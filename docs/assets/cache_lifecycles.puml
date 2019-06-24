@@ -18,11 +18,11 @@ collections "IK Cache"
 database Metastore
 entity KMS
 
-API -> API : service startup initiated
-API -> AppEncryptionSessionFactory : build new session factory
+API -> API : startup initiated
+API -> AppEncryptionSessionFactory : create new factory
 AppEncryptionSessionFactory -> "SK Cache" : create new cache
 activate "SK Cache"
-API -> API : service startup completes
+API -> API : startup completes
 |||
 Caller -> API : API call User 1
 API -> AppEncryptionSessionFactory : create new session
@@ -66,10 +66,10 @@ destroy "IK Cache"
 API -> Caller : API call User 2 result
 |||
 |||
-API -> API : service shutdown initiated
+API -> API : shutdown initiated
 API -> AppEncryptionSessionFactory : close session factory
 AppEncryptionSessionFactory -> "SK Cache" : securely close cache
 destroy "SK Cache"
-API -> API : service shutdown completes
+API -> API : shutdown completes
 
 @enduml
