@@ -1,0 +1,28 @@
+@startuml
+
+skinparam shadowing false
+
+legend left
+|= Type |= Description |
+| MK | Master Key, root key from KMS |
+| SK | System Key, encrypted by MK |
+| IK | Intermediate Key, encrypted by SK |
+| DRK | Data Row Key, encrypted by IK |
+| DRR | encrypted data and encrypted DRK |
+endlegend
+
+participant Caller
+boundary Asherah
+collections Cache
+database Metastore
+entity KMS
+
+Caller -> Asherah : encrypt payload
+Asherah -> Cache : get IK from protected memory cache
+|||
+Asherah -> Asherah : generate DRK and encrypt using IK
+Asherah -> Asherah : use DRK to encrypt payload
+Asherah -> Asherah : package encrypted payload \nwith encrypted DRK in a DRR
+Asherah -> Caller : return DRR
+
+@enduml
