@@ -10,7 +10,7 @@ Table of Contents
    * [Supported Languages](#supported-languages)
        * [Feature Support](#feature-support)
    * [Current Status](#current-status)
-   * [Contributing](#CONTRIBUTING.md)
+   * [Contributing](CONTRIBUTING.md)
 
 ## Introduction
 
