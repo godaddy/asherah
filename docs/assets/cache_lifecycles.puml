@@ -1,0 +1,75 @@
+@startuml
+
+skinparam shadowing false
+
+legend left
+|= Type |= Description |
+| MK | Master Key, root key from KMS |
+| SK | System Key, encrypted by MK |
+| IK | Intermediate Key, encrypted by SK |
+endlegend
+
+participant Caller
+participant API
+boundary AppEncryptionSessionFactory
+collections "SK Cache"
+boundary AppEncryption
+collections "IK Cache"
+database Metastore
+entity KMS
+
+API -> API : startup initiated
+API -> AppEncryptionSessionFactory : create new factory
+AppEncryptionSessionFactory -> "SK Cache" : create new cache
+activate "SK Cache"
+API -> API : startup completes
+|||
+Caller -> API : API call User 1
+API -> AppEncryptionSessionFactory : create new session
+AppEncryptionSessionFactory -> AppEncryption : create new instance
+AppEncryption -> "IK Cache" : create new cache
+activate "IK Cache"
+API -> AppEncryption : operation 1
+AppEncryption -> Metastore : fetch IK
+AppEncryption -> Metastore : fetch SK
+AppEncryption -> KMS : decrypt SK with MK
+AppEncryption -> "SK Cache" : cache SK
+AppEncryption -> AppEncryption : decrypt IK with SK
+AppEncryption -> "IK Cache" : cache IK
+AppEncryption -> API : complete operation 1
+|||
+API -> AppEncryption : operation 2
+AppEncryption -> "IK Cache" : get IK from cache
+AppEncryption -> API : complete operation 2
+|||
+API -> AppEncryption : close session
+AppEncryption -> "IK Cache" : securely close cache
+destroy "IK Cache"
+API -> Caller : API call User 1 result
+|||
+|||
+Caller -> API : API call User 2
+API -> AppEncryptionSessionFactory : create new session
+AppEncryptionSessionFactory -> AppEncryption : create new instance
+AppEncryption -> "IK Cache" : create new cache
+activate "IK Cache"
+API -> AppEncryption : operation 1
+AppEncryption -> Metastore : fetch IK
+AppEncryption -> "SK Cache" : get SK from cache
+AppEncryption -> AppEncryption : decrypt IK with SK
+AppEncryption -> "IK Cache" : cache IK
+AppEncryption -> API : complete operation 1
+|||
+API -> AppEncryption : close session
+AppEncryption -> "IK Cache" : securely close cache
+destroy "IK Cache"
+API -> Caller : API call User 2 result
+|||
+|||
+API -> API : shutdown initiated
+API -> AppEncryptionSessionFactory : close session factory
+AppEncryptionSessionFactory -> "SK Cache" : securely close cache
+destroy "SK Cache"
+API -> API : shutdown completes
+
+@enduml
