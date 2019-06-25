@@ -31,7 +31,13 @@ at this version includes a reference app, some kind of testing app or integratio
 unit tests.
 
 1.1.0 is currently tentatively targeted for Q3/Q4 2019 and our plans are to enhance our memory 
-protections using PROT_NONE in mprotect and give guidance on how ptrace_scope should be managed on
-machines running Asherah. In addition, we will formalize a cross-language testing method and
-implementation so that we have a guarantee that all languages and underlying storage schemas and 
-data are compatible.
+protections and give guidance on how ptrace_scope should be managed on machines running Asherah. In addition, 
+we will formalize a cross-language testing method and implementation so that we have a guarantee that all 
+languages and underlying storage schemas and data are compatible.
+
+## Issues and Projects
+
+Visit our [GitHub issue tracker](https://github.com/godaddy/asherah/issues) to view and create new
+issues and our [GitHub project page](https://github.com/godaddy/asherah/project) to see our story tracking.
+We are investigating using [ZenHub](https://www.zenhub.com/).  Please note our projects page is very much a 
+work in progress as we begin taking internal planning tickets and moving them to Asherah's new home.
