@@ -1,5 +1,15 @@
 # Asherah
-Asherah SDK documentation covering background, features, and starting points for language implementations.
+
+Asherah is an application-layer encryption SDK, currently in incubator status, that provides advanced encryption
+features and defense in depth against compromise.
+
+### NOTICE: This is an alpha product
+
+Internally, we are preparing this for production workloads and have a high degree of confidence in it, but we want to
+be clear that this should still be considered an incubator project. We have **not** yet had any formal external
+security audits of this product. We do not yet consider Asherah as validated for production use. As we receive more
+feedback, both internally and externally, APIs and features may be subject to change. Once we have cleared external
+audits and hit feature and testing milestones, we will release languages and versions into production status.
 
 Table of Contents
 =================
@@ -31,7 +41,6 @@ The SDK provides implementations in multiple languages using native interoperabi
 cache internally-generated keys in off-heap protected memory. The combination of secure memory management and the hierarchical
 key model's partitioning help minimize attack exposure in the event of compromise. Using the protected memory cache has an added
 benefit of reducing interactions with external resources to improve latency and minimize incurred costs.
-
 
 ## Getting Started
 
