@@ -3,7 +3,7 @@
 Asherah supports caching of Intermediate and System Keys to minimize calls against external resource and reducing
 latency. This is especially important for minimizing calls to the configured
 [Key Management Service](KeyManagementService.md) as that is often the most expensive and latent interaction of the
-involved resources. The cache is built on top of the Secure Memory implementation.
+resources involved. The cache is built on top of the Secure Memory implementation.
 
 ## Crypto Policy Configuration
 
@@ -16,7 +16,7 @@ the granularity of a minute with `revokeCheckMinutes()` in the builder.
 
 ## Cache Lifecycles
 
-Due to the [hierarchical nature](DesignAndArchitecture.md#key-hierarchy-and-storage) of the System and Intermediate
+Due to the [hierarchical ordering](DesignAndArchitecture.md#key-hierarchy-and-storage) of the System and Intermediate
 Keys, the scope of the their respective caches are different. For System Keys, which are intended to be service-level
 keys, their lifetime is that of the `AppEncryptionSessionFactory`. This allows for the System Key cache to be shared
 across `AppEncryption` instances generated from the session factory. Doing so prevents each one of these "encryption
