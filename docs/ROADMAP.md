@@ -26,8 +26,8 @@ languages as we get interest in them.
 
 Our 1.0.0 release comprises a feature set including a first version of our memory protections library, AES256-GCM 
 encryption/decryption, AWS KMS key management store, and two backing storage engines for Metastore persistence: RDS
-and DynamoDB. Each implementation of the SDK at this version includes a reference app, some kind of testing app or 
-integration test suite and unit tests.
+and DynamoDB. Each implementation of the SDK at this version includes a reference app, unit tests and some kind of 
+testing app or integration test suite.
 
 1.1.0 is currently tentatively targeted for Q3/Q4 2019 and our plans are to enhance our memory 
 protections and give guidance on how ptrace_scope should be managed on machines running Asherah. In addition, 
