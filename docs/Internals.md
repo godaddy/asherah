@@ -1,12 +1,48 @@
 #Internals
 
-## Asherah APIs
+## Common APIs
 
 Below are the primary public-facing interfaces of Asherah.
 
-**NOTE:** The syntax is primarily based off of our Java implementation.
+**NOTE:** The interfaces below are from the Java implementation of the SDK.
 
-[Cryptopolicy](CryptoPolicy.md)
+**Primary SDK Interface**
+
+```java
+  // <P> The payload type being encrypted
+  // <D> The Data Row Record type
+  interface AppEncryption<P, D> {
+    P decrypt(D dataRowRecord);
+    D encrypt(P payload);
+
+    Optional<P> load(String persistenceKey, Persistence<D> dataPersistence);
+    String store(P payload, Persistence<D> dataPersistence);
+    void store(String key, P payload, Persistence<D> dataPersistence);
+
+    void close();
+  }
+
+  // When using the load/store style, this defines the callbacks used to interact with Data Row Records.
+  interface Persistence<T> {
+    Optional<T> load(String key);
+    String store(T value);
+    void store(String key, T value);
+    String generateKey(T value);
+  }
+ 
+   // Create a session factory using the step builder pattern. 
+   AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
+      .newBuilder("myservice", "sample_code")
+      .withMemoryPersistence() 
+      .withNeverExpiredCryptoPolicy()
+      .withStaticKeyManagementService("secretmasterkey!")
+      .build());
+
+    // Use the factory to get an AppEncryption instance
+    AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("partitionId");
+```
+
+**[Cryptopolicy](CryptoPolicy.md)**
 
 ```java
   // Used to configure various behaviors of the internal algorithm
@@ -28,7 +64,8 @@ Below are the primary public-facing interfaces of Asherah.
 }
 ```
 
-[Metastore](Metastore.md)
+**[Metastore](Metastore.md)**
+
 ```java
 
   // Defines the backing metastore
@@ -40,7 +77,7 @@ Below are the primary public-facing interfaces of Asherah.
 }
 ```
 
-[Key Management Service](KeyManagementService.md)
+**[Key Management Service](KeyManagementService.md)**
 
 ```java
 
@@ -54,34 +91,7 @@ Below are the primary public-facing interfaces of Asherah.
 }
 ```
 
-SDK Usage Patterns:
-
-```java
-  // Primary interface for using the app encryption SDK.  
-  // <P> The payload type being encrypted
-  // <D> The Data Row Record type
-  interface AppEncryption<P, D> {
-    P decrypt(D dataRowRecord);
-    D encrypt(P payload);
-
-    Optional<P> load(String persistenceKey, Persistence<D> dataPersistence);
-    String store(P payload, Persistence<D> dataPersistence);
-    void store(String key, P payload, Persistence<D> dataPersistence);
-
-    void close();
-}
-
-// When using the load/store style, this defines the callbacks used to interact with Data Row Records.
-  interface Persistence<T> {
-    Optional<T> load(String key);
-    String store(T value);
-    void store(String key, T value);
-
-    String generateKey(T value);
-}
-```
-
-Potential future enhancements:
+## Potential future enhancements:
 
 Add support for multiple cipher suites.
 
