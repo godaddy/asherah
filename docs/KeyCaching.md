@@ -18,7 +18,8 @@ the granularity of a minute with `revokeCheckMinutes()` in the builder.
 
 Due to the [hierarchical ordering](DesignAndArchitecture.md#key-hierarchy-and-storage) of the System and Intermediate
 Keys, the scope of the their respective caches are different. For System Keys, which are intended to be service-level
-keys, their lifetime is that of the `AppEncryptionSessionFactory`. This allows for the System Key cache to be shared
+keys, their lifetime is that of the `AppEncryptionSessionFactory`. Ideally an instance of `AppEncryptionSessionFactory`
+is a singleton, where its lifetime is that of the application. This allows for the System Key cache to be shared
 across `AppEncryption` instances generated from the session factory. Doing so prevents each one of these "encryption
 sessions" from having to cache another copy of the same System Key in Secure Memory, as well as avoiding interaction
 with the [Key Management Service](KeyManagementService.md) to decrypt it.
