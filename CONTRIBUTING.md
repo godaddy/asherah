@@ -104,5 +104,5 @@ guide with respect to patterns, naming, documentation and testing.
 - [General GitHub Documentation](https://help.github.com/) 
 - [GitHub Pull Request documentation](https://help.github.com/send-pull-requests/)
 
-[issues]: https://github.com/godaddy/appencryption/issues 
+[issues]: https://github.com/godaddy/asherah/issues
 [slack]: https://godaddy-oss.slack.com/

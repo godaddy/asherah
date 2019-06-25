@@ -17,6 +17,9 @@ For both Linux and MacOS, Asherah depends on a `libc` implementation being avail
 
 Windows is not currently supported, but we may provide an implementation at a later time.
 
+If the library is unable to make the native system calls (e.g. missing method or entire underlying library), the native
+facilities of the language will raise an error.
+
 ## Memory Usage
 
 One of the system calls Asherah uses in Secure Memory is `mlock`, which locks address space in memory and prevents it
