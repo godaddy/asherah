@@ -39,5 +39,5 @@ languages and underlying storage schemas and data are compatible.
 
 Visit our [GitHub issue tracker](https://github.com/godaddy/asherah/issues) to view and create new
 issues and our [GitHub project page](https://github.com/godaddy/asherah/project) to see our story tracking.
-We are investigating using [ZenHub](https://www.zenhub.com/).  Please note our projects page is very much a 
+We are investigating using [ZenHub](https://www.zenhub.com/). Please note our projects page is very much a 
 work in progress as we begin taking internal planning tickets and moving them to Asherah's new home.
