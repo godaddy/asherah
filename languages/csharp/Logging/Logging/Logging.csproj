@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>GoDaddy.Asherah.Logging</PackageId>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
+    <Authors>GoDaddy</Authors>
+    <Company>GoDaddy</Company>
+    <RootNamespace>GoDaddy.Asherah.Logging</RootNamespace>
+    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.2" />
+      <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
+    </ItemGroup>
+</Project>
