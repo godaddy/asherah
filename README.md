@@ -1,5 +1,8 @@
 # Asherah
 
+[![Join Slack](https://img.shields.io/badge/Join%20us%20on-Slack-e01563.svg)](https://godaddy-oss-slack.herokuapp.com/)
+![License](https://img.shields.io/github/license/godaddy/asherah.svg)
+
 Asherah is an application-layer encryption SDK, currently in incubator status, that provides advanced encryption
 features and defense in depth against compromise.
 
@@ -45,13 +48,13 @@ benefit of reducing interactions with external resources to improve latency and 
 ## Getting Started
 
 The basic use of the SDK proceeds in 3 steps:
- 
+
 ### Step 1: Create a session factory
 
 A session factory is required to generate encryption/decryption sessions. For simplicity, the session factory uses the
 builder pattern, specifically a _step builder_. This ensures all required properties are set before a factory is built.
 
-To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can 
+To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can
 use the `withXXX` setter methods to configure the session factory properties.
 
 Below is an example of a session factory that uses in-memory persistence and static key management.
@@ -87,10 +90,10 @@ decrypted, and it is completely up to the calling application for storage respon
 ```java
 String originalPayloadString = "mysupersecretpayload";
 
-// encrypt the payload 
+// encrypt the payload
 byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
-// decrypt the payload 
+// decrypt the payload
 String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
 ```
 
@@ -106,25 +109,25 @@ Persistence dataPersistence = new Persistence<JSONObject>() {
 
     Map<String, JSONObject> mapPersistence = new HashMap<>();
 
-    @Override 
-    public Optional<JSONObject> load(String key) { 
-        return Optional.ofNullable(mapPersistence.get(key)); 
+    @Override
+    public Optional<JSONObject> load(String key) {
+        return Optional.ofNullable(mapPersistence.get(key));
     }
 
-    @Override 
-    public void store(String key, JSONObject value) { 
-        mapPersistence.put(key, value); 
-    } 
+    @Override
+    public void store(String key, JSONObject value) {
+        mapPersistence.put(key, value);
+    }
 };
 ```
 
 Putting it all together, an example end-to-end use of the store and load calls:
 
 ```java
-// Encrypts the payload, stores it in the dataPersistence and returns a look up key 
+// Encrypts the payload, stores it in the dataPersistence and returns a look up key
 String persistenceKey = appEncryptionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
-// Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it 
+// Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
 Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersistence);
 ```
 
