@@ -139,13 +139,13 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 
 ### Feature Support
 
-| Feature            | Java | .NET | Go  |
-| ------------------ | ---- | ---- | --- |
-| AWS KMS Support    | Yes  | Yes  | Yes |
-| RDBMS Metastore    | Yes  | Yes  | Yes |
-| DynamoDB Metastore | Yes  | Yes  | No  |
+| Feature            | Java | .NET |
+| ------------------ | ---- | ---- |
+| AWS KMS Support    | Yes  | Yes  |
+| RDBMS Metastore    | Yes  | Yes  |
+| DynamoDB Metastore | Yes  | Yes  |
 
 
 ## Current Status
 
-Capture high level state of various languages, etc.
+Asherah is currently in incubator status. Please refer to our [Roadmap](docs/ROADMAP.md) for additional information.
