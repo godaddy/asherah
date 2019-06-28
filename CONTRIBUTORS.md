@@ -10,7 +10,7 @@ These people contributed to Asherah's design, implementation, testing, and open 
   * Jason Haslup
   * Jeremiah Gowdy
   * Joey Paskhay
-  * Joey Wilhelm
+  * Joey Wilhelm ([@tarkatronic](https://github.com/tarkatronic))
   * Lilia Abaibourova
   * Nikhil Lohia
   * Ryanne Fox
