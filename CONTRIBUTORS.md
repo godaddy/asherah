@@ -1,6 +1,6 @@
 # Contributors
 
-These people have contributed to Asherah's design, implementation, and testing:
+These people contributed to Asherah's design, implementation, testing, and open sourcing efforts:
 
   * Adam Knapp
   * Arpita V Belagur
@@ -10,6 +10,8 @@ These people have contributed to Asherah's design, implementation, and testing:
   * Jason Haslup
   * Jeremiah Gowdy
   * Joey Paskhay
+  * Joey Wilhelm
+  * Lilia Abaibourova
   * Nikhil Lohia
   * Ryanne Fox
   * Sushant Mimani
