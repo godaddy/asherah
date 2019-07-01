@@ -1,12 +1,30 @@
 # ASHERAH - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
+Table of Contents
+=================
+
   * [Basic Example](#basic-example)
   * [SDK Details](#sdk-details)
-  * [Metrics](#metrics)
+    * [Usage Styles](#usage-styles)
+      * [Custom Persistence via Load/Store methods](#custom-persistence-via-loadstore-methods)
+      * [Plain Encrypt/Decrypt style](#plain-encryptdecrypt-style)
+    * [Metastore](#metastore)
+      * [JDBC Metastore](#jdbc-metastore)
+      * [DynamoDB Metastore](#dynamodb-metastore)
+      * [In\-memory Metastore (FOR TESTING ONLY)](#in-memory-metastore-for-testing-only)
+    * [Key Management Service](#key-management-service)
+      * [AWS KMS](#aws-kms)
+      * [Static KMS (FOR TESTING ONLY)](#static-kms-for-testing-only)
+    * [Crypto Policy](#crypto-policy)
+      * [Basic Expiring Crypto Policy](#basic-expiring-crypto-policy)
+      * [Never Expiring Crypto Policy (FOR TESTING ONLY)](#never-expiring-crypto-policy-for-testing-only)
+    * [Key Caching](#key-caching)
+    * [Metrics](#metrics)
   * [Deployment Notes](#deployment-notes)
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
     * [Setting rlimits](#setting-rlimits)
+    * [Revoking keys](#revoking-keys)
   * [SDK Development Notes](#sdk-development-notes)
     * [Running Tests Locally via Docker Image](#running-tests-locally-via-docker-image)
 
@@ -14,12 +32,10 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 
 Asherah generally uses the **builder pattern** to define objects.
 
-``` java
-
+```java
 // First build a basic Crypto Policy that expires
 // keys after 90 days and has a cache TTL of 60 minutes
-CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
-    .newBuilder()
+CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
     .withKeyExpirationDays(90)
     .withRevokeCheckMinutes(60)
     .build();
@@ -27,8 +43,7 @@ CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
 // Create a session factory for this app. Normally this would be done upon app startup and the
 // same factory would be used anytime a new session is needed for a partition (e.g., shopper).
 // We've split it out into multiple try blocks to underscore this point.
-try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
-    .newBuilder("productId", "sample_code")
+try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "sample_code")
     .withMemoryPersistence() // in-memory metastore persistence only
     .withCryptoPolicy(cryptoPolicy)
     .withStaticKeyManagementService("secretmasterkey!") // hard-coded/static master key
@@ -56,12 +71,15 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
   }
 }
 ```
-You can also review the [Reference Application](../../samples/java/reference-app), which will evolve along with the 
-SDK and show more detailed usage.
+You can also review the [Reference Application](../../samples/java/reference-app), which will evolve along with the sdk
+ and show more detailed usage.
 
 ## SDK Details
 
-Asherah supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java) instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java) implementation
+### Usage Styles
+
+#### Custom Persistence via Load/Store methods
+The SDK supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java) instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java) implementation
 and hooks into its `load` and `store` calls. This can be seen in the interface definition:
 
  ```java
@@ -70,8 +88,8 @@ public interface AppEncryption<P, D> extends SafeAutoCloseable {
   /**
    * Uses a persistence key to load a Data Row Record from the provided data persistence store, if any, and returns the
    * decrypted payload.
-   * @param persistenceKey
-   * @param dataPersistence
+   * @param persistenceKey the key to lookup in the data persistence store
+   * @param dataPersistence the data persistence store to use
    * @return The decrypted payload, if found in persistence
    */
   default Optional<P> load(final String persistenceKey, final Persistence<D> dataPersistence) {
@@ -82,8 +100,8 @@ public interface AppEncryption<P, D> extends SafeAutoCloseable {
   /**
    * Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store, and returns its
    * associated persistence key for future lookups.
-   * @param payload
-   * @param dataPersistence
+   * @param payload the payload to encrypt and store
+   * @param dataPersistence the data persistence store to use
    * @return The persistence key associated with the stored Data Row Record
    */
   default String store(final P payload, final Persistence<D> dataPersistence) {
@@ -94,9 +112,9 @@ public interface AppEncryption<P, D> extends SafeAutoCloseable {
 
   /**
    * Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store with given key
-   * @param key
-   * @param payload
-   * @param dataPersistence
+   * @param key the key to associate the Data Row Record with
+   * @param payload the payload to encrypt and store
+   * @param dataPersistence the data persistence store to use
    */
   default void store(final String key, final P payload, final Persistence<D> dataPersistence) {
     D dataRowRecord = encrypt(payload);
@@ -135,8 +153,7 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 ```
 
 #### Plain Encrypt/Decrypt Style
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, 
-and it is completely up to the calling application for storage responsibility.
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is completely up to the calling application for storage responsibility.
 
 ```java
 String originalPayloadString = "mysupersecretpayload";
@@ -148,7 +165,100 @@ byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.get
 String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
 ```
 
-Further details on the working of SDK are defined [here](https://github.com/godaddy/asherah/tree/master#further-reading).
+### Metastore
+The SDK handles the storage of Intermediate and System Keys in its "Metastore" which can either be a completely separate datastore from the application's, or simply a table within an application's existing database. Detailed information on row-size estimates and schemas can be found [here](../../docs/Metastore.md).
+
+#### Using a JDBC-compliant Metastore
+The JDBC Metastore follows the same builder pattern as the SDK and supports the use of a standard JDBC DataSource for connection handling so that any JDBC-compliant connection pool can be used:
+
+```java
+// Create / retrieve a DataSource from your connection pool
+DataSource dataSource = ...;
+
+// Build the JDBC Metastore
+MetastorePersistence jdbcMetastorePersistence = JdbcMetastorePersistenceImpl.newBuilder(dataSource).build();
+
+// Use the Metastore for the session factory
+try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "reference_app")
+     .withMetastorePersistence(jdbcMetastorePersistence)
+     .withCryptoPolicy(policy)
+     .withKeyManagementService(keyManagementService)
+     .build()) {
+
+    // ...
+}
+```
+
+#### DynamoDB Metastore
+The DynamoDB Metastore follows the same builder pattern as the SDK:
+
+```java
+// Build the DynamoDB Metastore.
+MetastorePersistence dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.newBuilder().build();
+
+// Use the Metastore for the session factory
+try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "reference_app")
+     .withMetastorePersistence(dynamoDbMetastorePersistence)
+     .withCryptoPolicy(policy)
+     .withKeyManagementService(keyManagementService)
+     .build()) {
+
+    // ...
+}
+```
+
+#### In-memory Metastore (FOR TESTING ONLY)
+Asherah also supports an in-memory metastore persistence model but that ***should only be used for testing purposes***.
+
+### Key Management Service
+Asherah requires a Key Management Service (KMS) to generate the top level key and to encrypt the System Keys. AWS KMS
+ support is provided by the SDK, but an interface exists for applications to use another provider as needed. Detailed information on KMS can be found [here](../../docs/KeyManagementService.md).
+
+#### AWS KMS
+```java
+// Create a map of region and arn that will all be used when creating a System Key
+Map<String, String> regionMap = ImmutableMap.of("us-east-1", "arn_of_us-east-1",
+    "us-east-2", "arn_of_us-east-2",
+    ...);
+
+// Build the Key Management Service using the region map and your preferred (usually current) region
+AWSKeyManagementServiceImpl keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1").build();
+
+// Provide the above keyManagementService to the session factory builder
+try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "reference_app")
+     .withMetastorePersistence(metastorePersistence)
+     .withCryptoPolicy(policy)
+     .withKeyManagementService(keyManagementService)
+     .build()) {
+
+    // ...
+}
+```
+
+#### Static KMS (FOR TESTING ONLY)
+The SDK also supports a static KMS but it ***should never be used in production***.
+
+### Crypto Policy
+A crypto policy dictates the various behaviors of the SDK and can be configured with several options. Detailed information
+on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). 
+
+#### Basic Expiring Crypto Policy
+A BasicExpiringCryptoPolicy can be built using the same builder pattern as the SDK.
+
+```java
+CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
+    .newBuilder()
+    .withKeyExpirationDays(90)
+    .withRevokeCheckMinutes(60)
+    .build();
+```
+
+#### Never Expiring Crypto Policy (FOR TESTING ONLY)
+This policy supports keys that never expire nor ever removed from the cache. This ***should never be used in the production environment***.
+
+### Key Caching
+
+Detailed information on Key Caching can be found [here](../../docs/KeyCaching.md).
 
 ### Metrics
 Asherah uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics 
@@ -272,7 +382,27 @@ This creates an override configuration with the following content:
 LimitMEMLOCK=infinity
 ```
 
+### Revoking keys
+
+If for any reason there is a need to accelerate the rotation of a key that's been used by the SDK (e.g. suspected 
+compromise of keys) there is support for marking a key as "revoked".
+
+We have created helper python scripts for the below metastore implementations.  See their usage message for details on how to run them:
+* [JDBC-based Metastore (MySQL)](scripts/revoke_keys_mysql.py)
+* [DynamoDB Metastore](scripts/revoke_keys_dynamodb.py) (WARNING: Bulk operation uses Scan API, which reads the **entire** table. Avoid if possible, e.g. revoke individual system keys)
+
 ## SDK Development Notes
+
+Some unit tests will use the AWS SDK, If you don’t already have a local [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), 
+create a *dummy* file called **`~/.aws/credentials`** with the below contents:
+
+```
+[default]
+aws_access_key_id = foobar
+aws_secret_access_key = barfoo
+```
+
+Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
 ### Running Tests Locally via Docker Image
 Below is an example of how to run tests locally using a Docker image. This one is using the build image used 
@@ -298,3 +428,7 @@ you will likely need to add the optional build arguments:
 ```
 
 This will create the container's user with your UID so that it has full access to the `.m2` directory.
+
+---
+The table of contents was generated using [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
+Usage: `./gh-md-toc <README.md>`
