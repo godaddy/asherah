@@ -1,4 +1,4 @@
-# Internals
+# Common APIs and Algorithm Internals
 
 ## Common APIs
 
@@ -6,43 +6,70 @@ Below are the primary public-facing interfaces of Asherah.
 
 **NOTE:** The interfaces below are from the Java implementation of the SDK.
 
-**Primary SDK Interface**
+### Primary SDK Interfaces
+
+The below interfaces implement the session factory using the step builder pattern.
 
 ```java
-  // <P> The payload type being encrypted
-  // <D> The Data Row Record type
-  interface AppEncryption<P, D> {
-    P decrypt(D dataRowRecord);
-    D encrypt(P payload);
-
-    Optional<P> load(String persistenceKey, Persistence<D> dataPersistence);
-    String store(P payload, Persistence<D> dataPersistence);
-    void store(String key, P payload, Persistence<D> dataPersistence);
-
-    void close();
-  }
-
-  // When using the load/store style, this defines the callbacks used to interact with Data Row Records.
-  interface Persistence<T> {
-    Optional<T> load(String key);
-    String store(T value);
-    void store(String key, T value);
-    String generateKey(T value);
-  }
+class AppEncryptionSessionFactory {
+  static MetastoreStep newBuilder(String productId, String systemId);
+  
+  AppEncryption<JSONObject, byte[]> getAppEncryptionJson(String partitionId);
+  AppEncryption<byte[], byte[]> getAppEncryptionBytes(String partitionId);
+  AppEncryption<JSONObject, JSONObject> getAppEncryptionJsonAsJson(String partitionId);
+  AppEncryption<byte[], JSONObject> getAppEncryptionBytesAsJson(String partitionId);
+  
+  void close();
+}
  
-   // Create a session factory using the step builder pattern. 
-   AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
-      .newBuilder("myservice", "sample_code")
-      .withMemoryPersistence() 
-      .withNeverExpiredCryptoPolicy()
-      .withStaticKeyManagementService("secretmasterkey!")
-      .build());
+interface MetastoreStep {
+  CryptoPolicyStep withMetastorePersistence(MetastorePersistence<JSONObject> persistence);
+}
 
-    // Use the factory to get an AppEncryption instance
-    AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("partitionId");
+interface CryptoPolicyStep {
+  KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
+}
+
+interface KeyManagementServiceStep {
+  BuildStep withKeyManagementService(KeyManagementService keyManagementService);
+}
+
+interface BuildStep {
+  BuildStep withMetricsEnabled();
+
+  AppEncryptionSessionFactory build();
+}
 ```
 
-**[Cryptopolicy](CryptoPolicy.md)**
+Cryptographic operations are performed using the methods provided in the AppEncryption interface.
+
+```java
+// <P> The payload type being encrypted
+// <D> The Data Row Record type
+interface AppEncryption<P, D> {
+  P decrypt(D dataRowRecord);
+  D encrypt(P payload);
+
+  Optional<P> load(String persistenceKey, Persistence<D> dataPersistence);
+  String store(P payload, Persistence<D> dataPersistence);
+  void store(String key, P payload, Persistence<D> dataPersistence);
+
+  void close();
+}
+```
+  
+For the load/store usage model, we also need to implement the Persistence interface
+```java
+// When using the load/store style, this defines the callbacks used to interact with Data Row Records.
+interface Persistence<T> {
+  Optional<T> load(String key);
+  String store(T value);
+  void store(String key, T value);
+  String generateKey(T value);
+}
+```
+
+### Cryptopolicy
 
 ```java
   // Used to configure various behaviors of the internal algorithm
@@ -63,8 +90,9 @@ Below are the primary public-facing interfaces of Asherah.
     boolean notifyExpiredSystemKeyOnRead();
 }
 ```
+An in-depth explanation of CryptoPolicy is available [here](CryptoPolicy.md) 
 
-**[Metastore](Metastore.md)**
+### Metastore
 
 ```java
 
@@ -76,8 +104,10 @@ Below are the primary public-facing interfaces of Asherah.
     boolean store(String keyId, Instant created, V value);
 }
 ```
+An in-depth explanation of the Metastore is available [here](Metastore.md) 
 
-**[Key Management Service](KeyManagementService.md)**
+
+### Key Management Service]
 
 ```java
 
@@ -90,20 +120,5 @@ Below are the primary public-facing interfaces of Asherah.
                            BiFunction<CryptoKey, Instant, T> actionWithDecryptedKey);
 }
 ```
+An in-depth explanation of the Key Management Service is available [here](KeyManagementService.md) 
 
-## Potential future enhancements:
-
-Add support for multiple cipher suites.
-
-```java
-  interface CryptoPolicy {
-    ...
-
-    enum CipherSuite {
-        AES-256-GCM,
-        ...
-    };
-    CipherSuite getCipherSuite();
-    int getNonceSizeBits();
-}
-```
