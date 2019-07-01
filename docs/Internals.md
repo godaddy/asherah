@@ -7,13 +7,13 @@
 ### Current Implementation
 
 Secure Memory is implemented using well known native calls that ensure various protections of a secret value in memory.
-Below we describe the calls a Secure Memory implementation needs to perform to properly protect memory. Note the calls
+Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the calls
 will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this page with
 corresponding calls appropriately.
 
 #### Create a Secret
 
-```
+```java
 ProtectedMemorySecret(byte[] secret) {
     // check rlimit to make sure we won't exceed limit
     get memlock rlimit from system
@@ -60,7 +60,7 @@ ProtectedMemorySecret(byte[] secret) {
 
 #### Use a Secret
 
-```
+```java
 withSecretBytes(function<byte[], type> functionWithSecret) {
     bytes = new byte[length]
     try {
@@ -87,14 +87,14 @@ withSecretBytes(function<byte[], type> functionWithSecret) {
 
 #### Delete a Secret
 
-```
+```java
 close() {
     // change memory page access to read-write
     mprotect(addr = pointer, len = <length>, prot = (PROT_READ | PROT_WRITE))
 
     try {
-      # use platform specific zero memory function that can't be optimized away.
-      # for MacOS, use memset_s(dest = pointer, destSize = <length>, c = 0, count = <length>)
+      // use platform specific zero memory function that can't be optimized away.
+      // for MacOS, use memset_s(dest = pointer, destSize = <length>, c = 0, count = <length>)
       bzero(addr = pointer, length = <length>)
     }
     finally {
