@@ -14,4 +14,4 @@ These people contributed to Asherah's design, implementation, testing, and open 
   * Lilia Abaibourova
   * Nikhil Lohia ([@nikoo28](https://github.com/nikoo28))
   * Ryanne Fox
-  * Sushant Mimani
+  * Sushant Mimani ([@sushantmimani](https://github.com/sushantmimani))
