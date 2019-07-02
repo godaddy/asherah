@@ -107,7 +107,7 @@ An in-depth explanation of CryptoPolicy is available [here](CryptoPolicy.md)
 An in-depth explanation of the Metastore is available [here](Metastore.md) 
 
 
-### Key Management Service]
+### Key Management Service
 
 ```java
 
