@@ -1,4 +1,4 @@
-# ASHERAH - Java
+# Asherah - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
 Table of Contents
@@ -23,8 +23,6 @@ Table of Contents
     * [Metrics](#metrics)
   * [Deployment Notes](#deployment-notes)
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
-    * [Setting rlimits](#setting-rlimits)
-    * [Revoking keys](#revoking-keys)
   * [SDK Development Notes](#sdk-development-notes)
     * [Running Tests Locally via Docker Image](#running-tests-locally-via-docker-image)
 
@@ -33,24 +31,15 @@ Table of Contents
 Asherah generally uses the **builder pattern** to define objects.
 
 ```java
-// First build a basic Crypto Policy that expires
-// keys after 90 days and has a cache TTL of 60 minutes
-CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
-    .withKeyExpirationDays(90)
-    .withRevokeCheckMinutes(60)
-    .build();
-
-// Create a session factory for this app. Normally this would be done upon app startup and the
-// same factory would be used anytime a new session is needed for a partition (e.g., shopper).
-// We've split it out into multiple try blocks to underscore this point.
+// Create a session factory
 try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "sample_code")
     .withMemoryPersistence() // in-memory metastore persistence only
     .withCryptoPolicy(cryptoPolicy)
     .withStaticKeyManagementService("secretmasterkey!") // hard-coded/static master key
     .build()) {
 
-  // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
-  // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
+  // Now create an actual session for a partition. This session is used for a transaction 
+  // and is closed automatically after use due to the AutoCloseable implementation.
   try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("shopper123")) {
 
     // Now encrypt some data
@@ -59,15 +48,10 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
     byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
     String dataRowString = Base64.getEncoder().encodeToString(dataRowRecordBytes);
 
-    System.out.println("dataRowRecordBytes = " + dataRowString);
-
     byte[] newBytes = Base64.getDecoder().decode(dataRowString);
 
-    // Ensure we can decrypt the data, too
+    // Decrypt the data
     String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
-
-    System.out.println("decryptedPayloadString = " + decryptedPayloadString + ", matches = "
-                       + originalPayloadString.equals(decryptedPayloadString));
   }
 }
 ```
@@ -80,47 +64,25 @@ and show more detailed usage.
 
 #### Custom Persistence via Load/Store methods
 The SDK supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java) instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java) implementation
-and hooks into its `load` and `store` calls. This can be seen in the interface definition:
+and hooks into its `load` and `store` calls:
 
  ```java
-public interface AppEncryption<P, D> extends SafeAutoCloseable {
+default Optional<P> load(final String persistenceKey, final Persistence<D> dataPersistence) {
+  return dataPersistence.load(persistenceKey)
+      .map(this::decrypt);
+}
 
-  /**
-   * Uses a persistence key to load a Data Row Record from the provided data persistence store, if any, and returns the
-   * decrypted payload.
-   * @param persistenceKey the key to lookup in the data persistence store
-   * @param dataPersistence the data persistence store to use
-   * @return The decrypted payload, if found in persistence
-   */
-  default Optional<P> load(final String persistenceKey, final Persistence<D> dataPersistence) {
-    return dataPersistence.load(persistenceKey)
-        .map(this::decrypt);
-  }
+default String store(final P payload, final Persistence<D> dataPersistence) {
+  D dataRowRecord = encrypt(payload);
 
-  /**
-   * Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store, and returns its
-   * associated persistence key for future lookups.
-   * @param payload the payload to encrypt and store
-   * @param dataPersistence the data persistence store to use
-   * @return The persistence key associated with the stored Data Row Record
-   */
-  default String store(final P payload, final Persistence<D> dataPersistence) {
-    D dataRowRecord = encrypt(payload);
+  return dataPersistence.store(dataRowRecord);
+}
 
-    return dataPersistence.store(dataRowRecord);
-  }
+default void store(final String key, final P payload, final Persistence<D> dataPersistence) {
+  D dataRowRecord = encrypt(payload);
 
-  /**
-   * Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store with given key
-   * @param key the key to associate the Data Row Record with
-   * @param payload the payload to encrypt and store
-   * @param dataPersistence the data persistence store to use
-   */
-  default void store(final String key, final P payload, final Persistence<D> dataPersistence) {
-    D dataRowRecord = encrypt(payload);
-
-    dataPersistence.store(key, dataRowRecord);
-  }
+  dataPersistence.store(key, dataRowRecord);
+}
 ```
 
 Example `HashMap`-backed `Persistence` implementation:
@@ -167,12 +129,10 @@ String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes),
 ```
 
 ### Metastore
-The SDK handles the storage of Intermediate and System Keys in its "Metastore" which can either be a completely separate 
-datastore from the application's, or simply a table within an application's existing database. Detailed information on 
-row-size estimates and schemas can be found [here](../../../docs/Metastore.md).
+Detailed information on metastore, row-size estimates and schemas can be found [here](../../../docs/Metastore.md). Java specific implementation examples are provided below.
 
 #### Using a JDBC-compliant Metastore
-The JDBC Metastore follows the same builder pattern as the SDK and supports the use of a standard JDBC DataSource for connection handling so that any JDBC-compliant connection pool can be used:
+Asherah supports the use of a standard JDBC DataSource for connection handling so that any JDBC-compliant connection pool can be used. You can build it as:
 
 ```java
 // Create / retrieve a DataSource from your connection pool
@@ -193,7 +153,7 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
 ```
 
 #### DynamoDB Metastore
-The DynamoDB Metastore follows the same builder pattern as the SDK:
+You can build the DynamoDB metastore as:
 
 ```java
 // Build the DynamoDB Metastore.
@@ -211,11 +171,13 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
-Asherah also supports an in-memory metastore persistence model but that ***should only be used for testing purposes***.
+Asherah also supports an in-memory metastore persistence model but that ***should only be used for testing purposes***. You can use it as:
+```java
+MetastorePersistence<JSONObject> metastorePersistence= new MemoryPersistenceImpl<>();
+```
 
 ### Key Management Service
-Asherah requires a Key Management Service (KMS) to generate the top level key and to encrypt the System Keys. AWS KMS
- support is provided by the SDK, but an interface exists for applications to use another provider as needed. Detailed information on KMS can be found [here](../../../docs/KeyManagementService.md).
+Detailed information on KMS can be found [here](../../../docs/KeyManagementService.md). Java specific implementation examples are provided below.
 
 #### AWS KMS
 ```java
@@ -239,14 +201,16 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
 ```
 
 #### Static KMS (FOR TESTING ONLY)
-The SDK also supports a static KMS but it ***should never be used in production***.
+The SDK also supports a static KMS but it ***should never be used in production***. You can use it as:
+```java
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+```
 
 ### Crypto Policy
-A crypto policy dictates the various behaviors of the SDK and can be configured with several options. Detailed information
-on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). 
+Detailed information on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). 
 
 #### Basic Expiring Crypto Policy
-A BasicExpiringCryptoPolicy can be built using the same builder pattern as the SDK.
+You can use a BasicExpiringCryptoPolicy as:
 
 ```java
 CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
@@ -257,14 +221,17 @@ CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
 ```
 
 #### Never Expiring Crypto Policy (FOR TESTING ONLY)
-This policy supports keys that never expire nor ever removed from the cache. This ***should never be used in the production environment***.
+This policy supports keys that never expire nor ever removed from the cache. This ***should never be used in the production environment***. You can use it as:
+```java
+CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
+```
 
 ### Key Caching
 
-Detailed information on Key Caching can be found [here](../../../docs/KeyCaching.md).
+Detailed information on Key Caching and how crypto policy affects it can be found [here](../../../docs/KeyCaching.md).
 
 ### Metrics
-Asherah uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics 
+Asherah's Java version uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics 
 generated by this SDK use the [global registry](https://micrometer.io/docs/concepts#_global_registry) and 
 use a prefix defined by `MetricsUtil.AEL_METRICS_PREFIX` (`ael` as of this writing). If metrics are left disabled, 
 we rely on Micrometer's [deny filtering](https://micrometer.io/docs/concepts#_deny_accept_meters).
@@ -330,71 +297,6 @@ The following are distro-specific notes that we know about:
 Our [test app repo's](../../../tests/java/test-app/) Dockerfiles can be used for reference: 
 [Alpine](../../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../../tests/java/test-app/images/debian/Dockerfile) 
 and [Ubuntu](../../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
-
-### Setting rlimits
-
-Asherah uses the [SecureMemory Library](../secure-memory) for protecting cached keys. Among other things, 
-this SDK uses system calls in order to lock the memory used for caching to prevent access to that memory 
-from other processes. The amount of memory a user can lock can be limited by the OS and we have seen different 
-default values across the different distributions and docker images. If the value that is set is not sufficient 
-for the amount of caching needed, the SDK will throw an "Insufficient Memory" exception. There are different 
-ways to resolve the issue:
-
-#### System-wide `limits.conf`
-
-On Linux servers the `/etc/security/limits.conf` file allows for the configuration of system-wide and user-specific 
-memory locking limits. While this can be specified differently for each user we will set this to unlimited for 
-all users on our test servers:
-
-``` console
-# <User>     <soft/hard/both>     <item>        <value>
-*                 -               memlock      unlimited
-```
-
-**Note:** We've seen that in some cases (EKS worker nodes for us), `systemd` can override `rlimits` for service 
-under its management so that the `limits.conf` changes do not have any affect. See below in the Kubernetes section 
-how this was handled with a `systemd` override configuration.
-
-#### Running Docker containers
-
-When running docker containers (such as our testing framework) the `--ulimit` option can be used set memory locking 
-limits:
-
-``` console
-docker run -it --ulimit memlock=-1:-1  [...]
-```
-
-#### AWS EKS
-
-(This may apply to Kubernetes in general, as well, but we only experienced it using EKS.)
-
-The EKS worker nodes that we've used have a built-in default of 64k as the amount of memory that a user can lock. 
-This is too small for our testing framework's normal run. As noted above, setting new values in 
-`/etc/security/limits.conf` did not affect the docker service as `systemd` appears to have its own override. 
-Our solution was to modify the docker service's memlock limit using systemd's configuration override mechanism. 
-We accomplished this by adding a `CustomUserData` parameter to our EKS sceptre configuration:
-
-``` console
-CustomUserData: "mkdir -p /etc/systemd/system/docker.service.d && echo '[Service]\nLimitMEMLOCK=infinity\n' > /etc/systemd/system/docker.service.d/override.conf && /bin/systemctl daemon-reload && /bin/systemctl restart docker.service"
-```
-
-This creates an override configuration with the following content:
-
-``` ini
-[Service]
-LimitMEMLOCK=infinity
-```
-
-### Revoking keys
-
-If for any reason there is a need to accelerate the rotation of a key that's been used by the SDK (e.g. suspected 
-compromise of keys) there is support for marking a key as "revoked".
-
-We have created helper python scripts for the below metastore implementations.  See their usage message for details 
-on how to run them:
-* [JDBC-based Metastore (MySQL)](scripts/revoke_keys_mysql.py)
-* [DynamoDB Metastore](scripts/revoke_keys_dynamodb.py) (WARNING: Bulk operation uses Scan API, which reads the 
-**entire** table. Avoid if possible, e.g. revoke individual system keys)
 
 ## SDK Development Notes
 
