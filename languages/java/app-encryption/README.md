@@ -71,8 +71,8 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
   }
 }
 ```
-You can also review the [Reference Application](../../samples/java/reference-app), which will evolve along with the sdk
- and show more detailed usage.
+You can also review the [Reference Application](../../../samples/java/reference-app), which will evolve along with the sdk 
+and show more detailed usage.
 
 ## SDK Details
 
@@ -153,7 +153,8 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 ```
 
 #### Plain Encrypt/Decrypt Style
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is completely up to the calling application for storage responsibility.
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
+completely up to the calling application for storage responsibility.
 
 ```java
 String originalPayloadString = "mysupersecretpayload";
@@ -166,7 +167,9 @@ String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes),
 ```
 
 ### Metastore
-The SDK handles the storage of Intermediate and System Keys in its "Metastore" which can either be a completely separate datastore from the application's, or simply a table within an application's existing database. Detailed information on row-size estimates and schemas can be found [here](../../docs/Metastore.md).
+The SDK handles the storage of Intermediate and System Keys in its "Metastore" which can either be a completely separate 
+datastore from the application's, or simply a table within an application's existing database. Detailed information on 
+row-size estimates and schemas can be found [here](../../../docs/Metastore.md).
 
 #### Using a JDBC-compliant Metastore
 The JDBC Metastore follows the same builder pattern as the SDK and supports the use of a standard JDBC DataSource for connection handling so that any JDBC-compliant connection pool can be used:
@@ -212,7 +215,7 @@ Asherah also supports an in-memory metastore persistence model but that ***shoul
 
 ### Key Management Service
 Asherah requires a Key Management Service (KMS) to generate the top level key and to encrypt the System Keys. AWS KMS
- support is provided by the SDK, but an interface exists for applications to use another provider as needed. Detailed information on KMS can be found [here](../../docs/KeyManagementService.md).
+ support is provided by the SDK, but an interface exists for applications to use another provider as needed. Detailed information on KMS can be found [here](../../../docs/KeyManagementService.md).
 
 #### AWS KMS
 ```java
@@ -240,7 +243,7 @@ The SDK also supports a static KMS but it ***should never be used in production*
 
 ### Crypto Policy
 A crypto policy dictates the various behaviors of the SDK and can be configured with several options. Detailed information
-on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). 
+on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). 
 
 #### Basic Expiring Crypto Policy
 A BasicExpiringCryptoPolicy can be built using the same builder pattern as the SDK.
@@ -258,7 +261,7 @@ This policy supports keys that never expire nor ever removed from the cache. Thi
 
 ### Key Caching
 
-Detailed information on Key Caching can be found [here](../../docs/KeyCaching.md).
+Detailed information on Key Caching can be found [here](../../../docs/KeyCaching.md).
 
 ### Metrics
 Asherah uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics 
@@ -324,9 +327,9 @@ The following are distro-specific notes that we know about:
   * If using the `adoptopenjdk/openjdk` base image, we need to add additional directories in the default library 
   path using `-Djna.boot.library.path=/usr/lib/x86_64-linux-gnu/jni/`
 
-Our [test app repo's](../../tests/java/test-app/) Dockerfiles can be used for reference: 
-[Alpine](../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../tests/java/test-app/images/debian/Dockerfile) 
-and [Ubuntu](../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
+Our [test app repo's](../../../tests/java/test-app/) Dockerfiles can be used for reference: 
+[Alpine](../../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../../tests/java/test-app/images/debian/Dockerfile) 
+and [Ubuntu](../../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
 
 ### Setting rlimits
 
@@ -387,9 +390,11 @@ LimitMEMLOCK=infinity
 If for any reason there is a need to accelerate the rotation of a key that's been used by the SDK (e.g. suspected 
 compromise of keys) there is support for marking a key as "revoked".
 
-We have created helper python scripts for the below metastore implementations.  See their usage message for details on how to run them:
+We have created helper python scripts for the below metastore implementations.  See their usage message for details 
+on how to run them:
 * [JDBC-based Metastore (MySQL)](scripts/revoke_keys_mysql.py)
-* [DynamoDB Metastore](scripts/revoke_keys_dynamodb.py) (WARNING: Bulk operation uses Scan API, which reads the **entire** table. Avoid if possible, e.g. revoke individual system keys)
+* [DynamoDB Metastore](scripts/revoke_keys_dynamodb.py) (WARNING: Bulk operation uses Scan API, which reads the 
+**entire** table. Avoid if possible, e.g. revoke individual system keys)
 
 ## SDK Development Notes
 
