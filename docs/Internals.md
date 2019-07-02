@@ -75,7 +75,7 @@ interface Persistence<T> {
   // Used to configure various behaviors of the internal algorithm
   interface CryptoPolicy {
     enum KeyRotationStrategy {
-        INLINE, // note this is the only one currenly supported/implemented
+        INLINE, // This is the only one currently supported/implemented
         QUEUED
     };
     KeyRotationStrategy keyRotationStrategy();
