@@ -4,7 +4,8 @@
 
 Below are the primary public-facing interfaces of Asherah.
 
-**NOTE:** The interfaces below are from the Java implementation of the SDK.
+**NOTE:** The interfaces below are from the Java implementation of the SDK, which also serves as the reference 
+implementation
 
 ### Primary SDK Interfaces
 
@@ -34,6 +35,7 @@ interface KeyManagementServiceStep {
   BuildStep withKeyManagementService(KeyManagementService keyManagementService);
 }
 
+// Additional optional steps can be added to the BuildStep interface
 interface BuildStep {
   BuildStep withMetricsEnabled();
 
@@ -41,7 +43,7 @@ interface BuildStep {
 }
 ```
 
-Cryptographic operations are performed using the methods provided in the AppEncryption interface.
+Cryptographic operations are performed using the methods provided in the `AppEncryption` interface.
 
 ```java
 // <P> The payload type being encrypted
@@ -58,7 +60,7 @@ interface AppEncryption<P, D> {
 }
 ```
   
-For the load/store usage model, we also need to implement the Persistence interface
+For the [store/load](../README.md#store--load) usage model, we also need to implement the `Persistence` interface
 ```java
 // When using the load/store style, this defines the callbacks used to interact with Data Row Records.
 interface Persistence<T> {
@@ -69,7 +71,7 @@ interface Persistence<T> {
 }
 ```
 
-### Cryptopolicy
+### Crypto Policy
 
 ```java
   // Used to configure various behaviors of the internal algorithm
@@ -95,7 +97,6 @@ An in-depth explanation of CryptoPolicy is available [here](CryptoPolicy.md)
 ### Metastore
 
 ```java
-
   // Defines the backing metastore
   interface MetastorePersistence<V> {
     Optional<V> load(String keyId, Instant created);
@@ -110,7 +111,6 @@ An in-depth explanation of the Metastore is available [here](Metastore.md)
 ### Key Management Service
 
 ```java
-
   // Defines the root KMS
   interface KeyManagementService {
     byte[] encryptKey(CryptoKey key);
