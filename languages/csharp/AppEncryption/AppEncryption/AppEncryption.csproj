@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>GoDaddy.Asherah.AppEncryption</PackageId>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
+    <Authors>GoDaddy</Authors>
+    <Company>GoDaddy</Company>
+    <RootNamespace>GoDaddy.Asherah.AppEncryption</RootNamespace>
+    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup Label="Package References">
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.4" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.100.5" />
+    <PackageReference Include="LanguageExt.Core" Version="3.1.15" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="App.Metrics" Version="3.1.0" />
+  </ItemGroup>
+  <ItemGroup Label="Project References">
+    <ProjectReference Include="../Crypto/Crypto.csproj" />
+  </ItemGroup>
+</Project>
