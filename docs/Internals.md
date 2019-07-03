@@ -35,10 +35,11 @@ interface KeyManagementServiceStep {
   BuildStep withKeyManagementService(KeyManagementService keyManagementService);
 }
 
-// Additional optional steps can be added to the BuildStep interface
+
 interface BuildStep {
   BuildStep withMetricsEnabled();
-
+  // Additional optional steps can be added here
+  
   AppEncryptionSessionFactory build();
 }
 ```
@@ -61,8 +62,9 @@ interface AppEncryption<P, D> {
 ```
   
 For the [store/load](../README.md#store--load) usage model, we also need to implement the `Persistence` interface
+
 ```java
-// When using the load/store style, this defines the callbacks used to interact with Data Row Records.
+// When using the store/load style, this defines the callbacks used to interact with Data Row Records.
 interface Persistence<T> {
   Optional<T> load(String key);
   String store(T value);
@@ -92,7 +94,8 @@ interface Persistence<T> {
     boolean notifyExpiredSystemKeyOnRead();
 }
 ```
-An in-depth explanation of CryptoPolicy is available [here](CryptoPolicy.md) 
+
+Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md) 
 
 ### Metastore
 
@@ -105,7 +108,8 @@ An in-depth explanation of CryptoPolicy is available [here](CryptoPolicy.md)
     boolean store(String keyId, Instant created, V value);
 }
 ```
-An in-depth explanation of the Metastore is available [here](Metastore.md) 
+
+Detailed information about the Metastore can be found [here](Metastore.md) 
 
 
 ### Key Management Service
@@ -120,5 +124,6 @@ An in-depth explanation of the Metastore is available [here](Metastore.md)
                            BiFunction<CryptoKey, Instant, T> actionWithDecryptedKey);
 }
 ```
-An in-depth explanation of the Key Management Service is available [here](KeyManagementService.md) 
+
+Detailed information about the  Key Management Service can be found [here](KeyManagementService.md) 
 
