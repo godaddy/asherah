@@ -3,28 +3,28 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
-    * [Setup Metastore](#setup-metastore)
-    * [Setup Key Management Service](#setup-key-management-service)
-    * [Setup Crypto Policy](#setup-crypto-policy)
+    * [Define the Metastore](#define-the-metastore)
+    * [Define the Key Management Service](#define-the-key-management-service)
+    * [Define the Crypto Policy](#define-the-crypto-policy)
     * [(Optional) Enable Metrics](#optional-enable-metrics)
-    * [Build Session Factory](#build-session-factory)
-    * [Usage Styles](#usage-styles)
+    * [Build a Session Factory](#build-a-session-factory)
+    * [Performing Cryptographic Operations](#performing-cryptographic-operations)
   * [Deployment Notes](#deployment-notes)
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
-  * [Development Notes](#sdk-development-notes)
+  * [Development Notes](#development-notes)
 
 ## Quick Start
 
 ```java
-// Create a session factory
-try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "sample_code")
-    .withMemoryPersistence() // in-memory metastore persistence model
+// Create a session factory. The builder steps used below are for testing only.
+try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("some_product", "some_service")
+    .withMemoryPersistence()
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("secretmasterkey!") // hard-coded/static master key
+    .withStaticKeyManagementService("secretmasterkey!")
     .build()) {
 
-  // Now create an actual cryptographic session for a partition.
-  try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("user123")) {
+  // Now create a cryptographic session for a partition.
+  try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("some_partition")) {
 
     // Now encrypt some data
     String originalPayloadString = "mysupersecretpayload";
@@ -35,17 +35,21 @@ try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSess
   }
 }
 ```
-You can also review the [Reference Application](../../../samples/java/reference-app), which will evolve along with the SDK 
-and show more detailed usage.
+
+A more extensive example is the [Reference Application](../../../samples/java/reference-app), which will evolve along with the SDK.
 
 ## How to Use Asherah
 
-### Setup Metastore
-Detailed information on metastore can be found [here](../../../docs/Metastore.md). Java specific implementation examples are provided below.
+Before you can start encrypting data, you need to define Asherah's required pluggable components. Below we show how to
+build the various options for each component.
 
-#### Using a JDBC-compliant Metastore
-Asherah supports the use of a standard JDBC DataSource for connection handling so that any JDBC-compliant connection pool can be used.
-A simple example could be like:
+### Define the Metastore
+
+Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
+
+#### RDBMS Metastore
+
+Asherah can connect to a relational database by accepting a JDBC DataSource for connection handling.
 
 ```java
 // Create / retrieve a DataSource from your connection pool
@@ -62,18 +66,19 @@ MetastorePersistence dynamoDbMetastorePersistence = DynamoDbMetastorePersistence
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
-Asherah also supports an in-memory metastore persistence model but that ***should only be used for testing purposes***.
 
 ```java
 MetastorePersistence<JSONObject> metastorePersistence = new MemoryPersistenceImpl<>();
 ```
 
-### Setup Key Management Service
-Detailed information on KMS can be found [here](../../../docs/KeyManagementService.md). Java specific implementation examples are provided below.
+### Define the Key Management Service
+
+Detailed information about the KeyManagementService can be found [here](../../../docs/KeyManagementService.md).
 
 #### AWS KMS
+
 ```java
-// Create a map of region and arn that will all be used when creating a System Key
+// Create a map of region and ARN pairs that will all be used when encrypting a System Key
 Map<String, String> regionMap = ImmutableMap.of("us-east-1", "arn_of_us-east-1",
     "us-east-2", "arn_of_us-east-2",
     ...);
@@ -83,19 +88,18 @@ KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuild
 ```
 
 #### Static KMS (FOR TESTING ONLY)
-The SDK also supports a static KMS but it ***should never be used in production***.
 
 ```java
 KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
 ```
 
-### Setup Crypto Policy
-Detailed information on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). 
-The Crypto Policy's effect on key caching can be found [here](../../../docs/KeyCaching.md).
+### Define the Crypto Policy
+
+Detailed information about Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). The Crypto Policy's effect
+on key caching is explained [here](../../../docs/KeyCaching.md).
 
 
 #### Basic Expiring Crypto Policy
-Here's how you can build a BasicExpiringCryptoPolicy:
 
 ```java
 CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy
@@ -106,27 +110,29 @@ CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy
 ```
 
 #### Never Expired Crypto Policy (FOR TESTING ONLY)
-This policy supports keys that never expire nor ever removed from the cache. This ***should never be used in the production environment***.
 
 ```java
 CryptoPolicy neverExpiredCryptoPolicy = new NeverExpiredCryptoPolicy();
 ```
 
 ### (Optional) Enable Metrics
-Asherah's Java implementation uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics 
-generated by this SDK use the [global registry](https://micrometer.io/docs/concepts#_global_registry) and 
-use a prefix defined by `MetricsUtil.AEL_METRICS_PREFIX` (`ael` as of this writing). If metrics are left disabled, 
+
+Asherah's Java implementation uses [Micrometer](http://micrometer.io/) for metrics, which are disabled by default. All metrics
+generated by this SDK use the [global registry](https://micrometer.io/docs/concepts#_global_registry) and
+use a prefix defined by `MetricsUtil.AEL_METRICS_PREFIX` (`ael` as of this writing). If metrics are left disabled,
 we rely on Micrometer's [deny filtering](https://micrometer.io/docs/concepts#_deny_accept_meters).
 
 To enable metrics generation, simply use the final optional builder step `withMetricsEnabled()` when building a session factory:
 
-The following metrics are available.
+The following metrics are available:
 - *ael.drr.decrypt:* Total time spent on all operations that were needed to decrypt.
 - *ael.drr.encrypt:* Total time spent on all operations that were needed to encrypt.
 - *ael.kms.aws.decrypt.\<region\>:* Time spent on decrypting the region-specific keys.
-- *ael.kms.aws.decryptkey:* Total time spend in decrypting the key which would include the region-specific decrypt calls in case of transient failures.
+- *ael.kms.aws.decryptkey:* Total time spend in decrypting the key which would include the region-specific decrypt calls
+in case of transient failures.
 - *ael.kms.aws.encrypt.\<region\>:* Time spent on data key plain text encryption for each region.
-- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific generatedDataKey and parallel encrypt calls.
+- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific generatedDataKey
+and parallel encrypt calls.
 - *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in remaining regions.
 - *ael.metastore.jdbc.load:* Time spent to load a record from jdbc metastore.
 - *ael.metastore.jdbc.loadlatest:* Time spent to get the latest record from jdbc metastore.
@@ -135,25 +141,55 @@ The following metrics are available.
 - *ael.metastore.dynamodb.loadlatest:* Time spent to get the latest record from DynamoDB metastore.
 - *ael.metastore.dynamodb.store:* Time spent to store a record into DynamoDB metastore.
 
-### Build Session Factory
+### Build a Session Factory
 
-Putting it all together, you can now build a session factory and get a session. This session can now be used for cryptographic operations.
+A session factory can now be built using the components we defined above.
+
 ```java
-AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("productId", "sample_code")
+AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("some_product", "some_service")
   .withMetastorePersistence(metastorePersistence)
   .withCryptoPolicy(policy)
   .withKeyManagementService(keyManagementService)
   .withMetricsEnabled() // optional
   .build();
-
-AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("user123");
 ```
 
-### Usage Styles
+**NOTE:** We recommend that every service have its own session factory, preferably as a singleton instance within the service.
+This will allow you to leverage caching and minimize resource usage. Always remember to close the session factory before exiting
+the service to ensure that all resources held by the factory, including the cache, are disposed of properly.
 
-#### Custom Persistence via Load/Store methods
-Asherah supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java) instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java) implementation
-and hooks into its `load` and `store` calls.
+### Performing Cryptographic Operations
+
+Create an `AppEncryption` session to be used for cryptographic operations.
+
+```java
+AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("some_user");
+```
+
+The different usage styles are explained below.
+
+**NOTE:** Remember to close the `AppEncryption` session after all cryptographic operations to dispose of associated resources.
+
+#### Plain Encrypt/Decrypt Style
+
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is
+completely up to the calling application for storage responsibility.
+
+```java
+String originalPayloadString = "mysupersecretpayload";
+
+// encrypt the payload
+byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+
+// decrypt the payload
+String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
+```
+
+#### Custom Persistence via Store/Load methods
+
+Asherah supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java)
+instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
+implementation and hook into its `store` and `load` calls.
 
 An example `HashMap`-backed `Persistence` implementation:
 
@@ -184,27 +220,12 @@ String persistenceKey = appEncryptionJson.store(originalPayload.toJsonObject(), 
 Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersistence);
 ```
 
-#### Plain Encrypt/Decrypt Style
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
-completely up to the calling application for storage responsibility.
-
-```java
-String originalPayloadString = "mysupersecretpayload";
-
-// encrypt the payload
-byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
-
-// decrypt the payload
-String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
-```
-
-
 ## Deployment Notes
 
 ### Handling read-only Docker containers
 
-SecureMemory currently uses [JNA](link) for native calls. The default behavior of JNA is to unpack the native libraries from 
-the jar to a temp folder, which can fail in a read-only container. The native library can instead be installed as a 
+SecureMemory currently uses [JNA](link) for native calls. The default behavior of JNA is to unpack the native libraries from
+the jar to a temp folder, which can fail in a read-only container. The native library can instead be installed as a
 part of the container. The general steps are:
 
 1. Install the native JNA package
@@ -216,26 +237,27 @@ The following are distro-specific notes that we know about:
   * The native package is `java-jna-native`.
 
 * **Debian**
-  * The native package, `libjna-jni`, needs to be installed from the Debian testing repo as the current base image 
-  is not compatible with AEL's JNA version. The example Debian Dockerfile listed below adds the testing repo before 
+  * The native package, `libjna-jni`, needs to be installed from the Debian testing repo as the current base image
+  is not compatible with AEL's JNA version. The example Debian Dockerfile listed below adds the testing repo before
   installing this package and is then removed.
-  * Add the property `-Djna.boot.library.name=jnidispatch.system` in java exec as Debian package contains an extra 
+  * Add the property `-Djna.boot.library.name=jnidispatch.system` in java exec as Debian package contains an extra
   ".system" in the library name.
 
 * **Ubuntu**
   * The native package is `libjna-jni`.
-  * Add the property `-Djna.boot.library.name=jnidispatch.system` in java exec as Ubuntu package contains an extra 
+  * Add the property `-Djna.boot.library.name=jnidispatch.system` in java exec as Ubuntu package contains an extra
   ".system" in the library name.
-  * If using the `adoptopenjdk/openjdk` base image, we need to add additional directories in the default library 
+  * If using the `adoptopenjdk/openjdk` base image, we need to add additional directories in the default library
   path using `-Djna.boot.library.path=/usr/lib/x86_64-linux-gnu/jni/`
 
-Our [test app repo's](../../../tests/java/test-app/) Dockerfiles can be used for reference: 
-[Alpine](../../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../../tests/java/test-app/images/debian/Dockerfile) 
+Our [test app repo's](../../../tests/java/test-app/) Dockerfiles can be used for reference:
+[Alpine](../../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../../tests/java/test-app/images/debian/Dockerfile)
 and [Ubuntu](../../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
 
-## SDK Development Notes
+## Development Notes
 
-Some unit tests will use the AWS SDK, If you don’t already have a local [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), 
+Some unit tests will use the AWS SDK, If you don’t already have a local
+[AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
 create a *dummy* file called **`~/.aws/credentials`** with the below contents:
 
 ```
@@ -245,3 +267,4 @@ aws_secret_access_key = barfoo
 ```
 
 Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+
