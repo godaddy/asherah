@@ -46,7 +46,7 @@ with the SDK.
 Before you can start encrypting data, you need to define Asherah's required pluggable components. Below we show how to
 build the various options for each component.
 
-### Define the  Metastore
+### Define the Metastore
 
 Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
 
@@ -60,9 +60,7 @@ DbProviderFactory dbProviderFactory = ...;
 string connectionString = ...;
 
 // Build the ADO Metastore
-IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistenceImpl
-    .NewBuilder(dbProviderFactory, connectionString).Build();
-}
+IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistenceImpl.NewBuilder(dbProviderFactory, connectionString).Build();
 ```
 
 #### DynamoDB Metastore
@@ -73,7 +71,6 @@ AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
 IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
-}
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
@@ -139,7 +136,7 @@ creation an `AppEncryptionSessionFactory`.
 A session factory can now be built using the components we defined above.
 
 ```c#
-AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("productId", "systemId")
+AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("some_product", "some_service")
      .WithMetastorePersistence(metastorePersistence)
      .WithCryptoPolicy(policy)
      .WithKeyManagementService(keyManagementService)
@@ -210,8 +207,6 @@ string persistenceKey = appEncryptionJsonImpl.Store(originalPayload.ToJObject(),
 // Uses the persistenceKey to look-up the payload in the dictionaryPersistence, decrypts the payload if any and then returns it
 Option<JObject> payload = appEncryptionJsonImpl.Load(persistenceKey, dictionaryPersistence);
 ```
-
-
 
 ## Deployment Notes
 
