@@ -52,7 +52,7 @@ Detailed information about the Metastore, including any provisioning steps, can 
 
 #### RDBMS Metastore
 
-Asherah can connect to a relational database by accepting a ADO DbProviderFactory and a connection string.
+Asherah can connect to a relational database by accepting an ADO DbProviderFactory and a connection string.
 
 ```c#
 // Create / retrieve a DbProviderFactory for your target vendor, as well as the connection string
@@ -94,7 +94,7 @@ Dictionary<string, string> regionDictionary = new Dictionary<string, string>
 };
 
 // Build the Key Management Service using the region dictionary and your preferred (usually current) region
-KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").build();
+KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").Build();
 ```
 
 #### Static KMS (FOR TESTING ONLY)
