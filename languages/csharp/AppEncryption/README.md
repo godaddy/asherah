@@ -76,7 +76,7 @@ IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastoreP
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```c#
-IMetastorePersistence<JObject> metastorePersistence = metastorePersistence = new MemoryPersistenceImpl<JObject>();
+IMetastorePersistence<JObject> metastorePersistence = new MemoryPersistenceImpl<JObject>();
 ```
 
 ### Define the Key Management Service
@@ -140,9 +140,9 @@ in case of transient failures.
 - *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific generatedDataKey
 and parallel encrypt calls.
 - *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in remaining regions.
-- *ael.metastore.ado.load:* Time spent to load a record from jdbc metastore.
-- *ael.metastore.ado.loadlatest:* Time spent to get the latest record from jdbc metastore.
-- *ael.metastore.ado.store:* Time spent to store a record into jdbc metastore.
+- *ael.metastore.ado.load:* Time spent to load a record from ado metastore.
+- *ael.metastore.ado.loadlatest:* Time spent to get the latest record from ado metastore.
+- *ael.metastore.ado.store:* Time spent to store a record into ado metastore.
 - *ael.metastore.dynamodb.load:* Time spent to load a record from DynamoDB metastore.
 - *ael.metastore.dynamodb.loadlatest:* Time spent to get the latest record from DynamoDB metastore.
 - *ael.metastore.dynamodb.store:* Time spent to store a record into DynamoDB metastore.
