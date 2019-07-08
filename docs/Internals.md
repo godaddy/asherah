@@ -223,7 +223,7 @@ The following diagram summarizes the entire write path.
         # NOTE: Not currently implemented
         Queue DRK for rotation
 
-The following diagram summarizes the entire write path.
+The following diagram summarizes the entire read path.
 ![Read Flow](images/decrypt.svg)
 
 ### Future Consideration: Queued Rotation
