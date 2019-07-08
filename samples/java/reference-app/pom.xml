@@ -14,6 +14,7 @@
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <appencryption.version>1.0.0-SNAPSHOT</appencryption.version>
+    <aws.sdk.version>1.11.468</aws.sdk.version>
     <junit.jupiter.version>5.1.0</junit.jupiter.version>
     <junit.platform.version>1.1.0</junit.platform.version>
     <jacoco.version>0.8.2</jacoco.version>
@@ -108,6 +109,18 @@
       <groupId>com.godaddy.asherah</groupId>
       <artifactId>appencryption</artifactId>
       <version>${appencryption.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-kms</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-dynamodb</artifactId>
+      <version>${aws.sdk.version}</version>
     </dependency>
 
     <dependency>

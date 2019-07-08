@@ -171,8 +171,8 @@
         </repository>
     </distributionManagement>
     <scm>
-    <connection>scm:git:https://github.com/godaddy/asherah.git</connection>
-    <developerConnection>scm:git:https://github.com/godaddy/asherah.git</developerConnection>
-    <url>https://github.com/godaddy/asherah</url>
+        <connection>scm:git:https://github.com/godaddy/asherah.git</connection>
+        <developerConnection>scm:git:https://github.com/godaddy/asherah.git</developerConnection>
+        <url>https://github.com/godaddy/asherah</url>
     </scm>
 </project>

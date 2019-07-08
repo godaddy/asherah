@@ -14,6 +14,9 @@
     <PackageReference Include="TestContainers" Version="0.0.2.64" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.4" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.100.5" />
+    <PackageReference Include="App.Metrics" Version="3.1.0" />
   </ItemGroup>
   <ItemGroup Label="CLI Tool References">
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />

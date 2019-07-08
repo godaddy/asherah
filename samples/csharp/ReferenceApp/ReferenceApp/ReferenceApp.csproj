@@ -16,6 +16,9 @@
         <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="1.0.0-alpha" />
         <PackageReference Include="CommandLineParser" Version="2.4.3" />
         <PackageReference Include="MySql.Data" Version="8.0.16" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.4" />
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.100.5" />
+        <PackageReference Include="App.Metrics" Version="3.1.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
         <PackageReference Include="App.Metrics.Reporting.Console" Version="3.1.0" />
     </ItemGroup>
