@@ -1,5 +1,18 @@
 # Asherah
-Asherah SDK documentation covering background, features, and starting points for language implementations.
+
+[![Join Slack](https://img.shields.io/badge/Join%20us%20on-Slack-e01563.svg)](https://godaddy-oss-slack.herokuapp.com/)
+![License](https://img.shields.io/github/license/godaddy/asherah.svg)
+
+Asherah is an application-layer encryption SDK, currently in incubator status, that provides advanced encryption
+features and defense in depth against compromise.
+
+### NOTICE: This is an alpha product
+
+Internally, we are preparing this for production workloads and have a high degree of confidence in it, but we want to
+be clear that this should still be considered an incubator project. We have **not** yet had any formal external
+security audits of this product. We do not yet consider Asherah as validated for production use. As we receive more
+feedback, both internally and externally, APIs and features may be subject to change. Once we have cleared external
+audits and hit feature and testing milestones, we will release languages and versions into production status.
 
 Table of Contents
 =================
@@ -10,7 +23,7 @@ Table of Contents
    * [Supported Languages](#supported-languages)
        * [Feature Support](#feature-support)
    * [Current Status](#current-status)
-   * [Contributing](#contributing)
+   * [Contributing](CONTRIBUTING.md)
 
 ## Introduction
 
@@ -32,17 +45,16 @@ cache internally-generated keys in off-heap protected memory. The combination of
 key model's partitioning help minimize attack exposure in the event of compromise. Using the protected memory cache has an added
 benefit of reducing interactions with external resources to improve latency and minimize incurred costs.
 
-
 ## Getting Started
 
 The basic use of the SDK proceeds in 3 steps:
- 
+
 ### Step 1: Create a session factory
 
 A session factory is required to generate encryption/decryption sessions. For simplicity, the session factory uses the
 builder pattern, specifically a _step builder_. This ensures all required properties are set before a factory is built.
 
-To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can 
+To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can
 use the `withXXX` setter methods to configure the session factory properties.
 
 Below is an example of a session factory that uses in-memory persistence and static key management.
@@ -78,10 +90,10 @@ decrypted, and it is completely up to the calling application for storage respon
 ```java
 String originalPayloadString = "mysupersecretpayload";
 
-// encrypt the payload 
+// encrypt the payload
 byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
-// decrypt the payload 
+// decrypt the payload
 String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
 ```
 
@@ -97,25 +109,25 @@ Persistence dataPersistence = new Persistence<JSONObject>() {
 
     Map<String, JSONObject> mapPersistence = new HashMap<>();
 
-    @Override 
-    public Optional<JSONObject> load(String key) { 
-        return Optional.ofNullable(mapPersistence.get(key)); 
+    @Override
+    public Optional<JSONObject> load(String key) {
+        return Optional.ofNullable(mapPersistence.get(key));
     }
 
-    @Override 
-    public void store(String key, JSONObject value) { 
-        mapPersistence.put(key, value); 
-    } 
+    @Override
+    public void store(String key, JSONObject value) {
+        mapPersistence.put(key, value);
+    }
 };
 ```
 
 Putting it all together, an example end-to-end use of the store and load calls:
 
 ```java
-// Encrypts the payload, stores it in the dataPersistence and returns a look up key 
+// Encrypts the payload, stores it in the dataPersistence and returns a look up key
 String persistenceKey = appEncryptionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
-// Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it 
+// Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
 Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersistence);
 ```
 
@@ -125,6 +137,7 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 * [System Requirements](docs/SystemRequirements.md)
 * [Key Management Service](docs/KeyManagementService.md)
 * [Metastore Persistence](docs/Metastore.md)
+* [Key Caching](docs/KeyCaching.md)
 * [Common APIs and Algorithm Internals](docs/Internals.md)
 * [Roadmap](docs/ROADMAP.md)
 * [Testing Approach](docs/TestingApproach.md)
@@ -138,13 +151,13 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 
 ### Feature Support
 
-| Feature            | Java | .NET | Go  |
-| ------------------ | ---- | ---- | --- |
-| AWS KMS Support    | Yes  | Yes  | Yes |
-| RDBMS Metastore    | Yes  | Yes  | Yes |
-| DynamoDB Metastore | Yes  | Yes  | No  |
+| Feature            | Java | .NET |
+| ------------------ | ---- | ---- |
+| AWS KMS Support    | Yes  | Yes  |
+| RDBMS Metastore    | Yes  | Yes  |
+| DynamoDB Metastore | Yes  | Yes  |
 
 
 ## Current Status
 
-Capture high level state of various languages, etc.
+Asherah is currently in incubator status. Please refer to our [Roadmap](docs/ROADMAP.md) for additional information.
