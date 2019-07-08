@@ -1,127 +1,201 @@
-# AppEncryptionCSharp
-Application level encryption C#
+# Asherah - C#
+Application level envelope encryption SDK for C# with support for cloud-agnostic data storage and key management.
 
-Table of Contents
-=================
-
-  * [Basic Example](#basic-example)
-  * [Library Details](#library-details)
-    * [Usage Styles](#usage-styles)
-      * [Custom Persistence via Load/Store methods](#custom-persistence-via-loadstore-methods)
-      * [Plain Encrypt/Decrypt style](#plain-encryptdecrypt-style)
-    * [Metastore](#metastore)
-      * [ADO Metastore](#ado-metastore)
-      * [DynamoDB Metastore](#dynamodb-metastore)
-    * [Key Management Service](#key-management-service)
-      * [AWS KMS](#aws-kms)
-    * [Crypto Policy](#crypto-policy)
-    * [Key Caching](#key-caching)
-    * [Metrics](#metrics)
+  * [Quick Start](#quick-start)
+  * [How to Use Asherah](#how-to-use-asherah)
+    * [Define the Metastore](#define-the-metastore)
+    * [Define the Key Management Service](#define-the-key-management-service)
+    * [Define the Crypto Policy](#define-the-crypto-policy)
+    * [(Optional) Enable Metrics](#optional-enable-metrics)
+    * [Build a Session Factory](#build-a-session-factory)
+    * [Performing Cryptographic Operations](#performing-cryptographic-operations)
   * [Deployment Notes](#deployment-notes)
-  * [Library Development Notes](#library-development-notes)
-    * [Running Tests Locally via Docker Image](#running-tests-locally-via-docker-image)
+    * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
+  * [Development Notes](#development-notes)
 
-## Basic Example
-
-The App Encryption library generally uses the **builder pattern** to define objects.
+## Quick Start
 
 ```c#
-// First build a basic Crypto Policy that expires
-// keys after 90 days and has a cache TTL of 60 minutes
-CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
-    .NewBuilder()
-    .WithKeyExpirationDays(90)
-    .WithRevokeCheckMinutes(60)
-    .Build();
-
-// Create a session factory for this app. Normally this would be done upon app startup and the
-// same factory would be used anytime a new session is needed for a partition (e.g., shopper).
-// We've split it out into multiple using blocks to underscore this point.
+// Create a session factory. The builder steps used below are for testing only.
 using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
-    .NewBuilder("productId", "systemId")
-    .WithMemoryPersistence() // in-memory metastore persistence only
-    .WithCryptoPolicy(cryptoPolicy)
-    .WithStaticKeyManagementService("secretmasterkey!") // hard-coded/static master key
+    .NewBuilder("some_product", "some_service")
+    .WithMemoryPersistence()
+    .WithNeverExpiredCryptoPolicy()
+    .WithStaticKeyManagementService("secretmasterkey!")
     .Build())
 {
-    // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
-    // for a transaction and is disposed automatically after use due to the IDisposable implementation.
+    // Now create a cryptographic session for a partition.
     using (AppEncryption<byte[], byte[]> appEncryptionBytes =
-        appEncryptionSessionFactory.GetAppEncryptionBytes("shopper123"))
+        appEncryptionSessionFactory.GetAppEncryptionBytes("some_partition"))
     {
-        // Now encrypt some data
+        // Encrypt some data
         const string originalPayloadString = "mysupersecretpayload";
-
         byte[] dataRowRecordBytes = appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
 
-        // Consider this us "persisting" the DRR
-        string dataRowString = Convert.ToBase64String(dataRowRecordBytes);
-        logger.LogInformation("dataRowRecord as string = {dataRow}", dataRowString);
-
-        byte[] newDataRowRecordBytes = Convert.FromBase64String(dataRowString);
-
-        // Ensure we can decrypt the data, too
-        string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(newDataRowRecordBytes));
-
-        logger.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
-        logger.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));
+        // Decrypt the data
+        string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(dataRowRecordBytes));
     }
 }
 ```
-You can also review the [Reference Application](../../../samples/csharp/ReferenceApp/), which will evolve along with the library and show more detailed usage.
 
-## Library Details
+A more extensive example is the [Reference Application](../../../samples/csharp/ReferenceApp/), which will evolve along 
+with the SDK.
 
-### Usage Styles
+## How to Use Asherah
 
-#### Custom Persistence via Load/Store methods
-The App Encryption library supports a key-value/document storage model. An [AppEncryption](AppEncryption/AppEncryption.cs) instance can accept a [Persistence](AppEncryption/Persistence/Persistence.cs) implementation
-and hooks into its `Load` and `Store` calls. This can be seen in the abstract class definition:
+Before you can start encrypting data, you need to define Asherah's required pluggable components. Below we show how to
+build the various options for each component.
 
- ```c#
-public abstract class AppEncryption<TP, TD> : IDisposable
-{
+### Define the Metastore
 
-    /// <summary>
-    /// Uses a persistence key to load a Data Row Record from the provided data persistence store, if any,
-    /// and returns the decrypted payload.
-    /// </summary>
-    /// <param name="persistenceKey">Key used to retrieve the Data Row Record</param>
-    /// <param name="dataPersistence">The persistence store from which to retrieve the DRR</param>
-    /// <returns>The decrypted payload, if found in persistence</returns>
-    public virtual Option<TP> Load(string persistenceKey, Persistence<TD> dataPersistence)
-    {
-        return dataPersistence.Load(persistenceKey).Map(Decrypt);
-    }
+Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
 
-    /// <summary>
-    /// Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store, and
-    /// returns its associated persistence key for future lookups.
-    /// </summary>
-    /// <param name="payload">Payload to be encrypted</param>
-    /// <param name="dataPersistence">The persistence store where the encrypted DRR should be stored</param>
-    /// <returns>The persistence key associated with the stored Data Row Record</returns>
-    public virtual string Store(TP payload, Persistence<TD> dataPersistence)
-    {
-        TD dataRowRecord = Encrypt(payload);
-        return dataPersistence.Store(dataRowRecord);
-    }
+#### RDBMS Metastore
 
-    /// <summary>
-    /// Encrypts a payload, stores the resulting Data Row Record into the provided data persistence store with
-    /// given key
-    /// </summary>
-    /// <param name="key">Key against which the encrypted DRR will be saved</param>
-    /// <param name="payload">Payload to be encrypted</param>
-    /// <param name="dataPersistence">The persistence store where the encrypted DRR should be stored</param>
-    public virtual void Store(string key, TP payload, Persistence<TD> dataPersistence)
-    {
-        TD dataRowRecord = Encrypt(payload);
-        dataPersistence.Store(key, dataRowRecord);
-    }
+Asherah can connect to a relational database by accepting an ADO DbProviderFactory and a connection string.
+
+```c#
+// Create / retrieve a DbProviderFactory for your target vendor, as well as the connection string
+DbProviderFactory dbProviderFactory = ...;
+string connectionString = ...;
+
+// Build the ADO Metastore
+IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistenceImpl.NewBuilder(dbProviderFactory, connectionString).Build();
 ```
 
-Example `Dictionary`-backed `Persistence` implementation:
+#### DynamoDB Metastore
+
+```c#
+// Setup region via global default or via other AWS .NET SDK mechanisms
+AWSConfigs.AWSRegion = "us-west-2";
+
+// Build the DynamoDB Metastore.
+IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+```
+
+#### In-memory Metastore (FOR TESTING ONLY)
+
+```c#
+IMetastorePersistence<JObject> metastorePersistence = new MemoryPersistenceImpl<JObject>();
+```
+
+### Define the Key Management Service
+Detailed information about the Key Management Service can be found [here](../../../docs/KeyManagementService.md).
+
+#### AWS KMS
+
+```c#
+// Create a dictionary of region and ARN pairs that will all be used when creating a System Key
+Dictionary<string, string> regionDictionary = new Dictionary<string, string>
+{
+    { "us-east-1", "arn_of_us-east-1" },
+    { "us-east-2", "arn_of_us-east-2" },
+    ...
+};
+
+// Build the Key Management Service using the region dictionary and your preferred (usually current) region
+KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").Build();
+```
+
+#### Static KMS (FOR TESTING ONLY)
+
+```c#
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+```
+
+### Define the Crypto Policy
+Detailed information on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). The Crypto Policy's effect 
+on key caching is explained [here](../../../docs/KeyCaching.md).
+
+#### Basic Expiring Crypto Policy
+
+```c#
+CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
+    .WithKeyExpirationDays(90)
+    .WithRevokeCheckMinutes(60)
+    .Build();
+```
+
+#### Never Expired Crypto Policy (FOR TESTING ONLY)
+
+```c#
+CryptoPolicy neverExpiredCryptoPolicy = new NeverExpiredCryptoPolicy();
+```
+
+### (Optional) Enable Metrics
+Asherah's C# implementation uses [App.Metrics](https://www.app-metrics.io/) for metrics, which are disabled by default.
+If metrics are left disabled, we simply create and use an `IMetrics`instance whose 
+[Enabled flag](https://www.app-metrics.io/getting-started/fundamentals/configuration/) is disabled.
+
+To enable metrics generation, simply pass in an existing `IMetrics` instance to the final optional builder step when 
+creation an `AppEncryptionSessionFactory`.
+
+The following metrics are available:
+- *ael.drr.decrypt:* Total time spent on all operations that were needed to decrypt.
+- *ael.drr.encrypt:* Total time spent on all operations that were needed to encrypt.
+- *ael.kms.aws.decrypt.\<region\>:* Time spent on decrypting the region-specific keys.
+- *ael.kms.aws.decryptkey:* Total time spend in decrypting the key which would include the region-specific decrypt calls
+in case of transient failures.
+- *ael.kms.aws.encrypt.\<region\>:* Time spent on data key plain text encryption for each region.
+- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific generatedDataKey
+and parallel encrypt calls.
+- *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in remaining regions.
+- *ael.metastore.ado.load:* Time spent to load a record from ado metastore.
+- *ael.metastore.ado.loadlatest:* Time spent to get the latest record from ado metastore.
+- *ael.metastore.ado.store:* Time spent to store a record into ado metastore.
+- *ael.metastore.dynamodb.load:* Time spent to load a record from DynamoDB metastore.
+- *ael.metastore.dynamodb.loadlatest:* Time spent to get the latest record from DynamoDB metastore.
+- *ael.metastore.dynamodb.store:* Time spent to store a record into DynamoDB metastore.
+
+### Build a Session Factory
+
+A session factory can now be built using the components we defined above.
+
+```c#
+AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("some_product", "some_service")
+     .WithMetastorePersistence(metastorePersistence)
+     .WithCryptoPolicy(policy)
+     .WithKeyManagementService(keyManagementService)
+     .WithMetrics(metrics) // Optional
+     .Build();
+```
+
+**NOTE:** We recommend that every service have its own session factory, preferably as a singleton instance within the service.
+This will allow you to leverage caching and minimize resource usage. Always remember to close the session factory before exiting
+the service to ensure that all resources held by the factory, including the cache, are disposed of properly.
+
+### Performing Cryptographic Operations
+
+Create an `AppEncryption` session to be used for cryptographic operations.
+
+```c#
+AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.GetAppEncryptionBytes("some_user");
+```
+
+The different usage styles are explained below.
+
+**NOTE:** Remember to close the `AppEncryption` session after all cryptographic operations to dispose of associated resources.
+
+#### Plain Encrypt/Decrypt Style
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
+completely up to the calling application for storage responsibility.
+
+```c#
+string originalPayloadString = "mysupersecretpayload";
+
+// encrypt the payload
+byte[] dataRowRecordBytes = appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+
+// decrypt the payload
+string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(newDataRowRecordBytes));
+```
+
+#### Custom Persistence via Store/Load methods
+Asherah supports a key-value/document storage model. An [AppEncryption](AppEncryption/AppEncryption.cs) instance can 
+accept a [Persistence](AppEncryption/Persistence/Persistence.cs) implementation and hook into its `Load` and `Store` 
+calls.
+
+An example `Dictionary`-backed `Persistence` implementation:
 
 ```c#
 public class DictionaryPersistence : Persistence<JObject>
@@ -140,7 +214,7 @@ public class DictionaryPersistence : Persistence<JObject>
 }
 ```
 
-Putting it all together, an example end-to-end use of the store and load calls:
+An example end-to-end use of the store and load calls:
 
 ```c#
 // Encrypts the payload, stores it in the dictionaryPersistence and returns a look up key
@@ -150,137 +224,33 @@ string persistenceKey = appEncryptionJsonImpl.Store(originalPayload.ToJObject(),
 Option<JObject> payload = appEncryptionJsonImpl.Load(persistenceKey, dictionaryPersistence);
 ```
 
-#### Plain Encrypt/Decrypt Style
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is completely up to the calling application for storage responsibility.
-
-```c#
-string originalPayloadString = "mysupersecretpayload";
-
-// encrypt the payload
-byte[] dataRowRecordBytes = appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
-
-// decrypt the payload
-string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(newDataRowRecordBytes));
-```
-
-
-### Metastore
-Please refer to the [Java lib's notes](../../java/app-encryption#metastore) until documentation cleanup/refactor is complete. It contains deployment info, data size estimates, etc. Until then, we will simply provide code usage examples here.
-
-#### ADO Metastore
-
-```c#
-// Create / retrieve a DbProviderFactory for your target vendor, as well as the connection string
-DbProviderFactory dbProviderFactory = ...;
-string connectionString = ...;
-
-// Build the ADO Metastore
-IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistenceImpl
-    .NewBuilder(dbProviderFactory, connectionString).Build();
-
-// Use the Metastore for the session factory
-using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("productId", "systemId")
-     .WithMetastorePersistence(adoMetastorePersistence)
-     .WithCryptoPolicy(policy)
-     .WithKeyManagementService(keyManagementService)
-     .Build()) {
-
-    // ...
-}
-```
-
-#### DynamoDB Metastore
-
-```c#
-// Setup region via global default or via other AWS .NET SDK mechanisms
-AWSConfigs.AWSRegion = "us-west-2";
-
-// Build the DynamoDB Metastore.
-IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
-
-// Use the Metastore for the session factory
-using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("productId", "systemId")
-     .WithMetastorePersistence(dynamoDbMetastorePersistence)
-     .WithCryptoPolicy(policy)
-     .WithKeyManagementService(keyManagementService)
-     .Build()) {
-
-    // ...
-}
-```
-
-### Key Management Service
-Please refer to the [Java lib's notes](../../java/app-encryption#key-management-service) until documentation cleanup/refactor is complete. Until then, we will simply provide code usage examples here.
-
-#### AWS KMS
-```c#
-// Create a dictionary of region and arn that will all be used when creating a System Key
-Dictionary<string, string> regionDictionary = new Dictionary<string, string>
-{
-    { "us-east-1", "arn_of_us-east-1" },
-    { "us-east-2", "arn_of_us-east-2" },
-    ...
-};
-
-// Build the Key Management Service using the region dictionary and your preferred (usually current) region
-AWSKeyManagementServiceImpl keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").build();
-
-// Provide the above keyManagementService to the session factory builder
-using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("productId", "systemId")
-     .WithMetastorePersistence(metastorePersistence)
-     .WithCryptoPolicy(policy)
-     .WithKeyManagementService(keyManagementService)
-     .Build()) {
-
-    // ...
-}
-```
-
-### Crypto Policy
-Please refer to the [Java lib's notes](../../java/app-encryption#crypto-policy) until documentation cleanup/refactor is complete. The only difference code-wise is the convention of using PascalCase instead of camelCase for method naming.
-
-### Key Caching
-Please refer to the [Java lib's notes](../../java/app-encryption#key-caching) until documentation cleanup/refactor is complete. The only difference code-wise is the directory path to the C# classes, but semantics should be the same.
-
-### Metrics
-The library uses [App.Metrics](https://www.app-metrics.io/) for metrics, which are disabled by default. If metrics are left disabled, we simply create and use an `IMetrics`instance whose [Enabled flag](https://www.app-metrics.io/getting-started/fundamentals/configuration/) is disabled.
-
-To enable metrics generation, simply pass in an existing `IMetrics` instance to the final optional builder step when creation an `AppEncryptionSessionFactory`:
-
-```c#
-IMetrics metrics = ...;
-
-using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("productId", "systemId")
-     .WithMetastorePersistence(metastorePersistence)
-     .WithCryptoPolicy(policy)
-     .WithKeyManagementService(keyManagementService)
-     .WithMetrics(metrics)
-     .Build()) {
-
-    // ...
-}
-```
-To report metrics to AmazonCloudWatch please refer to AppMetricsCloudWatchReporter (add link when we open source it).
-
 ## Deployment Notes
-Please refer to the [Java lib's notes](../../java/app-encryption#deployment-notes) until documentation cleanup/refactor is complete.
 
-## Library Development Notes
+### Handling read-only Docker containers
 
-### Running Tests Locally via Docker Image
-Below is an example of how to run tests locally using a Docker image. This one is using the build image used for Jenkins build/deployment, but could be replaced with other images for different targeted platforms. Note this is run from your project directory.
+Dotnet enables debugging and profiling by default causing filesystem writes. Disabling them ensures that the 
+SDK can be used in a read-only container.
 
-```console
-[user@machine AppEncryptionCSharp]$ docker build images/build/
-...
-Successfully built <generated_image_id>
-[user@machine AppEncryptionCSharp]$ docker run -it --rm -v $HOME/.nuget:/home/jenkins/.nuget -v "$PWD":/usr/app/src -w /usr/app/src --ulimit memlock=-1:-1 --ulimit core=-1:-1 <generated_image_id> dotnet clean -c Release && dotnet restore && dotnet build -c Release --no-restore && dotnet test -c Release --no-build /p:CollectCoverage=true /p:Exclude=\"[xunit*]*,[*.IntegrationTests]*,[*.Tests]*\" /p:CoverletOutputFormat=cobertura /p:ExcludeByFile="../**/MacOS/**/*.cs" && dotnet pack -c Release --no-restore
-...
-```
-*Note*: The above build is known to work on macOS due to how the bind mounts map UIDs. On Linux systems you will likely need to add the optional build arguments:
+To do so, simply set the environment variable `COMPlus_EnableDiagnostics` to 0
 
-``` console
-[user@machine AppEncryptionCSharp]$ docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) images/build
+```dockerfile
+ENV COMPlus_EnableDiagnostics=0
 ```
 
-This will create the container's user with your UID so that it has full access to the .nuget directory.
+Our [sample application's](../../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for 
+reference.
+
+## Development Notes
+
+Some unit tests will use the AWS SDK, If you don’t already have a local
+[AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
+create a *dummy* file called **`~/.aws/credentials`** with the below contents:
+
+```
+[default]
+aws_access_key_id = foobar
+aws_secret_access_key = barfoo
+```
+
+Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+

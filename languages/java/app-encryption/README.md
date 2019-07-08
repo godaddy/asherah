@@ -73,7 +73,7 @@ MetastorePersistence<JSONObject> metastorePersistence = new MemoryPersistenceImp
 
 ### Define the Key Management Service
 
-Detailed information about the KeyManagementService can be found [here](../../../docs/KeyManagementService.md).
+Detailed information about the Key Management Service can be found [here](../../../docs/KeyManagementService.md).
 
 #### AWS KMS
 
@@ -102,8 +102,7 @@ on key caching is explained [here](../../../docs/KeyCaching.md).
 #### Basic Expiring Crypto Policy
 
 ```java
-CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy
-    .newBuilder()
+CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
     .withKeyExpirationDays(90)
     .withRevokeCheckMinutes(60)
     .build();
