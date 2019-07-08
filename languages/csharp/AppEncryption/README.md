@@ -50,9 +50,9 @@ build the various options for each component.
 
 Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
 
-#### ADO Metastore
+#### RDBMS Metastore
 
-TODO : Do we need to add something here, like we did for Java?
+Asherah can connect to a relational database by accepting a ADO DbProviderFactory and a connection string.
 
 ```c#
 // Create / retrieve a DbProviderFactory for your target vendor, as well as the connection string
@@ -76,7 +76,7 @@ IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastoreP
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```c#
-MetastorePersistence<JObject> metastorePersistence = new MemoryPersistenceImpl<>();
+IMetastorePersistence<JObject> metastorePersistence = metastorePersistence = new MemoryPersistenceImpl<JObject>();
 ```
 
 ### Define the Key Management Service
@@ -85,7 +85,7 @@ Detailed information about the Key Management Service can be found [here](../../
 #### AWS KMS
 
 ```c#
-// Create a dictionary of region and arn that will all be used when creating a System Key
+// Create a dictionary of region and ARN pairs that will all be used when creating a System Key
 Dictionary<string, string> regionDictionary = new Dictionary<string, string>
 {
     { "us-east-1", "arn_of_us-east-1" },
@@ -94,7 +94,7 @@ Dictionary<string, string> regionDictionary = new Dictionary<string, string>
 };
 
 // Build the Key Management Service using the region dictionary and your preferred (usually current) region
-AWSKeyManagementServiceImpl keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").build();
+KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").build();
 ```
 
 #### Static KMS (FOR TESTING ONLY)
@@ -110,8 +110,7 @@ on key caching is explained [here](../../../docs/KeyCaching.md).
 #### Basic Expiring Crypto Policy
 
 ```c#
-CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
-    .NewBuilder()
+CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
     .WithKeyExpirationDays(90)
     .WithRevokeCheckMinutes(60)
     .Build();
@@ -124,12 +123,29 @@ CryptoPolicy neverExpiredCryptoPolicy = new NeverExpiredCryptoPolicy();
 ```
 
 ### (Optional) Enable Metrics
-The library uses [App.Metrics](https://www.app-metrics.io/) for metrics, which are disabled by default.
+Asherah's C# implementation uses [App.Metrics](https://www.app-metrics.io/) for metrics, which are disabled by default.
 If metrics are left disabled, we simply create and use an `IMetrics`instance whose 
 [Enabled flag](https://www.app-metrics.io/getting-started/fundamentals/configuration/) is disabled.
 
 To enable metrics generation, simply pass in an existing `IMetrics` instance to the final optional builder step when 
 creation an `AppEncryptionSessionFactory`.
+
+The following metrics are available:
+- *ael.drr.decrypt:* Total time spent on all operations that were needed to decrypt.
+- *ael.drr.encrypt:* Total time spent on all operations that were needed to encrypt.
+- *ael.kms.aws.decrypt.\<region\>:* Time spent on decrypting the region-specific keys.
+- *ael.kms.aws.decryptkey:* Total time spend in decrypting the key which would include the region-specific decrypt calls
+in case of transient failures.
+- *ael.kms.aws.encrypt.\<region\>:* Time spent on data key plain text encryption for each region.
+- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific generatedDataKey
+and parallel encrypt calls.
+- *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in remaining regions.
+- *ael.metastore.ado.load:* Time spent to load a record from jdbc metastore.
+- *ael.metastore.ado.loadlatest:* Time spent to get the latest record from jdbc metastore.
+- *ael.metastore.ado.store:* Time spent to store a record into jdbc metastore.
+- *ael.metastore.dynamodb.load:* Time spent to load a record from DynamoDB metastore.
+- *ael.metastore.dynamodb.loadlatest:* Time spent to get the latest record from DynamoDB metastore.
+- *ael.metastore.dynamodb.store:* Time spent to store a record into DynamoDB metastore.
 
 ### Build a Session Factory
 
@@ -212,8 +228,8 @@ Option<JObject> payload = appEncryptionJsonImpl.Load(persistenceKey, dictionaryP
 
 ### Handling read-only Docker containers
 
-Dotnet enables debugging and profiling by default causing some system level writes. Disabling them ensures that the 
-SDK can be used in a read-only environment.
+Dotnet enables debugging and profiling by default causing filesystem writes. Disabling them ensures that the 
+SDK can be used in a read-only container.
 
 To do so, simply set the environment variable `COMPlus_EnableDiagnostics` to 0
 
@@ -222,7 +238,7 @@ ENV COMPlus_EnableDiagnostics=0
 ```
 
 Our [sample application's](../../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for 
-reference:
+reference.
 
 ## Development Notes
 
