@@ -171,8 +171,6 @@ ProtectedMemorySecret(byte[] secret) {
         THROW ERROR madvise failed
     }
 
-    // TODO Need to finalize error handling in remaining calls. Inconsistency in java vs C# currently
-
     // write the secret
     pointer.write(secret)
 
