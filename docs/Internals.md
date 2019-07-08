@@ -186,6 +186,8 @@ Depending on policy, we will either continue to write if a key in the tree has e
     Use IK to encrypt DRK
     Create and write DRR to data persistence
 
+![Write Flow](images/encrypt.svg)
+
 ### Read
 
     Load DRR from data persistence
@@ -220,6 +222,7 @@ Depending on policy, we will either continue to write if a key in the tree has e
         # NOTE: Not currently implemented
         Queue DRK for rotation
 
+![Read Flow](images/decrypt.svg)
 
 ### Future Consideration: Queued Rotation
 There has been a shift from the original queue-based key rotation towards generating new keys inline by default (for the write path).
