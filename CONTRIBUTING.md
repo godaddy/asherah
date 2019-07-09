@@ -11,8 +11,8 @@ Guidelines document.
 
 **Please Note:** GitHub is for bug reports and contributions primarily - if you
 have a support question head over to [GoDaddy's Open Source Software Slack
-workspace][slack]. You can request an invite [here](https://godaddy-oss-
-slack.herokuapp.com).
+workspace][slack]. You can request an invite
+[here](https://godaddy-oss-slack.herokuapp.com).
 
 ## Answering Questions
 
