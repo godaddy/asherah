@@ -1,6 +1,6 @@
 # SDK Internals
 
-## Algorithm Internals
+## Envelope Encryption Algorithm
 
 ### Encrypt 
 Depending on policy, we will either continue to encrypt if a key in the tree has expired or rotate/generate keys inline.
@@ -16,7 +16,8 @@ Depending on policy, we will either continue to encrypt if a key in the tree has
                         Fall through to new IK creation
                     If allowed by policy, add SK to protected memory cache
                 If SK is expired
-                    # NOTE: Possible inconsistency: when policy doesn't use inline rotation, consider proceeding without forced creation (same as IK handling)
+                    # NOTE: Possible inconsistency: when policy doesn't use inline rotation, consider proceeding without
+                            forced creation (same as IK handling)
                     Fall through to new IK creation
                 Else
                     Use SK to decrypt IK
@@ -128,7 +129,7 @@ Below are the proposed queue rotation flows.
             Queue SK for rotation
             Queue IK for rotation
         Else 
-            Create new IK from crypto library (i.e. openssl)
+            Create new IK from crypto library (e.g. openssl)
             Use SK to encrypt IK
             Create and write new IK EKR in metadata persistence 
     Delete message
@@ -150,7 +151,7 @@ Below are the proposed queue rotation flows.
     If IK is expired
         Queue IK for rotation
         Exit  #We'll be back once IK has rotated
-    Create new DRK from crypto library (i.e. openssl)
+    Create new DRK from crypto library (e.g. openssl)
     Load DRR from data persistence
     Use DRK to encrypt data
     Use IK to encrypt DRK
@@ -166,9 +167,9 @@ Below are the proposed queue rotation flows.
 ### Current Implementation
 
 Secure Memory is implemented using well known native calls that ensure various protections of a secret value in memory.
-Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the calls
-will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this page with
-corresponding calls appropriately.
+Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the 
+calls will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this 
+page with corresponding calls appropriately.
 
 #### Create a Secret
 
