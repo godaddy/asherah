@@ -1,5 +1,23 @@
 # Common APIs and Algorithm Internals
 
+## Directory Structure
+
+Language-specific best practices will apply to the full package name, but we'll use the Java reference implementation
+for an example of how the code should be structured:
+
+* root (`com.godaddy.asherah.appencryption`)
+    * Interfaces and types a user interacts with during primary cryptographic operations.
+* envelope (`com.godaddy.asherah.appencryption.envelope`)
+    * Core envelope encryption algorithm and models used
+* keymanagement (`com.godaddy.asherah.appencryption.keymanagement`)
+    * Interfaces and types related to the external Key Management Service (KMS/HSM)
+* persistence (`com.godaddy.asherah.appencryption.persistence`)
+    * Interfaces and types related to the Metastore and store/load model's persistence functionality
+* crypto (`com.godaddy.asherah.crypto`)
+    * Interfaces and types for Crypto Policy and any cryptographic functionality for internal data key generation
+* crypto.keys (`com.godaddy.asherah.crypto.keys`)
+    * Interfaces and types for internally-generated data key management and caching
+
 ## Common APIs
 
 Below are the primary public-facing interfaces of Asherah.
