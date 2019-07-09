@@ -138,7 +138,7 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 * [Key Management Service](docs/KeyManagementService.md)
 * [Metastore Persistence](docs/Metastore.md)
 * [Key Caching](docs/KeyCaching.md)
-* [Directory Structure and Common APIs](docs/DirectoryStructureAndCommonAPIs.md)
+* [Code Structure](docs/CodeStructure.md)
 * [SDK Internals](docs/Internals.md)
 * [Roadmap](docs/ROADMAP.md)
 * [Testing Approach](docs/TestingApproach.md)

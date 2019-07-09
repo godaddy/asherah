@@ -1,4 +1,4 @@
-# Directory Structure and Common APIs
+# Code Structure
 
 ## Directory Structure
 
