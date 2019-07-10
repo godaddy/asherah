@@ -254,6 +254,14 @@ withSecretBytes(function<byte[], type> functionWithSecret) {
 }
 ```
 
+##### Concurrent Access
+
+The `withSecretBytes` pseudocode above is not thread-safe code as written. A thread could disable the memory access as
+another thread attempts to read the secret, which would result in a SIGSEGV signal to the process. Some form of thread
+safety is needed to guard against this. In the Java reference implementation (as of this writing) this is implemented
+using a lock and access counter to determine when we need to make the memory readable (first thread accessing) or
+unreadable (last thread accessing).
+
 #### Delete a Secret
 
 ```java
@@ -286,3 +294,23 @@ library such as OpenSSL, BoringSSL, etc. The intent of this effort would be to s
 memory protections, refactor existing crypto calls to use the selected library, and provide more cross-language
 implementation consistency.
 
+## Key Cache
+
+### TTL and Expired/Revoked Keys
+
+The [Crypto Policy](CryptoPolicy.md)'s `revokeCheckPeriodMillis` drives the key cache implementation's TTL behavior.
+The TTL is primarily intended to signal refreshing the cache so the SDK can check if keys have been flagged out-of-band
+as revoked (e.g. due to a suspected compromise). Note that in the Java reference implementation, we are not currently
+removing expired or revoked keys from the cache. This approach was chosen to minimize the added latency and cost
+associated with interacting with a KMS/HSM provider (recall TTL is more likely to come into play with System Keys due
+to their [intended lifecycle](KeyCaching.md#cache-lifecycles)).
+
+### Duplicate Key Handling
+
+Since the objects being cached are resources which need to be closed, there is additional complexity when dealing with
+duplicates in the cache. The approach taken in the Java reference implementation is to always return the key intended
+to be closed to the caller. For the case of a new key being added to the cache, we return a new "shared key"
+representation of the key whose close operation is a no-op (since the key passed in to the cache put/store call will
+now be used in the cache by other threads). For the case of a duplicate key being added to the cache (e.g. a race
+condition's second thread), we return the key passed in to the cache put/store call so it can be safely closed without
+affecting the existing underlying key in the cache and ensuring we don't leak the memory space of the key.
