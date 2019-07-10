@@ -187,7 +187,7 @@ Depending on policy, we will either continue to write if a key in the tree has e
     Create and write DRR to data persistence
 
 The following diagram summarizes the entire write path.
-![Write Flow](images/encrypt.svg)
+![Write Flow](https://raw.githubusercontent.com/godaddy/asherah/flowcharts/docs/images/encrypt.svg?sanitize=true)
 
 ### Read
 
@@ -224,7 +224,7 @@ The following diagram summarizes the entire write path.
         Queue DRK for rotation
 
 The following diagram summarizes the entire read path.
-![Read Flow](images/decrypt.svg)
+![Read Flow](https://raw.githubusercontent.com/godaddy/asherah/flowcharts/docs/images/decrypt.svg?sanitize=true)
 
 ### Future Consideration: Queued Rotation
 There has been a shift from the original queue-based key rotation towards generating new keys inline by default (for the write path).
