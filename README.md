@@ -1,7 +1,7 @@
 # Asherah
 
 [![Join Slack](https://img.shields.io/badge/Join%20us%20on-Slack-e01563.svg)](https://godaddy-oss-slack.herokuapp.com/)
-![License](https://img.shields.io/github/license/godaddy/asherah.svg)
+[![License](https://img.shields.io/github/license/godaddy/asherah.svg)](https://github.com/godaddy/asherah/blob/master/LICENSE)
 
 Asherah is an application-layer encryption SDK, currently in incubator status, that provides advanced encryption
 features and defense in depth against compromise.
