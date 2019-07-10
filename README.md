@@ -107,17 +107,17 @@ Example `HashMap`-backed `Persistence` implementation:
 ```java
 Persistence dataPersistence = new Persistence<JSONObject>() {
 
-    Map<String, JSONObject> mapPersistence = new HashMap<>();
+  Map<String, JSONObject> mapPersistence = new HashMap<>();
 
-    @Override
-    public Optional<JSONObject> load(String key) {
-        return Optional.ofNullable(mapPersistence.get(key));
-    }
+  @Override
+  public Optional<JSONObject> load(String key) {
+    return Optional.ofNullable(mapPersistence.get(key));
+  }
 
-    @Override
-    public void store(String key, JSONObject value) {
-        mapPersistence.put(key, value);
-    }
+  @Override
+  public void store(String key, JSONObject value) {
+    mapPersistence.put(key, value);
+  }
 };
 ```
 
@@ -138,7 +138,8 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 * [Key Management Service](docs/KeyManagementService.md)
 * [Metastore Persistence](docs/Metastore.md)
 * [Key Caching](docs/KeyCaching.md)
-* [Common APIs and Algorithm Internals](docs/Internals.md)
+* [Code Structure](docs/CodeStructure.md)
+* [SDK Internals](docs/Internals.md)
 * [Roadmap](docs/ROADMAP.md)
 * [Testing Approach](docs/TestingApproach.md)
 * [FAQ](docs/FAQ.md)

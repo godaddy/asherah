@@ -12,19 +12,15 @@ The logger factory is be setup by calling the provided `SetLoggerFactory` method
 as a parameter. This can typically be done during service startup.
 
 ```c#
-    ILoggerFactory loggerFactory = new LoggerFactory();
-    loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level >= LogLevel.Information, true));
-    LogManager.SetLoggerFactory(loggerFactory);
+ILoggerFactory loggerFactory = new LoggerFactory();
+loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level >= LogLevel.Information, true));
+LogManager.SetLoggerFactory(loggerFactory);
 ```
 
 ### Use the Logger to log relevant details
 Use the `CreateLogger` method to get an ILogger instance. This instance is used for logging.
 
 ```C#
-    ILogger logger = LogManager.CreateLogger<_ClassName_>();
-    logger.LogError("Logger Ready");
+ILogger logger = LogManager.CreateLogger<_ClassName_>();
+logger.LogError("Logger Ready");
 ```
-
-
-
-

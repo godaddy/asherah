@@ -1,159 +1,186 @@
-# Common APIs and Algorithm Internals
+# SDK Internals
 
-## Directory Structure
+## Envelope Encryption Algorithm
 
-Language-specific best practices will apply to the full package name, but we'll use the Java reference implementation
-for an example of how the code should be structured:
+### Encrypt 
 
-* root (`com.godaddy.asherah.appencryption`)
-    * Interfaces and types a user interacts with during primary cryptographic operations.
-* envelope (`com.godaddy.asherah.appencryption.envelope`)
-    * Core envelope encryption algorithm and models used
-* keymanagement (`com.godaddy.asherah.appencryption.keymanagement`)
-    * Interfaces and types related to the external Key Management Service (KMS/HSM)
-* persistence (`com.godaddy.asherah.appencryption.persistence`)
-    * Interfaces and types related to the Metastore and store/load model's persistence functionality
-* crypto (`com.godaddy.asherah.crypto`)
-    * Interfaces and types for Crypto Policy and any cryptographic functionality for internal data key generation
-* crypto.keys (`com.godaddy.asherah.crypto.keys`)
-    * Interfaces and types for internally-generated data key management and caching
+Depending on policy, we will either continue to encrypt if a key in the tree has expired or rotate/generate keys inline.
 
-## Common APIs
-
-Below are the primary public-facing interfaces of Asherah.
-
-**NOTE:** The interfaces below are from the Java implementation of the SDK, which also serves as the reference 
-implementation
-
-### Primary SDK Interfaces
-
-The below interfaces implement the session factory using the step builder pattern.
-
-```java
-class AppEncryptionSessionFactory {
-  static MetastoreStep newBuilder(String productId, String systemId);
-  
-  AppEncryption<JSONObject, byte[]> getAppEncryptionJson(String partitionId);
-  AppEncryption<byte[], byte[]> getAppEncryptionBytes(String partitionId);
-  AppEncryption<JSONObject, JSONObject> getAppEncryptionJsonAsJson(String partitionId);
-  AppEncryption<byte[], JSONObject> getAppEncryptionBytesAsJson(String partitionId);
-  
-  void close();
-}
- 
-interface MetastoreStep {
-  CryptoPolicyStep withMetastorePersistence(MetastorePersistence<JSONObject> persistence);
-}
-
-interface CryptoPolicyStep {
-  KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
-}
-
-interface KeyManagementServiceStep {
-  BuildStep withKeyManagementService(KeyManagementService keyManagementService);
-}
-
-
-interface BuildStep {
-  BuildStep withMetricsEnabled();
-  // Additional optional steps can be added here
-  
-  AppEncryptionSessionFactory build();
-}
+```
+Data is ready to write to data persistence
+If latest IK is not cached or latest IK in cache is expired
+    Load latest IK EKR from metadata persistence
+    If IK is found
+        If IK is not expired or (IK is expired and policy allows queued rotation)
+            If SK is not cached
+                Load specific SK EKR from metadata persistence
+                If SK EKR DOES NOT exist in metadata persistence
+                    Fall through to new IK creation
+                If allowed by policy, add SK to protected memory cache
+            If SK is expired
+                # NOTE: Possible inconsistency: when policy doesn't use inline rotation, consider proceeding without
+                #       forced creation (same as IK handling)
+                Fall through to new IK creation
+            Else
+                Use SK to decrypt IK
+        Else
+            Fall through to new IK creation
+    Else (new IK being created)
+        If latest SK is not cached or latest SK in cache is expired
+            Load latest SK EKR from metadata persistence
+            If SK is found
+                If SK is not expired or (SK is expired and policy allows queued rotation)
+                    Use MK in HSM to decrypt SK
+                Else
+                    Fall through to new SK creation
+            Else (new SK being created)
+                Create new SK with crypto library (e.g. openssl)
+                Use MK in HSM to encrypt SK
+                Attempt to write SK EKR in metadata persistence
+                If SK EKR write failed due to duplicate (race condition with other thread)
+                    Load latest SK EKR from metadata persistence
+                    Use MK in HSM to decrypt SK
+            If allowed by policy, add SK to protected memory cache
+        Create new IK with crypto library (e.g. openssl)
+        Use SK to encrypt IK
+        Attempt to write IK EKR in metadata persistence
+            If IK EKR write failed due to duplicate (race condition with other thread)
+                Load latest IK EKR from metadata persistence
+                If SK is not cached
+                    Load specific SK EKR from metadata persistence
+                    If SK EKR DOES NOT exist in metadata persistence
+                        THROW ERROR: Unable to decrypt IK, missing SK from metadata (shouldn't happen)
+                    Use MK in HSM to decrypt SK
+                    If allowed by policy, add SK to protected memory cache
+                If SK is expired
+                    THROW ERROR: system key expired (shouldn't happen, other thread would've created one)
+                Use SK to decrypt IK
+        If allowed by policy, add IK to protected memory cache
+Create new DRK with crypto library (e.g. openssl)
+Use DRK to encrypt Data
+Use IK to encrypt DRK
+Create and write DRR to data persistence
 ```
 
-Cryptographic operations are performed using the methods provided in the `AppEncryption` interface.
+### Decrypt
 
-```java
-// <P> The payload type being encrypted
-// <D> The Data Row Record type
-interface AppEncryption<P, D> {
-  P decrypt(D dataRowRecord);
-  D encrypt(P payload);
-
-  Optional<P> load(String persistenceKey, Persistence<D> dataPersistence);
-  String store(P payload, Persistence<D> dataPersistence);
-  void store(String key, P payload, Persistence<D> dataPersistence);
-
-  void close();
-}
 ```
-  
-For the [store/load](../README.md#store--load) usage model, we also need to implement the `Persistence` interface
-
-```java
-// When using the store/load style, this defines the callbacks used to interact with Data Row Records.
-interface Persistence<T> {
-  Optional<T> load(String key);
-  String store(T value);
-  void store(String key, T value);
-  String generateKey(T value);
-}
-```
-
-### Crypto Policy
-
-```java
-  // Used to configure various behaviors of the internal algorithm
-  interface CryptoPolicy {
-    enum KeyRotationStrategy {
-        INLINE, // This is the only one currently supported/implemented
-        QUEUED
-    };
-    KeyRotationStrategy keyRotationStrategy();
-
-    boolean isKeyExpired(Instant keyCreationDate);
-    long getRevokeCheckPeriodMillis();
-
-    boolean canCacheSystemKeys();
-    boolean canCacheIntermediateKeys();
-
-    boolean notifyExpiredIntermediateKeyOnRead();
-    boolean notifyExpiredSystemKeyOnRead();
-}
+Load DRR from data persistence
+Extract IK meta from DRR
+If IK is not cached
+    Load specific IK EKR from metadata persistence
+    If IK EKR DOES NOT exist in metadata persistence
+        THROW ERROR: Unable to decrypt DRK, missing IK from metadata
+    Extract SK meta from IK EKR
+    If SK is not cached
+        Load specific SK EKR from metadata persistence
+        If SK EKR DOES NOT exist in metadata persistence
+            THROW ERROR: Unable to decrypt IK, missing SK from metadata
+        Use MK in HSM to decrypt SK
+        If allowed by policy, add SK to protected memory cache
+    If SK is expired
+        # NOTE: None of these currently implemented
+        Send notification SK is expired
+        Queue SK for rotation
+        Queue IK for rotation
+        Queue DRK for rotation
+    Use SK to decrypt IK
+    If allowed by policy, add IK to protected memory cache
+If IK is expired
+    # NOTE: None of these currently implemented
+    Send notification IK is expired
+    Queue IK for rotation
+    Queue DRK for rotation #We'll continue to wind up here until we write with valid key
+Use IK to decrypt DRK
+Use DRK to decrypt Data
+If DRK is expired
+    # NOTE: Not currently implemented
+    Queue DRK for rotation
 ```
 
-Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md) 
+### Future Consideration: Queued Rotation
 
-### Metastore
+Below are the proposed queue rotation flows.
 
-```java
-  // Defines the backing metastore
-  interface MetastorePersistence<V> {
-    Optional<V> load(String keyId, Instant created);
-    Optional<V> loadLatestValue(String keyId);
+#### MK Rotation
 
-    boolean store(String keyId, Instant created, V value);
-}
+```
+This happens annually
+Update the policy to expire all the keys
+Once it does:
+    Queue All SKs for rotation
+    Queue All IKs for rotation
+    Queue All DRKs for rotation #Specific for each user - this is stored in the application
 ```
 
-Detailed information about the Metastore can be found [here](Metastore.md) 
+#### SK Rotation
 
-
-### Key Management Service
-
-```java
-  // Defines the root KMS
-  interface KeyManagementService {
-    byte[] encryptKey(CryptoKey key);
-    CryptoKey decryptKey(byte[] keyCipherText, Instant keyCreated, boolean revoked);
-
-    <T> T withDecryptedKey(byte[] keyCipherText, Instant keyCreated, boolean revoked,
-                           BiFunction<CryptoKey, Instant, T> actionWithDecryptedKey);
-}
+```
+Read message from FIFO SK_IK key rotation queue
+If SK message meta = current SK meta in metadata persistence 
+    Load SK EKR from metadata persistence 
+    Use MK in HSM to create and encrypt a new SK
+    Create and write new SK EKR in metadata persistence 
+Delete message
 ```
 
-Detailed information about the  Key Management Service can be found [here](KeyManagementService.md) 
+#### IK Rotation
 
+```
+Read message from FIFO SK_IK key rotation queue
+If IK meta in message = current IK in metadata persistence
+    If SK EKR DOES NOT exist in metadata persistence 
+        THROW ERROR: no SK exists
+    Load current SK EKR from metadata persistence
+    Use MK in HSM to decrypt SK
+    If SK is expired
+        Queue SK for rotation
+        Queue IK for rotation
+    Else 
+        Create new IK from crypto library (e.g. openssl)
+        Use SK to encrypt IK
+        Create and write new IK EKR in metadata persistence 
+Delete message
+```
+
+#### DRK Rotation - POTENTIAL RACE CONDITION
+
+```
+Read message from standard DRK key rotation queue
+Load DRK EKR from message
+If IK is not cached 
+    Load current IK from metadata persistence 
+    If SK in IK EKR is not cached
+        Load current SK from metadata persistence 
+        Use MK in HSM to decrypt SK
+    If SK is expired
+        Queue SK for rotation
+        Queue IK for rotation
+        Exit #We'll be back once SK has rotated
+    Use SK to decrypt IK
+If IK is expired
+    Queue IK for rotation
+    Exit  #We'll be back once IK has rotated
+Create new DRK from crypto library (e.g. openssl)
+Load DRR from data persistence
+Use DRK to encrypt data
+Use IK to encrypt DRK
+Load DRR from data persistence AGAIN
+If DRK EKR matches DRR EKR
+    #Warning potential race condition starts here
+    Update existing DRR in data persistence 
+    #We could have just overwritten a user's write
+Delete Message
+```
 
 ## Secure Memory
 
 ### Current Implementation
 
 Secure Memory is implemented using well known native calls that ensure various protections of a secret value in memory.
-Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the calls
-will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this page with
-corresponding calls appropriately.
+Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the 
+calls will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this 
+page with corresponding calls appropriately.
 
 #### Create a Secret
 
@@ -258,3 +285,4 @@ We plan to investigate the feasibility of replacing the current Secure Memory im
 library such as OpenSSL, BoringSSL, etc. The intent of this effort would be to see if we can provide even stronger
 memory protections, refactor existing crypto calls to use the selected library, and provide more cross-language
 implementation consistency.
+
