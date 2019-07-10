@@ -135,12 +135,12 @@ Depending on policy, we will either continue to write if a key in the tree has e
 
     Data is ready to write to data persistence
     If latest IK is not cached or latest IK in cache is expired
-        Load latest IK EKR from metadata persistence
+        Load latest IK EKR from metastore
         If IK is found
             If IK is not expired or (IK is expired and policy allows queued rotation)
                 If SK is not cached
-                    Load specific SK EKR from metadata persistence
-                    If SK EKR DOES NOT exist in metadata persistence
+                    Load specific SK EKR from metastore
+                    If SK EKR DOES NOT exist in metastore
                         Fall through to new IK creation
                     If allowed by policy, add SK to protected memory cache
                 If SK is expired
@@ -152,7 +152,7 @@ Depending on policy, we will either continue to write if a key in the tree has e
                 Fall through to new IK creation
         Else (new IK being created)
             If latest SK is not cached or latest SK in cache is expired
-                Load latest SK EKR from metadata persistence
+                Load latest SK EKR from metastore
                 If SK is found
                     If SK is not expired or (SK is expired and policy allows queued rotation)
                         Use MK in HSM to decrypt SK
@@ -161,19 +161,19 @@ Depending on policy, we will either continue to write if a key in the tree has e
                 Else (new SK being created)
                     Create new SK with crypto library (e.g. openssl)
                     Use MK in HSM to encrypt SK
-                    Attempt to write SK EKR in metadata persistence
+                    Attempt to write SK EKR in metastore
                     If SK EKR write failed due to duplicate (race condition with other thread)
-                        Load latest SK EKR from metadata persistence
+                        Load latest SK EKR from metastore
                         Use MK in HSM to decrypt SK
                 If allowed by policy, add SK to protected memory cache
             Create new IK with crypto library (e.g. openssl)
             Use SK to encrypt IK
-            Attempt to write IK EKR in metadata persistence
+            Attempt to write IK EKR in metastore
                 If IK EKR write failed due to duplicate (race condition with other thread)
-                    Load latest IK EKR from metadata persistence
+                    Load latest IK EKR from metastore
                     If SK is not cached
-                        Load specific SK EKR from metadata persistence
-                        If SK EKR DOES NOT exist in metadata persistence
+                        Load specific SK EKR from metastore
+                        If SK EKR DOES NOT exist in metastore
                             THROW ERROR: Unable to decrypt IK, missing SK from metadata (shouldn't happen)
                         Use MK in HSM to decrypt SK
                         If allowed by policy, add SK to protected memory cache
@@ -194,13 +194,13 @@ The following diagram summarizes the entire write path.
     Load DRR from data persistence
     Extract IK meta from DRR
     If IK is not cached
-        Load specific IK EKR from metadata persistence    
-        If IK EKR DOES NOT exist in metadata persistence
+        Load specific IK EKR from metastore    
+        If IK EKR DOES NOT exist in metastore
             THROW ERROR: Unable to decrypt DRK, missing IK from metadata
         Extract SK meta from IK EKR
         If SK is not cached
-            Load specific SK EKR from metadata persistence
-            If SK EKR DOES NOT exist in metadata persistence
+            Load specific SK EKR from metastore
+            If SK EKR DOES NOT exist in metastore
                 THROW ERROR: Unable to decrypt IK, missing SK from metadata
             Use MK in HSM to decrypt SK
             If allowed by policy, add SK to protected memory cache
@@ -244,19 +244,19 @@ Below are the original proposed queue rotation flows.
 #### SK Rotation
 
     Read message from FIFO SK_IK key rotation queue
-    If SK message meta = current SK meta in metadata persistence 
-        Load SK EKR from metadata persistence 
+    If SK message meta = current SK meta in metastore 
+        Load SK EKR from metastore 
         Use MK in HSM to create and encrypt a new SK
-        Create and write new SK EKR in metadata persistence 
+        Create and write new SK EKR in metastore 
     Delete message
 
 #### IK Rotation
 
     Read message from FIFO SK_IK key rotation queue
-    If IK meta in message = current IK in metadata persistence
-        If SK EKR DOES NOT exist in metadata persistence 
+    If IK meta in message = current IK in metastore
+        If SK EKR DOES NOT exist in metastore 
             THROW ERROR: no SK exists
-        Load current SK EKR from metadata persistence
+        Load current SK EKR from metastore
         Use MK in HSM to decrypt SK
         If SK is expired
             Queue SK for rotation
@@ -264,7 +264,7 @@ Below are the original proposed queue rotation flows.
         Else 
             Create new IK from crypto library (i.e. openssl)
             Use SK to encrypt IK
-            Create and write new IK EKR in metadata persistence 
+            Create and write new IK EKR in metastore 
     Delete message
 
 #### DRK Rotation - POTENTIAL RACE CONDITION
@@ -272,9 +272,9 @@ Below are the original proposed queue rotation flows.
     Read message from standard DRK key rotation queue
     Load DRK EKR from message
     If IK is not cached 
-        Load current IK from metadata persistence 
+        Load current IK from metastore 
         If SK in IK EKR is not cached
-            Load current SK from metadata persistence 
+            Load current SK from metastore 
             Use MK in HSM to decrypt SK
         If SK is expired
             Queue SK for rotation
