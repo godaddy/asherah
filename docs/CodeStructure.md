@@ -95,21 +95,21 @@ interface Persistence<T> {
 
 ```java
   // Used to configure various behaviors of the internal algorithm
-  interface CryptoPolicy {
-    enum KeyRotationStrategy {
-        INLINE, // This is the only one currently supported/implemented
-        QUEUED
-    };
-    KeyRotationStrategy keyRotationStrategy();
+interface CryptoPolicy {
+  enum KeyRotationStrategy {
+      INLINE, // This is the only one currently supported/implemented
+      QUEUED
+  };
+  KeyRotationStrategy keyRotationStrategy();
 
-    boolean isKeyExpired(Instant keyCreationDate);
-    long getRevokeCheckPeriodMillis();
+  boolean isKeyExpired(Instant keyCreationDate);
+  long getRevokeCheckPeriodMillis();
 
-    boolean canCacheSystemKeys();
-    boolean canCacheIntermediateKeys();
+  boolean canCacheSystemKeys();
+  boolean canCacheIntermediateKeys();
 
-    boolean notifyExpiredIntermediateKeyOnRead();
-    boolean notifyExpiredSystemKeyOnRead();
+  boolean notifyExpiredIntermediateKeyOnRead();
+  boolean notifyExpiredSystemKeyOnRead();
 }
 ```
 
@@ -118,12 +118,12 @@ Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md)
 ### Metastore
 
 ```java
-  // Defines the backing metastore
-  interface MetastorePersistence<V> {
-    Optional<V> load(String keyId, Instant created);
-    Optional<V> loadLatestValue(String keyId);
+// Defines the backing metastore
+interface MetastorePersistence<V> {
+  Optional<V> load(String keyId, Instant created);
+  Optional<V> loadLatestValue(String keyId);
 
-    boolean store(String keyId, Instant created, V value);
+  boolean store(String keyId, Instant created, V value);
 }
 ```
 
@@ -133,13 +133,13 @@ Detailed information about the Metastore can be found [here](Metastore.md)
 ### Key Management Service
 
 ```java
-  // Defines the root KMS
-  interface KeyManagementService {
-    byte[] encryptKey(CryptoKey key);
-    CryptoKey decryptKey(byte[] keyCipherText, Instant keyCreated, boolean revoked);
+// Defines the root KMS
+interface KeyManagementService {
+  byte[] encryptKey(CryptoKey key);
+  CryptoKey decryptKey(byte[] keyCipherText, Instant keyCreated, boolean revoked);
 
-    <T> T withDecryptedKey(byte[] keyCipherText, Instant keyCreated, boolean revoked,
-                           BiFunction<CryptoKey, Instant, T> actionWithDecryptedKey);
+  <T> T withDecryptedKey(byte[] keyCipherText, Instant keyCreated, boolean revoked,
+                         BiFunction<CryptoKey, Instant, T> actionWithDecryptedKey);
 }
 ```
 
