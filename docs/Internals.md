@@ -309,8 +309,10 @@ to their [intended lifecycle](KeyCaching.md#cache-lifecycles)).
 
 Since the objects being cached are resources which need to be closed, there is additional complexity when dealing with
 duplicates in the cache. The approach taken in the Java reference implementation is to always return the key intended
-to be closed to the caller. For the case of a new key being added to the cache, we return a new "shared key"
-representation of the key whose close operation is a no-op (since the key passed in to the cache put/store call will
-now be used in the cache by other threads). For the case of a duplicate key being added to the cache (e.g. a race
-condition's second thread), we return the key passed in to the cache put/store call so it can be safely closed without
-affecting the existing underlying key in the cache and ensuring we don't leak the memory space of the key.
+to be closed to the caller:
+* For the case of a new key being added to the cache, we return a new "shared key" representation of the key whose
+close operation is a no-op (since the key passed in to the cache put/store call will now be used in the cache by other
+threads).
+* For the case of a duplicate key being added to the cache (e.g. a race condition's second thread), we return the key
+passed in to the cache put/store call so it can be safely closed without affecting the existing underlying key in the
+cache and ensuring we don't leak the memory space of the key.
