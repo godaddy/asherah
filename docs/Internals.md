@@ -258,9 +258,8 @@ withSecretBytes(function<byte[], type> functionWithSecret) {
 
 The `withSecretBytes` pseudocode above is not thread-safe code as written. A thread could disable the memory access as
 another thread attempts to read the secret, which would result in a SIGSEGV signal to the process. Some form of thread
-safety is needed to guard against this. In the Java reference implementation (as of this writing) this is implemented
-using a lock and access counter to determine when we need to make the memory readable (first thread accessing) or
-unreadable (last thread accessing).
+safety is needed to guard against this. For example, this could be implemented using a lock and access counter to
+determine when we need to make the memory readable (first thread accessing) or unreadable (last thread accessing).
 
 #### Delete a Secret
 
