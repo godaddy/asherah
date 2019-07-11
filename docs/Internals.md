@@ -62,9 +62,9 @@ Use IK to encrypt DRK
 Create and write DRR to data persistence
 ```
 
-The following diagram summarizes the entire write path.
+The following diagram summarizes the entire encrypt path.
 
-![Write Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/encrypt.svg?sanitize=true)
+![Encrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/encrypt.svg?sanitize=true)
 
 ### Decrypt
 
@@ -72,7 +72,7 @@ The following diagram summarizes the entire write path.
 Load DRR from data persistence
 Extract IK meta from DRR
 If IK is not cached
-    Load specific IK EKR from metastore    
+    Load specific IK EKR from metastore
     If IK EKR DOES NOT exist in metastore
         THROW ERROR: Unable to decrypt DRK, missing IK from metastore
     Extract SK meta from IK EKR
@@ -103,9 +103,9 @@ If DRK is expired
 Return decrypted data
 ```
 
-The following diagram summarizes the entire read path.
+The following diagram summarizes the entire decrypt path.
 
-![Read Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/decrypt.svg?sanitize=true)
+![Decrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/decrypt.svg?sanitize=true)
 
 ### Future Consideration: Queued Rotation
 
