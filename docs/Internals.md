@@ -174,7 +174,7 @@ Depending on policy, we will either continue to write if a key in the tree has e
                     If SK is not cached
                         Load specific SK EKR from metastore
                         If SK EKR DOES NOT exist in metastore
-                            THROW ERROR: Unable to decrypt IK, missing SK from metadata (shouldn't happen)
+                            THROW ERROR: Unable to decrypt IK, missing SK from metastore (shouldn't happen)
                         Use MK in HSM to decrypt SK
                         If allowed by policy, add SK to protected memory cache
                     If SK is expired
@@ -196,12 +196,12 @@ The following diagram summarizes the entire write path.
     If IK is not cached
         Load specific IK EKR from metastore    
         If IK EKR DOES NOT exist in metastore
-            THROW ERROR: Unable to decrypt DRK, missing IK from metadata
+            THROW ERROR: Unable to decrypt DRK, missing IK from metastore
         Extract SK meta from IK EKR
         If SK is not cached
             Load specific SK EKR from metastore
             If SK EKR DOES NOT exist in metastore
-                THROW ERROR: Unable to decrypt IK, missing SK from metadata
+                THROW ERROR: Unable to decrypt IK, missing SK from metastore
             Use MK in HSM to decrypt SK
             If allowed by policy, add SK to protected memory cache
         If SK is expired
@@ -222,6 +222,7 @@ The following diagram summarizes the entire write path.
     If DRK is expired
         # NOTE: Not currently implemented
         Queue DRK for rotation
+    Return decrypted data
 
 The following diagram summarizes the entire read path.
 ![Read Flow](https://raw.githubusercontent.com/godaddy/asherah/flowcharts/docs/images/decrypt.svg?sanitize=true)
