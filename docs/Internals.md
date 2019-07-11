@@ -9,12 +9,12 @@ Depending on policy, we will either continue to encrypt if a key in the tree has
 ```
 Data is ready to write to data persistence
 If latest IK is not cached or latest IK in cache is expired
-    Load latest IK EKR from metadata persistence
+    Load latest IK EKR from metastore
     If IK is found
         If IK is not expired or (IK is expired and policy allows queued rotation)
             If SK is not cached
-                Load specific SK EKR from metadata persistence
-                If SK EKR DOES NOT exist in metadata persistence
+                Load specific SK EKR from metastore
+                If SK EKR DOES NOT exist in metastore
                     Fall through to new IK creation
                 If allowed by policy, add SK to protected memory cache
             If SK is expired
@@ -27,7 +27,7 @@ If latest IK is not cached or latest IK in cache is expired
             Fall through to new IK creation
     Else (new IK being created)
         If latest SK is not cached or latest SK in cache is expired
-            Load latest SK EKR from metadata persistence
+            Load latest SK EKR from metastore
             If SK is found
                 If SK is not expired or (SK is expired and policy allows queued rotation)
                     Use MK in HSM to decrypt SK
@@ -36,20 +36,20 @@ If latest IK is not cached or latest IK in cache is expired
             Else (new SK being created)
                 Create new SK with crypto library (e.g. openssl)
                 Use MK in HSM to encrypt SK
-                Attempt to write SK EKR in metadata persistence
+                Attempt to write SK EKR in metastore
                 If SK EKR write failed due to duplicate (race condition with other thread)
-                    Load latest SK EKR from metadata persistence
+                    Load latest SK EKR from metastore
                     Use MK in HSM to decrypt SK
             If allowed by policy, add SK to protected memory cache
         Create new IK with crypto library (e.g. openssl)
         Use SK to encrypt IK
-        Attempt to write IK EKR in metadata persistence
+        Attempt to write IK EKR in metastore
             If IK EKR write failed due to duplicate (race condition with other thread)
-                Load latest IK EKR from metadata persistence
+                Load latest IK EKR from metastore
                 If SK is not cached
-                    Load specific SK EKR from metadata persistence
-                    If SK EKR DOES NOT exist in metadata persistence
-                        THROW ERROR: Unable to decrypt IK, missing SK from metadata (shouldn't happen)
+                    Load specific SK EKR from metastore
+                    If SK EKR DOES NOT exist in metastore
+                        THROW ERROR: Unable to decrypt IK, missing SK from metastore (shouldn't happen)
                     Use MK in HSM to decrypt SK
                     If allowed by policy, add SK to protected memory cache
                 If SK is expired
@@ -62,20 +62,24 @@ Use IK to encrypt DRK
 Create and write DRR to data persistence
 ```
 
+The following diagram summarizes the entire encrypt path.
+
+![Encrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/encrypt.svg?sanitize=true)
+
 ### Decrypt
 
 ```
 Load DRR from data persistence
 Extract IK meta from DRR
 If IK is not cached
-    Load specific IK EKR from metadata persistence
-    If IK EKR DOES NOT exist in metadata persistence
-        THROW ERROR: Unable to decrypt DRK, missing IK from metadata
+    Load specific IK EKR from metastore
+    If IK EKR DOES NOT exist in metastore
+        THROW ERROR: Unable to decrypt DRK, missing IK from metastore
     Extract SK meta from IK EKR
     If SK is not cached
-        Load specific SK EKR from metadata persistence
-        If SK EKR DOES NOT exist in metadata persistence
-            THROW ERROR: Unable to decrypt IK, missing SK from metadata
+        Load specific SK EKR from metastore
+        If SK EKR DOES NOT exist in metastore
+            THROW ERROR: Unable to decrypt IK, missing SK from metastore
         Use MK in HSM to decrypt SK
         If allowed by policy, add SK to protected memory cache
     If SK is expired
@@ -96,7 +100,12 @@ Use DRK to decrypt Data
 If DRK is expired
     # NOTE: Not currently implemented
     Queue DRK for rotation
+Return decrypted data
 ```
+
+The following diagram summarizes the entire decrypt path.
+
+![Decrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/decrypt.svg?sanitize=true)
 
 ### Future Consideration: Queued Rotation
 
@@ -117,10 +126,10 @@ Once it does:
 
 ```
 Read message from FIFO SK_IK key rotation queue
-If SK message meta = current SK meta in metadata persistence 
-    Load SK EKR from metadata persistence 
+If SK message meta = current SK meta in metastore 
+    Load SK EKR from metastore 
     Use MK in HSM to create and encrypt a new SK
-    Create and write new SK EKR in metadata persistence 
+    Create and write new SK EKR in metastore 
 Delete message
 ```
 
@@ -128,10 +137,10 @@ Delete message
 
 ```
 Read message from FIFO SK_IK key rotation queue
-If IK meta in message = current IK in metadata persistence
-    If SK EKR DOES NOT exist in metadata persistence 
+If IK meta in message = current IK in metastore
+    If SK EKR DOES NOT exist in metastore 
         THROW ERROR: no SK exists
-    Load current SK EKR from metadata persistence
+    Load current SK EKR from metastore
     Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
@@ -139,7 +148,7 @@ If IK meta in message = current IK in metadata persistence
     Else 
         Create new IK from crypto library (e.g. openssl)
         Use SK to encrypt IK
-        Create and write new IK EKR in metadata persistence 
+        Create and write new IK EKR in metastore 
 Delete message
 ```
 
@@ -149,9 +158,9 @@ Delete message
 Read message from standard DRK key rotation queue
 Load DRK EKR from message
 If IK is not cached 
-    Load current IK from metadata persistence 
+    Load current IK from metastore 
     If SK in IK EKR is not cached
-        Load current SK from metadata persistence 
+        Load current SK from metastore 
         Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
@@ -172,174 +181,6 @@ If DRK EKR matches DRR EKR
     #We could have just overwritten a user's write
 Delete Message
 ```
-
-## Algorithm Internals
-
-### Write 
-Depending on policy, we will either continue to write if a key in the tree has expired or rotate/generate keys inline.
-
-    Data is ready to write to data persistence
-    If latest IK is not cached or latest IK in cache is expired
-        Load latest IK EKR from metastore
-        If IK is found
-            If IK is not expired or (IK is expired and policy allows queued rotation)
-                If SK is not cached
-                    Load specific SK EKR from metastore
-                    If SK EKR DOES NOT exist in metastore
-                        Fall through to new IK creation
-                    If allowed by policy, add SK to protected memory cache
-                If SK is expired
-                    # NOTE: Possible inconsistency: when policy doesn't use inline rotation, consider proceeding without forced creation (same as IK handling)
-                    Fall through to new IK creation
-                Else
-                    Use SK to decrypt IK
-            Else
-                Fall through to new IK creation
-        Else (new IK being created)
-            If latest SK is not cached or latest SK in cache is expired
-                Load latest SK EKR from metastore
-                If SK is found
-                    If SK is not expired or (SK is expired and policy allows queued rotation)
-                        Use MK in HSM to decrypt SK
-                    Else
-                        Fall through to new SK creation
-                Else (new SK being created)
-                    Create new SK with crypto library (e.g. openssl)
-                    Use MK in HSM to encrypt SK
-                    Attempt to write SK EKR in metastore
-                    If SK EKR write failed due to duplicate (race condition with other thread)
-                        Load latest SK EKR from metastore
-                        Use MK in HSM to decrypt SK
-                If allowed by policy, add SK to protected memory cache
-            Create new IK with crypto library (e.g. openssl)
-            Use SK to encrypt IK
-            Attempt to write IK EKR in metastore
-                If IK EKR write failed due to duplicate (race condition with other thread)
-                    Load latest IK EKR from metastore
-                    If SK is not cached
-                        Load specific SK EKR from metastore
-                        If SK EKR DOES NOT exist in metastore
-                            THROW ERROR: Unable to decrypt IK, missing SK from metastore (shouldn't happen)
-                        Use MK in HSM to decrypt SK
-                        If allowed by policy, add SK to protected memory cache
-                    If SK is expired
-                        THROW ERROR: system key expired (shouldn't happen, other thread would've created one)
-                    Use SK to decrypt IK
-            If allowed by policy, add IK to protected memory cache
-    Create new DRK with crypto library (e.g. openssl)
-    Use DRK to encrypt Data
-    Use IK to encrypt DRK
-    Create and write DRR to data persistence
-
-The following diagram summarizes the entire write path.
-![Write Flow](https://raw.githubusercontent.com/godaddy/asherah/flowcharts/docs/images/encrypt.svg?sanitize=true)
-
-### Read
-
-    Load DRR from data persistence
-    Extract IK meta from DRR
-    If IK is not cached
-        Load specific IK EKR from metastore    
-        If IK EKR DOES NOT exist in metastore
-            THROW ERROR: Unable to decrypt DRK, missing IK from metastore
-        Extract SK meta from IK EKR
-        If SK is not cached
-            Load specific SK EKR from metastore
-            If SK EKR DOES NOT exist in metastore
-                THROW ERROR: Unable to decrypt IK, missing SK from metastore
-            Use MK in HSM to decrypt SK
-            If allowed by policy, add SK to protected memory cache
-        If SK is expired
-            # NOTE: None of these currently implemented
-            Send notification SK is expired
-            Queue SK for rotation
-            Queue IK for rotation
-            Queue DRK for rotation
-        Use SK to decrypt IK
-        If allowed by policy, add IK to protected memory cache
-    If IK is expired
-        # NOTE: None of these currently implemented
-        Send notification IK is expired
-        Queue IK for rotation
-        Queue DRK for rotation #We'll continue to wind up here until we write with valid key
-    Use IK to decrypt DRK
-    Use DRK to decrypt Data
-    If DRK is expired
-        # NOTE: Not currently implemented
-        Queue DRK for rotation
-    Return decrypted data
-
-The following diagram summarizes the entire read path.
-![Read Flow](https://raw.githubusercontent.com/godaddy/asherah/flowcharts/docs/images/decrypt.svg?sanitize=true)
-
-### Future Consideration: Queued Rotation
-There has been a shift from the original queue-based key rotation towards generating new keys inline by default (for the write path).
-
-Below are the original proposed queue rotation flows.
-
-#### MK Rotation
-
-    This happens annually
-    Update the policy to expire all the keys
-    Once it does:
-        Queue All SKs for rotation
-        Queue All IKs for rotation
-        Queue All DRKs for rotation #Specific for each user - this is stored in the application
-
-
-#### SK Rotation
-
-    Read message from FIFO SK_IK key rotation queue
-    If SK message meta = current SK meta in metastore 
-        Load SK EKR from metastore 
-        Use MK in HSM to create and encrypt a new SK
-        Create and write new SK EKR in metastore 
-    Delete message
-
-#### IK Rotation
-
-    Read message from FIFO SK_IK key rotation queue
-    If IK meta in message = current IK in metastore
-        If SK EKR DOES NOT exist in metastore 
-            THROW ERROR: no SK exists
-        Load current SK EKR from metastore
-        Use MK in HSM to decrypt SK
-        If SK is expired
-            Queue SK for rotation
-            Queue IK for rotation
-        Else 
-            Create new IK from crypto library (i.e. openssl)
-            Use SK to encrypt IK
-            Create and write new IK EKR in metastore 
-    Delete message
-
-#### DRK Rotation - POTENTIAL RACE CONDITION
-
-    Read message from standard DRK key rotation queue
-    Load DRK EKR from message
-    If IK is not cached 
-        Load current IK from metastore 
-        If SK in IK EKR is not cached
-            Load current SK from metastore 
-            Use MK in HSM to decrypt SK
-        If SK is expired
-            Queue SK for rotation
-            Queue IK for rotation
-            Exit #We'll be back once SK has rotated
-        Use SK to decrypt IK
-    If IK is expired
-        Queue IK for rotation
-        Exit  #We'll be back once IK has rotated
-    Create new DRK from crypto library (i.e. openssl)
-    Load DRR from data persistence
-    Use DRK to encrypt data
-    Use IK to encrypt DRK
-    Load DRR from data persistence AGAIN
-    If DRK EKR matches DRR EKR
-        #Warning potential race condition starts here
-        Update existing DRR in data persistence 
-        #We could have just overwritten a user's write
-    Delete Message
 
 ## Secure Memory
 
