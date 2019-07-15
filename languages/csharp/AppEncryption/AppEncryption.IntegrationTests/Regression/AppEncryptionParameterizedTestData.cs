@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using App.Metrics;
+using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Envelope;
+using GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
@@ -14,9 +16,9 @@ using Moq;
 using Newtonsoft.Json.Linq;
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
-namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
+namespace GoDaddy.AppServices.AppEncryption.IntegrationTests.Regression
 {
-    public class AppEncryptionParameterizedTestData
+    public class AppEncryptionParameterizedTestData : Configuration
     {
         private static readonly Random Random = new Random();
 
@@ -45,13 +47,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
                 DefaultProductId);
 
-            // TODO Update to create KeyManagementService based on config/param once we plug in AWS KMS
-            KeyManagementService kms = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            KeyManagementService kms = KeyManagementService;
 
             CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
 
-            // TODO Pass Metastore type to enable spy generation once we plug in external metastore types
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(appEncryptionPartition, kms,  metaIK, metaSK, cryptoKeyHolder);
+            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
+            appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder);
 
             CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 

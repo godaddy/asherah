@@ -1,5 +1,7 @@
 using System;
+using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Envelope;
+using GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -9,7 +11,7 @@ using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
 
-namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
+namespace GoDaddy.AppServices.AppEncryption.IntegrationTests.Regression
 {
     public static class MetastoreMock
     {
@@ -25,6 +27,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // TODO Change this to generate a mock dynamically based on the Metastore type
             Mock<MemoryPersistenceImpl<JObject>> metastorePersistenceSpy = new Mock<MemoryPersistenceImpl<JObject>> { CallBase = true };
             CryptoKey systemKey = cryptoKeyHolder.SystemKey;
+
+            Mock<Type> mock = new Mock<Type>(typeof(Mock<>).MakeGenericType(typeof(DynamoDbMetastorePersistenceImpl))
+                .GetConstructor(
+                Type
+                    .EmptyTypes).Invoke(new object[] { })) { CallBase = true };
 
             if (metaSK != KeyState.Empty)
             {

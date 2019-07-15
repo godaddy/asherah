@@ -2,15 +2,17 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp2.0</TargetFramework>
         <IsPackable>false</IsPackable>
-        <RootNamespace>GoDaddy.Asherah.AppEncryption.IntegrationTests</RootNamespace>
+        <RootNamespace>GoDaddy.AppServices.AppEncryption.IntegrationTests</RootNamespace>
         <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
     <ItemGroup Label="Package References">
         <PackageReference Include="coverlet.msbuild" Version="2.6.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0-preview6.19304.6" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
         <PackageReference Include="Moq" Version="4.10.1" />
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0-preview6.19303.8" />
         <PackageReference Include="xunit" Version="2.4.1" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     </ItemGroup>
@@ -19,5 +21,8 @@
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="config.json" CopyToOutputDirectory="Always" />
     </ItemGroup>
 </Project>
