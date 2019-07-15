@@ -4,11 +4,11 @@ using GoDaddy.Asherah.AppEncryption.Persistence;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 
-namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
+namespace GoDaddy.AppServices.AppEncryption.IntegrationTests
 {
-    public class Configuration
+    public class ConfigFixture
     {
-        static Configuration()
+        public ConfigFixture()
         {
             var config = new ConfigurationBuilder()
                 .AddJsonFile("config.json")
@@ -19,15 +19,15 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             MetastorePersistence = CreateMetaStorePersistence(MetaStoreType);
         }
 
-        public static string MetaStoreType { get; }
+        public string MetaStoreType { get; }
 
-        public static string KmsType { get; }
+        public string KmsType { get; }
 
-        public static KeyManagementService KeyManagementService { get; }
+        public KeyManagementService KeyManagementService { get; }
 
-        public static IMetastorePersistence<JObject> MetastorePersistence { get; }
+        public IMetastorePersistence<JObject> MetastorePersistence { get; }
 
-        private static IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
+        private IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
         {
             if (metaStoreType.Equals("memory", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -37,7 +37,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return null;
         }
 
-        private static KeyManagementService CreateKeyManagementService(string kmsType)
+        private KeyManagementService CreateKeyManagementService(string kmsType)
         {
             if (kmsType.Equals("static", StringComparison.InvariantCultureIgnoreCase))
             {
