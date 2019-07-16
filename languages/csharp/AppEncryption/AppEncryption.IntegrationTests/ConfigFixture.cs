@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
+using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
-namespace GoDaddy.AppServices.AppEncryption.IntegrationTests
+namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
     public class ConfigFixture
     {
@@ -29,22 +33,35 @@ namespace GoDaddy.AppServices.AppEncryption.IntegrationTests
 
         private IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
         {
-            if (metaStoreType.Equals("memory", StringComparison.InvariantCultureIgnoreCase))
+            if (metaStoreType.Equals(MetastoreADO, StringComparison.InvariantCultureIgnoreCase))
             {
-                return new MemoryPersistenceImpl<JObject>();
+                return AdoMetastorePersistenceImpl
+                    .NewBuilder(MySqlClientFactory.Instance, Environment.GetEnvironmentVariable("METASTORE_ADO_CONNECTIONSTRING"))
+                    .Build();
             }
 
-            return null;
+            if (metaStoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+            }
+
+            return new MemoryPersistenceImpl<JObject>();
         }
 
         private KeyManagementService CreateKeyManagementService(string kmsType)
         {
-            if (kmsType.Equals("static", StringComparison.InvariantCultureIgnoreCase))
+            if (kmsType.Equals(KeyManagementAWS, StringComparison.InvariantCultureIgnoreCase))
             {
-                return new StaticKeyManagementServiceImpl("secretmasterkey!");
+                string regionToArnString = Environment.GetEnvironmentVariable("KMS_AWS_REGION_DICTIONARY");
+                Dictionary<string, string> regionToArnDictionary = regionToArnString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(part => part.Split('='))
+                    .ToDictionary(split => split[0], split => split[1]);
+                return AwsKeyManagementServiceImpl.NewBuilder(
+                    regionToArnDictionary, Environment.GetEnvironmentVariable("KMS_AWS_PREFERRED_REGION"))
+                    .Build();
             }
 
-            return null;
+            return new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
         }
     }
 }

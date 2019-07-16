@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using App.Metrics;
-using GoDaddy.AppServices.AppEncryption.IntegrationTests;
 using GoDaddy.AppServices.AppEncryption.IntegrationTests.Regression;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
@@ -16,7 +15,6 @@ using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
-
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
@@ -153,76 +151,88 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
         }
 
-        public class AppEncryptionParameterizedTestData : IEnumerable<object[]>
-    {
-        private static readonly Random Random = new Random();
-
-        public IEnumerator<object[]> GetEnumerator()
+        private class AppEncryptionParameterizedTestData : IEnumerable<object[]>
         {
-            foreach (KeyState cacheIK in Enum.GetValues(typeof(KeyState)))
+            private static readonly Random Random = new Random();
+            private readonly ConfigFixture configFixture;
+
+            public AppEncryptionParameterizedTestData()
             {
-                foreach (KeyState metaIK in Enum.GetValues(typeof(KeyState)))
+                configFixture = new ConfigFixture();
+            }
+
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                foreach (KeyState cacheIK in Enum.GetValues(typeof(KeyState)))
                 {
-                    foreach (KeyState cacheSK in Enum.GetValues(typeof(KeyState)))
+                    foreach (KeyState metaIK in Enum.GetValues(typeof(KeyState)))
                     {
-                        foreach (KeyState metaSK in Enum.GetValues(typeof(KeyState)))
+                        foreach (KeyState cacheSK in Enum.GetValues(typeof(KeyState)))
                         {
-                            // TODO Add CryptoPolicy.KeyRotationStrategy loop and update expect/verify logic accordingly
-                           yield return GenerateMocks(cacheIK, metaIK, cacheSK, metaSK);
+                            foreach (KeyState metaSK in Enum.GetValues(typeof(KeyState)))
+                            {
+                                // TODO Add CryptoPolicy.KeyRotationStrategy loop and update expect/verify logic accordingly
+                                yield return GenerateMocks(cacheIK, metaIK, cacheSK, metaSK);
+                            }
                         }
                     }
                 }
             }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private object[] GenerateMocks(KeyState cacheIK, KeyState metaIK, KeyState cacheSK, KeyState metaSK)
+            {
+                AppEncryptionPartition appEncryptionPartition = new AppEncryptionPartition(
+                    cacheIK + "CacheIK_" + metaIK + "MetaIK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() +
+                    "_" + Random.Next(),
+                    cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
+                    DefaultProductId);
+
+                KeyManagementService kms = configFixture.KeyManagementService;
+
+                CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
+
+                Mock<MemoryPersistenceImpl<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
+                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder);
+
+                CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
+
+                // Mimics (mostly) the old TimeBasedCryptoPolicyImpl settings
+                CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
+                    .WithKeyExpirationDays(KeyExpiryDays)
+                    .WithRevokeCheckMinutes(int.MaxValue)
+                    .WithCanCacheIntermediateKeys(false)
+                    .WithCanCacheSystemKeys(false)
+                    .Build();
+
+                SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
+                SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
+
+                EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
+                    appEncryptionPartition,
+                    metastorePersistence.Object,
+                    systemKeyCache,
+                    new FakeSecureCryptoKeyDictionaryFactory<DateTimeOffset>(intermediateKeyCache),
+                    new BouncyAes256GcmCrypto(),
+                    cryptoPolicy,
+                    kms);
+
+                IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
+                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
+
+                // Need to manually set a no-op metrics instance
+                IMetrics metrics = new MetricsBuilder()
+                    .Configuration.Configure(options => options.Enabled = false)
+                    .Build();
+                MetricsUtil.SetMetricsInstance(metrics);
+
+                return new object[]
+                {
+                    envelopeEncryptionByteImpl, metastorePersistence, cacheIK, metaIK, cacheSK, metaSK,
+                    appEncryptionPartition
+                };
+            }
         }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-         private object[] GenerateMocks(KeyState cacheIK, KeyState metaIK, KeyState cacheSK, KeyState metaSK)
-        {
-            AppEncryptionPartition appEncryptionPartition = new AppEncryptionPartition(
-                cacheIK + "CacheIK_" + metaIK + "MetaIK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
-                cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
-                DefaultProductId);
-
-            KeyManagementService kms = new StaticKeyManagementServiceImpl("secretmasterkey!");
-
-            CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
-
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
-            appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder);
-
-            CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
-
-            // Mimics (mostly) the old TimeBasedCryptoPolicyImpl settings
-            CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
-                .WithKeyExpirationDays(KeyExpiryDays)
-                .WithRevokeCheckMinutes(int.MaxValue)
-                .WithCanCacheIntermediateKeys(false)
-                .WithCanCacheSystemKeys(false)
-                .Build();
-
-            SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
-            SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
-
-            EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
-                appEncryptionPartition,
-                metastorePersistence.Object,
-                systemKeyCache,
-                new FakeSecureCryptoKeyDictionaryFactory<DateTimeOffset>(intermediateKeyCache),
-                new BouncyAes256GcmCrypto(),
-                cryptoPolicy,
-                kms);
-
-            IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl = new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
-
-            // Need to manually set a no-op metrics instance
-            IMetrics metrics = new MetricsBuilder()
-                .Configuration.Configure(options => options.Enabled = false)
-                .Build();
-            MetricsUtil.SetMetricsInstance(metrics);
-
-            return new object[] { envelopeEncryptionByteImpl, metastorePersistence, cacheIK, metaIK, cacheSK, metaSK, appEncryptionPartition };
-        }
-    }
     }
 }

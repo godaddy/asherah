@@ -1,4 +1,3 @@
-using GoDaddy.AppServices.AppEncryption.IntegrationTests;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
