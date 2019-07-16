@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using App.Metrics;
-using GoDaddy.AppServices.AppEncryption.IntegrationTests.Regression;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;

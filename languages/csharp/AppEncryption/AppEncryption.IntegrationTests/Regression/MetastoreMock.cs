@@ -1,7 +1,5 @@
 using System;
-using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Envelope;
-using GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -11,7 +9,7 @@ using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
 
-namespace GoDaddy.AppServices.AppEncryption.IntegrationTests.Regression
+namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     public static class MetastoreMock
     {
