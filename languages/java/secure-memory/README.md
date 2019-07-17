@@ -1,4 +1,5 @@
 # SecureMemory Java Edition
+
 This class provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
 
