@@ -8,7 +8,7 @@
     </PropertyGroup>
     <ItemGroup Label="Package References">
         <PackageReference Include="coverlet.msbuild" Version="2.6.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0-preview6.19304.6" />
+        <PackageReference Include="NetEscapades.Configuration.Yaml" Version="1.5.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
         <PackageReference Include="Moq" Version="4.10.1" />
@@ -24,6 +24,6 @@
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="config.json" CopyToOutputDirectory="Always" />
+        <None Include="$(CONFIG_FILE)" CopyToOutputDirectory="Always" />
     </ItemGroup>
 </Project>

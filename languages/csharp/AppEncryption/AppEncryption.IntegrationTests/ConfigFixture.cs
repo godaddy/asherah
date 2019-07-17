@@ -15,7 +15,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
         public ConfigFixture()
         {
             var config = new ConfigurationBuilder()
-                .AddJsonFile("config.json")
+                .AddYamlFile(Environment.GetEnvironmentVariable("CONFIG_FILE"))
                 .Build();
             MetaStoreType = config["metaStoreType"];
             KmsType = config["kmsType"];
