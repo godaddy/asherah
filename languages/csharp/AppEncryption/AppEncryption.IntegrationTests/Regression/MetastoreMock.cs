@@ -15,21 +15,23 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
     {
         private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
 
-         internal static Mock<MemoryPersistenceImpl<JObject>> CreateMetastoreMock(
-            AppEncryptionPartition appEncryptionPartition,
-            KeyManagementService kms,
-            KeyState metaIK,
-            KeyState metaSK,
-            CryptoKeyHolder cryptoKeyHolder)
+         internal static Mock<IMetastorePersistence<JObject>> CreateMetastoreMock(
+             AppEncryptionPartition appEncryptionPartition,
+             KeyManagementService kms,
+             KeyState metaIK,
+             KeyState metaSK,
+             CryptoKeyHolder cryptoKeyHolder,
+             Type type)
         {
             // TODO Change this to generate a mock dynamically based on the Metastore type
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistenceSpy = new Mock<MemoryPersistenceImpl<JObject>> { CallBase = true };
             CryptoKey systemKey = cryptoKeyHolder.SystemKey;
 
-            Mock<Type> mock = new Mock<Type>(typeof(Mock<>).MakeGenericType(typeof(DynamoDbMetastorePersistenceImpl))
-                .GetConstructor(
-                Type
-                    .EmptyTypes).Invoke(new object[] { })) { CallBase = true };
+            Mock x = (Mock)typeof(Mock<>).MakeGenericType(type).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
+
+            Mock<IMetastorePersistence<JObject>> disposableFoo = x.As<IMetastorePersistence<JObject>>();
+            disposableFoo.Setup(y => y.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()));
+            disposableFoo.Setup(y => y.Load(It.IsAny<string>(),  It.IsAny<DateTimeOffset>()));
+            disposableFoo.Setup(y => y.LoadLatestValue(It.IsAny<string>()));
 
             if (metaSK != KeyState.Empty)
             {
@@ -43,7 +45,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, kms.EncryptKey(systemKey), systemKey.IsRevoked());
-                metastorePersistenceSpy.Object.Store(
+                disposableFoo.Object.Store(
                     appEncryptionPartition.SystemKeyId,
                     systemKeyRecord.Created,
                     systemKeyRecord.ToJson());
@@ -65,14 +67,14 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     new KeyMeta(appEncryptionPartition.SystemKeyId, systemKey.GetCreated()),
                     Crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
-                metastorePersistenceSpy.Object.Store(
+                disposableFoo.Object.Store(
                     appEncryptionPartition.IntermediateKeyId,
                     intermediateKeyRecord.Created,
                     intermediateKeyRecord.ToJson());
             }
 
-            metastorePersistenceSpy.Reset();
-            return metastorePersistenceSpy;
+            disposableFoo.Reset();
+            return disposableFoo;
         }
     }
 }

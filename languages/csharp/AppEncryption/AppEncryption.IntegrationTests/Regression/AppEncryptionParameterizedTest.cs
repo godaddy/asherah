@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         [ClassData(typeof(AppEncryptionParameterizedTestData))]
         public void ParameterizedTests(
             IEnvelopeEncryption<byte[]> envelopeEncryptionJson,
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             KeyState cacheIK,
             KeyState metaIK,
             KeyState cacheSK,
@@ -61,7 +61,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         }
 
         private void VerifyDecryptFlow(
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             DecryptMetastoreInteractions metastoreInteractions,
             AppEncryptionPartition appEncryptionPartition)
         {
@@ -82,7 +82,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         }
 
         private void VerifyEncryptFlow(
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             EncryptMetastoreInteractions metastoreInteractions,
             AppEncryptionPartition appEncryptionPartition)
         {
@@ -192,8 +192,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
 
-                Mock<MemoryPersistenceImpl<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
-                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder);
+                Type c = configFixture.MetastorePersistence.GetType();
+
+                Mock<IMetastorePersistence<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
+                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder, c);
 
                 CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 
