@@ -21,6 +21,7 @@ Any implementation must have the following guarantees in so far as secret inform
 * Values stored will be securely / explicitly zeroed out when no longer in use
 
 ## Protected Memory Implementation
+
 The protected memory implementation of secure memory
 
 * Uses mlock to lock the pages to prevent swapping
