@@ -1,7 +1,18 @@
-version: 2.0
+version: 2.1
 
 orbs:
   compare-url: iynere/compare-url@1.2.0
+
+workflows:
+  version: 2
+  build-test-and-maybe-deploy:
+    jobs:
+      # only if we want conditional build logic (circleci workflow limitations will still lead to some steps running)
+      #- build
+      - languages-java-secure-memory
+      - languages-java-app-encryption:
+          requires:
+            - languages-java-secure-memory
 
 jobs:
   build:
@@ -41,9 +52,10 @@ jobs:
               if grep -Fxq $project project-dirs; then
                 printf "\nTriggerring build for project: "$project
                 project_fixed_up=$(echo $project | tr / -)
-                curl -s -u ${CIRCLE_TOKEN}: \
-                  -d build_parameters[CIRCLE_JOB]=${project_fixed_up} \
-                  https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+                #curl -s -u ${CIRCLE_TOKEN}: \
+                #  -d build_parameters[CIRCLE_JOB]=${project_fixed_up} \
+                #  https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+                touch /tmp/${project_fixed_up}
               fi
             done
   languages-java-secure-memory:
