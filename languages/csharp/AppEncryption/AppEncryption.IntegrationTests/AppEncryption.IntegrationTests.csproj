@@ -24,6 +24,6 @@
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="$(CONFIG_FILE)" CopyToOutputDirectory="Always" />
+        <None Include="config.yaml" CopyToOutputDirectory="Always" />
     </ItemGroup>
 </Project>

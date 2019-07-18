@@ -192,10 +192,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
 
-                Type metaStoreType = configFixture.MetastorePersistence.GetType();
-
                 Mock<IMetastorePersistence<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
-                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder, metaStoreType);
+                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.MetastorePersistence);
 
                 CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 
