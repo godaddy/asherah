@@ -15,6 +15,7 @@ that is secure in the described ways.
 * Minimize the lifetime of secrets in managed memory
 
 ## Guarantees
+
 Any implementation must have the following guarantees in so far as secret information stored in secure memory
 
 * Values stored will not show up in core dumps
