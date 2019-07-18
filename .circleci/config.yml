@@ -10,9 +10,9 @@ workflows:
       # only if we want conditional build logic (circleci workflow limitations will still lead to some steps running)
       #- build
       - languages-java-secure-memory
-      - languages-java-app-encryption:
-          requires:
-            - languages-java-secure-memory
+      #- languages-java-app-encryption:
+      #    requires:
+      #      - languages-java-secure-memory
 
 jobs:
   build:
@@ -69,18 +69,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-java-secure-memory-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
-            - v1-java-secure-memory-{{ .Branch }}-
-            - v1-java-secure-memory-
-      - run:
-          name: Download dependencies for cache
-          command: |
-            cd languages/java/secure-memory
-            mvn dependency:resolve-plugins dependency:go-offline
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-java-secure-memory-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
       - run:
           name: Build
           command: |
@@ -92,6 +83,10 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/secure-memory/target/surefire-reports
   languages-java-app-encryption:
@@ -105,18 +100,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-java-app-encryption-{{ .Branch }}-{{ checksum "languages/java/app-encryption/pom.xml" }}
-            - v1-java-app-encryption-{{ .Branch }}-
-            - v1-java-app-encryption-
-      - run:
-          name: Download dependencies for cache
-          command: |
-            cd languages/java/app-encryption
-            mvn dependency:resolve-plugins dependency:go-offline
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-java-app-encryption-{{ .Branch }}-{{ checksum "languages/java/app-encryption/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
       - run:
           name: Build
           command: |
@@ -128,5 +114,9 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/app-encryption/target/surefire-reports
