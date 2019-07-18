@@ -65,30 +65,35 @@ jobs:
     #  TEST_RESULTS: /tmp/test-results
     steps:
       - checkout
-      - run: cd languages/java/secure-memory
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-java-secure-memory-{{ .Branch }}-{{ checksum "pom.xml" }}
+            - v1-java-secure-memory-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
             - v1-java-secure-memory-{{ .Branch }}-
             - v1-java-secure-memory-
-      - run: mvn dependency:resolve-plugins dependency:go-offline
+      - run:
+          name: Download dependencies for cache
+          command: |
+            cd languages/java/secure-memory
+            mvn dependency:resolve-plugins dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-java-secure-memory-{{ .Branch }}-{{ checksum "pom.xml" }}
+          key: v1-java-secure-memory-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - run:
           name: Build
           command: |
+            cd languages/java/secure-memory
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
+            cd languages/java/secure-memory
             ./scripts/test.sh
       - store_test_results:
-          path: target/surefire-reports
+          path: languages/java/secure-memory/target/surefire-reports
   languages-java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -96,27 +101,32 @@ jobs:
     #  TEST_RESULTS: /tmp/test-results
     steps:
       - checkout
-      - run: cd languages/java/app-encryption
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-java-app-encryption-{{ .Branch }}-{{ checksum "pom.xml" }}
+            - v1-java-app-encryption-{{ .Branch }}-{{ checksum "languages/java/app-encryption/pom.xml" }}
             - v1-java-app-encryption-{{ .Branch }}-
             - v1-java-app-encryption-
-      - run: mvn dependency:resolve-plugins dependency:go-offline
+      - run:
+          name: Download dependencies for cache
+          command: |
+            cd languages/java/app-encryption
+            mvn dependency:resolve-plugins dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-java-app-encryption-{{ .Branch }}-{{ checksum "pom.xml" }}
+          key: v1-java-app-encryption-{{ .Branch }}-{{ checksum "languages/java/app-encryption/pom.xml" }}
       - run:
           name: Build
           command: |
+            cd languages/java/app-encryption
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
+            cd languages/java/app-encryption
             ./scripts/test.sh
       - store_test_results:
-          path: target/surefire-reports
+          path: languages/java/app-encryption/target/surefire-reports
