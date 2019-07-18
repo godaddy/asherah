@@ -59,13 +59,13 @@ jobs:
               fi
             done
   languages-java-secure-memory:
-    working_directory: ~/asherah/languages/java/secure-memory
     docker:
       - image: circleci/openjdk:8-jdk
     #environment:
     #  TEST_RESULTS: /tmp/test-results
     steps:
       - checkout
+      - run: cd languages/java/secure-memory
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
@@ -90,13 +90,13 @@ jobs:
       - store_test_results:
           path: target/surefire-reports
   languages-java-app-encryption:
-    working_directory: ~/asherah/languages/java/app-encryption
     docker:
       - image: circleci/openjdk:8-jdk
     #environment:
     #  TEST_RESULTS: /tmp/test-results
     steps:
       - checkout
+      - run: cd languages/java/app-encryption
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
