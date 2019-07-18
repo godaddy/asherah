@@ -4,6 +4,7 @@ This class provides a way for applications to keep secret information (like cryp
 that is secure in the described ways.
 
 ## Currently supported / tested platforms
+
 * MacOS x86-64
 * Linux x86-64
 
