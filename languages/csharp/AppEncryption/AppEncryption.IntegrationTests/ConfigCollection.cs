@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
+namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
     [CollectionDefinition("Configuration collection")]
     public class ConfigCollection : ICollectionFixture<ConfigFixture>
