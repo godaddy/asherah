@@ -52,7 +52,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 Assert.NotNull(encryptedPayload);
                 VerifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, appEncryptionPartition);
 
-                metastorePersistence.Reset();
+                metastorePersistence.Invocations.Clear();
                 JObject decryptedPayload = appEncryptionJsonImpl.Decrypt(encryptedPayload);
 
                 VerifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, appEncryptionPartition);
@@ -158,6 +158,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             public AppEncryptionParameterizedTestData()
             {
                 configFixture = new ConfigFixture();
+                IMetricsRoot metrics = new MetricsBuilder()
+                    .Configuration.Configure(options => options.Enabled = false)
+                    .Build();
+
+                MetricsUtil.SetMetricsInstance(metrics);
             }
 
             public IEnumerator<object[]> GetEnumerator()
@@ -219,12 +224,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
                     new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
-
-                // Need to manually set a no-op metrics instance
-                IMetrics metrics = new MetricsBuilder()
-                    .Configuration.Configure(options => options.Enabled = false)
-                    .Build();
-                MetricsUtil.SetMetricsInstance(metrics);
 
                 return new object[]
                 {

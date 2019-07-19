@@ -14,22 +14,34 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
     {
         public ConfigFixture()
         {
-            var config = new ConfigurationBuilder()
-                .AddYamlFile(Environment.GetEnvironmentVariable("CONFIG_FILE"))
-                .Build();
+            // Load the config file name from environment variables. If not found, default to config.yaml
+            IConfigurationRoot config;
+            try
+            {
+                config = new ConfigurationBuilder()
+                    .AddYamlFile(Environment.GetEnvironmentVariable("CONFIG_FILE"))
+                    .Build();
+            }
+            catch (ArgumentException)
+            {
+                config = new ConfigurationBuilder()
+                    .AddYamlFile("config.yaml")
+                    .Build();
+            }
+
             MetaStoreType = config["metaStoreType"];
             KmsType = config["kmsType"];
             KeyManagementService = CreateKeyManagementService(KmsType);
             MetastorePersistence = CreateMetaStorePersistence(MetaStoreType);
         }
 
-        public string MetaStoreType { get; }
-
-        public string KmsType { get; }
-
         public KeyManagementService KeyManagementService { get; }
 
         public IMetastorePersistence<JObject> MetastorePersistence { get; }
+
+        private string MetaStoreType { get; }
+
+        private string KmsType { get; }
 
         private IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
         {

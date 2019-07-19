@@ -49,7 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, kms.EncryptKey(systemKey), systemKey.IsRevoked());
-                metaStorePersistenceSpy.Object.Store(
+                metaStore.Store(
                     appEncryptionPartition.SystemKeyId,
                     systemKeyRecord.Created,
                     systemKeyRecord.ToJson());
@@ -71,13 +71,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     new KeyMeta(appEncryptionPartition.SystemKeyId, systemKey.GetCreated()),
                     Crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
-                metaStorePersistenceSpy.Object.Store(
+                metaStore.Store(
                     appEncryptionPartition.IntermediateKeyId,
                     intermediateKeyRecord.Created,
                     intermediateKeyRecord.ToJson());
             }
 
-            metaStorePersistenceSpy.Reset();
             return metaStorePersistenceSpy;
         }
     }
