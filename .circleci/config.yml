@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   compare-url: iynere/compare-url@1.2.0
-  codecov: codecov/codecov@1.0.2
+  codecov: codecov/codecov@1.0.5
 
 workflows:
   version: 2
