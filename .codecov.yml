@@ -39,4 +39,4 @@ flags:
 ignore:
   # Ignore non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
   # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
-  - languages/java/secure-memory/src/main/com/godaddy/securememory/protectedmemoryimpl/macos
+  - languages/java/secure-memory/src/main/java/com/godaddy/securememory/protectedmemoryimpl/macos
