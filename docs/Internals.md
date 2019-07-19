@@ -9,12 +9,12 @@ Depending on policy, we will either continue to encrypt if a key in the tree has
 ```
 Data is ready to write to data persistence
 If latest IK is not cached or latest IK in cache is expired
-    Load latest IK EKR from metadata persistence
+    Load latest IK EKR from metastore
     If IK is found
         If IK is not expired or (IK is expired and policy allows queued rotation)
             If SK is not cached
-                Load specific SK EKR from metadata persistence
-                If SK EKR DOES NOT exist in metadata persistence
+                Load specific SK EKR from metastore
+                If SK EKR DOES NOT exist in metastore
                     Fall through to new IK creation
                 If allowed by policy, add SK to protected memory cache
             If SK is expired
@@ -27,7 +27,7 @@ If latest IK is not cached or latest IK in cache is expired
             Fall through to new IK creation
     Else (new IK being created)
         If latest SK is not cached or latest SK in cache is expired
-            Load latest SK EKR from metadata persistence
+            Load latest SK EKR from metastore
             If SK is found
                 If SK is not expired or (SK is expired and policy allows queued rotation)
                     Use MK in HSM to decrypt SK
@@ -36,20 +36,20 @@ If latest IK is not cached or latest IK in cache is expired
             Else (new SK being created)
                 Create new SK with crypto library (e.g. openssl)
                 Use MK in HSM to encrypt SK
-                Attempt to write SK EKR in metadata persistence
+                Attempt to write SK EKR in metastore
                 If SK EKR write failed due to duplicate (race condition with other thread)
-                    Load latest SK EKR from metadata persistence
+                    Load latest SK EKR from metastore
                     Use MK in HSM to decrypt SK
             If allowed by policy, add SK to protected memory cache
         Create new IK with crypto library (e.g. openssl)
         Use SK to encrypt IK
-        Attempt to write IK EKR in metadata persistence
+        Attempt to write IK EKR in metastore
             If IK EKR write failed due to duplicate (race condition with other thread)
-                Load latest IK EKR from metadata persistence
+                Load latest IK EKR from metastore
                 If SK is not cached
-                    Load specific SK EKR from metadata persistence
-                    If SK EKR DOES NOT exist in metadata persistence
-                        THROW ERROR: Unable to decrypt IK, missing SK from metadata (shouldn't happen)
+                    Load specific SK EKR from metastore
+                    If SK EKR DOES NOT exist in metastore
+                        THROW ERROR: Unable to decrypt IK, missing SK from metastore (shouldn't happen)
                     Use MK in HSM to decrypt SK
                     If allowed by policy, add SK to protected memory cache
                 If SK is expired
@@ -62,20 +62,24 @@ Use IK to encrypt DRK
 Create and write DRR to data persistence
 ```
 
+The following diagram summarizes the entire encrypt path.
+
+![Encrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/encrypt.svg?sanitize=true)
+
 ### Decrypt
 
 ```
 Load DRR from data persistence
 Extract IK meta from DRR
 If IK is not cached
-    Load specific IK EKR from metadata persistence
-    If IK EKR DOES NOT exist in metadata persistence
-        THROW ERROR: Unable to decrypt DRK, missing IK from metadata
+    Load specific IK EKR from metastore
+    If IK EKR DOES NOT exist in metastore
+        THROW ERROR: Unable to decrypt DRK, missing IK from metastore
     Extract SK meta from IK EKR
     If SK is not cached
-        Load specific SK EKR from metadata persistence
-        If SK EKR DOES NOT exist in metadata persistence
-            THROW ERROR: Unable to decrypt IK, missing SK from metadata
+        Load specific SK EKR from metastore
+        If SK EKR DOES NOT exist in metastore
+            THROW ERROR: Unable to decrypt IK, missing SK from metastore
         Use MK in HSM to decrypt SK
         If allowed by policy, add SK to protected memory cache
     If SK is expired
@@ -96,7 +100,12 @@ Use DRK to decrypt Data
 If DRK is expired
     # NOTE: Not currently implemented
     Queue DRK for rotation
+Return decrypted data
 ```
+
+The following diagram summarizes the entire decrypt path.
+
+![Decrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/decrypt.svg?sanitize=true)
 
 ### Future Consideration: Queued Rotation
 
@@ -117,10 +126,10 @@ Once it does:
 
 ```
 Read message from FIFO SK_IK key rotation queue
-If SK message meta = current SK meta in metadata persistence 
-    Load SK EKR from metadata persistence 
+If SK message meta = current SK meta in metastore 
+    Load SK EKR from metastore 
     Use MK in HSM to create and encrypt a new SK
-    Create and write new SK EKR in metadata persistence 
+    Create and write new SK EKR in metastore 
 Delete message
 ```
 
@@ -128,10 +137,10 @@ Delete message
 
 ```
 Read message from FIFO SK_IK key rotation queue
-If IK meta in message = current IK in metadata persistence
-    If SK EKR DOES NOT exist in metadata persistence 
+If IK meta in message = current IK in metastore
+    If SK EKR DOES NOT exist in metastore 
         THROW ERROR: no SK exists
-    Load current SK EKR from metadata persistence
+    Load current SK EKR from metastore
     Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
@@ -139,7 +148,7 @@ If IK meta in message = current IK in metadata persistence
     Else 
         Create new IK from crypto library (e.g. openssl)
         Use SK to encrypt IK
-        Create and write new IK EKR in metadata persistence 
+        Create and write new IK EKR in metastore 
 Delete message
 ```
 
@@ -149,9 +158,9 @@ Delete message
 Read message from standard DRK key rotation queue
 Load DRK EKR from message
 If IK is not cached 
-    Load current IK from metadata persistence 
+    Load current IK from metastore 
     If SK in IK EKR is not cached
-        Load current SK from metadata persistence 
+        Load current SK from metastore 
         Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
@@ -254,6 +263,13 @@ withSecretBytes(function<byte[], type> functionWithSecret) {
 }
 ```
 
+##### Concurrent Access
+
+The `withSecretBytes` pseudocode above is not thread-safe code as written. A thread could disable the memory access as
+another thread attempts to read the secret, which would result in a SIGSEGV signal to the process. Some form of thread
+safety is needed to guard against this. For example, this could be implemented using a lock and access counter to
+determine when we need to make the memory readable (first thread accessing) or unreadable (last thread accessing).
+
 #### Delete a Secret
 
 ```java
@@ -286,3 +302,25 @@ library such as OpenSSL, BoringSSL, etc. The intent of this effort would be to s
 memory protections, refactor existing crypto calls to use the selected library, and provide more cross-language
 implementation consistency.
 
+## Key Cache
+
+### TTL and Expired/Revoked Keys
+
+The [Crypto Policy](CryptoPolicy.md)'s `revokeCheckPeriodMillis` drives the key cache implementation's TTL behavior.
+The TTL is primarily intended to signal refreshing the cache so the SDK can check if keys have been flagged out-of-band
+as revoked (e.g. due to a suspected compromise). Note that in the Java reference implementation, we are not currently
+removing expired or revoked keys from the cache. This approach was chosen to minimize the added latency and cost
+associated with interacting with a KMS/HSM provider (recall TTL is more likely to come into play with System Keys due
+to their [intended lifecycle](KeyCaching.md#cache-lifecycles)).
+
+### Duplicate Key Handling
+
+Since the objects being cached are resources which need to be closed, there is additional complexity when dealing with
+duplicates in the cache. The approach taken in the Java reference implementation is to always return the key intended
+to be closed to the caller:
+* For the case of a new key being added to the cache, we return a new "shared key" representation of the key whose
+close operation is a no-op (since the key passed in to the cache put/store call will now be used in the cache by other
+threads).
+* For the case of a duplicate key being added to the cache (e.g. a race condition's second thread), we return the key
+passed in to the cache put/store call so it can be safely closed without affecting the existing underlying key in the
+cache and ensuring we don't leak the memory space of the key.
