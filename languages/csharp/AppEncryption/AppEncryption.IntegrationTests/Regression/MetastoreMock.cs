@@ -7,7 +7,6 @@ using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
@@ -28,13 +27,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             Mock<IMetastorePersistence<JObject>> metaStorePersistenceSpy = new Mock<IMetastorePersistence<JObject>>();
 
-            metaStorePersistenceSpy.Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
+            metaStorePersistenceSpy
+                .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns<string, DateTimeOffset>(metaStore.Load);
 
-            metaStorePersistenceSpy.Setup(x => x.LoadLatestValue(It.IsAny<string>()))
+            metaStorePersistenceSpy
+                .Setup(x => x.LoadLatestValue(It.IsAny<string>()))
                 .Returns<string>(metaStore.LoadLatestValue);
 
-            metaStorePersistenceSpy.Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
+            metaStorePersistenceSpy
+                .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
                 .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
 
             if (metaSK != KeyState.Empty)
