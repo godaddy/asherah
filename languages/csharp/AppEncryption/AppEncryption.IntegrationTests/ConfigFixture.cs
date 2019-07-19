@@ -46,7 +46,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private string KmsType { get; }
 
-        private IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
+        private static IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
         {
             if (metaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -63,7 +63,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return new MemoryPersistenceImpl<JObject>();
         }
 
-        private KeyManagementService CreateKeyManagementService(string kmsType)
+        private static KeyManagementService CreateKeyManagementService(string kmsType)
         {
             if (kmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
             {
