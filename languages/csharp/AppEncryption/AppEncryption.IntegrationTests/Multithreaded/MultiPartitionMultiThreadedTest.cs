@@ -26,7 +26,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 
         public MultiPartitionMultiThreadedTest(ConfigFixture configFixture)
         {
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(configFixture.KeyManagementService, configFixture.MetastorePersistence);
+            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                configFixture.KeyManagementService,
+                configFixture.MetastorePersistence);
         }
 
         public void Dispose()

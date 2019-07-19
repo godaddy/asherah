@@ -24,7 +24,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         public AppEncryptionJsonMultiThreadedTest(ConfigFixture configFixture)
         {
             payload = PayloadGenerator.CreateDefaultRandomJsonPayload();
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(configFixture.KeyManagementService, configFixture.MetastorePersistence);
+            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                configFixture.KeyManagementService,
+                configFixture.MetastorePersistence);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             appEncryptionJson = appEncryptionSessionFactory.GetAppEncryptionJson(partitionId);
         }
