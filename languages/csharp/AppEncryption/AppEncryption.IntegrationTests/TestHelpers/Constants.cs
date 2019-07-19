@@ -6,14 +6,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         /// KMS
         /// </summary>
         public const string KeyManagementStaticMasterKey = "secretmasterkey!";
-        public const string KeyManagementStatic = "static";
-        public const string KeyManagementAWS = "aws";
+        public const string KeyManagementAws = "aws";
 
         /// <summary>
         /// Metastore
         /// </summary>
-        public const string MetastoreInMemory = "memory";
-        public const string MetastoreADO = "ado";
+        public const string MetastoreAdo = "ado";
         public const string MetastoreDynamoDb = "dynamodb";
 
         /// <summary>
@@ -31,5 +29,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         public const int PayloadSizeBytes = 100;
         public const int NumIterations = 100;
         public const int NumRequests = 100;
+
+        /// <summary>
+        /// Regression Test Configuration
+        /// </summary>
+        public const string ConfigFile = "CONFIG_FILE";
+        public const string DefaultConfigFile = "config.yaml";
+        public const string AdoConnectionString = "METASTORE_ADO_CONNECTIONSTRING";
+        public const string KmsAwsRegionDictionary = "KMS_AWS_REGION_DICTIONARY";
+        public const string KmsAwsPreferredRegion = "KMS_AWS_PREFERRED_REGION";
+        public const string MetaStoreType = "metaStoreType";
+        public const string KmsType = "kmsType";
     }
 }

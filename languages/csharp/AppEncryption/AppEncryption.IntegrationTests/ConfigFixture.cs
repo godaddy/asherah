@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
+
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
@@ -19,18 +21,18 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             try
             {
                 config = new ConfigurationBuilder()
-                    .AddYamlFile(Environment.GetEnvironmentVariable("CONFIG_FILE"))
+                    .AddYamlFile(Environment.GetEnvironmentVariable(ConfigFile))
                     .Build();
             }
             catch (ArgumentException)
             {
                 config = new ConfigurationBuilder()
-                    .AddYamlFile("config.yaml")
+                    .AddYamlFile(DefaultConfigFile)
                     .Build();
             }
 
-            MetaStoreType = config["metaStoreType"];
-            KmsType = config["kmsType"];
+            MetaStoreType = config[Constants.MetaStoreType];
+            KmsType = config[Constants.KmsType];
             KeyManagementService = CreateKeyManagementService(KmsType);
             MetastorePersistence = CreateMetaStorePersistence(MetaStoreType);
         }
@@ -45,10 +47,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
         {
-            if (metaStoreType.Equals(MetastoreADO, StringComparison.InvariantCultureIgnoreCase))
+            if (metaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
             {
                 return AdoMetastorePersistenceImpl
-                    .NewBuilder(MySqlClientFactory.Instance, Environment.GetEnvironmentVariable("METASTORE_ADO_CONNECTIONSTRING"))
+                    .NewBuilder(MySqlClientFactory.Instance, Environment.GetEnvironmentVariable(AdoConnectionString))
                     .Build();
             }
 
@@ -62,14 +64,17 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private KeyManagementService CreateKeyManagementService(string kmsType)
         {
-            if (kmsType.Equals(KeyManagementAWS, StringComparison.InvariantCultureIgnoreCase))
+            if (kmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
             {
-                string regionToArnString = Environment.GetEnvironmentVariable("KMS_AWS_REGION_DICTIONARY");
-                Dictionary<string, string> regionToArnDictionary = regionToArnString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                string regionToArnString = Environment.GetEnvironmentVariable(KmsAwsRegionDictionary);
+
+                Dictionary<string, string> regionToArnDictionary =
+                    regionToArnString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(part => part.Split('='))
                     .ToDictionary(split => split[0], split => split[1]);
+
                 return AwsKeyManagementServiceImpl.NewBuilder(
-                    regionToArnDictionary, Environment.GetEnvironmentVariable("KMS_AWS_PREFERRED_REGION"))
+                    regionToArnDictionary, Environment.GetEnvironmentVariable(KmsAwsPreferredRegion))
                     .Build();
             }
 
