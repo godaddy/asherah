@@ -57,7 +57,11 @@ jobs:
                 #curl -s -u ${CIRCLE_TOKEN}: \
                 #  -d build_parameters[CIRCLE_JOB]=${project_fixed_up} \
                 #  https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
-                touch /tmp/${project_fixed_up}
+
+                # TODO If we end up following through on this route, need context setup in org and share env vars:
+                # https://circleci.com/docs/2.0/workflows/#using-workspaces-to-share-data-among-jobs
+                # https://medium.com/@johnthughes/circleci-persisting-environment-variables-across-steps-and-jobs-5276670cf590
+                # https://discuss.circleci.com/t/ability-to-return-successfully-from-a-job-before-completing-all-the-next-steps/12969/7
               fi
             done
   languages-java-secure-memory:
