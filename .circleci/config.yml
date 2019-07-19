@@ -2,12 +2,14 @@ version: 2.1
 
 orbs:
   compare-url: iynere/compare-url@1.2.0
+  codecov: codecov/codecov@1.0.2
 
 workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
       # only if we want conditional build logic (circleci workflow limitations will still lead to some steps running)
+      # update: may be able to use env variables in workflow context and rely on circleci halt step. codecov impact?
       #- build
       - languages-java-secure-memory
       #- languages-java-app-encryption:
@@ -89,6 +91,9 @@ jobs:
           key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/secure-memory/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: languages-java-secure-memory
   languages-java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -120,3 +125,6 @@ jobs:
           key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/app-encryption/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: languages-java-app-encryption

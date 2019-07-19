@@ -1,0 +1,41 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+        threshold: 5%
+      #languages-csharp-AppEncryption:
+      #  flags: languages-csharp-AppEncryption
+      #  target: 90%
+      #languages-csharp-Logging:
+      #  flags: languages-csharp-Logging
+      #  target: 90%
+      #languages-csharp-SecureMemory:
+      #  flags: languages-csharp-SecureMemory
+      #  target: 90%
+      languages-java-app-encryption:
+        flags: languages-java-app-encryption
+        target: 90%
+      languages-java-secure-memory:
+        target: 90%
+        flags: languages-java-secure-memory
+flags:
+  languages-csharp-AppEncryption:
+    paths:
+      - languages/csharp/AppEncryption
+  languages-csharp-Logging:
+    paths:
+      - languages/csharp/Logging
+  languages-csharp-SecureMemory:
+    paths:
+      - languages/csharp/SecureMemory
+  languages-java-app-encryption:
+    paths:
+      - languages/java/app-encryption
+  languages-java-secure-memory:
+    paths:
+      - languages/java/secure-memory
+ignore:
+  # Ignore non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
+  # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
+  - languages/java/secure-memory/src/main/com/godaddy/securememory/protectedmemoryimpl/macos/*
