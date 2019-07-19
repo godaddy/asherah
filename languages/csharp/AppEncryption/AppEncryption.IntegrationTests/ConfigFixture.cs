@@ -4,6 +4,7 @@ using System.Linq;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
+using GoDaddy.Asherah.Crypto.Exceptions;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
@@ -66,15 +67,20 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
         {
             if (kmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
             {
-                string regionToArnString = Environment.GetEnvironmentVariable(KmsAwsRegionDictionary);
+                string regionToArnTuples = Environment.GetEnvironmentVariable(KmsAwsRegionTuples);
+
+                if (regionToArnTuples == null)
+                {
+                    throw new AppEncryptionException("Missing AWS Region ARN tuples");
+                }
 
                 Dictionary<string, string> regionToArnDictionary =
-                    regionToArnString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(part => part.Split('='))
-                    .ToDictionary(split => split[0], split => split[1]);
+                    regionToArnTuples.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(part => part.Split('='))
+                        .ToDictionary(split => split[0], split => split[1]);
 
                 return AwsKeyManagementServiceImpl.NewBuilder(
-                    regionToArnDictionary, Environment.GetEnvironmentVariable(KmsAwsPreferredRegion))
+                        regionToArnDictionary, Environment.GetEnvironmentVariable(KmsAwsPreferredRegion))
                     .Build();
             }
 

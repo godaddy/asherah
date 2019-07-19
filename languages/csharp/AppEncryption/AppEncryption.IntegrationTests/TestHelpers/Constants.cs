@@ -36,7 +36,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         public const string ConfigFile = "CONFIG_FILE";
         public const string DefaultConfigFile = "config.yaml";
         public const string AdoConnectionString = "METASTORE_ADO_CONNECTIONSTRING";
-        public const string KmsAwsRegionDictionary = "KMS_AWS_REGION_DICTIONARY";
+        public const string KmsAwsRegionTuples = "KMS_AWS_REGION_TUPLES";
         public const string KmsAwsPreferredRegion = "KMS_AWS_PREFERRED_REGION";
         public const string MetaStoreType = "metaStoreType";
         public const string KmsType = "kmsType";
