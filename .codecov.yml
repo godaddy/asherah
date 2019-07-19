@@ -5,34 +5,35 @@ coverage:
         target: 90%
         threshold: 5%
       #languages-csharp-AppEncryption:
-      #  flags: languages-csharp-AppEncryption
+      #  flags: languages_csharp_AppEncryption
       #  target: 90%
       #languages-csharp-Logging:
-      #  flags: languages-csharp-Logging
+      #  flags: languages_csharp_Logging
       #  target: 90%
       #languages-csharp-SecureMemory:
-      #  flags: languages-csharp-SecureMemory
+      #  flags: languages_csharp_SecureMemory
       #  target: 90%
       languages-java-app-encryption:
-        flags: languages-java-app-encryption
+        flags: languages_java_app_encryption
         target: 90%
       languages-java-secure-memory:
         target: 90%
-        flags: languages-java-secure-memory
+        flags: languages_java_secure_memory
+# Note flags have to be "\w" charset (hence underscore instead of hyphen)
 flags:
-  languages-csharp-AppEncryption:
+  languages_csharp_AppEncryption:
     paths:
       - languages/csharp/AppEncryption
-  languages-csharp-Logging:
+  languages_csharp_Logging:
     paths:
       - languages/csharp/Logging
-  languages-csharp-SecureMemory:
+  languages_csharp_SecureMemory:
     paths:
       - languages/csharp/SecureMemory
-  languages-java-app-encryption:
+  languages_java_app_encryption:
     paths:
       - languages/java/app-encryption
-  languages-java-secure-memory:
+  languages_java_secure_memory:
     paths:
       - languages/java/secure-memory
 ignore:

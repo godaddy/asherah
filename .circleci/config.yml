@@ -93,7 +93,7 @@ jobs:
           path: languages/java/secure-memory/target/surefire-reports
       - codecov/upload:
           file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
-          flags: languages-java-secure-memory
+          flags: languages_java_secure_memory
   languages-java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -127,4 +127,4 @@ jobs:
           path: languages/java/app-encryption/target/surefire-reports
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
-          flags: languages-java-app-encryption
+          flags: languages_java_app_encryption
