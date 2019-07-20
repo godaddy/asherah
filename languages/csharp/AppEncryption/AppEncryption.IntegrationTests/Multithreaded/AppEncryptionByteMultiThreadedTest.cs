@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Xunit;
