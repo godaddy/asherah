@@ -50,8 +50,15 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
         {
             if (metaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
             {
+                string adoConnectionString = Environment.GetEnvironmentVariable(AdoConnectionString);
+
+                if (string.IsNullOrWhiteSpace(adoConnectionString))
+                {
+                    throw new AppEncryptionException("Missing ADO connection string");
+                }
+
                 return AdoMetastorePersistenceImpl
-                    .NewBuilder(MySqlClientFactory.Instance, Environment.GetEnvironmentVariable(AdoConnectionString))
+                    .NewBuilder(MySqlClientFactory.Instance, adoConnectionString)
                     .Build();
             }
 
@@ -69,7 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             {
                 string regionToArnTuples = Environment.GetEnvironmentVariable(KmsAwsRegionTuples);
 
-                if (regionToArnTuples == null)
+                if (string.IsNullOrWhiteSpace(regionToArnTuples))
                 {
                     throw new AppEncryptionException("Missing AWS Region ARN tuples");
                 }
