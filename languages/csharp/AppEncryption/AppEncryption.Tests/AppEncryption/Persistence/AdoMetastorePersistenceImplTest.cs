@@ -246,14 +246,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestStoreWithSqlException()
+        private void TestStoreWithSqlExceptionShouldReturnFalse()
         {
             AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            Assert.Throws<AppEncryptionException>(() =>
-                adoMetastorePersistenceImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject()));
+            bool actualValue = adoMetastorePersistenceImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject());
+            Assert.False(actualValue);
         }
 
         [Fact]
