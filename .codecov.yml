@@ -17,8 +17,8 @@ coverage:
         flags: languages_java_app_encryption
         target: 90%
       languages-java-secure-memory:
-        target: 90%
         flags: languages_java_secure_memory
+        target: 90%
 # Note flags have to be "\w" charset (hence underscore instead of hyphen)
 flags:
   languages_csharp_AppEncryption:
