@@ -1,0 +1,8 @@
+languages/csharp/AppEncryption
+languages/csharp/Logging
+languages/csharp/SecureMemory
+languages/java/app-encryption
+languages/java/secure-memory
+samples/csharp/ReferenceApp
+samples/java/reference-app
+tests/java/test-app
