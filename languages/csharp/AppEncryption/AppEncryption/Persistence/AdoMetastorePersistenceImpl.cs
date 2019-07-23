@@ -23,12 +23,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         private const string LoadQuery = @"SELECT key_record from encryption_key where id = @id and created = @created";
 
-        // Store only if a value with the same key doesn't exist
-        // Using this approach since dotnet doesn't provide a specific integrity violation exception
         private const string StoreQuery =
-            @"INSERT INTO encryption_key (id, created, key_record) 
-              SELECT @id, @created, @key_record WHERE NOT EXISTS 
-              (SELECT id from encryption_key where id = @id and created = @created )";
+            @"INSERT INTO encryption_key (id, created, key_record) VALUES (@id, @created, @key_record)";
 
         private const string LoadLatestQuery =
             @"SELECT key_record from encryption_key where id = @id order by created DESC limit 1";
@@ -123,8 +119,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
                             int result = command.ExecuteNonQuery();
 
-                            // Database inserts with WHERE NOT EXISTS sub-clause will return 0 on a duplicate key insertion.
-                            // So, we can return false for such cases
                             return result == 1;
                         }
                     }
@@ -132,7 +126,10 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 catch (DbException dbe)
                 {
                     Logger.LogError(dbe, "Metastore error during store");
-                    throw new AppEncryptionException("Metastore error:", dbe);
+
+                    // ADO based persistence does not provide any kind of specific integrity violation error
+                    // code/exception. Hence we always return false even for systemic issues to keep things simple.
+                    return false;
                 }
             }
         }

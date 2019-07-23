@@ -1,0 +1,126 @@
+version: 2.1
+
+orbs:
+  compare-url: iynere/compare-url@1.2.0
+  codecov: codecov/codecov@1.0.5
+
+workflows:
+  version: 2
+  build-test-and-maybe-deploy:
+    jobs:
+      # commenting out for now. add back if/when we want conditional build logic (see TODO in "build" job)
+      #- build
+      - languages-java-secure-memory
+      #- languages-java-app-encryption:
+      #    requires:
+      #      - languages-java-secure-memory
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - compare-url/reconstruct
+      - compare-url/use:
+          step-name: Determine which projects have changed and trigger the builds
+          custom-logic: |
+            # Some of this is based off https://github.com/Tufin/circleci-monorepo
+
+            # Identify modified directories using compare-url ORB
+
+            # Assumes structure of "languages/<lang>/<project>", "samples/<lang>/<project>", etc.
+            git diff --name-only $COMMIT_RANGE  | cut -d/ -f1,2,3 | sort -u > project_candidates
+            echo -e "Modified directories:\n`cat project_candidates`\n"
+
+            # Build affected projects and their dependencies
+
+            projects_inc_dep=(`cat project_candidates`)
+            # TODO Bonus if we can handle dependencies here for chaining builds when needed, but may be complex w/ multiple langauges
+            #echo -e "Calculating dependencies\n"
+            #for dir in `ls -d */`; do
+            #  for dep in `go list -f '{{ .Deps }}' ./${dir} 2>/dev/null`; do
+            #    for project_dep in `echo $dep | grep github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME | egrep -v "vendor|${dir%\/}"`; do
+            #      if [[ " ${projects_inc_dep[@]} " =~ " ${project_dep##*\/} " ]] && ! [[ " ${projects_inc_dep[@]} " =~ " ${dir%\/} " ]]; then
+            #        projects_inc_dep+=(${dir%\/})
+            #      fi
+            #    done
+            #  done
+            #done
+
+            echo -e "Evaluating whether to build: ${projects_inc_dep[@]}\n"
+            for project in ${projects_inc_dep[@]}; do
+              if grep -Fxq $project project-dirs; then
+                printf "\nTriggerring build for project: "$project
+                project_fixed_up=$(echo $project | tr / -)
+
+                # TODO If we end up following through on this route, can use workflow workspace and perist env vars to signal halt:
+                # https://circleci.com/docs/2.0/workflows/#using-workspaces-to-share-data-among-jobs
+                # https://medium.com/@johnthughes/circleci-persisting-environment-variables-across-steps-and-jobs-5276670cf590
+                # https://discuss.circleci.com/t/ability-to-return-successfully-from-a-job-before-completing-all-the-next-steps/12969/7
+              fi
+            done
+  languages-java-secure-memory:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+      - store_test_results:
+          path: languages/java/secure-memory/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: languages_java_secure_memory
+  languages-java-app-encryption:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd languages/java/app-encryption
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            cd languages/java/app-encryption
+            ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+      - store_test_results:
+          path: languages/java/app-encryption/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: languages_java_app_encryption
