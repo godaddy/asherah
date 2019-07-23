@@ -1,2 +1,5 @@
-"metaStoreType": "memory"
-"kmsType": "static"
+metastoreType: ""
+metastoreAdoConnectionString: ""
+kmsType: ""
+kmsAwsRegionArnTuples: ""
+kmsAwsPreferredRegion: ""

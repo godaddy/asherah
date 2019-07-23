@@ -242,6 +242,8 @@ reference.
 
 ## Development Notes
 
+### Unit Tests
+
 Some unit tests will use the AWS SDK, If you don’t already have a local
 [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
 create a *dummy* file called **`~/.aws/credentials`** with the below contents:
@@ -254,3 +256,15 @@ aws_secret_access_key = barfoo
 
 Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
+### Regression Tests
+
+The regression test use configuration parameters that can be passed either by using a `config.yaml` file or by
+setting the environment variables. The below table outlines the parameter names and their default values (if any)
+
+| Config File                  	| Environment Variable            	| Default Value 	|
+|------------------------------	|---------------------------------	|---------------	|
+| kmsType                      	| KMS_TYPE                        	| static        	|
+| kmsAwsRegionArnTuples        	| KMS_AWS_REGION_ARN_TUPLES       	| N/A           	|
+| kmsAwsPreferredRegion        	| KMS_AWS_PREFERRED_REGION        	| us-west-2     	|
+| metastoreType                	| METASTORE_TYPE                  	| memory        	|
+| metastoreAdoConnectionString 	| METASTORE_ADO_CONNECTION_STRING 	| N/A           	|

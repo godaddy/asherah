@@ -15,54 +15,80 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
     public class ConfigFixture
     {
+        private readonly IConfigurationRoot config;
+
         public ConfigFixture()
         {
             // Load the config file name from environment variables. If not found, default to config.yaml
-            IConfigurationRoot config;
-            try
+            string configFile = Environment.GetEnvironmentVariable(ConfigFile);
+            if (string.IsNullOrWhiteSpace(configFile))
             {
-                config = new ConfigurationBuilder()
-                    .AddYamlFile(Environment.GetEnvironmentVariable(ConfigFile))
-                    .Build();
-            }
-            catch (ArgumentException)
-            {
-                config = new ConfigurationBuilder()
-                    .AddYamlFile(DefaultConfigFile)
-                    .Build();
+                configFile = DefaultConfigFile;
             }
 
-            MetaStoreType = config[Constants.MetaStoreType];
-            KmsType = config[Constants.KmsType];
-            KeyManagementService = CreateKeyManagementService(KmsType);
-            MetastorePersistence = CreateMetaStorePersistence(MetaStoreType);
+            config = new ConfigurationBuilder()
+                .AddYamlFile(configFile)
+                .Build();
+
+            MetaStoreType = GetParam(Constants.MetaStoreType);
+            if (string.IsNullOrWhiteSpace(MetaStoreType))
+            {
+                MetaStoreType = DefaultMetastoreType;
+            }
+
+            KmsType = GetParam(Constants.KmsType);
+            if (string.IsNullOrWhiteSpace(KmsType))
+            {
+                KmsType = DefaultKeyManagementType;
+            }
+
+            KeyManagementService = CreateKeyManagementService();
+            MetastorePersistence = CreateMetaStorePersistence();
         }
 
         public KeyManagementService KeyManagementService { get; }
 
         public IMetastorePersistence<JObject> MetastorePersistence { get; }
 
+        private string PreferredRegion { get; set; }
+
         private string MetaStoreType { get; }
 
         private string KmsType { get; }
 
-        private static IMetastorePersistence<JObject> CreateMetaStorePersistence(string metaStoreType)
+        private static string GetEnvVariable(string input)
         {
-            if (metaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
-            {
-                string adoConnectionString = Environment.GetEnvironmentVariable(AdoConnectionString);
+            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper();
+        }
 
-                if (string.IsNullOrWhiteSpace(adoConnectionString))
+        private string GetParam(string paramName)
+        {
+            string paramValue = Environment.GetEnvironmentVariable(GetEnvVariable(paramName));
+            if (string.IsNullOrWhiteSpace(paramValue))
+            {
+                paramValue = config[paramName];
+            }
+
+            return paramValue;
+        }
+
+        private IMetastorePersistence<JObject> CreateMetaStorePersistence()
+        {
+            if (MetaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
+            {
+                string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
+
+                if (string.IsNullOrWhiteSpace(metastoreAdoConnectionString))
                 {
                     throw new AppEncryptionException("Missing ADO connection string");
                 }
 
                 return AdoMetastorePersistenceImpl
-                    .NewBuilder(MySqlClientFactory.Instance, adoConnectionString)
+                    .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
                     .Build();
             }
 
-            if (metaStoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
+            if (MetaStoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
             {
                 return DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
             }
@@ -70,11 +96,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return new MemoryPersistenceImpl<JObject>();
         }
 
-        private static KeyManagementService CreateKeyManagementService(string kmsType)
+        private KeyManagementService CreateKeyManagementService()
         {
-            if (kmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
+            if (KmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
             {
-                string regionToArnTuples = Environment.GetEnvironmentVariable(KmsAwsRegionTuples);
+                string regionToArnTuples = GetParam(KmsAwsRegionTuples);
 
                 if (string.IsNullOrWhiteSpace(regionToArnTuples))
                 {
@@ -86,8 +112,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                         .Select(part => part.Split('='))
                         .ToDictionary(split => split[0], split => split[1]);
 
-                return AwsKeyManagementServiceImpl.NewBuilder(
-                        regionToArnDictionary, Environment.GetEnvironmentVariable(KmsAwsPreferredRegion))
+                PreferredRegion = GetParam(KmsAwsPreferredRegion);
+                if (string.IsNullOrWhiteSpace(PreferredRegion))
+                {
+                    PreferredRegion = DefaultPreferredRegion;
+                }
+
+                return AwsKeyManagementServiceImpl.NewBuilder(regionToArnDictionary, PreferredRegion)
                     .Build();
             }
 

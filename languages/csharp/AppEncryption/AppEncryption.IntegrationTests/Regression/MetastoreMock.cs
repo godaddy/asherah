@@ -30,11 +30,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             metaStorePersistenceSpy
                 .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns<string, DateTimeOffset>(metaStore.Load);
-
             metaStorePersistenceSpy
                 .Setup(x => x.LoadLatestValue(It.IsAny<string>()))
                 .Returns<string>(metaStore.LoadLatestValue);
-
             metaStorePersistenceSpy
                 .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
                 .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
