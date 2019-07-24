@@ -140,8 +140,8 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-          cd languages/csharp/
-          ./checksum.sh /tmp/checksum.txt ./Logging
+            cd languages/csharp/
+            ./checksum.sh /tmp/checksum.txt ./Logging
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
@@ -177,8 +177,8 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-          cd languages/csharp/
-          ./checksum.sh /tmp/checksum.txt ./SecureMemory
+            cd languages/csharp/
+            ./checksum.sh /tmp/checksum.txt ./SecureMemory
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
@@ -214,8 +214,8 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-          cd languages/csharp/
-          ./checksum.sh /tmp/checksum.txt ./AppEncryption
+            cd languages/csharp/
+            ./checksum.sh /tmp/checksum.txt ./AppEncryption
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
