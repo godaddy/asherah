@@ -7,9 +7,9 @@ coverage:
       #languages-csharp-AppEncryption:
       #  flags: languages_csharp_AppEncryption
       #  target: 90%
-      #languages-csharp-Logging:
-      #  flags: languages_csharp_Logging
-      #  target: 90%
+      languages-csharp-Logging:
+        flags: languages_csharp_Logging
+        target: 90%
       #languages-csharp-SecureMemory:
       #  flags: languages_csharp_SecureMemory
       #  target: 90%

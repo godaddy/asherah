@@ -160,8 +160,9 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-maven-{{ .Branch }}-{{ checksum "languages/csharp/Logging/Logging/Logging.csproj" }}
-#      - store_test_results:
-#          path: languages/java/app-encryption/target/surefire-reports
-#      - codecov/upload:
-#          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
-#          flags: languages_java_app_encryption
+      - store_test_results:
+          path:
+          - languages/csharp/AppEncryption/AppEncryption.Tests
+      - codecov/upload:
+          file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
+          flags: languages_csharp_Logging
