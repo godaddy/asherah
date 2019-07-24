@@ -137,11 +137,16 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+          cd languages/csharp/
+          ./checksum.sh /tmp/checksum.txt ./Logging
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/Logging/*/*.csproj" }}
+            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -158,7 +163,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/Logging/*/*.csproj" }}
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - store_test_results:
           path: languages/csharp/Logging/Logging.Tests
       - codecov/upload:
@@ -169,11 +174,16 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+          cd languages/csharp/
+          ./checksum.sh /tmp/checksum.txt ./SecureMemory
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/SecureMemory/SecureMemory/SecureMemory.csproj" }}
+            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -190,7 +200,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/SecureMemory/SecureMemory/SecureMemory.csproj" }}
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - store_test_results:
           path: languages/csharp/SecureMemory/SecureMemory.Tests
       - codecov/upload:
@@ -201,11 +211,16 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+          cd languages/csharp/
+          ./checksum.sh /tmp/checksum.txt ./AppEncryption
       - restore_cache:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/AppEncryptionAppEncryption/AppEncryption.csproj" }}
+            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -222,7 +237,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/AppEncryption/AppEncryption/AppEncryption.csproj" }}
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - store_test_results:
           path: languages/csharp/AppEncryption/AppEncryption.Tests
       - codecov/upload:
