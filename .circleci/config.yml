@@ -14,6 +14,14 @@ workflows:
       #- languages-java-app-encryption:
       #    requires:
       #      - languages-java-secure-memory
+      - languages-csharp-logging
+#      - languages-csharp-secure-memory
+#          requires:
+#            - languages-csharp-logging
+#      - languages-csharp-app-encryption
+#          requires:
+#            - languages-csharp-logging
+#            - languages-csharp-secure-memory
 
 jobs:
   build:
@@ -124,3 +132,36 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+
+  languages-csharp-logging:
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/Logging/Logging/Logging.csproj" }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
+      - run:
+          name: Build
+          command: |
+            cd languages/csharp/Logging
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/Logging
+            ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/csharp/Logging/Logging/Logging.csproj" }}
+#      - store_test_results:
+#          path: languages/java/app-encryption/target/surefire-reports
+#      - codecov/upload:
+#          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
+#          flags: languages_java_app_encryption
