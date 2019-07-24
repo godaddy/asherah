@@ -11,6 +11,7 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 {
+    [Collection("Configuration collection")]
     public class AppEncryptionJsonMultiThreadedTest : IDisposable
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<AppEncryptionJsonMultiThreadedTest>();
@@ -20,10 +21,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         private readonly string partitionId;
         private readonly AppEncryption<JObject, byte[]> appEncryptionJson;
 
-        public AppEncryptionJsonMultiThreadedTest()
+        public AppEncryptionJsonMultiThreadedTest(ConfigFixture configFixture)
         {
             payload = PayloadGenerator.CreateDefaultRandomJsonPayload();
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory();
+            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                configFixture.KeyManagementService,
+                configFixture.MetastorePersistence);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             appEncryptionJson = appEncryptionSessionFactory.GetAppEncryptionJson(partitionId);
         }

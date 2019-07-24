@@ -15,16 +15,27 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
     {
         private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
 
-         internal static Mock<MemoryPersistenceImpl<JObject>> CreateMetastoreMock(
+        internal static Mock<IMetastorePersistence<JObject>> CreateMetastoreMock(
             AppEncryptionPartition appEncryptionPartition,
             KeyManagementService kms,
             KeyState metaIK,
             KeyState metaSK,
-            CryptoKeyHolder cryptoKeyHolder)
+            CryptoKeyHolder cryptoKeyHolder,
+            IMetastorePersistence<JObject> metaStore)
         {
-            // TODO Change this to generate a mock dynamically based on the Metastore type
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistenceSpy = new Mock<MemoryPersistenceImpl<JObject>> { CallBase = true };
             CryptoKey systemKey = cryptoKeyHolder.SystemKey;
+
+            Mock<IMetastorePersistence<JObject>> metaStorePersistenceSpy = new Mock<IMetastorePersistence<JObject>>();
+
+            metaStorePersistenceSpy
+                .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
+                .Returns<string, DateTimeOffset>(metaStore.Load);
+            metaStorePersistenceSpy
+                .Setup(x => x.LoadLatestValue(It.IsAny<string>()))
+                .Returns<string>(metaStore.LoadLatestValue);
+            metaStorePersistenceSpy
+                .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
+                .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
 
             if (metaSK != KeyState.Empty)
             {
@@ -38,7 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, kms.EncryptKey(systemKey), systemKey.IsRevoked());
-                metastorePersistenceSpy.Object.Store(
+                metaStore.Store(
                     appEncryptionPartition.SystemKeyId,
                     systemKeyRecord.Created,
                     systemKeyRecord.ToJson());
@@ -60,14 +71,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     new KeyMeta(appEncryptionPartition.SystemKeyId, systemKey.GetCreated()),
                     Crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
-                metastorePersistenceSpy.Object.Store(
+                metaStore.Store(
                     appEncryptionPartition.IntermediateKeyId,
                     intermediateKeyRecord.Created,
                     intermediateKeyRecord.ToJson());
             }
 
-            metastorePersistenceSpy.Reset();
-            return metastorePersistenceSpy;
+            return metaStorePersistenceSpy;
         }
     }
 }

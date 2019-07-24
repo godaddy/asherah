@@ -16,6 +16,7 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 {
+    [Collection("Configuration collection")]
     public class MultiPartitionMultiThreadedTest : IDisposable
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiPartitionMultiThreadedTest>();
@@ -23,9 +24,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 
         private readonly AppEncryptionSessionFactory appEncryptionSessionFactory;
 
-        public MultiPartitionMultiThreadedTest()
+        public MultiPartitionMultiThreadedTest(ConfigFixture configFixture)
         {
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory();
+            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                configFixture.KeyManagementService,
+                configFixture.MetastorePersistence);
         }
 
         public void Dispose()
