@@ -7,14 +7,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         /// </summary>
         public const string KeyManagementStaticMasterKey = "secretmasterkey!";
         public const string KeyManagementAws = "aws";
-        public const string DefaultKeyManagementType = "static";
+        public const string KeyManagementStatic = "static";
+        public const string DefaultKeyManagementType = KeyManagementStatic;
 
         /// <summary>
         /// Metastore
         /// </summary>
         public const string MetastoreAdo = "ado";
         public const string MetastoreDynamoDb = "dynamodb";
-        public const string DefaultMetastoreType = "memory";
+        public const string MetastoreMemory = "memory";
+        public const string DefaultMetastoreType = MetastoreMemory;
 
         /// <summary>
         /// IDs & Keys
