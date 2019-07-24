@@ -132,7 +132,6 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
-
   languages-csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.1
@@ -165,3 +164,67 @@ jobs:
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
+  languages-csharp-secure-memory:
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/SecureMemory/SecureMemory/SecureMemory.csproj" }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
+      - run:
+          name: Build
+          command: |
+            cd languages/csharp/SecureMemory
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/SecureMemory
+            ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/csharp/SecureMemory/SecureMemory/SecureMemory.csproj" }}
+      - store_test_results:
+          path: languages/csharp/SecureMemory/SecureMemory.Tests
+      - codecov/upload:
+          file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
+          flags: languages_csharp_SecureMemory
+  languages-csharp-app-encryption:
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ checksum "languages/csharp/AppEncryption/*/*.csproj" }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
+      - run:
+          name: Build
+          command: |
+            cd languages/csharp/AppEncryption
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/AppEncryption
+            ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-maven-{{ .Branch }}-{{ checksum "languages/csharp/AppEncryption/AppEncryption/AppEncryption.csproj" }}
+      - store_test_results:
+          path: languages/csharp/AppEncryption/AppEncryption.Tests
+      - codecov/upload:
+          file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
+          flags: languages_csharp_AppEncryption
