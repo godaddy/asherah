@@ -161,8 +161,7 @@ jobs:
             - ~/.nuget
           key: v1-maven-{{ .Branch }}-{{ checksum "languages/csharp/Logging/Logging/Logging.csproj" }}
       - store_test_results:
-          path:
-          - languages/csharp/AppEncryption/AppEncryption.Tests
+          path: languages/csharp/AppEncryption/AppEncryption.Tests
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
