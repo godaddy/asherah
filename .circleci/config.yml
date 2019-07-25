@@ -173,7 +173,7 @@ jobs:
       - run:
           name: Test Results
           command: |
-            cd languages/csharp/logging
+            cd languages/csharp/Logging
             dotnet tool install -g trx2junit
             trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
