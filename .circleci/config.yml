@@ -75,9 +75,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -92,7 +92,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+          key: v2-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/secure-memory/target/surefire-reports
       - codecov/upload:
@@ -107,9 +107,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -124,7 +124,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+          key: v2-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
       - store_test_results:
           path: languages/java/app-encryption/target/surefire-reports
       - codecov/upload:
@@ -139,9 +139,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -151,7 +151,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
+          key: v2-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
   tests-java-test-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -161,9 +161,9 @@ jobs:
           keys:
             # when pom changes, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -173,4 +173,4 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
+          key: v2-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
