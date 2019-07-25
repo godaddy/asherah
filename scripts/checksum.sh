@@ -1,10 +1,11 @@
 #!/bin/bash
+# Based of https://github.com/chrisbanes/tivi/blob/master/checksum.sh
 RESULT_FILE=$1
-PATH_TO_CHECK_CSPROJ_FILES=$2
+PROJECT_FILE=$2
 
 if [[ -z "$2" ]]
   then
-    echo "No path supplied to check for csproj files"
+    echo "No path supplied to check for project files"
     exit 1
 fi
 
@@ -20,11 +21,11 @@ checksum_file() {
 FILES=()
 while read -r -d ''; do
 	FILES+=("$REPLY")
-done < <(find $2 -name '*.csproj' -type f -print0)
+done < <(find . -name ${PROJECT_FILE} -type f -print0)
 
 # Loop through files and append MD5 to result file
 for FILE in ${FILES[@]}; do
-	echo `checksum_file $FILE` >> $RESULT_FILE
+	echo `checksum_file ${FILE}` >> ${RESULT_FILE}
 done
 # Now sort the file so that it is
-sort $RESULT_FILE -o $RESULT_FILE
+sort ${RESULT_FILE} -o ${RESULT_FILE}

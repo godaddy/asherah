@@ -73,11 +73,16 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd languages/java/app-encryption
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -94,7 +99,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
       - store_test_results:
           path: languages/java/secure-memory/target/surefire-reports
       - codecov/upload:
@@ -105,11 +110,16 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd languages/java/app-encryption
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -126,7 +136,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "languages/java/secure-memory/pom.xml" }}
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
       - store_test_results:
           path: languages/java/app-encryption/target/surefire-reports
       - codecov/upload:
@@ -134,17 +144,17 @@ jobs:
           flags: languages_java_app_encryption
   languages-csharp-logging:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
           name: Generate cache key
           command: |
-            cd languages/csharp/
-            ./checksum.sh /tmp/checksum.txt ./Logging
+            cd languages/csharp/Logging
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
             - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
@@ -160,28 +170,34 @@ jobs:
           command: |
             cd languages/csharp/Logging
             ./scripts/test.sh
+      - run:
+          name: Test Results
+          command: |
+            cd languages/csharp/logging
+            dotnet tool install -g trx2junit
+            trx2junit Logging.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/Logging/Logging.Tests/TestResults
       - save_cache:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
-      - store_test_results:
-          path: languages/csharp/Logging/Logging.Tests
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
   languages-csharp-secure-memory:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
           name: Generate cache key
           command: |
-            cd languages/csharp/
-            ./checksum.sh /tmp/checksum.txt ./SecureMemory
+            cd languages/csharp/SecureMemory
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
             - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
@@ -208,17 +224,17 @@ jobs:
           flags: languages_csharp_SecureMemory
   languages-csharp-app-encryption:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
           name: Generate cache key
           command: |
-            cd languages/csharp/
-            ./checksum.sh /tmp/checksum.txt ./AppEncryption
+            cd languages/csharp/AppEncryption
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
             - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-nuget-{{ .Branch }}-
