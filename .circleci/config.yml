@@ -14,6 +14,12 @@ workflows:
       #- languages-java-app-encryption:
       #    requires:
       #      - languages-java-secure-memory
+      #- samples-java-reference-app:
+      #    requires:
+      #      - languages-java-app-encryption
+      #- tests-java-test-app:
+      #    requires:
+      #      - languages-java-app-encryption
 
 jobs:
   build:
@@ -124,3 +130,47 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+  samples-java-reference-app:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd samples/java/reference-app
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
+  tests-java-test-app:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when pom changes, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd tests/java/test-app
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
