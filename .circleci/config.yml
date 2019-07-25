@@ -82,7 +82,7 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -96,12 +96,12 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/test.sh
+      - store_test_results:
+          path: languages/java/secure-memory/target/surefire-reports
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
-      - store_test_results:
-          path: languages/java/secure-memory/target/surefire-reports
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - codecov/upload:
           file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
           flags: languages_java_secure_memory
@@ -119,7 +119,7 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -133,12 +133,12 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/test.sh
+      - store_test_results:
+          path: languages/java/app-encryption/target/surefire-reports
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.sh" }}
-      - store_test_results:
-          path: languages/java/app-encryption/target/surefire-reports
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
@@ -171,7 +171,7 @@ jobs:
             cd languages/csharp/Logging
             ./scripts/test.sh
       - run:
-          name: Test Results
+          name: Convert test results
           command: |
             cd languages/csharp/Logging
             dotnet tool install -g trx2junit
@@ -214,12 +214,19 @@ jobs:
           command: |
             cd languages/csharp/SecureMemory
             ./scripts/test.sh
+      - run:
+          name: Convert test results
+          command: |
+            cd languages/csharp/SecureMemory
+            dotnet tool install -g trx2junit
+            export PATH="$PATH:/root/.dotnet/tools"
+            trx2junit SecureMemory.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
       - save_cache:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
-      - store_test_results:
-          path: languages/csharp/SecureMemory/SecureMemory.Tests
       - codecov/upload:
           file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: languages_csharp_SecureMemory
@@ -251,12 +258,19 @@ jobs:
           command: |
             cd languages/csharp/AppEncryption
             ./scripts/test.sh
+      - run:
+          name: Convert test results
+          command: |
+            cd languages/csharp/AppEncryption
+            dotnet tool install -g trx2junit
+            export PATH="$PATH:/root/.dotnet/tools"
+            trx2junit AppEncryption.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
       - save_cache:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
-      - store_test_results:
-          path: languages/csharp/AppEncryption/AppEncryption.Tests
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_AppEncryption
