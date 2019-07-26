@@ -1,11 +1,20 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using App.Metrics;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
+using GoDaddy.Asherah.AppEncryption.KeyManagement;
 using GoDaddy.Asherah.AppEncryption.Persistence;
+using GoDaddy.Asherah.AppEncryption.Util;
+using GoDaddy.Asherah.Crypto;
+using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
+using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
@@ -19,10 +28,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         }
 
         [Theory]
-        [MemberData(nameof(AppEncryptionParameterizedTestData.GenerateScenarios), MemberType = typeof(AppEncryptionParameterizedTestData))]
+        [ClassData(typeof(AppEncryptionParameterizedTestData))]
         public void ParameterizedTests(
             IEnvelopeEncryption<byte[]> envelopeEncryptionJson,
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             KeyState cacheIK,
             KeyState metaIK,
             KeyState cacheSK,
@@ -43,7 +52,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 Assert.NotNull(encryptedPayload);
                 VerifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, appEncryptionPartition);
 
-                metastorePersistence.Reset();
+                metastorePersistence.Invocations.Clear();
                 JObject decryptedPayload = appEncryptionJsonImpl.Decrypt(encryptedPayload);
 
                 VerifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, appEncryptionPartition);
@@ -52,7 +61,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         }
 
         private void VerifyDecryptFlow(
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             DecryptMetastoreInteractions metastoreInteractions,
             AppEncryptionPartition appEncryptionPartition)
         {
@@ -73,7 +82,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         }
 
         private void VerifyEncryptFlow(
-            Mock<MemoryPersistenceImpl<JObject>> metastorePersistence,
+            Mock<IMetastorePersistence<JObject>> metastorePersistence,
             EncryptMetastoreInteractions metastoreInteractions,
             AppEncryptionPartition appEncryptionPartition)
         {
@@ -138,6 +147,91 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 metastorePersistence.Verify(
                     x => x.LoadLatestValue(It.IsAny<string>()),
                     Times.Never);
+            }
+        }
+
+        private class AppEncryptionParameterizedTestData : IEnumerable<object[]>
+        {
+            private static readonly Random Random = new Random();
+            private readonly ConfigFixture configFixture;
+
+            public AppEncryptionParameterizedTestData()
+            {
+                configFixture = new ConfigFixture();
+
+                // We do not log metrics for the Parameterized tests but we still need to set a disabled/no-op metrics
+                // instance for the tests to run successfully. This is done below.
+                IMetricsRoot metrics = new MetricsBuilder()
+                    .Configuration.Configure(options => options.Enabled = false)
+                    .Build();
+                MetricsUtil.SetMetricsInstance(metrics);
+            }
+
+            public IEnumerator<object[]> GetEnumerator()
+            {
+                foreach (KeyState cacheIK in Enum.GetValues(typeof(KeyState)))
+                {
+                    foreach (KeyState metaIK in Enum.GetValues(typeof(KeyState)))
+                    {
+                        foreach (KeyState cacheSK in Enum.GetValues(typeof(KeyState)))
+                        {
+                            foreach (KeyState metaSK in Enum.GetValues(typeof(KeyState)))
+                            {
+                                // TODO Add CryptoPolicy.KeyRotationStrategy loop and update expect/verify logic accordingly
+                                yield return GenerateMocks(cacheIK, metaIK, cacheSK, metaSK);
+                            }
+                        }
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private object[] GenerateMocks(KeyState cacheIK, KeyState metaIK, KeyState cacheSK, KeyState metaSK)
+            {
+                AppEncryptionPartition appEncryptionPartition = new AppEncryptionPartition(
+                    cacheIK + "CacheIK_" + metaIK + "MetaIK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() +
+                    "_" + Random.Next(),
+                    cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
+                    DefaultProductId);
+
+                KeyManagementService kms = configFixture.KeyManagementService;
+
+                CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
+
+                Mock<IMetastorePersistence<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
+                    appEncryptionPartition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.MetastorePersistence);
+
+                CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
+
+                // Mimics (mostly) the old TimeBasedCryptoPolicyImpl settings
+                CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
+                    .WithKeyExpirationDays(KeyExpiryDays)
+                    .WithRevokeCheckMinutes(int.MaxValue)
+                    .WithCanCacheIntermediateKeys(false)
+                    .WithCanCacheSystemKeys(false)
+                    .Build();
+
+                SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
+                SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
+
+                EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
+                    appEncryptionPartition,
+                    metastorePersistence.Object,
+                    systemKeyCache,
+                    new FakeSecureCryptoKeyDictionaryFactory<DateTimeOffset>(intermediateKeyCache),
+                    new BouncyAes256GcmCrypto(),
+                    cryptoPolicy,
+                    kms);
+
+                IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
+                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
+
+                return new object[]
+                {
+                    envelopeEncryptionByteImpl, metastorePersistence, cacheIK, metaIK, cacheSK, metaSK,
+                    appEncryptionPartition
+                };
             }
         }
     }

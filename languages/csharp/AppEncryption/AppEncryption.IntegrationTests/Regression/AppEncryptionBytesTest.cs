@@ -9,6 +9,7 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
+    [Collection("Configuration collection")]
     public class AppEncryptionBytesTest : IDisposable
     {
         private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory<byte[]>.CreateInMemoryPersistence();
@@ -17,10 +18,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private readonly string partitionId;
         private readonly AppEncryption<byte[], byte[]> appEncryptionBytes;
 
-        public AppEncryptionBytesTest()
+        public AppEncryptionBytesTest(ConfigFixture configFixture)
         {
             payload = PayloadGenerator.CreateDefaultRandomBytePayload();
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory();
+            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                configFixture.KeyManagementService,
+                configFixture.MetastorePersistence);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             appEncryptionBytes = appEncryptionSessionFactory.GetAppEncryptionBytes(partitionId);
         }

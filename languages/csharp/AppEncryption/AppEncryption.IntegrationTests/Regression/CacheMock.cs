@@ -26,8 +26,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             KeyState cacheSK,
             CryptoKeyHolder cryptoKeyHolder)
         {
-            Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheSpy = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(long.MaxValue / 2) { CallBase = true };
-            Mock<SecureCryptoKeyDictionary<DateTimeOffset>> intermediateKeyCacheSpy = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(long.MaxValue / 2) { CallBase = true };
+            Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheSpy =
+                new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(long.MaxValue / 2) { CallBase = true };
+            Mock<SecureCryptoKeyDictionary<DateTimeOffset>> intermediateKeyCacheSpy =
+                new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(long.MaxValue / 2) { CallBase = true };
 
             if (cacheSK != KeyState.Empty)
             {

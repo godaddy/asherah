@@ -12,9 +12,16 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 {
+    [Collection("Configuration collection")]
     public class MultiFactoryThreadedTest
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiFactoryThreadedTest>();
+        private readonly ConfigFixture configFixture;
+
+        public MultiFactoryThreadedTest(ConfigFixture configFixture)
+        {
+            this.configFixture = configFixture;
+        }
 
         // Create multiple sessions from multiple factories
         // to encrypt and decrypt data for multiple partitions.
@@ -85,7 +92,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             try
             {
                 using (AppEncryptionSessionFactory factory =
-                    SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory())
+                    SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                        configFixture.KeyManagementService,
+                        configFixture.MetastorePersistence))
                 {
                     using (AppEncryption<JObject, byte[]> partition = factory.GetAppEncryptionJson(partitionId))
                     {
