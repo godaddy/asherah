@@ -80,7 +80,7 @@ jobs:
           # TODO : Need to use CIRCLE_WORKING_DIRECTORY
           # Refer to https://discuss.circleci.com/t/circle-working-directory-doesnt-expand/17007/5
           command: |
-            cd languages/java/app-encryption
+            cd languages/java/secure-memory
             ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
