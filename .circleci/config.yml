@@ -77,9 +77,11 @@ jobs:
       - checkout
       - run:
           name: Generate cache key
+          # TODO : Need to use CIRCLE_WORKING_DIRECTORY
+          # Refer to https://discuss.circleci.com/t/circle-working-directory-doesnt-expand/17007/5
           command: |
             cd languages/java/app-encryption
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt pom.xml
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -116,7 +118,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/java/app-encryption
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt pom.xml
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -152,15 +154,8 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-            pwd
-            ls
-            ls scripts/checksum.sh
             cd languages/csharp/Logging
-            ls ~/project/scripts/checksum.sh
-            cd ~
-            pwd
-            /root/project/scripts/checksum.sh /tmp/checksum.txt *.csproj
-            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -204,7 +199,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/csharp/SecureMemory
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -248,7 +243,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/csharp/AppEncryption
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -292,7 +287,7 @@ jobs:
           name: Generate cache key
           command: |
             cd samples/csharp/ReferenceApp
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
