@@ -299,11 +299,6 @@ jobs:
             cd samples/csharp/ReferenceApp
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd samples/csharp/ReferenceApp
-            ./scripts/test.sh
       - save_cache:
           paths:
             - ~/.nuget
