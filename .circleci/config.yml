@@ -157,11 +157,16 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd samples/java/reference-app
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "samples/java/reference-app/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -179,11 +184,16 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd tests/java/test-app
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
-            # when pom changes, use increasingly general patterns to restore cache.
+            # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "tests/java/test-app/pom.xml" }}
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
