@@ -153,8 +153,9 @@ jobs:
           name: Generate cache key
           command: |
             ls
+            pwd
             cd languages/csharp/Logging
-            ./${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
