@@ -152,9 +152,14 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-            ls
             pwd
+            ls
+            ls scripts/checksum.sh
             cd languages/csharp/Logging
+            ls ~
+            cd ~
+            pwd
+            /root/project/scripts/checksum.sh /tmp/checksum.txt *.csproj
             ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
