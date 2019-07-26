@@ -14,6 +14,12 @@ workflows:
       #- languages-java-app-encryption:
       #    requires:
       #      - languages-java-secure-memory
+      #- samples-java-reference-app:
+      #    requires:
+      #      - languages-java-app-encryption
+      #- tests-java-test-app:
+      #    requires:
+      #      - languages-java-app-encryption
       - languages-csharp-logging
 #      - languages-csharp-secure-memory
 #          requires:
@@ -146,6 +152,60 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+  samples-java-reference-app:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd samples/java/reference-app
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd samples/java/reference-app
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+  tests-java-test-app:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Generate cache key
+          command: |
+            cd tests/java/test-app
+            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd tests/java/test-app
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
   languages-csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
