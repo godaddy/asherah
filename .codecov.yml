@@ -4,15 +4,15 @@ coverage:
       default:
         target: 90%
         threshold: 5%
-      #languages-csharp-AppEncryption:
-      #  flags: languages_csharp_AppEncryption
-      #  target: 90%
-      #languages-csharp-Logging:
-      #  flags: languages_csharp_Logging
-      #  target: 90%
-      #languages-csharp-SecureMemory:
-      #  flags: languages_csharp_SecureMemory
-      #  target: 90%
+      languages-csharp-AppEncryption:
+        flags: languages_csharp_AppEncryption
+        target: 90%
+      languages-csharp-Logging:
+        flags: languages_csharp_Logging
+        target: 90%
+      languages-csharp-SecureMemory:
+        flags: languages_csharp_SecureMemory
+        target: 90%
       languages-java-app-encryption:
         flags: languages_java_app_encryption
         target: 90%
