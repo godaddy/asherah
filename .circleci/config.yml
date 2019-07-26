@@ -156,7 +156,7 @@ jobs:
             ls
             ls scripts/checksum.sh
             cd languages/csharp/Logging
-            ls ~
+            ls ~/project/scripts/checksum.sh
             cd ~
             pwd
             /root/project/scripts/checksum.sh /tmp/checksum.txt *.csproj
