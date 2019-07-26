@@ -98,12 +98,12 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/test.sh
-      - store_test_results:
-          path: languages/java/secure-memory/target/surefire-reports
       - save_cache:
           paths:
             - ~/.m2
           key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      - store_test_results:
+          path: languages/java/secure-memory/target/surefire-reports
       - codecov/upload:
           file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
           flags: languages_java_secure_memory
@@ -116,7 +116,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/java/app-encryption
-            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -135,12 +135,12 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/test.sh
-      - store_test_results:
-          path: languages/java/app-encryption/target/surefire-reports
       - save_cache:
           paths:
             - ~/.m2
           key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      - store_test_results:
+          path: languages/java/app-encryption/target/surefire-reports
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
@@ -153,7 +153,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/csharp/Logging
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -172,6 +172,10 @@ jobs:
           command: |
             cd languages/csharp/Logging
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
@@ -181,10 +185,6 @@ jobs:
             trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/Logging/Logging.Tests/TestResults
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
@@ -197,7 +197,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/csharp/SecureMemory
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -216,6 +216,10 @@ jobs:
           command: |
             cd languages/csharp/SecureMemory
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
@@ -225,10 +229,6 @@ jobs:
             trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - codecov/upload:
           file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: languages_csharp_SecureMemory
@@ -241,7 +241,7 @@ jobs:
           name: Generate cache key
           command: |
             cd languages/csharp/AppEncryption
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -260,6 +260,10 @@ jobs:
           command: |
             cd languages/csharp/AppEncryption
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
@@ -269,10 +273,6 @@ jobs:
             trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_AppEncryption
@@ -285,7 +285,7 @@ jobs:
           name: Generate cache key
           command: |
             cd samples/csharp/ReferenceApp
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            ${CIRCLE_WORKING_DIRECTORY}/scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
