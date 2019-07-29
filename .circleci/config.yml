@@ -99,6 +99,7 @@ jobs:
           name: Build
           command: |
             cd languages/java/secure-memory
+            dotnet restore
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
