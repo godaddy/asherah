@@ -21,9 +21,9 @@ workflows:
       #    requires:
       #      - languages-java-app-encryption
       - languages-csharp-logging
-#      - languages-csharp-secure-memory
-#          requires:
-#            - languages-csharp-logging
+      - languages-csharp-secure-memory
+          requires:
+            - languages-csharp-logging
 #      - languages-csharp-app-encryption
 #          requires:
 #            - languages-csharp-secure-memory
