@@ -21,13 +21,13 @@ workflows:
       #    requires:
       #      - languages-java-app-encryption
       - languages-csharp-logging
-      - languages-csharp-secure-memory
+      - languages-csharp-secure-memory:
           requires:
             - languages-csharp-logging
-#      - languages-csharp-app-encryption
+#      - languages-csharp-app-encryption:
 #          requires:
 #            - languages-csharp-secure-memory
-#      - samples-csharp-reference-app
+#      - samples-csharp-reference-app:
 #          requires:
 #            - languages-csharp-app-encryption
 
