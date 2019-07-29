@@ -12,5 +12,6 @@
   </PropertyGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../PlatformNative/PlatformNative.csproj" />
+    <ProjectReference Include="../../Logging/Logging/Logging.csproj" />
   </ItemGroup>
 </Project>
