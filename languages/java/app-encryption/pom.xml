@@ -9,7 +9,7 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>Asherah</name>
   <description>
-      An application-layer encryption SDK that provides advanced encryption features and defense in depth against
+      An application-layer encryption SDK that provides advanced encryption features and in depth defense against
       compromise.
   </description>
   <url>https://github.com/godaddy/asherah</url>
