@@ -248,7 +248,7 @@ jobs:
             dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
             find . -name *.nupkg -exec dotnet nuget push {} -s local \;
       - persist_to_workspace:
-          root: root
+          root: /root
           paths:
             - .nuget
       - run:
@@ -269,7 +269,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: root
+          at: /root
       - run:
           name: Generate cache key
           command: |
