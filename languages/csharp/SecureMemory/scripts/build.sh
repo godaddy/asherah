@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-dotnet build --configuration Release
+dotnet build --configuration Release --no-restore

@@ -22,8 +22,8 @@ workflows:
       #      - languages-java-app-encryption
       - languages-csharp-logging
       - languages-csharp-secure-memory
-#          requires:
-#            - languages-csharp-logging
+          requires:
+            - languages-csharp-logging
 #      - languages-csharp-app-encryption:
 #          requires:
 #            - languages-csharp-secure-memory
@@ -99,7 +99,6 @@ jobs:
           name: Build
           command: |
             cd languages/java/secure-memory
-            dotnet restore
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
@@ -227,6 +226,8 @@ jobs:
       - run:
           name: Build
           command: |
+            mkdir -p ~/.nuget/NuGet/
+            cp .cicleci/Nuget.Config ~/.nuget/NuGet/
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -239,6 +240,16 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      -run:
+          name: Push to local artifactory
+          command: |
+            cd languages/csharp/Logging
+            dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
+            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - .nuget
       - run:
           name: Convert test results
           command: |
@@ -256,6 +267,8 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - attach_workspace:
+          at: root
       - run:
           name: Generate cache key
           command: |
@@ -271,6 +284,11 @@ jobs:
       - run:
           name: Build
           command: |
+            ls
+            ls .nuget
+            ls .nuget/packages/
+            mkdir -p ~/.nuget/NuGet/
+            cp .cicleci/Nuget.Config ~/.nuget/NuGet/
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -283,6 +301,12 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      -run:
+          name: Push to local artifactory
+          command: |
+            cd languages/csharp/SecureMemory
+            dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
+            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
       - run:
           name: Convert test results
           command: |
