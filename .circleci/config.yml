@@ -79,7 +79,17 @@ jobs:
         type: string
     steps:
       - checkout
-      - compare-url/reconstruct
+      # TEMP: Hack for https://github.com/iynere/compare-url/issues/25 -- duplicate the reconstruct call w/ patch
+      #- compare-url/reconstruct
+      - run:
+          name: Reconstruct CIRCLE_COMPARE_URL
+          when: always
+          command: ./.circleci/compare-url-reconstruct-patch.sh
+      - persist_to_workspace:
+          root: .
+          paths:
+            - CIRCLE_COMPARE_URL.txt
+            - BASE_COMPARE_COMMIT.txt
       - compare-url/use:
           step-name: Determine projects changed
           custom-logic: |
@@ -90,36 +100,11 @@ jobs:
             git diff --name-only $COMMIT_RANGE  | cut -d/ -f1,2,3 | sort -u > project_candidates
             echo -e "Modified directories:\n$(cat project_candidates)\n"
 
-            # Build affected projects and their dependencies
-            # Hacky way to do bash 3 compatible associative array (in case we ever build on mac).
-            # Pairs are of the format "<project>=<dependency>"
-            project_dep_hash=(
-              'languages/csharp/SecureMemory=languages/csharp/Logging'
-              'languages/csharp/AppEncryption=languages/csharp/SecureMemory'
-              'languages/java/app-encryption=languages/java/secure-memory'
-              'samples/csharp/ReferenceApp=languages/csharp/AppEncryption'
-              'samples/java/reference-app=languages/java/app-encryption'
-              'tests/java/test-app=languages/java/app-encryption'
-            )
-
+            # Build affected projects and any downstream dependencies
             echo -e "Calculating dependencies\n"
-            projects_inc_dep=($(cat project_candidates))
-            for project in ${projects_inc_dep[@]}; do
-              # Yes, it's O(n) but should be fast
-              for pair in $project_dep_hash; do
-                if [ "${pair%%=*}" = $project ]; then
-                  dependency_to_add="${pair##*=}"
-                  break
-                fi
-              done
+            ./.circleci/calculate_dependencies.py project_candidates projects_to_build
 
-              if [ ! -z $dependency_to_add ]; then
-                projects_inc_dep+=(${dependency_to_add})
-              fi
-
-              unset dependency_to_add
-            done
-
+            projects_inc_dep=($(cat projects_to_build))
             echo -e "Evaluating whether to build: ${projects_inc_dep[@]}\n"
             mkdir -p << parameters.workspace-dir >>
             for project in ${projects_inc_dep[@]}; do
