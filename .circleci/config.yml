@@ -343,6 +343,7 @@ jobs:
             cd languages/csharp/AppEncryption
             ./scripts/clean.sh
             ./scripts/build.sh
+      - setup_remote_docker
       - run:
           name: Tests
           command: |
