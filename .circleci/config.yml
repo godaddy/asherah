@@ -228,7 +228,7 @@ jobs:
           command: |
             mkdir -p ~/.nuget/NuGet/
             ls .circleci
-            cp .circleci/Nuget.Config ~/.nuget/NuGet/
+            cp .circleci/NuGet.Config ~/.nuget/NuGet/
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -289,7 +289,7 @@ jobs:
             ls .nuget
             ls .nuget/packages/
             mkdir -p ~/.nuget/NuGet/
-            cp .circleci/Nuget.Config ~/.nuget/NuGet/
+            cp .circleci/NuGet.Config ~/.nuget/NuGet/
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
