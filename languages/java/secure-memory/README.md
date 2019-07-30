@@ -17,7 +17,6 @@ that is secure in the described ways.
 ## Guarantees
 
 Any implementation must have the following guarantees in so far as secret information stored in secure memory
-
 * Values stored will not show up in core dumps
 * Values stored will not be swapped
 * Values stored will be securely / explicitly zeroed out when no longer in use
