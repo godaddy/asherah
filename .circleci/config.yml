@@ -24,9 +24,9 @@ workflows:
       - languages-csharp-secure-memory:
           requires:
             - languages-csharp-logging
-#      - languages-csharp-app-encryption:
-#          requires:
-#            - languages-csharp-secure-memory
+      - languages-csharp-app-encryption:
+          requires:
+            - languages-csharp-secure-memory
 #      - samples-csharp-reference-app:
 #          requires:
 #            - languages-csharp-app-encryption
@@ -227,7 +227,6 @@ jobs:
           name: Build
           command: |
             mkdir -p /root/.nuget/NuGet/
-            ls .circleci
             cp .circleci/NuGet.Config /root/.nuget/NuGet/
             cd languages/csharp/Logging
             ./scripts/clean.sh
@@ -285,11 +284,6 @@ jobs:
       - run:
           name: Build
           command: |
-            ls
-            ls /root/.nuget
-            ls /root/.nuget/packages/
-            mkdir -p /root/.nuget/NuGet/
-            cp .circleci/NuGet.Config /root/.nuget/NuGet/
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -308,6 +302,10 @@ jobs:
             cd languages/csharp/SecureMemory
             dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
             find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .nuget
       - run:
           name: Convert test results
           command: |
@@ -325,6 +323,8 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - attach_workspace:
+          at: /root
       - run:
           name: Generate cache key
           command: |
@@ -352,6 +352,16 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      - run:
+          name: Push to local artifactory
+          command: |
+            cd languages/csharp/AppEncryption
+            dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
+            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .nuget
       - run:
           name: Convert test results
           command: |
