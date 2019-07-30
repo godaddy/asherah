@@ -107,6 +107,7 @@ jobs:
             projects_inc_dep=($(cat projects_to_build))
             echo -e "Evaluating whether to build: ${projects_inc_dep[@]}\n"
             mkdir -p << parameters.workspace-dir >>
+            touch << parameters.workspace-dir >>/<< parameters.env-file >>
             for project in ${projects_inc_dep[@]}; do
               if grep -Fxq $project project-dirs; then
                 echo -e "\nWill trigger build for project: ${project}"
