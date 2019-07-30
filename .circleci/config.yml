@@ -40,10 +40,10 @@ workflows:
       - languages-java-secure-memory:
           requires:
             - detect-changed-projects
-      - languages-java-app-encryption:
-          requires:
-            - detect-changed-projects
-            - languages-java-secure-memory
+      #- languages-java-app-encryption:
+      #    requires:
+      #      - detect-changed-projects
+      #      - languages-java-secure-memory
       #- samples-java-reference-app:
       #    requires:
       #      - detect-changed-projects
