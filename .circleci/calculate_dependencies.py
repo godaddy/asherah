@@ -23,6 +23,7 @@ with open(sys.argv[1]) as projects_changed_file:
 
 # Loop forever until we're done adding dependencies
 while True:
+    added_new_project = False
     for project in projects_to_build_set.copy():
         # If this project has downstream dependencies, add them to the set if needed and signal that we need to
         # loop again
@@ -33,9 +34,7 @@ while True:
                     added_new_project = True
 
     # Check if we're looping again or done processing
-    if added_new_project:
-        added_new_project = False
-    else:
+    if not added_new_project:
         break
 
 # Write final list of projects to build
