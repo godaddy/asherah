@@ -227,7 +227,7 @@ jobs:
           name: Build
           command: |
             mkdir -p ~/.nuget/NuGet/
-            cp .cicleci/Nuget.Config ~/.nuget/NuGet/
+            cp project/.cicleci/Nuget.Config ~/.nuget/NuGet/
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -247,7 +247,7 @@ jobs:
             dotnet pack -c Release --version-suffix --version-suffix label-$(date "+%Y%m%d")
             find . -name *.nupkg -exec dotnet nuget push {} -s local \;
       - persist_to_workspace:
-          root: workspace
+          root: root
           paths:
             - .nuget
       - run:
@@ -288,7 +288,7 @@ jobs:
             ls .nuget
             ls .nuget/packages/
             mkdir -p ~/.nuget/NuGet/
-            cp .cicleci/Nuget.Config ~/.nuget/NuGet/
+            cp project/.cicleci/Nuget.Config ~/.nuget/NuGet/
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
