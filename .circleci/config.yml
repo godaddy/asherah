@@ -111,7 +111,7 @@ jobs:
             for project in ${projects_inc_dep[@]}; do
               if grep -Fxq $project project-dirs; then
                 echo -e "\nWill trigger build for project: ${project}"
-                project_fixed_up=$(echo $project | tr / _ | tr '[:lower:]' '[:upper:]')
+                project_fixed_up=$(echo $project | tr / _ | tr - _ | tr '[:lower:]' '[:upper:]')
 
                 # We'll use an env variable to indicate when a project needs to be built downstream
                 echo "export ${project_fixed_up}=changed" >> << parameters.workspace-dir >>/<< parameters.env-file >>

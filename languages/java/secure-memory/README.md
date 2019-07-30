@@ -23,7 +23,7 @@ Any implementation must have the following guarantees in so far as secret inform
 
 ## Protected Memory Implementation
 
-The protected memory implementation of secure memory
+The protected memory implementation of secure memory:
 * Uses mlock to lock the pages to prevent swapping
 * Uses mprotect to mark the pages no-access until needed
 * If the operating system supports it, uses madvise to disallow core dumps of protected regions
