@@ -12,8 +12,8 @@ if len(sys.argv) <= 2:
 project_dependency_dict = {
     'languages/csharp/Logging': ['languages/csharp/SecureMemory'],
     'languages/csharp/SecureMemory': ['languages/csharp/AppEncryption'],
-    'languages/java/secure-memory': ['languages/java/app-encryption'],
     'languages/csharp/AppEncryption': ['samples/csharp/ReferenceApp'],
+    'languages/java/secure-memory': ['languages/java/app-encryption'],
     'languages/java/app-encryption': ['samples/java/reference-app', 'tests/java/test-app']
 }
 
