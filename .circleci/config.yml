@@ -63,10 +63,10 @@ workflows:
           requires:
             - detect-changed-projects
             - languages-csharp-secure-memory
-#      - samples-csharp-reference-app:
-#          requires:
-#            - detect-changed-projects
-#            - languages-csharp-app-encryption
+      - samples-csharp-reference-app:
+          requires:
+            - detect-changed-projects
+            - languages-csharp-app-encryption
 
 jobs:
   detect-changed-projects:
@@ -410,21 +410,6 @@ jobs:
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
-          name: Install Docker
-          command: |
-            apt-get update \
-            && apt-get install -y --no-install-recommends libxml2-utils apt-transport-https ca-certificates curl gnupg2 software-properties-common \
-            && curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
-            && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
-            && apt update \
-            && apt-get install -y --no-install-recommends docker-ce-cli \
-            && rm -rf /var/lib/apt/lists/*
-
-            dotnet tool install dotnet-setversion --tool-path /usr/bin \
-            && chmod 755 /usr/bin/setversion
-      - setup_remote_docker:
-          version: 18.09.3
-      - run:
           name: Tests
           command: |
             cd languages/csharp/AppEncryption
@@ -461,8 +446,10 @@ jobs:
     steps:
       - *attach_workspace
       - *setup_env
-      - *proceed_or_skip_job
+#      - *proceed_or_skip_job
       - checkout
+      - attach_workspace:
+          at: /root
       - run:
           name: Generate cache key
           command: |
