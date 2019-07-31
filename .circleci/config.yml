@@ -53,7 +53,7 @@ workflows:
       #      - detect-changed-projects
       #      - languages-java-app-encryption
       - languages-csharp-logging:
-        requires:
+          requires:
           - detect-changed-projects
       - languages-csharp-secure-memory:
           requires:
