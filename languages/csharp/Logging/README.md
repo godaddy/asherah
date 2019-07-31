@@ -8,7 +8,7 @@ The logging project provides static factory methods that are used to provide log
 
 ### Setup the Logger Factory
 
-The logger factory is be setup by calling the provided `SetLoggerFactory` method with a LoggerFactory instance 
+The logger factory is setup by calling the provided `SetLoggerFactory` method with a LoggerFactory instance
 as a parameter. This can typically be done during service startup.
 
 ```c#
