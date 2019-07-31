@@ -4,130 +4,43 @@ version: 2.1
 references:
   workspace_root: &workspace_root
     /tmp/workspace
-  env_file: &env_file
-    env-file
   attach_workspace: &attach_workspace
     attach_workspace:
       at: *workspace_root
-  setup_env: &setup_env
-    run:
-      name: Setup Environment Variables
-      command: |
-        cat /tmp/workspace/env-file >> $BASH_ENV
-  proceed_or_skip_job: &proceed_or_skip_job
-    run:
-      name: Check if Build Needed
-      command: |
-        project_fixed_up=$(echo $CIRCLE_JOB | tr - _ | tr '[:lower:]' '[:upper:]')
-        if [ "${!project_fixed_up}" = "changed" ]; then
-          echo "Changes detected or upstream dependency changed. Proceeding with build of ${CIRCLE_JOB}."
-        else
-          echo "No changes detected. Skipping build of ${CIRCLE_JOB}."
-          circleci-agent step halt
-        fi
 
 orbs:
-  compare-url: iynere/compare-url@1.2.0
   codecov: codecov/codecov@1.0.5
 
 workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - detect-changed-projects:
-          workspace-dir: *workspace_root
-          env-file: *env_file
-      - languages-java-secure-memory:
-          requires:
-            - detect-changed-projects
+      - languages-java-secure-memory
       #- languages-java-app-encryption:
       #    requires:
-      #      - detect-changed-projects
       #      - languages-java-secure-memory
       #- samples-java-reference-app:
       #    requires:
-      #      - detect-changed-projects
       #      - languages-java-app-encryption
       #- tests-java-test-app:
       #    requires:
-      #      - detect-changed-projects
       #      - languages-java-app-encryption
-      - languages-csharp-logging:
-          requires:
-          - detect-changed-projects
+      - languages-csharp-logging
       - languages-csharp-secure-memory:
           requires:
-            - detect-changed-projects
             - languages-csharp-logging
       - languages-csharp-app-encryption:
           requires:
-            - detect-changed-projects
             - languages-csharp-secure-memory
       - samples-csharp-reference-app:
           requires:
-            - detect-changed-projects
             - languages-csharp-app-encryption
 
 jobs:
-  detect-changed-projects:
-    docker:
-      - image: circleci/python:3.7
-    parameters:
-      workspace-dir:
-        type: string
-      env-file:
-        type: string
-    steps:
-      - checkout
-      # TEMP: Hack for https://github.com/iynere/compare-url/issues/25 -- duplicate the reconstruct call w/ patch
-      #- compare-url/reconstruct
-      - run:
-          name: Reconstruct CIRCLE_COMPARE_URL
-          when: always
-          command: ./.circleci/compare-url-reconstruct-patch.sh
-      - persist_to_workspace:
-          root: .
-          paths:
-            - CIRCLE_COMPARE_URL.txt
-            - BASE_COMPARE_COMMIT.txt
-      - compare-url/use:
-          step-name: Determine projects changed
-          custom-logic: |
-            # Some of this is based off https://github.com/Tufin/circleci-monorepo
-
-            # Identify modified directories using compare-url ORB
-            # Assumes structure of "languages/<lang>/<project>", "samples/<lang>/<project>", etc.
-            git diff --name-only $COMMIT_RANGE  | cut -d/ -f1,2,3 | sort -u > project_candidates
-            echo -e "Modified directories:\n$(cat project_candidates)\n"
-
-            # Build affected projects and any downstream dependencies
-            echo -e "Calculating dependencies\n"
-            ./.circleci/calculate_dependencies.py project_candidates projects_to_build
-
-            projects_inc_dep=($(cat projects_to_build))
-            echo -e "Evaluating whether to build: ${projects_inc_dep[@]}\n"
-            mkdir -p << parameters.workspace-dir >>
-            touch << parameters.workspace-dir >>/<< parameters.env-file >>
-            for project in ${projects_inc_dep[@]}; do
-              if grep -Fxq $project project-dirs; then
-                echo -e "\nWill trigger build for project: ${project}"
-                project_fixed_up=$(echo $project | tr / _ | tr - _ | tr '[:lower:]' '[:upper:]')
-
-                # We'll use an env variable to indicate when a project needs to be built downstream
-                echo "export ${project_fixed_up}=changed" >> << parameters.workspace-dir >>/<< parameters.env-file >>
-              fi
-            done
-      - persist_to_workspace:
-          root: *workspace_root
-          paths:
-            - *env_file
   languages-java-secure-memory:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -167,9 +80,6 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -207,9 +117,6 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -237,9 +144,6 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -267,9 +171,6 @@ jobs:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -326,9 +227,6 @@ jobs:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
@@ -385,9 +283,6 @@ jobs:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
@@ -444,9 +339,6 @@ jobs:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
-      - *attach_workspace
-      - *setup_env
-      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
