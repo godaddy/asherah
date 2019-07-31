@@ -269,7 +269,7 @@ jobs:
     steps:
       - *attach_workspace
       - *setup_env
-#      - *proceed_or_skip_job
+      - *proceed_or_skip_job
       - checkout
       - run:
           name: Generate cache key
@@ -328,7 +328,7 @@ jobs:
     steps:
       - *attach_workspace
       - *setup_env
-#      - *proceed_or_skip_job
+      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
@@ -387,7 +387,7 @@ jobs:
     steps:
       - *attach_workspace
       - *setup_env
-#      - *proceed_or_skip_job
+      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
@@ -446,7 +446,7 @@ jobs:
     steps:
       - *attach_workspace
       - *setup_env
-#      - *proceed_or_skip_job
+      - *proceed_or_skip_job
       - checkout
       - attach_workspace:
           at: /root
