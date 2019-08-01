@@ -19,13 +19,13 @@ workflows:
       - languages-java-app-encryption:
           requires:
             - languages-java-secure-memory
-      #- samples-java-reference-app:
-      #    requires:
-      #      - languages-java-app-encryption
-      #- tests-java-test-app:
-      #    requires:
-      #      - languages-java-app-encryption
-      - languages-csharp-logging
+      - samples-java-reference-app:
+          requires:
+            - languages-java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - languages-java-app-encryption
+#      - languages-csharp-logging
 #      - languages-csharp-secure-memory
 #          requires:
 #            - languages-csharp-logging
@@ -42,6 +42,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - run:
           name: Generate cache key
           # TODO : Need to use CIRCLE_WORKING_DIRECTORY
@@ -115,6 +117,15 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/test.sh
+      - run:
+          name: Install locally
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - .m2
       - save_cache:
           paths:
             - ~/.m2
@@ -129,6 +140,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - run:
           name: Generate cache key
           command: |
@@ -156,6 +169,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci
       - run:
           name: Generate cache key
           command: |
