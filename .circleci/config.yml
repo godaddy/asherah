@@ -73,7 +73,7 @@ jobs:
             cd languages/java/secure-memory
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: ~
+          root: /home/circleci
           paths:
             - .m2
       - save_cache:
@@ -91,7 +91,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: ~
+          at: /home/circleci
       - run:
           name: Generate cache key
           command: |
