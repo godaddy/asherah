@@ -187,8 +187,6 @@ jobs:
       - run:
           name: Build
           command: |
-            mkdir -p /root/.nuget/NuGet/
-            cp .circleci/NuGet.Config /root/.nuget/NuGet/
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -201,12 +199,16 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+      -run:
+          name: Add local nuget configuration
+          command: |
+            mkdir -p /root/.nuget/NuGet/
+            cp .circleci/NuGet.Config /root/.nuget/NuGet/
       - run:
-          name: Push to local artifactory
+          name: Install locally
           command: |
             cd languages/csharp/Logging
-            dotnet pack -c Release --version-suffix label-$(date "+%Y%m%d")
-            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+            ./scripts/install_local.sh
       - persist_to_workspace:
           root: /root
           paths:
@@ -258,11 +260,10 @@ jobs:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
-          name: Push to local artifactory
+          name: Install locally
           command: |
             cd languages/csharp/SecureMemory
-            dotnet pack -c Release --version-suffix label-$(date "+%Y%m%d")
-            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+            ./install_local.sh
       - persist_to_workspace:
           root: /root
           paths:
@@ -314,11 +315,10 @@ jobs:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
-          name: Push to local artifactory
+          name: Install locally
           command: |
             cd languages/csharp/AppEncryption
-            dotnet pack -c Release --version-suffix label-$(date "+%Y%m%d")
-            find . -name *.nupkg -exec dotnet nuget push {} -s local \;
+            ./scripts/install_local.sh
       - persist_to_workspace:
           root: /root
           paths:
