@@ -263,7 +263,7 @@ jobs:
           name: Install locally
           command: |
             cd languages/csharp/SecureMemory
-            ./install_local.sh
+            ./scripts/install_local.sh
       - persist_to_workspace:
           root: /root
           paths:
