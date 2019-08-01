@@ -24,11 +24,6 @@
 <!--     <docker.registry></docker.registry> -->
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
-  <distributionManagement>
-    <repository>
-      <!-- TODO Replace when doing public cicd work -->
-    </repository>
-  </distributionManagement>
   <scm>
     <connection>scm:git:https://github.com/godaddy/asherah.git</connection>
     <developerConnection>scm:git:https://github.com/godaddy/asherah.git</developerConnection>
