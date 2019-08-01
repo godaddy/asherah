@@ -16,9 +16,9 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - languages-java-secure-memory
-      #- languages-java-app-encryption:
-      #    requires:
-      #      - languages-java-secure-memory
+      - languages-java-app-encryption:
+          requires:
+            - languages-java-secure-memory
       #- samples-java-reference-app:
       #    requires:
       #      - languages-java-app-encryption
@@ -72,6 +72,10 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: ~
+          paths:
+            - .m2
       - save_cache:
           paths:
             - ~/.m2
@@ -86,6 +90,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: ~
       - run:
           name: Generate cache key
           command: |
