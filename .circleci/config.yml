@@ -93,7 +93,7 @@ jobs:
               echo "Detected tagged production release, proceeding to deploy"
               #./scripts/deploy.sh
             else
-              echo "Skipping deployment step..."
+              echo "Not releasable build, skipping deployment step"
             fi
   languages-java-app-encryption:
     docker:
