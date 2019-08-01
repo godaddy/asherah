@@ -19,9 +19,9 @@
     <com.zaxxer.hikaricp.version>2.6.1</com.zaxxer.hikaricp.version>
     <mockito.core.version>2.22.0</mockito.core.version>
     <elasticsearch.version>6.3.2</elasticsearch.version>
-    <docker.image.src.root>images</docker.image.src.root>
-    <docker.config.file>${env.DOCKER_CONFIG}/config.json</docker.config.file>
-    <!-- <docker.registry></docker.registry> -->
+<!--    <docker.image.src.root>images</docker.image.src.root>-->
+<!--    <docker.config.file>${env.DOCKER_CONFIG}/config.json</docker.config.file>-->
+<!--     <docker.registry></docker.registry> -->
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
   <distributionManagement>
@@ -156,56 +156,56 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>com.spotify</groupId>
-        <artifactId>dockerfile-maven-plugin</artifactId>
-        <version>1.4.10</version>
-        <executions>
-          <execution>
-            <id>alpine</id>
-            <goals>
-              <goal>build</goal>
-              <goal>push</goal>
-            </goals>
-            <configuration>
-              <!-- <repository>${docker.registry}/${project.artifactId}/alpine</repository> -->
-              <dockerfile>${project.build.directory}/${docker.image.src.root}/alpine/Dockerfile</dockerfile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>debian</id>
-            <goals>
-              <goal>build</goal>
-              <goal>push</goal>
-            </goals>
-            <configuration>
-              <!-- <repository>${docker.registry}/${project.artifactId}/debian</repository> -->
-              <dockerfile>${project.build.directory}/${docker.image.src.root}/debian/Dockerfile</dockerfile>
-            </configuration>
-          </execution>
-          <execution>
-            <id>ubuntu</id>
-            <goals>
-              <goal>build</goal>
-              <goal>push</goal>
-            </goals>
-            <configuration>
-              <!-- <repository>${docker.registry}/${project.artifactId}/ubuntu</repository> -->
-              <dockerfile>${project.build.directory}/${docker.image.src.root}/ubuntu/Dockerfile</dockerfile>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <tag>${project.version}</tag>
-          <contextDirectory>${project.build.directory}</contextDirectory>
-          <dockerConfigFile>${docker.config.file}</dockerConfigFile>
-          <verbose>true</verbose>
-          <skipDockerInfo>true</skipDockerInfo>
-          <buildArgs>
-            <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
-          </buildArgs>
-        </configuration>
-      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>com.spotify</groupId>-->
+<!--        <artifactId>dockerfile-maven-plugin</artifactId>-->
+<!--        <version>1.4.10</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>alpine</id>-->
+<!--            <goals>-->
+<!--              <goal>build</goal>-->
+<!--              <goal>push</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              &lt;!&ndash; <repository>${docker.registry}/${project.artifactId}/alpine</repository> &ndash;&gt;-->
+<!--              <dockerfile>${project.build.directory}/${docker.image.src.root}/alpine/Dockerfile</dockerfile>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--          <execution>-->
+<!--            <id>debian</id>-->
+<!--            <goals>-->
+<!--              <goal>build</goal>-->
+<!--              <goal>push</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              &lt;!&ndash; <repository>${docker.registry}/${project.artifactId}/debian</repository> &ndash;&gt;-->
+<!--              <dockerfile>${project.build.directory}/${docker.image.src.root}/debian/Dockerfile</dockerfile>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--          <execution>-->
+<!--            <id>ubuntu</id>-->
+<!--            <goals>-->
+<!--              <goal>build</goal>-->
+<!--              <goal>push</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              &lt;!&ndash; <repository>${docker.registry}/${project.artifactId}/ubuntu</repository> &ndash;&gt;-->
+<!--              <dockerfile>${project.build.directory}/${docker.image.src.root}/ubuntu/Dockerfile</dockerfile>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--        <configuration>-->
+<!--          <tag>${project.version}</tag>-->
+<!--          <contextDirectory>${project.build.directory}</contextDirectory>-->
+<!--          <dockerConfigFile>${docker.config.file}</dockerConfigFile>-->
+<!--          <verbose>true</verbose>-->
+<!--          <skipDockerInfo>true</skipDockerInfo>-->
+<!--          <buildArgs>-->
+<!--            <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
+<!--          </buildArgs>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>

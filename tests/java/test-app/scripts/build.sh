@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-mvn -U compile
+mvn -U package
