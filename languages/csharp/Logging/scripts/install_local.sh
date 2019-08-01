@@ -2,7 +2,7 @@
 set -e
 
 FULL_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-TIME_STAMP=.$(date "+%Y%m%d")
+TIME_STAMP=$(date "+%Y%m%d")
 PACKAGE_VERSION=${FULL_VERSION}.${TIME_STAMP}
 
 dotnet pack -c Release -p:PackageVersion=${PACKAGE_VERSION}
