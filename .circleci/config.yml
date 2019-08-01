@@ -71,7 +71,7 @@ jobs:
           name: Install locally
           command: |
             cd languages/java/secure-memory
-            ./scripts/local_install.sh
+            ./scripts/install_local.sh
       - save_cache:
           paths:
             - ~/.m2
