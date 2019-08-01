@@ -67,7 +67,7 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/test.sh
-      -run:
+      - run:
         - name: Install locally
           - command: |
               cd languages/java/secure-memory
@@ -76,7 +76,7 @@ jobs:
           root: ~
           paths:
             - .m2
-      -run:
+      - run:
         - name: Test local install
           - command: |
                pwd
