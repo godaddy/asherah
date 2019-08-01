@@ -345,7 +345,6 @@ jobs:
       - run:
           name: Generate cache key
           command: |
-            ls /root/.nuget/packages/godaddy.asherah.appencryption/*/
             cd samples/csharp/ReferenceApp
             ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
