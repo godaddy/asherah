@@ -16,16 +16,16 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - languages-java-secure-memory
-      - languages-java-app-encryption:
-          requires:
-            - languages-java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - languages-java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - languages-java-app-encryption
-#      - languages-csharp-logging
+#      - languages-java-app-encryption:
+#          requires:
+#            - languages-java-secure-memory
+#      - samples-java-reference-app:
+#          requires:
+#            - languages-java-app-encryption
+#      - tests-java-test-app:
+#          requires:
+#            - languages-java-app-encryption
+      - languages-csharp-logging
 #      - languages-csharp-secure-memory
 #          requires:
 #            - languages-csharp-logging
