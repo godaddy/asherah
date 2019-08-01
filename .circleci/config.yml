@@ -199,7 +199,7 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
-      -run:
+      - run:
           name: Add local nuget configuration
           command: |
             mkdir -p /root/.nuget/NuGet/
