@@ -133,29 +133,29 @@
           </dependency>
         </dependencies>
       </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/${docker.image.src.root}</outputDirectory>
-              <resources>
-                <!-- Copy entire Dockerfile image structure, except build -->
-                <resource>
-                  <directory>${docker.image.src.root}</directory>
-                  <exclude>**/build/**</exclude>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+<!--      <plugin>-->
+<!--        <artifactId>maven-resources-plugin</artifactId>-->
+<!--        <version>3.1.0</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>copy-resources</id>-->
+<!--            <phase>package</phase>-->
+<!--            <goals>-->
+<!--              <goal>copy-resources</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <outputDirectory>${project.build.directory}/${docker.image.src.root}</outputDirectory>-->
+<!--              <resources>-->
+<!--                &lt;!&ndash; Copy entire Dockerfile image structure, except build &ndash;&gt;-->
+<!--                <resource>-->
+<!--                  <directory>${docker.image.src.root}</directory>-->
+<!--                  <exclude>**/build/**</exclude>-->
+<!--                </resource>-->
+<!--              </resources>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
 <!--      <plugin>-->
 <!--        <groupId>com.spotify</groupId>-->
 <!--        <artifactId>dockerfile-maven-plugin</artifactId>-->
