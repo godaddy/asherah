@@ -173,14 +173,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install tools
+          name: Setup csharp environment
           command: |
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
-      - run:
-          name: Add local nuget configuration
-          command: |
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
@@ -235,11 +232,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install tools
+          name: Setup csharp environment
           command: |
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - attach_workspace:
           at: /root
       - run:
@@ -294,11 +293,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install tools
+          name: Setup csharp environment
           command: |
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - attach_workspace:
           at: /root
       - run:
@@ -352,11 +353,6 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - run:
-          name: Install tools
-          command: |
-            apt-get update
-            apt-get install -y libxml2-utils
       - attach_workspace:
           at: /root
       - run:
