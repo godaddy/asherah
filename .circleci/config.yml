@@ -83,18 +83,16 @@ jobs:
 
             TAG_NAME=$(git tag -l --points-at HEAD)
             echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-            # Only deploy for master, rc tags, and GA tags
+            # Only deploy for master, RC tags, and prod release tags
             if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
               echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}" =~ ^test[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
               echo "Detected tagged RC, proceeding to deploy"
-              #./scripts/deploy.sh
-            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}"  =~ ^test[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
               echo "Detected tagged production release, proceeding to deploy"
-              #./scripts/deploy.sh
+              ./scripts/deploy.sh
             else
               echo "Not releasable build, skipping deployment step"
             fi
@@ -135,6 +133,26 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/java/app-encryption
+
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+            # Only deploy for master, RC tags, and prod release tags
+            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
+              echo "Detected master branch, proceeding to deploy Snapshot"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
   samples-java-reference-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -233,6 +251,23 @@ jobs:
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/Logging
+
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
   languages-csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -277,6 +312,23 @@ jobs:
       - codecov/upload:
           file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: languages_csharp_SecureMemory
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/SecureMemory
+
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
   languages-csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -321,6 +373,23 @@ jobs:
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_AppEncryption
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/AppEncryption
+
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
   samples-csharp-reference-app:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
