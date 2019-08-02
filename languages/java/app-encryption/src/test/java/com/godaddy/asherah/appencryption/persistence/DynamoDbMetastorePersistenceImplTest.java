@@ -6,13 +6,18 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Optional;
+
 import org.json.JSONObject;
-//import org.junit.jupiter.api.AfterEach;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
-//import org.testcontainers.junit.jupiter.Container;
-//import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -26,21 +31,19 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
+import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.google.common.collect.ImmutableMap;
 
 import static com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-//@Testcontainers
-class DynamoDbMetastorePersistenceImplTestIT {
+class DynamoDbMetastorePersistenceImplTest {
 
-  static final int DYNAMO_DB_PORT = 8000;
+  static final String DYNAMO_DB_PORT = "8000";
   static final String TEST_KEY = "some_key";
-
-//  @Container
-  static final GenericContainer<?> DYNAMO_DB_CONTAINER = new GenericContainer<>("amazon/dynamodb-local:latest")
-      .withExposedPorts(DYNAMO_DB_PORT);
+  static DynamoDBProxyServer server;
 
   // Note we need to use BigDecimals here to make the asserts play nice. SDK is always converting numbers to BigDecimal
   final Map<String, ?> keyRecord = ImmutableMap.of(
@@ -52,19 +55,30 @@ class DynamoDbMetastorePersistenceImplTestIT {
 
   final Instant instant = Instant.now().minus(1, ChronoUnit.DAYS);
 
-  DynamoDB dynamoDbDocumentClient;
   Table table;
+  DynamoDB dynamoDbDocumentClient;
   DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl;
 
-//  @BeforeEach
+  @BeforeAll
+  public static void setupClass() throws Exception {
+    System.setProperty("sqlite4java.library.path", "native-libs");
+    String port = DYNAMO_DB_PORT;
+    server = ServerRunner.createServerFromCommandLineArgs(
+        new String[]{"-inMemory", "-port", port});
+    server.start();
+  }
+
+  @AfterAll
+  public static void teardownClass() throws Exception {
+    server.stop();
+  }
+
+  @BeforeEach
   void setUp() {
-    // Setup client pointing to our local docker container
-    String endpointUrl = String.format("http://%s:%s",
-        DYNAMO_DB_CONTAINER.getContainerIpAddress(),
-        DYNAMO_DB_CONTAINER.getMappedPort(DYNAMO_DB_PORT));
+    // Setup client pointing to our local dynamodb
     dynamoDbDocumentClient = new DynamoDB(
-        AmazonDynamoDBClientBuilder.standard()
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpointUrl, null))
+        AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
+            new AwsClientBuilder.EndpointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
             .build());
 
     dynamoDbMetastorePersistenceImpl = new DynamoDbMetastorePersistenceImpl(dynamoDbDocumentClient);
@@ -89,13 +103,13 @@ class DynamoDbMetastorePersistenceImplTestIT {
     table.putItem(item);
   }
 
-//  @AfterEach
+  @AfterEach
   void tearDown() {
     // Blow out the whole table so we have clean slate each time
     dynamoDbDocumentClient.getTable(TABLE_NAME).delete();
   }
 
-//  @Test
+  @Test
   void testLoadSuccess() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(TEST_KEY, instant);
 
@@ -103,20 +117,20 @@ class DynamoDbMetastorePersistenceImplTestIT {
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 
-//  @Test
+  @Test
   void testLoadWithNoResultShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load("fake_key", Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
-//  @Test
+  @Test
   void testLoadWithFailureShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(null, Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
 
-//  @Test
+  @Test
   void testLoadLatestValueWithSingleRecord() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(TEST_KEY);
 
@@ -124,7 +138,7 @@ class DynamoDbMetastorePersistenceImplTestIT {
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 
-//  @Test
+  @Test
   void testLoadLatestValueWithMultipleRecords() {
     Instant instantMinusOneHour = instant.minus(1, ChronoUnit.HOURS);
     Instant instantPlusOneHour = instant.plus(1, ChronoUnit.HOURS);
@@ -166,28 +180,28 @@ class DynamoDbMetastorePersistenceImplTestIT {
     assertEquals(instantPlusOneDay.getEpochSecond(), actualJsonObject.get().getLong("mytime"));
   }
 
-//  @Test
+  @Test
   void testLoadLatestValueWithNoResultShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue("fake_key");
 
     assertFalse(actualJsonObject.isPresent());
   }
 
-//  @Test
+  @Test
   void testLoadLatestValueWithFailureShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(null);
 
     assertFalse(actualJsonObject.isPresent());
   }
 
-//  @Test
+  @Test
   void testStoreSuccess() {
     boolean actualValue = dynamoDbMetastorePersistenceImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
 
     assertTrue(actualValue);
   }
 
-//  @Test
+  @Test
   void testStoreWithDuplicateShouldReturnFalse() {
     Instant now = Instant.now();
     boolean firstAttempt = dynamoDbMetastorePersistenceImpl.store(TEST_KEY, now, new JSONObject(keyRecord));
@@ -197,20 +211,18 @@ class DynamoDbMetastorePersistenceImplTestIT {
     assertFalse(secondAttempt);
   }
 
-//  @Test
+  @Test
   void testStoreWithFailureShouldThrowException() {
-    assertThrows(AppEncryptionException.class,
-        () -> dynamoDbMetastorePersistenceImpl.store(null, Instant.now(), new JSONObject()));
+    assertThrows(AppEncryptionException.class, () -> dynamoDbMetastorePersistenceImpl.store(null, Instant.now(), new JSONObject()));
   }
 
-//  @Test
+  @Test
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
     DynamoDbMetastorePersistenceImpl.Builder dynamoDbMetastorePersistenceServicePrimaryBuilder =
         DynamoDbMetastorePersistenceImpl.newBuilder();
-    DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
-        dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
+    DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl = dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
     assertNotNull(dynamoDbMetastorePersistenceImpl);
   }
 

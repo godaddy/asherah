@@ -115,6 +115,9 @@ jobs:
       - run:
           name: Tests
           command: |
+            # Using dummy values for AWS based tests
+            export AWS_ACCESS_KEY="access"
+            export AWS_SECRET_KEY="secret"
             cd languages/java/app-encryption
             ./scripts/test.sh
       - save_cache:
