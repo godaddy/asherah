@@ -84,7 +84,7 @@ jobs:
             cd languages/java/secure-memory
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: $HOME
+          root: /home/circleci
           paths:
             - .m2
   languages-java-app-encryption:
@@ -132,7 +132,7 @@ jobs:
             cd languages/java/app-encryption
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: $HOME
+          root: /home/circleci
           paths:
             - .m2
   samples-java-reference-app:
