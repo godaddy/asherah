@@ -240,7 +240,7 @@ jobs:
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
       - attach_workspace:
-          at: /root
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
@@ -301,7 +301,7 @@ jobs:
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
       - attach_workspace:
-          at: /root
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
@@ -354,7 +354,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /root
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
