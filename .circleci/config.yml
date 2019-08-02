@@ -226,7 +226,7 @@ jobs:
             cd languages/csharp/Logging
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: ~
+          root: /root
           paths:
             - .nuget
   languages-csharp-secure-memory:
@@ -285,7 +285,7 @@ jobs:
             cd languages/csharp/SecureMemory
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: ~
+          root: /root
           paths:
             - .nuget
   languages-csharp-app-encryption:
@@ -344,7 +344,7 @@ jobs:
             cd languages/csharp/AppEncryption
             ./scripts/install_local.sh
       - persist_to_workspace:
-          root: ~
+          root: /root
           paths:
             - .nuget
   samples-csharp-reference-app:
