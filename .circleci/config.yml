@@ -16,9 +16,6 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - languages-java-secure-memory:
-          filters:
-            tags:
-              only: /.*/
       #- languages-java-app-encryption:
       #    requires:
       #      - languages-java-secure-memory
@@ -84,17 +81,18 @@ jobs:
           command: |
             cd languages/java/secure-memory
 
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${CIRCLE_TAG}"
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
             # Only deploy for master, rc tags, and GA tags
             if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
               echo "Detected master branch, proceeding to deploy Snapshot"
               #./scripts/deploy.sh
-            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${CIRCLE_TAG}" =~ ^v\d*\.\d*\.\d*-rc\d*$ ]]; then
-            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${CIRCLE_TAG}" =~ ^test\d*\.\d*\.\d*-rc\d*$ ]]; then
+            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v\d*\.\d*\.\d*-rc\d*$ ]]; then
+            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}" =~ ^test\d*\.\d*\.\d*-rc\d*$ ]]; then
               echo "Detected tagged RC, proceeding to deploy"
               #./scripts/deploy.sh
-            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${CIRCLE_TAG}" =~ ^v\d*\.\d*\.\d*$ ]]; then
-            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${CIRCLE_TAG}" =~ ^test\d*\.\d*\.\d*$ ]]; then
+            #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v\d*\.\d*\.\d*$ ]]; then
+            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}" =~ ^test\d*\.\d*\.\d*$ ]]; then
               echo "Detected tagged production release, proceeding to deploy"
               #./scripts/deploy.sh
             else
