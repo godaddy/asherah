@@ -92,7 +92,7 @@ jobs:
               echo "Detected tagged RC, proceeding to deploy"
               #./scripts/deploy.sh
             #elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}" =~ ^test[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+            elif [[ "${CIRCLE_BRANCH}" =~ circle_deploy_.* && "${TAG_NAME}"  =~ ^test[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
               echo "Detected tagged production release, proceeding to deploy"
               #./scripts/deploy.sh
             else
