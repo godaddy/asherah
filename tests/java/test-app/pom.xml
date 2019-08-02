@@ -21,7 +21,7 @@
     <elasticsearch.version>6.3.2</elasticsearch.version>
     <docker.image.src.root>images</docker.image.src.root>
     <docker.config.file>${env.DOCKER_CONFIG}/config.json</docker.config.file>
-    <docker.registry></docker.registry>
+<!--    <docker.registry></docker.registry>-->
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
   <scm>
