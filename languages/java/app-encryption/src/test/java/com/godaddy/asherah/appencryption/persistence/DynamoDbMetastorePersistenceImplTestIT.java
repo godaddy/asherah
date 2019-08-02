@@ -32,11 +32,15 @@ import com.google.common.collect.ImmutableMap;
 import static com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-
-class DynamoDbMetastorePersistenceImplTest {
+//@Testcontainers
+class DynamoDbMetastorePersistenceImplTestIT {
 
   static final int DYNAMO_DB_PORT = 8000;
   static final String TEST_KEY = "some_key";
+
+//  @Container
+  static final GenericContainer<?> DYNAMO_DB_CONTAINER = new GenericContainer<>("amazon/dynamodb-local:latest")
+      .withExposedPorts(DYNAMO_DB_PORT);
 
   // Note we need to use BigDecimals here to make the asserts play nice. SDK is always converting numbers to BigDecimal
   final Map<String, ?> keyRecord = ImmutableMap.of(
@@ -46,17 +50,52 @@ class DynamoDbMetastorePersistenceImplTest {
       "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr",
       "Created", new BigDecimal(1541461381));
 
-  @BeforeEach
+  final Instant instant = Instant.now().minus(1, ChronoUnit.DAYS);
+
+  DynamoDB dynamoDbDocumentClient;
+  Table table;
+  DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl;
+
+//  @BeforeEach
   void setUp() {
+    // Setup client pointing to our local docker container
+    String endpointUrl = String.format("http://%s:%s",
+        DYNAMO_DB_CONTAINER.getContainerIpAddress(),
+        DYNAMO_DB_CONTAINER.getMappedPort(DYNAMO_DB_PORT));
+    dynamoDbDocumentClient = new DynamoDB(
+        AmazonDynamoDBClientBuilder.standard()
+            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpointUrl, null))
+            .build());
 
+    dynamoDbMetastorePersistenceImpl = new DynamoDbMetastorePersistenceImpl(dynamoDbDocumentClient);
+
+    // Create table schema
+    dynamoDbDocumentClient.createTable(new CreateTableRequest()
+        .withTableName(TABLE_NAME)
+        .withKeySchema(
+            new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
+            new KeySchemaElement(SORT_KEY, KeyType.RANGE))
+        .withAttributeDefinitions(
+            new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
+            new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
+        .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+
+    table = dynamoDbDocumentClient.getTable(TABLE_NAME);
+    Item item = new Item()
+        .withPrimaryKey(
+            PARTITION_KEY, TEST_KEY,
+            SORT_KEY, instant.getEpochSecond())
+        .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
+    table.putItem(item);
   }
 
-  @AfterEach
+//  @AfterEach
   void tearDown() {
-
+    // Blow out the whole table so we have clean slate each time
+    dynamoDbDocumentClient.getTable(TABLE_NAME).delete();
   }
 
-  @Test
+//  @Test
   void testLoadSuccess() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(TEST_KEY, instant);
 
@@ -64,20 +103,20 @@ class DynamoDbMetastorePersistenceImplTest {
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 
-  @Test
+//  @Test
   void testLoadWithNoResultShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load("fake_key", Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
-  @Test
+//  @Test
   void testLoadWithFailureShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(null, Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
 
-  @Test
+//  @Test
   void testLoadLatestValueWithSingleRecord() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(TEST_KEY);
 
@@ -85,7 +124,7 @@ class DynamoDbMetastorePersistenceImplTest {
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 
-  @Test
+//  @Test
   void testLoadLatestValueWithMultipleRecords() {
     Instant instantMinusOneHour = instant.minus(1, ChronoUnit.HOURS);
     Instant instantPlusOneHour = instant.plus(1, ChronoUnit.HOURS);
