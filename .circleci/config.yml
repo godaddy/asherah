@@ -16,15 +16,15 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - languages-java-secure-memory
-      #- languages-java-app-encryption:
-      #    requires:
-      #      - languages-java-secure-memory
-      #- samples-java-reference-app:
-      #    requires:
-      #      - languages-java-app-encryption
-      #- tests-java-test-app:
-      #    requires:
-      #      - languages-java-app-encryption
+      - languages-java-app-encryption:
+          requires:
+            - languages-java-secure-memory
+      - samples-java-reference-app:
+          requires:
+            - languages-java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - languages-java-app-encryption
       - languages-csharp-logging
 #      - languages-csharp-secure-memory
 #          requires:
@@ -42,6 +42,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: $HOME
       - run:
           name: Generate cache key
           # TODO : Need to use CIRCLE_WORKING_DIRECTORY
@@ -76,11 +78,22 @@ jobs:
       - codecov/upload:
           file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
           flags: languages_java_secure_memory
+      - run:
+          name: Install locally
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - .m2
   languages-java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
@@ -113,11 +126,22 @@ jobs:
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+      - run:
+          name: Install locally
+          command: |
+            cd languages/java/app-encryption
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - .m2
   samples-java-reference-app:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
@@ -145,6 +169,8 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - attach_workspace:
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
