@@ -178,7 +178,6 @@ jobs:
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
-            export PATH="$PATH:$HOME/.dotnet/tools"
       - run:
           name: Add local nuget configuration
           command: |
@@ -215,7 +214,7 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/Logging
-            trx2junit Logging.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/Logging/Logging.Tests/TestResults
       - codecov/upload:
@@ -241,7 +240,6 @@ jobs:
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
-            export PATH="$PATH:$HOME/.dotnet/tools"
       - attach_workspace:
           at: /root
       - run:
@@ -275,7 +273,7 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/SecureMemory
-            trx2junit SecureMemory.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
       - codecov/upload:
@@ -301,7 +299,6 @@ jobs:
             apt-get update
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
-            export PATH="$PATH:$HOME/.dotnet/tools"
       - attach_workspace:
           at: /root
       - run:
@@ -335,7 +332,7 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/AppEncryption
-            trx2junit AppEncryption.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
       - codecov/upload:
