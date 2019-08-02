@@ -15,7 +15,7 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - languages-java-secure-memory:
+      - languages-java-secure-memory
       #- languages-java-app-encryption:
       #    requires:
       #      - languages-java-secure-memory
