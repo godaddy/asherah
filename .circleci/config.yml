@@ -26,15 +26,15 @@ workflows:
           requires:
             - languages-java-app-encryption
       - languages-csharp-logging
-#      - languages-csharp-secure-memory
-#          requires:
-#            - languages-csharp-logging
-#      - languages-csharp-app-encryption
-#          requires:
-#            - languages-csharp-secure-memory
-#      - samples-csharp-reference-app
-#          requires:
-#            - languages-csharp-app-encryption
+      - languages-csharp-secure-memory:
+          requires:
+            - languages-csharp-logging
+      - languages-csharp-app-encryption:
+          requires:
+            - languages-csharp-secure-memory
+      - samples-csharp-reference-app:
+          requires:
+            - languages-csharp-app-encryption
 
 jobs:
   languages-java-secure-memory:
@@ -199,6 +199,14 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Setup csharp environment
+          command: |
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
           name: Generate cache key
           command: |
             cd languages/csharp/Logging
@@ -229,20 +237,37 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/Logging
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit Logging.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/Logging/Logging.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
+      - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/Logging
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .nuget
   languages-csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
+          name: Setup csharp environment
+          command: |
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - attach_workspace:
+          at: $HOME
+      - run:
           name: Generate cache key
           command: |
             cd languages/csharp/SecureMemory
@@ -273,20 +298,37 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/SecureMemory
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit SecureMemory.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: languages_csharp_SecureMemory
+      - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/SecureMemory
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .nuget
   languages-csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
+          name: Setup csharp environment
+          command: |
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - attach_workspace:
+          at: $HOME
+      - run:
           name: Generate cache key
           command: |
             cd languages/csharp/AppEncryption
@@ -317,19 +359,28 @@ jobs:
           name: Convert test results
           command: |
             cd languages/csharp/AppEncryption
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit AppEncryption.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_AppEncryption
+      - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/AppEncryption
+            ./scripts/install_local.sh
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .nuget
   samples-csharp-reference-app:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - attach_workspace:
+          at: $HOME
       - run:
           name: Generate cache key
           command: |
