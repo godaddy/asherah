@@ -13,7 +13,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
-        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="1.0.0-alpha" />
+        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="1.0.0-alpha*" />
         <PackageReference Include="CommandLineParser" Version="2.4.3" />
         <PackageReference Include="MySql.Data" Version="8.0.16" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />

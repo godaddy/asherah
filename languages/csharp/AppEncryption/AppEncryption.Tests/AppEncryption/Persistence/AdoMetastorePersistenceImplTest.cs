@@ -139,9 +139,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Theory]
-        [InlineData(KeyStringWithParentKeyMetaKey, KeyStringWithParentKeyMetaValue)]
-        [InlineData(KeyStringWithNoParentKeyMetaKey, KeyStringWithNoParentKeyMetaValue)]
+        // [Theory]
+        // [InlineData(KeyStringWithParentKeyMetaKey, KeyStringWithParentKeyMetaValue)]
+        // [InlineData(KeyStringWithNoParentKeyMetaKey, KeyStringWithNoParentKeyMetaValue)]
         private void TestExecuteQueryAndLoadJsonObject(string keyStringKey, string keyStringValue)
         {
             using (DbCommand command = dbConnection.CreateCommand())
@@ -159,7 +159,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
+        // [Fact]
         private void TestExecuteQueryAndLoadJsonObjectFromKeyWithNoResultShouldReturnNone()
         {
             using (DbCommand command = dbConnection.CreateCommand())
@@ -176,7 +176,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
+        // [Fact]
         private void TestExecuteQueryAndLoadJsonObjectFromKeyWithExceptionShouldReturnNone()
         {
             using (DbCommand command = dbConnection.CreateCommand())
@@ -194,7 +194,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
+        // [Fact]
         private void TestLoad()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -203,7 +203,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(KeyStringWithParentKeyMetaValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
 
-        [Fact]
+        // [Fact]
         private void TestLoadWithSqlException()
         {
             AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
@@ -214,7 +214,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
-        [Fact]
+        // [Fact]
         private void TestLoadLatestValue()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -223,7 +223,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(KeyStringLatestValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
 
-        [Fact]
+        // [Fact]
         private void TestLoadLatestValueWithSqlException()
         {
             AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
@@ -234,7 +234,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
-        [Fact]
+        // [Fact]
         private void TestStore()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -245,7 +245,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(actualValue);
         }
 
-        [Fact]
+        // [Fact]
         private void TestStoreWithSqlExceptionShouldReturnFalse()
         {
             AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
@@ -256,7 +256,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualValue);
         }
 
-        [Fact]
+        // [Fact]
         private void TestStoreWithDuplicateKeyInsertionShouldReturnFalse()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -267,7 +267,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualValue);
         }
 
-        [Fact]
+        // [Fact]
         private void TestPrimaryBuilderPath()
         {
             AdoMetastorePersistenceImpl.Builder adoMetastorePersistenceServicePrimaryBuilder =
@@ -277,7 +277,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.NotNull(adoMetastorePersistenceServiceBuilder);
         }
 
-        [Fact]
+        // [Fact]
         private void TestDbConnectionClosedAfterLoad()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
@@ -297,7 +297,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
 
-        [Fact]
+        // [Fact]
         private void TestDbConnectionClosedAfterLoadLatestValue()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
@@ -317,7 +317,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
 
-        [Fact]
+        // [Fact]
         private void TestDbConnectionClosedAfterStore()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();

@@ -16,25 +16,25 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - languages-java-secure-memory
-      #- languages-java-app-encryption:
-      #    requires:
-      #      - languages-java-secure-memory
-      #- samples-java-reference-app:
-      #    requires:
-      #      - languages-java-app-encryption
-      #- tests-java-test-app:
-      #    requires:
-      #      - languages-java-app-encryption
+      - languages-java-app-encryption:
+          requires:
+            - languages-java-secure-memory
+      - samples-java-reference-app:
+          requires:
+            - languages-java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - languages-java-app-encryption
       - languages-csharp-logging
-#      - languages-csharp-secure-memory
-#          requires:
-#            - languages-csharp-logging
-#      - languages-csharp-app-encryption
-#          requires:
-#            - languages-csharp-secure-memory
-#      - samples-csharp-reference-app
-#          requires:
-#            - languages-csharp-app-encryption
+      - languages-csharp-secure-memory:
+          requires:
+            - languages-csharp-logging
+      - languages-csharp-app-encryption:
+          requires:
+            - languages-csharp-secure-memory
+      - samples-csharp-reference-app:
+          requires:
+            - languages-csharp-app-encryption
 
 jobs:
   languages-java-secure-memory:
@@ -42,18 +42,11 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run:
-          name: Generate cache key
-          # TODO : Need to use CIRCLE_WORKING_DIRECTORY
-          # Refer to https://discuss.circleci.com/t/circle-working-directory-doesnt-expand/17007/5
-          command: |
-            cd languages/java/secure-memory
-            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -67,16 +60,17 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/test.sh
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - store_test_results:
           path: languages/java/secure-memory/target/surefire-reports
       - codecov/upload:
           file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
           flags: languages_java_secure_memory
       - run:
+          name: Install locally
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/install_local.sh
+      - run:
           name: Deploy if needed
           command: |
             cd languages/java/secure-memory
@@ -98,21 +92,20 @@ jobs:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   languages-java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run:
-          name: Generate cache key
-          command: |
-            cd languages/java/app-encryption
-            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -126,15 +119,16 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/test.sh
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - store_test_results:
           path: languages/java/app-encryption/target/surefire-reports
       - codecov/upload:
           file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
           flags: languages_java_app_encryption
+      - run:
+          name: Install locally
+          command: |
+            cd languages/java/app-encryption
+            ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
@@ -157,21 +151,20 @@ jobs:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   samples-java-reference-app:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run:
-          name: Generate cache key
-          command: |
-            cd samples/java/reference-app
-            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -183,22 +176,17 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-java-test-app:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run:
-          name: Generate cache key
-          command: |
-            cd tests/java/test-app
-            ../../../scripts/checksum.sh /tmp/checksum.txt pom.xml
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
@@ -210,22 +198,25 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   languages-csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
-          name: Generate cache key
+          name: Setup csharp environment
           command: |
-            cd languages/csharp/Logging
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -239,23 +230,22 @@ jobs:
           command: |
             cd languages/csharp/Logging
             ./scripts/test.sh
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
             cd languages/csharp/Logging
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit Logging.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/Logging/Logging.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: languages_csharp_Logging
       - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/Logging
+            ./scripts/install_local.sh
+      - run:
           name: Deploy if needed
           command: |
             cd languages/csharp/Logging
@@ -274,21 +264,28 @@ jobs:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   languages-csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
-          name: Generate cache key
+          name: Setup csharp environment
           command: |
-            cd languages/csharp/SecureMemory
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -302,23 +299,22 @@ jobs:
           command: |
             cd languages/csharp/SecureMemory
             ./scripts/test.sh
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
             cd languages/csharp/SecureMemory
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit SecureMemory.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: languages_csharp_SecureMemory
       - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/SecureMemory
+            ./scripts/install_local.sh
+      - run:
           name: Deploy if needed
           command: |
             cd languages/csharp/SecureMemory
@@ -337,21 +333,28 @@ jobs:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   languages-csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
       - run:
-          name: Generate cache key
+          name: Setup csharp environment
           command: |
-            cd languages/csharp/AppEncryption
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -365,22 +368,21 @@ jobs:
           command: |
             cd languages/csharp/AppEncryption
             ./scripts/test.sh
-      - save_cache:
-          paths:
-            - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
       - run:
           name: Convert test results
           command: |
             cd languages/csharp/AppEncryption
-            dotnet tool install -g trx2junit
-            export PATH="$PATH:/root/.dotnet/tools"
-            trx2junit AppEncryption.Tests/TestResults/*.trx
+            ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
       - codecov/upload:
           file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: languages_csharp_AppEncryption
+      - run:
+          name: Install locally
+          command: |
+            cd languages/csharp/AppEncryption
+            ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
@@ -400,21 +402,20 @@ jobs:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+      - save_cache:
+          paths:
+            - ~/.nuget
+          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   samples-csharp-reference-app:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - run:
-          name: Generate cache key
-          command: |
-            cd samples/csharp/ReferenceApp
-            ../../../scripts/checksum.sh /tmp/checksum.txt *.csproj
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
@@ -426,4 +427,4 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ checksum "/tmp/checksum.txt" }}
+          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
