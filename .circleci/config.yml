@@ -419,6 +419,14 @@ jobs:
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - run:
+          name: Setup csharp environment
+          command: |
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
           name: Build
           command: |
             cd samples/csharp/ReferenceApp
