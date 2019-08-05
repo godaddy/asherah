@@ -70,6 +70,28 @@ jobs:
           command: |
             cd languages/java/secure-memory
             ./scripts/install_local.sh
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/java/secure-memory
+
+            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+
+            # Only deploy for master, RC tags, and prod release tags
+            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
+              echo "Detected master branch, proceeding to deploy Snapshot"
+              #./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
       - save_cache:
           paths:
             - ~/.m2
@@ -107,6 +129,28 @@ jobs:
           command: |
             cd languages/java/app-encryption
             ./scripts/install_local.sh
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/java/app-encryption
+
+            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+
+            # Only deploy for master, RC tags, and prod release tags
+            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
+              echo "Detected master branch, proceeding to deploy Snapshot"
+              #./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
       - save_cache:
           paths:
             - ~/.m2
@@ -201,6 +245,25 @@ jobs:
           command: |
             cd languages/csharp/Logging
             ./scripts/install_local.sh
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/Logging
+
+            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
       - save_cache:
           paths:
             - ~/.nuget
@@ -251,6 +314,25 @@ jobs:
           command: |
             cd languages/csharp/SecureMemory
             ./scripts/install_local.sh
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/SecureMemory
+
+            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
       - save_cache:
           paths:
             - ~/.nuget
@@ -301,6 +383,25 @@ jobs:
           command: |
             cd languages/csharp/AppEncryption
             ./scripts/install_local.sh
+      - run:
+          name: Deploy if needed
+          command: |
+            cd languages/csharp/AppEncryption
+
+            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
+            TAG_NAME=$(git tag -l --points-at HEAD)
+            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
+
+            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
+              echo "Detected tagged RC, proceeding to deploy"
+              ./scripts/deploy.sh
+            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
+              echo "Detected tagged production release, proceeding to deploy"
+              ./scripts/deploy.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
       - save_cache:
           paths:
             - ~/.nuget
