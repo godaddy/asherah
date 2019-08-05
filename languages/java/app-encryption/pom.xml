@@ -161,7 +161,7 @@
             <configuration>
               <includeScope>test</includeScope>
               <includeTypes>so,dll,dylib</includeTypes>
-              <outputDirectory>${project.basedir}/native-libs</outputDirectory>
+              <outputDirectory>${project.build.directory}/native-libs</outputDirectory>
             </configuration>
           </execution>
         </executions>
