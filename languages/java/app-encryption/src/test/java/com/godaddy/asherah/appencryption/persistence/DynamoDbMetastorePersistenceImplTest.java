@@ -6,12 +6,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.Optional;
-
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -77,8 +71,9 @@ class DynamoDbMetastorePersistenceImplTest {
   void setUp() {
     // Setup client pointing to our local dynamodb
     dynamoDbDocumentClient = new DynamoDB(
-        AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
-            new AwsClientBuilder.EndpointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
+        AmazonDynamoDBClientBuilder.standard()
+            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
+                "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
             .build());
 
     dynamoDbMetastorePersistenceImpl = new DynamoDbMetastorePersistenceImpl(dynamoDbDocumentClient);
@@ -213,7 +208,8 @@ class DynamoDbMetastorePersistenceImplTest {
 
   @Test
   void testStoreWithFailureShouldThrowException() {
-    assertThrows(AppEncryptionException.class, () -> dynamoDbMetastorePersistenceImpl.store(null, Instant.now(), new JSONObject()));
+    assertThrows(AppEncryptionException.class,
+        () -> dynamoDbMetastorePersistenceImpl.store(null, Instant.now(), new JSONObject()));
   }
 
   @Test
@@ -222,7 +218,8 @@ class DynamoDbMetastorePersistenceImplTest {
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
     DynamoDbMetastorePersistenceImpl.Builder dynamoDbMetastorePersistenceServicePrimaryBuilder =
         DynamoDbMetastorePersistenceImpl.newBuilder();
-    DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl = dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
+    DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
+        dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
     assertNotNull(dynamoDbMetastorePersistenceImpl);
   }
 
