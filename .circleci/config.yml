@@ -204,6 +204,13 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -212,13 +219,6 @@ jobs:
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
       - run:
           name: Build
           command: |
@@ -273,6 +273,13 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -281,13 +288,6 @@ jobs:
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
       - run:
           name: Build
           command: |
@@ -342,6 +342,13 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -350,13 +357,6 @@ jobs:
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/NuGet/
             cp build/NuGet.Config ~/.nuget/NuGet/
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
       - run:
           name: Build
           command: |
@@ -418,6 +418,14 @@ jobs:
             - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
+      - run:
+          name: Setup csharp environment
+          command: |
+            apt-get update
+            apt-get install -y libxml2-utils
+            dotnet tool install -g trx2junit
+            mkdir -p ~/.nuget/NuGet/
+            cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Build
           command: |
