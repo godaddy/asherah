@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using TestContainers.Core.Builders;
 using TestContainers.Core.Containers;
@@ -7,20 +8,43 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class DynamoDBContainerFixture : IAsyncLifetime
     {
-        public DynamoDBContainerFixture() =>
-            DynamoDbContainer = new GenericContainerBuilder<Container>()
-                .Begin()
-                .WithImage("amazon/dynamodb-local:latest")
-                .WithExposedPorts(8000)
-                .Build();
+        private const string LocalServiceUrl = "http://localhost:8000";
+        private readonly bool useTestContainers = true;
 
-        public string ServiceURL =>
-            $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+        public DynamoDBContainerFixture()
+        {
+            string containerType = Environment.GetEnvironmentVariable("CONTAINER_TYPE");
+
+            if (!string.IsNullOrWhiteSpace(containerType) &&
+                containerType.Equals("EXTERNAL", StringComparison.InvariantCultureIgnoreCase))
+            {
+                ServiceUrl = LocalServiceUrl;
+                useTestContainers = false;
+            }
+            else
+            {
+                DynamoDbContainer = new GenericContainerBuilder<Container>()
+                    .Begin()
+                    .WithImage("amazon/dynamodb-local:latest")
+                    .WithExposedPorts(8000)
+                    .Build();
+
+                ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+            }
+        }
+
+        public string ServiceUrl { get; }
 
         private Container DynamoDbContainer { get; }
 
-        public Task InitializeAsync() => DynamoDbContainer.Start();
+        public Task InitializeAsync()
+        {
+            return useTestContainers ? DynamoDbContainer.Start() : Task.Delay(0);
+        }
 
-        public Task DisposeAsync() => DynamoDbContainer.Stop();
+        public Task DisposeAsync()
+        {
+            return useTestContainers ? DynamoDbContainer.Stop() : Task.Delay(0);
+        }
     }
 }

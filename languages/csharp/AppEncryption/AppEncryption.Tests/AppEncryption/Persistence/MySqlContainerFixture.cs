@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using TestContainers.Core.Builders;
 using TestContainers.Core.Containers;
@@ -7,20 +8,44 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class MySqlContainerFixture : IAsyncLifetime
     {
-        public MySqlContainerFixture() =>
-            Container = new DatabaseContainerBuilder<MySqlContainer>()
-                .Begin()
-                .WithImage("mysql:5.7")
-                .WithExposedPorts(3306)
-                .WithEnv(("MYSQL_ROOT_PASSWORD", "Password123"))
-                .Build();
+        private const string LocalConnectionString = "Server=localhost;UID=root;SslMode=none;";
+        private readonly bool useTestContainers = true;
 
-        public string ConnectionString => Container.ConnectionString;
+        public MySqlContainerFixture()
+        {
+            string containerType = Environment.GetEnvironmentVariable("CONTAINER_TYPE");
+
+            if (!string.IsNullOrWhiteSpace(containerType) &&
+                containerType.Equals("external", StringComparison.InvariantCultureIgnoreCase))
+            {
+                ConnectionString = LocalConnectionString;
+                useTestContainers = false;
+            }
+            else
+            {
+                Container = new DatabaseContainerBuilder<MySqlContainer>()
+                    .Begin()
+                    .WithImage("mysql:5.7")
+                    .WithExposedPorts(3306)
+                    .WithEnv(("MYSQL_ROOT_PASSWORD", "Password123"))
+                    .Build();
+
+                ConnectionString = Container.ConnectionString;
+            }
+        }
+
+        public string ConnectionString { get; }
 
         private MySqlContainer Container { get; }
 
-        public Task InitializeAsync() => Container.Start();
+        public Task InitializeAsync()
+        {
+            return useTestContainers ? Container.Start() : Task.Delay(0);
+        }
 
-        public Task DisposeAsync() => Container.Stop();
+        public Task DisposeAsync()
+        {
+            return useTestContainers ? Container.Stop() : Task.Delay(0);
+        }
     }
 }

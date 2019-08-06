@@ -32,19 +32,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             { "Created", 1541461380 }
         };
 
-        private readonly Dictionary<string, object> keyRecordLatest = new Dictionary<string, object>
-        {
-            {
-                "ParentKeyMeta", new Dictionary<string, object>
-                {
-                    { "KeyId", "_SK_api_ecomm_latest" },
-                    { "Created", 1541461380 }
-                }
-            },
-            { "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr" },
-            { "Created", 1541461380 }
-        };
-
         private readonly Table table;
         private readonly DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl;
         private readonly DateTimeOffset created = DateTimeOffset.Now.AddDays(-1);
@@ -53,7 +40,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceURL
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl
             };
             amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
