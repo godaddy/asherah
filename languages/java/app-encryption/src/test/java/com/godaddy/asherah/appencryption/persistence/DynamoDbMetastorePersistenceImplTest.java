@@ -55,7 +55,7 @@ class DynamoDbMetastorePersistenceImplTest {
 
   @BeforeAll
   public static void setupClass() throws Exception {
-    System.setProperty("sqlite4java.library.path", "native-libs");
+    System.setProperty("sqlite4java.library.path", "target/native-libs");
     String port = DYNAMO_DB_PORT;
     server = ServerRunner.createServerFromCommandLineArgs(
         new String[]{"-inMemory", "-port", port});
