@@ -341,10 +341,10 @@ jobs:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
       - image: circleci/dynamodb
-      - image: circleci/mysql:5.7
+      - image: mysql:5.7
         environment:
           MYSQL_USER: root
-          MYSQL_ALLOW_EMPTY_PASSWORD: true
+          MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
       - restore_cache:

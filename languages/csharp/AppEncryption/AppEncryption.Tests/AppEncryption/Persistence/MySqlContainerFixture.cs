@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class MySqlContainerFixture : IAsyncLifetime
     {
-        private const string LocalConnectionString = "Server=localhost;UID=root;SslMode=none;";
+        private const string LocalConnectionString = "Server=localhost;UID=root;pwd=Password123;SslMode=none;";
         private readonly bool useTestContainers = true;
 
         public MySqlContainerFixture()

@@ -16,7 +16,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             string containerType = Environment.GetEnvironmentVariable("CONTAINER_TYPE");
 
             if (!string.IsNullOrWhiteSpace(containerType) &&
-                containerType.Equals("EXTERNAL", StringComparison.InvariantCultureIgnoreCase))
+                containerType.Equals("external", StringComparison.InvariantCultureIgnoreCase))
             {
                 ServiceUrl = LocalServiceUrl;
                 useTestContainers = false;
