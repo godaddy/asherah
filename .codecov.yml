@@ -2,13 +2,11 @@ coverage:
   status:
     project:
       default:
-        # TODO bump this back up to 90% once we update ado/dynamo unit tests
-        target: 86%
+        target: 90%
         threshold: 5%
       languages-csharp-AppEncryption:
         flags: languages_csharp_AppEncryption
-        # TODO bump this back up to 90% once we update ado/dynamo unit tests
-        target: 84%
+        target: 90%
       languages-csharp-Logging:
         flags: languages_csharp_Logging
         target: 90%
