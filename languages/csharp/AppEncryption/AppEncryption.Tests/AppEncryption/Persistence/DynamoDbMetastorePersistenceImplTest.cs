@@ -32,19 +32,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             { "Created", 1541461380 }
         };
 
-        private readonly Dictionary<string, object> keyRecordLatest = new Dictionary<string, object>
-        {
-            {
-                "ParentKeyMeta", new Dictionary<string, object>
-                {
-                    { "KeyId", "_SK_api_ecomm_latest" },
-                    { "Created", 1541461380 }
-                }
-            },
-            { "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr" },
-            { "Created", 1541461380 }
-        };
-
         private readonly Table table;
         private readonly DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl;
         private readonly DateTimeOffset created = DateTimeOffset.Now.AddDays(-1);
@@ -53,7 +40,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceURL
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl
             };
             amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
@@ -101,7 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadSuccess()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.Load(TestKey, created);
@@ -110,7 +97,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadWithNoResultShouldReturnEmpty()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.Load("fake_key", created);
@@ -118,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualJsonObject.IsSome);
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadWithFailureShouldReturnEmpty()
         {
             Dispose();
@@ -127,7 +114,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualJsonObject.IsSome);
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadLatestValueWithSingleRecord()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.LoadLatestValue(TestKey);
@@ -136,7 +123,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadLatestValueWithMultipleRecords()
         {
             DateTimeOffset createdMinusOneHour = created.AddHours(-1);
@@ -195,7 +182,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(createdPlusOneDay, ((JObject)actualJsonObject).GetValue("mytime")));
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadLatestValueWithNoResultShouldReturnEmpty()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.LoadLatestValue("fake_key");
@@ -203,7 +190,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualJsonObject.IsSome);
         }
 
-        // [Fact]
+        [Fact]
         private void TestLoadLatestValueWithFailureShouldReturnEmpty()
         {
             Dispose();
@@ -212,7 +199,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualJsonObject.IsSome);
         }
 
-        // [Fact]
+        [Fact]
         private void TestStore()
         {
             bool actualValue = dynamoDbMetastorePersistenceImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
@@ -220,7 +207,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(actualValue);
         }
 
-        // [Fact]
+        [Fact]
         private void TestStoreWithDbErrorShouldThrowException()
         {
             Dispose();
@@ -228,7 +215,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 dynamoDbMetastorePersistenceImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord)));
         }
 
-        // [Fact]
+        [Fact]
         private void TestStoreWithDuplicateShouldReturnFalse()
         {
             DateTimeOffset now = DateTimeOffset.Now;

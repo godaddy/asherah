@@ -340,6 +340,11 @@ jobs:
   languages-csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: circleci/dynamodb
+      - image: mysql:5.7
+        environment:
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
       - restore_cache:
