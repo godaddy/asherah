@@ -29,7 +29,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Build();
 
                 ConnectionString = Container.ConnectionString;
-                disableTestContainers = false;
             }
         }
 
@@ -39,12 +38,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public Task InitializeAsync()
         {
-            return !disableTestContainers ? Container.Start() : Task.Delay(0);
+            return disableTestContainers ? Task.Delay(0) : Container.Start();
         }
 
         public Task DisposeAsync()
         {
-            return !disableTestContainers ? Container.Stop() : Task.Delay(0);
+            return disableTestContainers ? Task.Delay(0) : Container.Stop();
         }
     }
 }

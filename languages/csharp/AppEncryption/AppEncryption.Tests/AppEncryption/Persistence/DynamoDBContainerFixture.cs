@@ -28,7 +28,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Build();
 
                 ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
-                disableTestContainers = false;
             }
         }
 
@@ -38,12 +37,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public Task InitializeAsync()
         {
-            return !disableTestContainers ? DynamoDbContainer.Start() : Task.Delay(0);
+            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Start();
         }
 
         public Task DisposeAsync()
         {
-            return !disableTestContainers ? DynamoDbContainer.Stop() : Task.Delay(0);
+            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Stop();
         }
     }
 }
