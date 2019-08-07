@@ -9,17 +9,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
     public class DynamoDBContainerFixture : IAsyncLifetime
     {
         private const string LocalServiceUrl = "http://localhost:8000";
-        private readonly bool useTestContainers = true;
+        private readonly bool disableTestContainers;
 
         public DynamoDBContainerFixture()
         {
-            string containerType = Environment.GetEnvironmentVariable("CONTAINER_TYPE");
+            disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
 
-            if (!string.IsNullOrWhiteSpace(containerType) &&
-                containerType.Equals("external", StringComparison.InvariantCultureIgnoreCase))
+            if (disableTestContainers)
             {
                 ServiceUrl = LocalServiceUrl;
-                useTestContainers = false;
             }
             else
             {
@@ -30,6 +28,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Build();
 
                 ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+                disableTestContainers = false;
             }
         }
 
@@ -39,12 +38,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public Task InitializeAsync()
         {
-            return useTestContainers ? DynamoDbContainer.Start() : Task.Delay(0);
+            return !disableTestContainers ? DynamoDbContainer.Start() : Task.Delay(0);
         }
 
         public Task DisposeAsync()
         {
-            return useTestContainers ? DynamoDbContainer.Stop() : Task.Delay(0);
+            return !disableTestContainers ? DynamoDbContainer.Stop() : Task.Delay(0);
         }
     }
 }

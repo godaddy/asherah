@@ -8,18 +8,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class MySqlContainerFixture : IAsyncLifetime
     {
-        private const string LocalConnectionString = "Server=localhost;UID=root;pwd=Password123;SslMode=none;";
-        private readonly bool useTestContainers = true;
+        private const string LocalConnectionString = "server=localhost;uid=root;pwd=Password123;sslmode=none;";
+        private readonly bool disableTestContainers;
 
         public MySqlContainerFixture()
         {
-            string containerType = Environment.GetEnvironmentVariable("CONTAINER_TYPE");
+            disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
 
-            if (!string.IsNullOrWhiteSpace(containerType) &&
-                containerType.Equals("external", StringComparison.InvariantCultureIgnoreCase))
+            if (disableTestContainers)
             {
                 ConnectionString = LocalConnectionString;
-                useTestContainers = false;
             }
             else
             {
@@ -31,6 +29,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Build();
 
                 ConnectionString = Container.ConnectionString;
+                disableTestContainers = false;
             }
         }
 
@@ -40,12 +39,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public Task InitializeAsync()
         {
-            return useTestContainers ? Container.Start() : Task.Delay(0);
+            return !disableTestContainers ? Container.Start() : Task.Delay(0);
         }
 
         public Task DisposeAsync()
         {
-            return useTestContainers ? Container.Stop() : Task.Delay(0);
+            return !disableTestContainers ? Container.Stop() : Task.Delay(0);
         }
     }
 }
