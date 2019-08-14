@@ -114,7 +114,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             else
             {
                 logger.LogInformation("using static KMS...");
-                keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+                keyManagementService = new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
             }
 
             CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
