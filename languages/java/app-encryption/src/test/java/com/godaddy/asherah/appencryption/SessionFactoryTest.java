@@ -71,25 +71,25 @@ class SessionFactoryTest {
   }
 
   @Test
-  void testGetAppEncryptionJson() {
+  void testGetSessionJson() {
     Session<?,?> session = sessionFactory.getSessionJson(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionBytes() {
+  void testGetSessionBytes() {
     Session<?,?> session = sessionFactory.getSessionBytes(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionJsonAsJson() {
+  void testGetSessionJsonAsJson() {
     Session<?,?> session = sessionFactory.getSessionJsonAsJson(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionBytesAsJson() {
+  void testGetSessionBytesAsJson() {
     Session<?,?> session = sessionFactory.getSessionBytesAsJson(testPartitionId);
     assertNotNull(session);
   }

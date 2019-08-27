@@ -61,7 +61,7 @@ class AppEncryptionParameterizedTest {
       final KeyState cacheSK, final KeyState metaSK,
       final Partition partition) {
 
-    try (Session<JSONObject, byte[]> appEncryptionJsonImpl = new SessionJsonImpl<>(envelopeEncryptionJson)) {
+    try (Session<JSONObject, byte[]> sessionJsonImpl = new SessionJsonImpl<>(envelopeEncryptionJson)) {
 
       EncryptMetastoreInteractions encryptMetastoreInteractions =
           new EncryptMetastoreInteractions(cacheIK, metaIK, cacheSK, metaSK);
@@ -69,13 +69,13 @@ class AppEncryptionParameterizedTest {
           new DecryptMetastoreInteractions(cacheIK, cacheSK);
 
       //encrypt with library object(appEncryptionJsonImpl)
-      byte[] encryptedPayload = appEncryptionJsonImpl.encrypt(payload);
+      byte[] encryptedPayload = sessionJsonImpl.encrypt(payload);
 
       assertNotNull(encryptedPayload);
       verifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, partition);
 
       reset(metastorePersistence);
-      JSONObject decryptedPayload = appEncryptionJsonImpl.decrypt(encryptedPayload);
+      JSONObject decryptedPayload = sessionJsonImpl.decrypt(encryptedPayload);
 
       verifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, partition);
       assertTrue(payload.similar(decryptedPayload));

@@ -17,7 +17,7 @@ class SessionBytesImplTest {
   @Mock
   EnvelopeEncryption<String> envelopeEncryption;
   @InjectMocks
-  SessionBytesImpl<String> appEncryptionBytesImpl;
+  SessionBytesImpl<String> sessionBytesImpl;
 
   @Test
   void testConstructor() {
@@ -30,7 +30,7 @@ class SessionBytesImplTest {
     byte[] expectedBytes = new byte[]{0, 1, 2, 3};
     when(envelopeEncryption.decryptDataRowRecord(any())).thenReturn(expectedBytes);
 
-    byte[] actualBytes = appEncryptionBytesImpl.decrypt("some data row record");
+    byte[] actualBytes = sessionBytesImpl.decrypt("some data row record");
     assertArrayEquals(expectedBytes, actualBytes);
   }
 
@@ -39,13 +39,13 @@ class SessionBytesImplTest {
     String expectedDataRowRecord = "some data row record";
     when(envelopeEncryption.encryptPayload(any())).thenReturn(expectedDataRowRecord);
 
-    String actualDataRowRecord = appEncryptionBytesImpl.encrypt(new byte[]{0, 1, 2, 3, 4});
+    String actualDataRowRecord = sessionBytesImpl.encrypt(new byte[]{0, 1, 2, 3, 4});
     assertEquals(expectedDataRowRecord, actualDataRowRecord);
   }
 
   @Test
   void testCloseSuccess() {
-    appEncryptionBytesImpl.close();
+    sessionBytesImpl.close();
 
     // Verify proper resources are closed
     verify(envelopeEncryption).close();
@@ -54,7 +54,7 @@ class SessionBytesImplTest {
   @Test
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(envelopeEncryption).close();
-    appEncryptionBytesImpl.close();
+    sessionBytesImpl.close();
 
     verify(envelopeEncryption).close();
   }
