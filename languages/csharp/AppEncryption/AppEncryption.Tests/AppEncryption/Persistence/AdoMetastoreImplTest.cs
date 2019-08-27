@@ -9,13 +9,13 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using static GoDaddy.Asherah.AppEncryption.Persistence.AdoMetastorePersistenceImpl;
+using static GoDaddy.Asherah.AppEncryption.Persistence.AdoMetastoreImpl;
 
 // TODO Verify that the DbCommand gets closed.
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     [Collection("Logger Fixture collection")]
-    public class AdoMetastorePersistenceImplTest : IClassFixture<MySqlContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+    public class AdoMetastoreImplTest : IClassFixture<MySqlContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
     {
         private const string KeyStringWithParentKeyMetaKey = "key_with_parentkeymeta";
 
@@ -39,7 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         private readonly DbProviderFactory dbProviderFactory;
         private readonly DbConnection dbConnection;
-        private readonly Mock<AdoMetastorePersistenceImpl> adoMetastorePersistenceImplSpy;
+        private readonly Mock<AdoMetastoreImpl> adoMetastoreImplSpy;
         private readonly string connectionString;
 
         // Create a connection string with incorrect user id. This is used to force generate a DbException while setting up a connection
@@ -48,7 +48,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             ["server"] = "localhost", ["user id"] = "some_id_"
         };
 
-        public AdoMetastorePersistenceImplTest(MySqlContainerFixture fixture)
+        public AdoMetastoreImplTest(MySqlContainerFixture fixture)
         {
             dbProviderFactory = MySqlClientFactory.Instance;
             connectionString = fixture.ConnectionString + "Initial Catalog=testdb;";
@@ -56,7 +56,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             dbConnection.ConnectionString = fixture.ConnectionString;
             dbConnection.Open();
 
-            adoMetastorePersistenceImplSpy = new Mock<AdoMetastorePersistenceImpl>(
+            adoMetastoreImplSpy = new Mock<AdoMetastoreImpl>(
                 dbProviderFactory,
                 connectionString) { CallBase = true };
             SetupDatabase();
@@ -103,27 +103,27 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 string insertDataQuery =
                     @"INSERT INTO testdb.encryption_key (id, created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithParentKeyMetaValue);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithParentKeyMetaValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
                 string insertDataQuery1 =
                     @"INSERT INTO testdb.encryption_key (id ,created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery1;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithNoParentKeyMetaKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithNoParentKeyMetaValue);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithNoParentKeyMetaKey);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithNoParentKeyMetaValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
                 string insertDataQuery2 =
                     @"INSERT INTO testdb.encryption_key (id ,created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery2;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Id, MalformedKeyStringKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, KeyRecord, MalformedKeyStringValue);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, MalformedKeyStringKey);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, MalformedKeyStringValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
@@ -131,9 +131,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     @"INSERT INTO testdb.encryption_key (id, created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery4;
 
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, Created, created.AddHours(1).UtcDateTime);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringLatestValue);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.AddHours(1).UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringLatestValue);
                 dbCommand.ExecuteNonQuery();
                 Console.WriteLine("Starting test");
             }
@@ -149,11 +149,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 string selectQuery =
                     @"SELECT key_record from  testdb.encryption_key WHERE id=@id AND created=@created;";
                 command.CommandText = selectQuery;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Id, keyStringKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(command, Id, keyStringKey);
+                adoMetastoreImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
 
                 Option<JObject> actualJsonObject =
-                    adoMetastorePersistenceImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
+                    adoMetastoreImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
                 Assert.True(actualJsonObject.IsSome);
                 Assert.Equal(keyStringValue, ((JObject)actualJsonObject).ToString(Formatting.None));
             }
@@ -167,11 +167,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 string selectQuery =
                     @"SELECT key_record from  testdb.encryption_key WHERE id=@id And created=@created;";
                 command.CommandText = selectQuery;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Id, "non_existent_key");
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(command, Id, "non_existent_key");
+                adoMetastoreImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
 
                 Option<JObject> actualJsonObject =
-                    adoMetastorePersistenceImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
+                    adoMetastoreImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
                 Assert.Equal(Option<JObject>.None, actualJsonObject);
             }
         }
@@ -184,11 +184,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 string selectQuery =
                     @"SELECT key_record from  testdb.encryption_key WHERE id=@id And created=@created;";
                 command.CommandText = selectQuery;
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Id, MalformedKeyStringKey);
-                adoMetastorePersistenceImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
+                adoMetastoreImplSpy.Object.AddParameter(command, Id, MalformedKeyStringKey);
+                adoMetastoreImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
 
                 Option<JObject> actualValue =
-                    adoMetastorePersistenceImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
+                    adoMetastoreImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
 
                 Assert.Equal(Option<JObject>.None, actualValue);
             }
@@ -198,7 +198,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestLoad()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastorePersistenceImplSpy.Object.Load(keyId, created.UtcDateTime);
+            Option<JObject> actualJsonObject = adoMetastoreImplSpy.Object.Load(keyId, created.UtcDateTime);
             Assert.True(actualJsonObject.IsSome);
             Assert.Equal(KeyStringWithParentKeyMetaValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
@@ -206,31 +206,31 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestLoadWithSqlException()
         {
-            AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
+            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastorePersistenceImpl.Load(keyId, created.UtcDateTime);
+            Option<JObject> actualJsonObject = adoMetastoreImpl.Load(keyId, created.UtcDateTime);
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
         [Fact]
-        private void TestLoadLatestValue()
+        private void TestLoadLatest()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastorePersistenceImplSpy.Object.LoadLatestValue(keyId);
+            Option<JObject> actualJsonObject = adoMetastoreImplSpy.Object.LoadLatest(keyId);
             Assert.True(actualJsonObject.IsSome);
             Assert.Equal(KeyStringLatestValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
 
         [Fact]
-        private void TestLoadLatestValueWithSqlException()
+        private void TestLoadLatestWithSqlException()
         {
-            AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
+            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastorePersistenceImpl.LoadLatestValue(keyId);
+            Option<JObject> actualJsonObject = adoMetastoreImpl.LoadLatest(keyId);
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
@@ -238,7 +238,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestStore()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
-            bool actualValue = adoMetastorePersistenceImplSpy.Object.Store(
+            bool actualValue = adoMetastoreImplSpy.Object.Store(
                 keyId,
                 DateTimeOffset.UtcNow,
                 JObject.Parse(KeyStringLatestValue));
@@ -248,11 +248,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestStoreWithSqlExceptionShouldReturnFalse()
         {
-            AdoMetastorePersistenceImpl adoMetastorePersistenceImpl = new AdoMetastorePersistenceImpl(
+            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            bool actualValue = adoMetastorePersistenceImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject());
+            bool actualValue = adoMetastoreImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject());
             Assert.False(actualValue);
         }
 
@@ -260,7 +260,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestStoreWithDuplicateKeyInsertionShouldReturnFalse()
         {
             string keyId = KeyStringWithParentKeyMetaKey;
-            bool actualValue = adoMetastorePersistenceImplSpy.Object.Store(
+            bool actualValue = adoMetastoreImplSpy.Object.Store(
                 keyId,
                 created.UtcDateTime,
                 JObject.Parse(KeyStringWithParentKeyMetaValue));
@@ -270,48 +270,48 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestPrimaryBuilderPath()
         {
-            AdoMetastorePersistenceImpl.Builder adoMetastorePersistenceServicePrimaryBuilder =
+            AdoMetastoreImpl.Builder adoMetastorePersistenceServicePrimaryBuilder =
                 NewBuilder(dbProviderFactory, dbConnection.ConnectionString);
-            AdoMetastorePersistenceImpl adoMetastorePersistenceServiceBuilder =
+            AdoMetastoreImpl adoMetastoreServiceBuilder =
                 adoMetastorePersistenceServicePrimaryBuilder.Build();
-            Assert.NotNull(adoMetastorePersistenceServiceBuilder);
+            Assert.NotNull(adoMetastoreServiceBuilder);
         }
 
         [Fact]
         private void TestDbConnectionClosedAfterLoad()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
-            adoMetastorePersistenceImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
+            adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);
-            adoMetastorePersistenceImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
+            adoMetastoreImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
 
             Assert.Equal(ConnectionState.Open, dbConnection.State);
 
-            adoMetastorePersistenceImplSpy.Setup(x => x.ExecuteQueryAndLoadJsonObjectFromKey(dbCommandMock.Object))
+            adoMetastoreImplSpy.Setup(x => x.ExecuteQueryAndLoadJsonObjectFromKey(dbCommandMock.Object))
                 .Returns(Option<JObject>.None);
-            adoMetastorePersistenceImplSpy
+            adoMetastoreImplSpy
                 .Setup(x => x.AddParameter(It.IsAny<DbCommand>(), It.IsAny<string>(), It.IsAny<object>())).Verifiable();
-            adoMetastorePersistenceImplSpy.Object.Load(KeyStringWithParentKeyMetaKey, created.UtcDateTime);
+            adoMetastoreImplSpy.Object.Load(KeyStringWithParentKeyMetaKey, created.UtcDateTime);
 
             // Verify that DbConnection is closed at the end of the function call
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
 
         [Fact]
-        private void TestDbConnectionClosedAfterLoadLatestValue()
+        private void TestDbConnectionClosedAfterLoadLatest()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
-            adoMetastorePersistenceImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
+            adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);
-            adoMetastorePersistenceImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
+            adoMetastoreImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
 
             Assert.Equal(ConnectionState.Open, dbConnection.State);
 
-            adoMetastorePersistenceImplSpy.Setup(x => x.ExecuteQueryAndLoadJsonObjectFromKey(dbCommandMock.Object))
+            adoMetastoreImplSpy.Setup(x => x.ExecuteQueryAndLoadJsonObjectFromKey(dbCommandMock.Object))
                 .Returns(Option<JObject>.None);
-            adoMetastorePersistenceImplSpy
+            adoMetastoreImplSpy
                 .Setup(x => x.AddParameter(It.IsAny<DbCommand>(), It.IsAny<string>(), It.IsAny<object>())).Verifiable();
-            adoMetastorePersistenceImplSpy.Object.LoadLatestValue(KeyStringWithParentKeyMetaKey);
+            adoMetastoreImplSpy.Object.LoadLatest(KeyStringWithParentKeyMetaKey);
 
             // Verify that DbConnection is closed at the end of the function call
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
@@ -321,17 +321,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestDbConnectionClosedAfterStore()
         {
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
-            adoMetastorePersistenceImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
+            adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);
-            adoMetastorePersistenceImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
+            adoMetastoreImplSpy.Setup(x => x.GetConnection()).Returns(dbConnection);
 
             Assert.Equal(ConnectionState.Open, dbConnection.State);
 
             dbCommandMock.Setup(x => x.ExecuteNonQuery()).Returns(1);
-            adoMetastorePersistenceImplSpy
+            adoMetastoreImplSpy
                 .Setup(x => x.AddParameter(It.IsAny<DbCommand>(), It.IsAny<string>(), It.IsAny<object>())).Verifiable();
 
-            adoMetastorePersistenceImplSpy.Object.Store(
+            adoMetastoreImplSpy.Object.Store(
                 KeyStringWithNoParentKeyMetaKey,
                 created.UtcDateTime,
                 JObject.Parse(KeyStringWithNoParentKeyMetaValue));

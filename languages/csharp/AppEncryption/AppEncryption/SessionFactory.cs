@@ -13,9 +13,9 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption
 {
-    public class AppEncryptionSessionFactory : IDisposable
+    public class SessionFactory : IDisposable
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<AppEncryptionSessionFactory>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
 
         private readonly string productId;
         private readonly string systemId;
@@ -25,7 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
 
-        public AppEncryptionSessionFactory(
+        public SessionFactory(
             string productId,
             string systemId,
             IMetastorePersistence<JObject> metastorePersistence,
@@ -69,7 +69,7 @@ namespace GoDaddy.Asherah.AppEncryption
         {
             IBuildStep WithMetrics(IMetrics metrics);
 
-            AppEncryptionSessionFactory Build();
+            SessionFactory Build();
         }
 
         public static IMetastoreStep NewBuilder(string productId, string systemId)
@@ -90,32 +90,32 @@ namespace GoDaddy.Asherah.AppEncryption
             }
         }
 
-        public AppEncryption<JObject, byte[]> GetAppEncryptionJson(string partitionId)
+        public Session<JObject, byte[]> GetSessionJson(string partitionId)
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption = GetEnvelopeEncryptionBytes(partitionId);
 
-            return new AppEncryptionJsonImpl<byte[]>(envelopeEncryption);
+            return new SessionJsonImpl<byte[]>(envelopeEncryption);
         }
 
-        public AppEncryption<byte[], byte[]> GetAppEncryptionBytes(string partitionId)
+        public Session<byte[], byte[]> GetSessionBytes(string partitionId)
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption = GetEnvelopeEncryptionBytes(partitionId);
 
-            return new AppEncryptionBytesImpl<byte[]>(envelopeEncryption);
+            return new SessionBytesImpl<byte[]>(envelopeEncryption);
         }
 
-        public AppEncryption<JObject, JObject> GetAppEncryptionJsonAsJson(string partitionId)
+        public Session<JObject, JObject> GetSessionJsonAsJson(string partitionId)
         {
             IEnvelopeEncryption<JObject> envelopeEncryption = GetEnvelopeEncryptionJson(partitionId);
 
-            return new AppEncryptionJsonImpl<JObject>(envelopeEncryption);
+            return new SessionJsonImpl<JObject>(envelopeEncryption);
         }
 
-        public AppEncryption<byte[], JObject> GetAppEncryptionBytesAsJson(string partitionId)
+        public Session<byte[], JObject> GetSessionBytesAsJson(string partitionId)
         {
             IEnvelopeEncryption<JObject> envelopeEncryption = GetEnvelopeEncryptionJson(partitionId);
 
-            return new AppEncryptionBytesImpl<JObject>(envelopeEncryption);
+            return new SessionBytesImpl<JObject>(envelopeEncryption);
         }
 
         internal IEnvelopeEncryption<byte[]> GetEnvelopeEncryptionBytes(string partitionId)
@@ -123,17 +123,17 @@ namespace GoDaddy.Asherah.AppEncryption
             return new EnvelopeEncryptionBytesImpl(GetEnvelopeEncryptionJson(partitionId));
         }
 
-        internal AppEncryptionPartition GetAppEncryptionPartition(string partitionId)
+        internal Partition GetPartition(string partitionId)
         {
-            return new AppEncryptionPartition(partitionId, systemId, productId);
+            return new Partition(partitionId, systemId, productId);
         }
 
         private EnvelopeEncryptionJsonImpl GetEnvelopeEncryptionJson(string partitionId)
         {
-            AppEncryptionPartition appEncryptionPartition = GetAppEncryptionPartition(partitionId);
+            Partition partition = GetPartition(partitionId);
 
             return new EnvelopeEncryptionJsonImpl(
-                appEncryptionPartition,
+                partition,
                 metastorePersistence,
                 systemKeyCache,
                 secureCryptoKeyDictionaryFactory,
@@ -160,7 +160,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
             public ICryptoPolicyStep WithMemoryPersistence()
             {
-                metastorePersistence = new MemoryPersistenceImpl<JObject>();
+                metastorePersistence = new InMemoryMetastoreImpl<JObject>();
                 return this;
             }
 
@@ -200,7 +200,7 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public AppEncryptionSessionFactory Build()
+            public SessionFactory Build()
             {
                 // If no metrics provided, we just create a disabled/no-op one
                 if (metrics == null)
@@ -212,7 +212,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
                 MetricsUtil.SetMetricsInstance(metrics);
 
-                return new AppEncryptionSessionFactory(
+                return new SessionFactory(
                     productId,
                     systemId,
                     metastorePersistence,

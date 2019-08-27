@@ -7,13 +7,13 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption
 {
-    public class AppEncryptionJsonImpl<TD> : AppEncryption<JObject, TD>
+    public class SessionJsonImpl<TD> : Session<JObject, TD>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<AppEncryptionJsonImpl<TD>>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<SessionJsonImpl<TD>>();
 
         private readonly IEnvelopeEncryption<TD> envelopeEncryption;
 
-        public AppEncryptionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+        public SessionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption)
         {
             this.envelopeEncryption = envelopeEncryption;
         }

@@ -17,7 +17,7 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
 
 ```c#
 // Create a session factory. The builder steps used below are for testing only.
-using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
+using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
     .WithMemoryPersistence()
     .WithNeverExpiredCryptoPolicy()
@@ -25,15 +25,15 @@ using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSe
     .Build())
 {
     // Now create a cryptographic session for a partition.
-    using (AppEncryption<byte[], byte[]> appEncryptionBytes =
-        appEncryptionSessionFactory.GetAppEncryptionBytes("some_partition"))
+    using (Session<byte[], byte[]> sessionBytes =
+        sessionFactory.GetSessionBytes("some_partition"))
     {
         // Encrypt some data
         const string originalPayloadString = "mysupersecretpayload";
-        byte[] dataRowRecordBytes = appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+        byte[] dataRowRecordBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
 
         // Decrypt the data
-        string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(dataRowRecordBytes));
+        string decryptedPayloadString = Encoding.UTF8.GetString(sessionBytes.Decrypt(dataRowRecordBytes));
     }
 }
 ```
@@ -60,7 +60,7 @@ DbProviderFactory dbProviderFactory = ...;
 string connectionString = ...;
 
 // Build the ADO Metastore
-IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistenceImpl.NewBuilder(dbProviderFactory, connectionString).Build();
+IMetastorePersistence<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory, connectionString).Build();
 ```
 
 #### DynamoDB Metastore
@@ -70,13 +70,13 @@ IMetastorePersistence<JObject> adoMetastorePersistence = AdoMetastorePersistence
 AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
-IMetastorePersistence<JObject> dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+IMetastorePersistence<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```c#
-IMetastorePersistence<JObject> metastorePersistence = new MemoryPersistenceImpl<JObject>();
+IMetastorePersistence<JObject> metastorePersistence = new InMemoryPersistenceImpl<JObject>();
 ```
 
 ### Define the Key Management Service
@@ -94,7 +94,7 @@ Dictionary<string, string> regionDictionary = new Dictionary<string, string>
 };
 
 // Build the Key Management Service using the region dictionary and your preferred (usually current) region
-KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").Build();
+KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").Build();
 ```
 
 #### Static KMS (FOR TESTING ONLY)
@@ -152,7 +152,7 @@ and parallel encrypt calls.
 A session factory can now be built using the components we defined above.
 
 ```c#
-AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.NewBuilder("some_product", "some_service")
+SessionFactory sessionFactory = SessionFactory.NewBuilder("some_product", "some_service")
      .WithMetastorePersistence(metastorePersistence)
      .WithCryptoPolicy(policy)
      .WithKeyManagementService(keyManagementService)
@@ -166,15 +166,15 @@ the service to ensure that all resources held by the factory, including the cach
 
 ### Performing Cryptographic Operations
 
-Create an `AppEncryption` session to be used for cryptographic operations.
+Create a `Session` session to be used for cryptographic operations.
 
 ```c#
-AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.GetAppEncryptionBytes("some_user");
+Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("some_user");
 ```
 
 The different usage styles are explained below.
 
-**NOTE:** Remember to close the `AppEncryption` session after all cryptographic operations to dispose of associated resources.
+**NOTE:** Remember to close the session after all cryptographic operations to dispose of associated resources.
 
 #### Plain Encrypt/Decrypt Style
 This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
@@ -184,10 +184,10 @@ completely up to the calling application for storage responsibility.
 string originalPayloadString = "mysupersecretpayload";
 
 // encrypt the payload
-byte[] dataRowRecordBytes = appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+byte[] dataRowRecordBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
 
 // decrypt the payload
-string decryptedPayloadString = Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(newDataRowRecordBytes));
+string decryptedPayloadString = Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
 ```
 
 #### Custom Persistence via Store/Load methods
@@ -218,10 +218,10 @@ An example end-to-end use of the store and load calls:
 
 ```c#
 // Encrypts the payload, stores it in the dictionaryPersistence and returns a look up key
-string persistenceKey = appEncryptionJsonImpl.Store(originalPayload.ToJObject(), dictionaryPersistence);
+string persistenceKey = sessionJson.Store(originalPayload.ToJObject(), dictionaryPersistence);
 
 // Uses the persistenceKey to look-up the payload in the dictionaryPersistence, decrypts the payload if any and then returns it
-Option<JObject> payload = appEncryptionJsonImpl.Load(persistenceKey, dictionaryPersistence);
+Option<JObject> payload = sessionJson.Load(persistenceKey, dictionaryPersistence);
 ```
 
 ## Deployment Notes

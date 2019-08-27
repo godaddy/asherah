@@ -1,8 +1,8 @@
 namespace GoDaddy.Asherah.AppEncryption
 {
-    public class AppEncryptionPartition
+    public class Partition
     {
-        public AppEncryptionPartition(string partitionId, string systemId, string productId)
+        public Partition(string partitionId, string systemId, string productId)
         {
             PartitionId = partitionId;
             SystemId = systemId;

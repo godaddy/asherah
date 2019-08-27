@@ -91,12 +91,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         {
             try
             {
-                using (AppEncryptionSessionFactory factory =
-                    SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+                using (SessionFactory sessionFactory =
+                    SessionFactoryGenerator.CreateDefaultSessionFactory(
                         configFixture.KeyManagementService,
                         configFixture.MetastorePersistence))
                 {
-                    using (AppEncryption<JObject, byte[]> partition = factory.GetAppEncryptionJson(partitionId))
+                    using (Session<JObject, byte[]> session = sessionFactory.GetSessionJson(partitionId))
                     {
                         Dictionary<string, byte[]> dataStore = new Dictionary<string, byte[]>();
 
@@ -109,12 +109,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
                             string keyPart = $"iteration-{i}";
                             jObject["payload"] = partitionPart + keyPart;
 
-                            dataStore.Add(keyPart, partition.Encrypt(jObject));
+                            dataStore.Add(keyPart, session.Encrypt(jObject));
                         }
 
                         foreach (KeyValuePair<string, byte[]> keyValuePair in dataStore)
                         {
-                            JObject decryptedObject = partition.Decrypt(keyValuePair.Value);
+                            JObject decryptedObject = session.Decrypt(keyValuePair.Value);
                             Assert.Equal(partitionPart + keyValuePair.Key, decryptedObject["payload"].ToObject<string>());
                         }
                     }

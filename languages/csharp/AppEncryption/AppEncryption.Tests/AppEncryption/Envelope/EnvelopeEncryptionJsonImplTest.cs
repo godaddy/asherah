@@ -20,8 +20,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
     [Collection("Logger Fixture collection")]
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
-        private readonly AppEncryptionPartition appEncryptionPartition =
-            new AppEncryptionPartition("shopper_123", "payments", "ecomm");
+        private readonly Partition partition =
+            new Partition("shopper_123", "payments", "ecomm");
 
         // Setup DateTimeOffsets truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple level keys
         private readonly DateTimeOffset drkDateTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromSeconds(1));
@@ -65,7 +65,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(intermediateKeyCacheMock.Object);
 
             envelopeEncryptionJsonImplSpy = new Mock<EnvelopeEncryptionJsonImpl>(
-                appEncryptionPartition,
+                partition,
                 metastorePersisteneMock.Object,
                 systemKeyCacheMock.Object,
                 intermediateKeyCacheFactoryMock.Object,
@@ -128,7 +128,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                     functionWithIntermediateKey(intermediateCryptoKeyMock.Object));
 
             byte[] decryptedPayload = Encoding.Unicode.GetBytes("somepayload");
-            KeyMeta intermediateKeyMeta = new KeyMeta(appEncryptionPartition.IntermediateKeyId, ikDateTime);
+            KeyMeta intermediateKeyMeta = new KeyMeta(partition.IntermediateKeyId, ikDateTime);
             byte[] encryptedPayload = { 0, 1, 2, 3 };
             byte[] encryptedKey = { 4, 5, 6, 7 };
             EnvelopeEncryptResult envelopeEncryptResult = new EnvelopeEncryptResult
@@ -669,7 +669,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(intermediateCryptoKeyMock.Object, actualIntermediateKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.DecryptKey(It.IsAny<EnvelopeKeyRecord>(), It.IsAny<CryptoKey>()), Times.Never);
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -728,7 +728,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(intermediateCryptoKeyMock.Object, actualIntermediateKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.DecryptKey(It.IsAny<EnvelopeKeyRecord>(), It.IsAny<CryptoKey>()), Times.Never);
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -781,7 +781,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(intermediateCryptoKeyMock.Object, actualIntermediateKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.DecryptKey(It.IsAny<EnvelopeKeyRecord>(), It.IsAny<CryptoKey>()), Times.Never);
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -815,7 +815,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(intermediateCryptoKeyMock.Object, actualIntermediateKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.DecryptKey(It.IsAny<EnvelopeKeyRecord>(), It.IsAny<CryptoKey>()), Times.Never);
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -878,7 +878,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 
             // TODO : Add verify for queue key rotation once implemented
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -918,7 +918,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 
             // TODO : Add verify for queue key rotation once implemented
             aeadEnvelopeCryptoMock.Verify(x => x.EncryptKey(intermediateCryptoKeyMock.Object, systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.IntermediateKeyId, ikDateTime, It.IsAny<JObject>()));
             intermediateCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -1030,7 +1030,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(systemCryptoKeyMock.Object, actualSystemKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.DecryptKey(It.IsAny<EnvelopeKeyRecord>(), It.IsAny<CryptoKey>()), Times.Never);
             keyManagementServiceMock.Verify(x => x.EncryptKey(systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.SystemKeyId, skDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.SystemKeyId, skDateTime, It.IsAny<JObject>()));
             systemCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -1079,7 +1079,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Assert.Equal(systemCryptoKeyMock.Object, actualSystemKey);
             keyManagementServiceMock.Verify(x => x.DecryptKey(It.IsAny<byte[]>(), It.IsAny<DateTimeOffset>(), It.IsAny<bool>()), Times.Never);
             keyManagementServiceMock.Verify(x => x.EncryptKey(systemCryptoKeyMock.Object));
-            metastorePersisteneMock.Verify(x => x.Store(appEncryptionPartition.SystemKeyId, skDateTime, It.IsAny<JObject>()));
+            metastorePersisteneMock.Verify(x => x.Store(partition.SystemKeyId, skDateTime, It.IsAny<JObject>()));
             systemCryptoKeyMock.Verify(x => x.Dispose(), Times.Never);
         }
 
@@ -1382,7 +1382,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 pretendKeyBytes,
                 false);
 
-            metastorePersisteneMock.Setup(x => x.LoadLatestValue(It.IsAny<string>()))
+            metastorePersisteneMock.Setup(x => x.LoadLatest(It.IsAny<string>()))
                 .Returns(Option<JObject>.Some(keyRecord.ToJson()));
 
             Option<EnvelopeKeyRecord> returnedOptionalEnvelopeKeyRecord = envelopeEncryptionJsonImplSpy.Object.LoadLatestKeyRecord("empty");
@@ -1395,7 +1395,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestLoadLatestKeyRecordEmptyResult()
         {
-            metastorePersisteneMock.Setup(x => x.LoadLatestValue(It.IsAny<string>())).Returns(Option<JObject>.None);
+            metastorePersisteneMock.Setup(x => x.LoadLatest(It.IsAny<string>())).Returns(Option<JObject>.None);
 
             Assert.False(envelopeEncryptionJsonImplSpy.Object.LoadLatestKeyRecord("empty").IsSome);
         }

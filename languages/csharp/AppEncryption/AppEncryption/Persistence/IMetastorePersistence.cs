@@ -26,7 +26,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// </returns>
         ///
         /// <param name="keyId">the keyId to lookup</param>
-        Option<T> LoadLatestValue(string keyId);
+        Option<T> LoadLatest(string keyId);
 
         /// <summary>
         /// Stores the value using the specified keyId and created time.

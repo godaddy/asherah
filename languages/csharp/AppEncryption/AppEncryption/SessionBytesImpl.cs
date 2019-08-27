@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 
 namespace GoDaddy.Asherah.AppEncryption
 {
-    public class AppEncryptionBytesImpl<TD> : AppEncryption<byte[], TD>
+    public class SessionBytesImpl<TD> : Session<byte[], TD>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<AppEncryptionBytesImpl<TD>>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<SessionBytesImpl<TD>>();
 
         private readonly IEnvelopeEncryption<TD> envelopeEncryption;
 
-        public AppEncryptionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+        public SessionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption)
         {
             this.envelopeEncryption = envelopeEncryption;
         }

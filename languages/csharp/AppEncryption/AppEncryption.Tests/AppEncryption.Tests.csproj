@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -20,5 +20,8 @@
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestResults" />
   </ItemGroup>
 </Project>

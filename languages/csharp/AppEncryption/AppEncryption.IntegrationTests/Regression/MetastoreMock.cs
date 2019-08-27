@@ -16,7 +16,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
 
         internal static Mock<IMetastorePersistence<JObject>> CreateMetastoreMock(
-            AppEncryptionPartition appEncryptionPartition,
+            Partition partition,
             KeyManagementService kms,
             KeyState metaIK,
             KeyState metaSK,
@@ -31,8 +31,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns<string, DateTimeOffset>(metaStore.Load);
             metaStorePersistenceSpy
-                .Setup(x => x.LoadLatestValue(It.IsAny<string>()))
-                .Returns<string>(metaStore.LoadLatestValue);
+                .Setup(x => x.LoadLatest(It.IsAny<string>()))
+                .Returns<string>(metaStore.LoadLatest);
             metaStorePersistenceSpy
                 .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
                 .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
@@ -50,7 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, kms.EncryptKey(systemKey), systemKey.IsRevoked());
                 metaStore.Store(
-                    appEncryptionPartition.SystemKeyId,
+                    partition.SystemKeyId,
                     systemKeyRecord.Created,
                     systemKeyRecord.ToJson());
             }
@@ -68,11 +68,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeKeyRecord intermediateKeyRecord = new EnvelopeKeyRecord(
                     intermediateKey.GetCreated(),
-                    new KeyMeta(appEncryptionPartition.SystemKeyId, systemKey.GetCreated()),
+                    new KeyMeta(partition.SystemKeyId, systemKey.GetCreated()),
                     Crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
                 metaStore.Store(
-                    appEncryptionPartition.IntermediateKeyId,
+                    partition.IntermediateKeyId,
                     intermediateKeyRecord.Created,
                     intermediateKeyRecord.ToJson());
             }

@@ -83,17 +83,17 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                     throw new AppEncryptionException("Missing ADO connection string");
                 }
 
-                return AdoMetastorePersistenceImpl
+                return AdoMetastoreImpl
                     .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
                     .Build();
             }
 
             if (MetaStoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
             {
-                return DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+                return DynamoDbMetastoreImpl.NewBuilder().Build();
             }
 
-            return new MemoryPersistenceImpl<JObject>();
+            return new InMemoryMetastoreImpl<JObject>();
         }
 
         private KeyManagementService CreateKeyManagementService()

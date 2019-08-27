@@ -6,11 +6,11 @@ using LanguageExt;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class MemoryPersistenceImpl<T> : IMetastorePersistence<T>
+    public class InMemoryMetastoreImpl<T> : IMetastorePersistence<T>
     {
         private readonly DataTable dataTable;
 
-        public MemoryPersistenceImpl()
+        public InMemoryMetastoreImpl()
         {
             dataTable = new DataTable();
             dataTable.Columns.Add("keyId", typeof(string));
@@ -36,7 +36,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public virtual Option<T> LoadLatestValue(string keyId)
+        public virtual Option<T> LoadLatest(string keyId)
         {
             lock (dataTable)
             {

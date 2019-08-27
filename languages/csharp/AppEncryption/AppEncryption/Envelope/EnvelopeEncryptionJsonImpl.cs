@@ -26,7 +26,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private static readonly TimerOptions EncryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
         private static readonly TimerOptions DecryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
 
-        private readonly AppEncryptionPartition partition;
+        private readonly Partition partition;
         private readonly IMetastorePersistence<JObject> metastorePersistence;
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache; // assuming limited to 1 product/service id pair
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache;
@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private readonly KeyManagementService keyManagementService;
 
         public EnvelopeEncryptionJsonImpl(
-            AppEncryptionPartition partition,
+            Partition partition,
             IMetastorePersistence<JObject> metastorePersistence,
             SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
             SecureCryptoKeyDictionaryFactory<DateTimeOffset> intermediateKeyCacheFactory,
@@ -552,7 +552,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)
         {
             Logger.LogDebug("Attempting to load latest key with keyId {keyId}", keyId);
-            return metastorePersistence.LoadLatestValue(keyId)
+            return metastorePersistence.LoadLatest(keyId)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));
         }

@@ -7,22 +7,22 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class AppEncryptionJsonImplTest
+    public class SessionJsonImplTest
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;
-        private readonly AppEncryptionJsonImpl<string> appEncryptionJsonImpl;
+        private readonly SessionJsonImpl<string> sessionJsonImpl;
 
-        public AppEncryptionJsonImplTest()
+        public SessionJsonImplTest()
         {
             envelopeEncryptionMock = new Mock<IEnvelopeEncryption<string>>();
-            appEncryptionJsonImpl = new AppEncryptionJsonImpl<string>(envelopeEncryptionMock.Object);
+            sessionJsonImpl = new SessionJsonImpl<string>(envelopeEncryptionMock.Object);
         }
 
         [Fact]
         private void TestConstructor()
         {
-            AppEncryptionJsonImpl<string> appEncryption = new AppEncryptionJsonImpl<string>(envelopeEncryptionMock.Object);
-            Assert.NotNull(appEncryption);
+            SessionJsonImpl<string> session = new SessionJsonImpl<string>(envelopeEncryptionMock.Object);
+            Assert.NotNull(session);
         }
 
         [Fact]
@@ -34,7 +34,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             envelopeEncryptionMock.Setup(x => x.DecryptDataRowRecord(It.IsAny<string>())).Returns(utf8Bytes);
 
-            JObject actualJson = appEncryptionJsonImpl.Decrypt("some data row record");
+            JObject actualJson = sessionJsonImpl.Decrypt("some data row record");
             Assert.Equal(expectedJson,  actualJson);
         }
 
@@ -47,14 +47,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             envelopeEncryptionMock.Setup(x => x.EncryptPayload(It.IsAny<byte[]>())).Returns(expectedDataRowRecord);
 
-            string actualDataRowRecord = appEncryptionJsonImpl.Encrypt(jObject);
+            string actualDataRowRecord = sessionJsonImpl.Encrypt(jObject);
             Assert.Equal(expectedDataRowRecord, actualDataRowRecord);
         }
 
         [Fact]
         private void TestDispose()
         {
-            appEncryptionJsonImpl.Dispose();
+            sessionJsonImpl.Dispose();
 
             // Verify proper resources are closed
             envelopeEncryptionMock.Verify(x => x.Dispose());
@@ -64,7 +64,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestCloseWithCloseFailShouldReturn()
         {
             envelopeEncryptionMock.Setup(x => x.Dispose()).Throws<Exception>();
-            appEncryptionJsonImpl.Dispose();
+            sessionJsonImpl.Dispose();
             envelopeEncryptionMock.Verify(x => x.Dispose());
         }
     }

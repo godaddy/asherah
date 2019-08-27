@@ -7,19 +7,19 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
 {
     public static class SessionFactoryGenerator
     {
-        public static AppEncryptionSessionFactory CreateDefaultAppEncryptionSessionFactory(
+        public static SessionFactory CreateDefaultSessionFactory(
             KeyManagementService keyManagementService, IMetastorePersistence<JObject> metastorePersistence)
         {
-            return CreateDefaultAppEncryptionSessionFactory(DefaultProductId, DefaultSystemId, keyManagementService, metastorePersistence);
+            return CreateDefaultSessionFactory(DefaultProductId, DefaultSystemId, keyManagementService, metastorePersistence);
         }
 
-        private static AppEncryptionSessionFactory CreateDefaultAppEncryptionSessionFactory(
+        private static SessionFactory CreateDefaultSessionFactory(
             string productId,
             string systemId,
             KeyManagementService keyManagementService,
             IMetastorePersistence<JObject> metastorePersistence)
         {
-            return AppEncryptionSessionFactory.NewBuilder(productId, systemId)
+            return SessionFactory.NewBuilder(productId, systemId)
                 .WithMetaStorePersistence(metastorePersistence)
                 .WithNeverExpiredCryptoPolicy()
                 .WithKeyManagementService(keyManagementService)
