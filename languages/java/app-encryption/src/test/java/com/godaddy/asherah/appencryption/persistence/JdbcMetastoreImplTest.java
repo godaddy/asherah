@@ -127,7 +127,7 @@ class JdbcMetastoreImplTest {
 
 
   @Test
-  void testLoadLatestValue() throws SQLException {
+  void testLoadLatest() throws SQLException {
 
     when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
 
@@ -144,7 +144,7 @@ class JdbcMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueWithSQLException() throws SQLException {
+  void testLoadLatestWithSQLException() throws SQLException {
 
     when(jdbcMetastoreImpl.getConnection()).thenThrow(SQLException.class);
 

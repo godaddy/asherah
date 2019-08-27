@@ -145,7 +145,7 @@ and parallel encrypt calls.
 A session factory can now be built using the components we defined above.
 
 ```java
-AppEncryptionSessionFactory sessionFactory = AppEncryptionSessionFactory.newBuilder("some_product", "some_service")
+SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
   .withMetastorePersistence(metastorePersistence)
   .withCryptoPolicy(policy)
   .withKeyManagementService(keyManagementService)

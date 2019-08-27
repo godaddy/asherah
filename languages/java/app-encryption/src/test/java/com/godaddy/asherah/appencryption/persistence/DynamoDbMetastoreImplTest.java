@@ -126,7 +126,7 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueWithSingleRecord() {
+  void testLoadLatestWithSingleRecord() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
 
     assertTrue(actualJsonObject.isPresent());
@@ -134,7 +134,7 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueWithMultipleRecords() {
+  void testLoadLatestWithMultipleRecords() {
     Instant instantMinusOneHour = instant.minus(1, ChronoUnit.HOURS);
     Instant instantPlusOneHour = instant.plus(1, ChronoUnit.HOURS);
     Instant instantMinusOneDay = instant.minus(1, ChronoUnit.DAYS);
@@ -176,14 +176,14 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueWithNoResultShouldReturnEmpty() {
+  void testLoadLatestWithNoResultShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest("fake_key");
 
     assertFalse(actualJsonObject.isPresent());
   }
 
   @Test
-  void testLoadLatestValueWithFailureShouldReturnEmpty() {
+  void testLoadLatestWithFailureShouldReturnEmpty() {
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(null);
 
     assertFalse(actualJsonObject.isPresent());

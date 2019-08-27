@@ -42,7 +42,7 @@ class InMemoryMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueMultipleCreatedAndValuesForKeyIdShouldReturnLatest() {
+  void testLoadLatestMultipleCreatedAndValuesForKeyIdShouldReturnLatest() {
     String keyId = "ThisIsMyKey";
     Instant created = Instant.now();
     String value = "created value";
@@ -64,7 +64,7 @@ class InMemoryMetastoreImplTest {
   }
 
   @Test
-  void testLoadLatestValueNonExistentKeyIdShouldReturnNull() {
+  void testLoadLatestNonExistentKeyIdShouldReturnNull() {
     String keyId = "ThisIsMyKey";
     Instant created = Instant.now();
     String value = "created value";
