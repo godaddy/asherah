@@ -68,7 +68,7 @@ class AppEncryptionParameterizedTest {
       DecryptMetastoreInteractions decryptMetastoreInteractions =
           new DecryptMetastoreInteractions(cacheIK, cacheSK);
 
-      //encrypt with library object(appEncryptionJsonImpl)
+      //encrypt with library object(sessionJsonImpl)
       byte[] encryptedPayload = sessionJsonImpl.encrypt(payload);
 
       assertNotNull(encryptedPayload);

@@ -101,7 +101,7 @@ class SessionFactoryTest {
   }
 
   @Test
-  void getAppEncryptionPartitionWithPartition() {
+  void testGetPartitionWithPartitionId() {
     Partition partition =
         sessionFactory.getPartition(testPartitionId);
     assertEquals(testPartitionId, partition.getPartitionId());
