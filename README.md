@@ -66,7 +66,7 @@ SessionFactory sessionFactory = SessionFactory
     .newBuilder("myservice", "sample_code")
     .withMemoryPersistence() // in-memory metastore persistence only
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService(""mysupersecretstaticmasterkey!!!!"") // hard-coded/static master key
+    .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!") // hard-coded/static master key
     .build());
 ```
 
