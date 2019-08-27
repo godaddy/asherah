@@ -6,7 +6,7 @@ import java.util.SortedMap;
 
 import com.google.common.collect.TreeBasedTable;
 
-public class MemoryPersistenceImpl<T> implements MetastorePersistence<T> {
+public class InMemoryMetastoreImpl<T> implements MetastorePersistence<T> {
   private final TreeBasedTable<String, Instant, T> table = TreeBasedTable.create();
 
   @Override
@@ -17,7 +17,7 @@ public class MemoryPersistenceImpl<T> implements MetastorePersistence<T> {
   }
 
   @Override
-  public Optional<T> loadLatestValue(final String keyId) {
+  public Optional<T> loadLatest(final String keyId) {
     synchronized (table) {
       SortedMap<Instant, T> partitionMap = table.row(keyId);
       // Need to check if empty as lastKey will throw an exception instead of returning null

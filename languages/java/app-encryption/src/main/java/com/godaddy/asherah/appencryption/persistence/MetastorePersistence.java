@@ -18,7 +18,7 @@ public interface MetastorePersistence<V> {
    * @param keyId the keyId part of the lookup key
    * @return The latest value associated with the keyId, if any.
    */
-  Optional<V> loadLatestValue(String keyId);
+  Optional<V> loadLatest(String keyId);
 
   /**
    * Stores the value using the specified keyId and created time.

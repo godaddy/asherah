@@ -1,6 +1,6 @@
 package com.godaddy.asherah.appencryption.envelope;
 
-import com.godaddy.asherah.appencryption.AppEncryptionPartition;
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
@@ -57,7 +57,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Mock
   KeyMeta keyMeta;
 
-  AppEncryptionPartition partition = new AppEncryptionPartition("shopper_123", "payments", "ecomm");
+  Partition partition = new Partition("shopper_123", "payments", "ecomm");
 
   // Setup Instants truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple
   // level keys
@@ -147,7 +147,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Test
   void testCloseSuccess() {
     envelopeEncryptionJson.close();
-    
+
     // Verify proper resources are closed
     verify(intermediateKeyCache).close();
     verify(systemKeyCache, never()).close(); // shouldn't be closed
@@ -157,7 +157,7 @@ class EnvelopeEncryptionJsonImplTest {
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(intermediateKeyCache).close();
     envelopeEncryptionJson.close();
-    
+
     verify(intermediateKeyCache).close();
     verify(systemKeyCache, never()).close(); // shouldn't be closed
   }
@@ -1130,7 +1130,7 @@ class EnvelopeEncryptionJsonImplTest {
     EnvelopeKeyRecord envelopeKeyRecord =
         new EnvelopeKeyRecord(ikInstant, new KeyMeta("KeyId", skInstant), pretendKeyBytes, false);
 
-    when(metastorePersistence.loadLatestValue(any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
+    when(metastorePersistence.loadLatest(any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
 
     Optional<EnvelopeKeyRecord> returnedOptionalEnvelopeKeyRecord = envelopeEncryptionJson.loadLatestKeyRecord("empty");
     assertTrue(returnedOptionalEnvelopeKeyRecord.isPresent());
@@ -1141,7 +1141,7 @@ class EnvelopeEncryptionJsonImplTest {
 
   @Test
   void testLoadLatestKeyRecordEmptyResult() {
-    when(metastorePersistence.loadLatestValue(any())).thenReturn(Optional.empty());
+    when(metastorePersistence.loadLatest(any())).thenReturn(Optional.empty());
 
     assertFalse(envelopeEncryptionJson.loadLatestKeyRecord("empty").isPresent());
   }

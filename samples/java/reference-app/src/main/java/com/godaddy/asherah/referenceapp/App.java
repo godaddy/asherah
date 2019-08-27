@@ -15,14 +15,14 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
-import com.godaddy.asherah.appencryption.keymanagement.AWSKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
+import com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
-import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.JdbcMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MemoryPersistenceImpl;
+import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
@@ -100,7 +100,7 @@ public final class App implements Callable<Void> {
         // Setup JDBC persistence from command line argument using Hikari connection pooling
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
-        metastorePersistence = JdbcMetastorePersistenceImpl.newBuilder(dataSource).build();
+        metastorePersistence = JdbcMetastoreImpl.newBuilder(dataSource).build();
       }
       else {
         CommandLine.usage(this, System.out);
@@ -110,12 +110,12 @@ public final class App implements Callable<Void> {
     else if (metastore == Metastore.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
 
-      metastorePersistence = DynamoDbMetastorePersistenceImpl.newBuilder().build();
+      metastorePersistence = DynamoDbMetastoreImpl.newBuilder().build();
     }
     else {
       logger.info("using in-memory metastore...");
 
-      metastorePersistence = new MemoryPersistenceImpl<>();
+      metastorePersistence = new InMemoryMetastoreImpl<>();
     }
 
     KeyManagementService keyManagementService;
@@ -124,7 +124,7 @@ public final class App implements Callable<Void> {
         logger.info("using AWS KMS...");
 
         // build the ARN regions including preferred region
-        keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
+        keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
       }
       else {
         CommandLine.usage(this, System.out);
@@ -162,7 +162,7 @@ public final class App implements Callable<Void> {
     // Create a session factory for this app. Normally this would be done upon app startup and the
     // same factory would be used anytime a new session is needed for a partition (e.g., shopper).
     // We've split it out into multiple try blocks to underscore this point.
-    try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
+    try (SessionFactory sessionFactory = SessionFactory
         .newBuilder("productId", "reference_app")
         .withMetastorePersistence(metastorePersistence)
         .withCryptoPolicy(cryptoPolicy)
@@ -172,8 +172,8 @@ public final class App implements Callable<Void> {
 
       // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
-      try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory
-          .getAppEncryptionBytes("shopper123")) {
+      try (Session<byte[], byte[]> sessionBytes = sessionFactory
+          .getSessionBytes("shopper123")) {
 
         String originalPayloadString = "mysupersecretpayload";
 
@@ -186,7 +186,7 @@ public final class App implements Callable<Void> {
           else {
             // Encrypt the payload
             byte[] dataRowRecordBytes =
-                appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+                sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
             // Consider this us "persisting" the DRR
             dataRowString = Base64.getEncoder().encodeToString(dataRowRecordBytes);
@@ -196,7 +196,7 @@ public final class App implements Callable<Void> {
           byte[] newDataRowRecordBytes = Base64.getDecoder().decode(dataRowString);
 
           // Decrypt the payload
-          String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newDataRowRecordBytes),
+          String decryptedPayloadString = new String(sessionBytes.decrypt(newDataRowRecordBytes),
               StandardCharsets.UTF_8);
 
           logger.info("decryptedPayloadString = {}, matches = {}", decryptedPayloadString,

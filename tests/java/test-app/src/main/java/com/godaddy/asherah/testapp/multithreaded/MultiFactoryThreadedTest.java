@@ -1,7 +1,7 @@
 package com.godaddy.asherah.testapp.multithreaded;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver.ConfigurationParameter;
 import com.godaddy.asherah.testapp.utils.PayloadGenerator;
@@ -29,8 +29,8 @@ class MultiFactoryThreadedTest {
   private static final Logger LOG = LoggerFactory.getLogger(MultiFactoryThreadedTest.class);
 
   private void runPartitionTest(final int testIterations, final String partitionId, final int payloadSizeBytesBase) {
-    try (AppEncryptionSessionFactory factory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory()) {
-      try (AppEncryption<JSONObject, byte[]> partition = factory.getAppEncryptionJson(partitionId)) {
+    try (SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory()) {
+      try (Session<JSONObject, byte[]> session = sessionFactory.getSessionJson(partitionId)) {
         Map<String, byte[]> dataStore = new HashMap<>();
 
         String partitionPart = "partition-" + partitionId + "-";
@@ -41,11 +41,11 @@ class MultiFactoryThreadedTest {
           String keyPart = String.format("iteration-%d", i);
           jsonObject.put("payload", partitionPart + keyPart);
 
-          dataStore.put(keyPart, partition.encrypt(jsonObject));
+          dataStore.put(keyPart, session.encrypt(jsonObject));
         }
 
         dataStore.forEach((key, value) -> {
-          JSONObject decryptedObject = partition.decrypt(value);
+          JSONObject decryptedObject = session.decrypt(value);
           assertEquals(partitionPart + key, decryptedObject.get("payload"));
         });
       }

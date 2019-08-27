@@ -2,15 +2,15 @@ package com.godaddy.asherah.appencryption.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionJsonImpl;
-import com.godaddy.asherah.appencryption.AppEncryptionPartition;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionJsonImpl;
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.AdhocPersistence;
-import com.godaddy.asherah.appencryption.persistence.MemoryPersistenceImpl;
+import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
 import com.godaddy.asherah.appencryption.testhelpers.dummy.DummyCryptoPolicy;
@@ -35,19 +35,19 @@ class AppJsonEncryptionImplTest {
   private HashMap<String, JSONObject> memoryPersistence;
   private Persistence<JSONObject> dataPersistence;
   private MetastorePersistence<JSONObject> metastorePersistence;
-  private AppEncryptionPartition appEncryptionPartition;
+  private Partition partition;
   private KeyManagementService keyManagementService;
 
   @BeforeEach
   void setUp() {
-    appEncryptionPartition = new AppEncryptionPartition("PARTITION", "SYSTEM",
+    partition = new Partition("PARTITION", "SYSTEM",
         "PRODUCT");
 
     memoryPersistence = new HashMap<>();
     dataPersistence = new AdhocPersistence<>(key -> Optional.ofNullable(memoryPersistence.get(key)),
         (key, jsonObject) -> memoryPersistence.put(key, jsonObject));
-    
-    metastorePersistence = new MemoryPersistenceImpl<>();
+
+    metastorePersistence = new InMemoryMetastoreImpl<>();
 
     keyManagementService = new DummyKeyManagementService();
 
@@ -60,7 +60,7 @@ class AppJsonEncryptionImplTest {
     EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(Instant.now(), null, encryptedSystemKey);
 
     //Write out the dummy systemKey record
-    memoryPersistence.put(appEncryptionPartition.getSystemKeyId(), systemKeyRecord.toJson());
+    memoryPersistence.put(partition.getSystemKeyId(), systemKeyRecord.toJson());
 
   }
 
@@ -80,21 +80,21 @@ class AppJsonEncryptionImplTest {
 
       EnvelopeEncryption<JSONObject> envelopeEncryption =
           new EnvelopeEncryptionJsonImpl(
-              appEncryptionPartition,
+            partition,
               metastorePersistence,
               systemKeyCache,
               new SecureCryptoKeyMapFactory<Instant>(cryptoPolicy),
               aeadEnvelopeCrypto,
               cryptoPolicy,
               keyManagementService);
-      try(AppEncryption<JSONObject, JSONObject> appEncryptionJson = new AppEncryptionJsonImpl<>(envelopeEncryption)) {
+      try(Session<JSONObject, JSONObject> sessionJson = new SessionJsonImpl<>(envelopeEncryption)) {
 
         Json testJson = new Json();
         testJson.put("Test", testData);
 
-        String persistenceKey = appEncryptionJson.store(testJson.toJsonObject(), dataPersistence);
+        String persistenceKey = sessionJson.store(testJson.toJsonObject(), dataPersistence);
 
-        Optional<JSONObject> testJson2 = appEncryptionJson.load(persistenceKey, dataPersistence);
+        Optional<JSONObject> testJson2 = sessionJson.load(persistenceKey, dataPersistence);
         assertTrue(testJson2.isPresent());
         String resultData = testJson2.get().getString("Test");
 

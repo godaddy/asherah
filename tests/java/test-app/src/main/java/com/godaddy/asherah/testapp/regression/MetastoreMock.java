@@ -1,6 +1,6 @@
 package com.godaddy.asherah.testapp.regression;
 
-import com.godaddy.asherah.appencryption.AppEncryptionPartition;
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
 import com.godaddy.asherah.appencryption.envelope.KeyMeta;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
@@ -25,7 +25,7 @@ final class MetastoreMock {
 
   private MetastoreMock() { }
 
-  static MetastorePersistence<JSONObject> createMetastoreMock(final AppEncryptionPartition appEncryptionPartition,
+  static MetastorePersistence<JSONObject> createMetastoreMock(final Partition partition,
                                                               final KeyManagementService kms,
                                                               final MetastorePersistence<JSONObject> metastorePersistence,
                                                               final KeyState metaIK,
@@ -46,7 +46,7 @@ final class MetastoreMock {
 
       EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(systemKey.getCreated(),
           null, kms.encryptKey(systemKey), systemKey.isRevoked());
-      memoryPersistenceSpy.store(appEncryptionPartition.getSystemKeyId(), systemKeyRecord.getCreated(),
+      memoryPersistenceSpy.store(partition.getSystemKeyId(), systemKeyRecord.getCreated(),
           systemKeyRecord.toJson());
     }
 
@@ -61,9 +61,9 @@ final class MetastoreMock {
       }
 
       EnvelopeKeyRecord intermediateKeyRecord = new EnvelopeKeyRecord(intermediateKey.getCreated(),
-          new KeyMeta(appEncryptionPartition.getSystemKeyId(), systemKey.getCreated()),
+          new KeyMeta(partition.getSystemKeyId(), systemKey.getCreated()),
           CRYPTO.encryptKey(intermediateKey, systemKey), intermediateKey.isRevoked());
-      memoryPersistenceSpy.store(appEncryptionPartition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
+      memoryPersistenceSpy.store(partition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
           intermediateKeyRecord.toJson());
     }
 

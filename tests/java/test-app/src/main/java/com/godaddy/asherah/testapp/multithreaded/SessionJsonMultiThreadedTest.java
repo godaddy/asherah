@@ -1,12 +1,13 @@
 package com.godaddy.asherah.testapp.multithreaded;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver.ConfigurationParameter;
 import com.godaddy.asherah.testapp.utils.PayloadGenerator;
 import com.godaddy.asherah.testapp.utils.SessionFactoryGenerator;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,26 +27,26 @@ import static com.godaddy.asherah.testapp.testhelpers.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(ConfigurationParameterResolver.class)
-public class AppEncryptionByteMultiThreadedTest {
-  private static final Logger LOG = LoggerFactory.getLogger(AppEncryptionByteMultiThreadedTest.class);
+public class SessionJsonMultiThreadedTest {
+  private static final Logger LOG = LoggerFactory.getLogger(SessionJsonMultiThreadedTest.class);
 
-  private byte[] payload;
-  private AppEncryptionSessionFactory appEncryptionSessionFactory;
+  private JSONObject payload;
+  private SessionFactory sessionFactory;
   private String partitionId;
-  private AppEncryption<byte[], byte[]> appEncryptionBytes;
+  private Session<JSONObject, byte[]> sessionJson;
 
   @BeforeEach
   public void setupTest(@ConfigurationParameter(TEST_PARAM_PAYLOAD_SIZE_BYTES) final int payloadSizeBytes) {
-    payload = PayloadGenerator.createRandomBytePayload(payloadSizeBytes);
-    appEncryptionSessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
-    partitionId = DEFAULT_PARTITION_ID + "_" + LocalDateTime.now().toString();
-    appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes(partitionId);
+    payload = PayloadGenerator.createRandomJsonPayload(payloadSizeBytes);
+    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    partitionId  = DEFAULT_PARTITION_ID + "_" + LocalDateTime.now().toString();
+    sessionJson = sessionFactory.getSessionJson(partitionId);
   }
 
   @AfterEach
   public void tearDown() {
-    appEncryptionBytes.close();
-    appEncryptionSessionFactory.close();
+    sessionJson.close();
+    sessionFactory.close();
   }
 
   @Test
@@ -58,7 +59,7 @@ public class AppEncryptionByteMultiThreadedTest {
     for (int i = 0; i < numThreads; i++) {
       Future<byte[]> future = service.submit(() -> {
         try {
-          byte[] drr = appEncryptionBytes.encrypt(payload);
+          byte[] drr = sessionJson.encrypt(payload);
 
           return drr;
         }
@@ -74,9 +75,8 @@ public class AppEncryptionByteMultiThreadedTest {
 
     for (Future<byte[]> future: dataRowRecord) {
       try {
-        byte[] decryptedPayload = future.get();
-        assertArrayEquals(payload, appEncryptionBytes.decrypt(decryptedPayload));
-
+        byte[] decryptedJsonObject = future.get();
+        assertTrue(payload.similar(sessionJson.decrypt(decryptedJsonObject)));
       }
       catch (ExecutionException | InterruptedException e) {
         LOG.error("unexpected error ", e);

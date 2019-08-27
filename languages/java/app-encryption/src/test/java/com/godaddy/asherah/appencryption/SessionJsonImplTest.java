@@ -3,6 +3,7 @@ package com.godaddy.asherah.appencryption;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,28 +11,30 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
+import com.godaddy.asherah.appencryption.utils.Json;
 
 @ExtendWith(MockitoExtension.class)
-class AppEncryptionBytesImplTest {
+class SessionJsonImplTest {
 
   @Mock
   EnvelopeEncryption<String> envelopeEncryption;
   @InjectMocks
-  AppEncryptionBytesImpl<String> appEncryptionBytesImpl;
-  
+  SessionJsonImpl<String> appEncryptionJsonImpl;
+
   @Test
   void testConstructor() {
-    AppEncryption<?, ?> appEncryption = new AppEncryptionBytesImpl<>(envelopeEncryption);
-    assertNotNull(appEncryption);
+    Session<?, ?> session = new SessionJsonImpl<>(envelopeEncryption);
+    assertNotNull(session);
   }
 
   @Test
   void testDecrypt() {
-    byte[] expectedBytes = new byte[]{0, 1, 2, 3};
-    when(envelopeEncryption.decryptDataRowRecord(any())).thenReturn(expectedBytes);
+    JSONObject expectedJson = new JSONObject("{\"some_key\": 123}");
+    byte[] utf8Bytes = new Json(expectedJson).toUtf8();
+    when(envelopeEncryption.decryptDataRowRecord(any())).thenReturn(utf8Bytes);
 
-    byte[] actualBytes = appEncryptionBytesImpl.decrypt("some data row record");
-    assertArrayEquals(expectedBytes, actualBytes);
+    JSONObject actualJson = appEncryptionJsonImpl.decrypt("some data row record");
+    assertTrue(expectedJson.similar(actualJson));
   }
 
   @Test
@@ -39,14 +42,14 @@ class AppEncryptionBytesImplTest {
     String expectedDataRowRecord = "some data row record";
     when(envelopeEncryption.encryptPayload(any())).thenReturn(expectedDataRowRecord);
 
-    String actualDataRowRecord = appEncryptionBytesImpl.encrypt(new byte[]{0, 1, 2, 3, 4});
+    String actualDataRowRecord = appEncryptionJsonImpl.encrypt(new JSONObject("{\"some_key\": 123}"));
     assertEquals(expectedDataRowRecord, actualDataRowRecord);
   }
 
   @Test
   void testCloseSuccess() {
-    appEncryptionBytesImpl.close();
-    
+    appEncryptionJsonImpl.close();
+
     // Verify proper resources are closed
     verify(envelopeEncryption).close();
   }
@@ -54,8 +57,8 @@ class AppEncryptionBytesImplTest {
   @Test
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(envelopeEncryption).close();
-    appEncryptionBytesImpl.close();
-    
+    appEncryptionJsonImpl.close();
+
     verify(envelopeEncryption).close();
   }
 

@@ -1,6 +1,6 @@
 package com.godaddy.asherah.appencryption.envelope;
 
-import com.godaddy.asherah.appencryption.AppEncryptionPartition;
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
@@ -32,7 +32,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final Timer encryptTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".drr.encrypt");
   private final Timer decryptTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".drr.decrypt");
 
-  private final AppEncryptionPartition partition;
+  private final Partition partition;
   private final MetastorePersistence<JSONObject> metastorePersistence;
   private final SecureCryptoKeyMap<Instant> systemKeyCache; // note assumed being limited to 1 product/service id pair
   private final SecureCryptoKeyMap<Instant> intermediateKeyCache;
@@ -40,7 +40,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
 
-  public EnvelopeEncryptionJsonImpl(final AppEncryptionPartition partition,
+  public EnvelopeEncryptionJsonImpl(final Partition partition,
       final MetastorePersistence<JSONObject> metastorePersistence, final SecureCryptoKeyMap<Instant> systemKeyCache,
       final SecureCryptoKeyMapFactory<Instant> intermediateKeyCacheFactory, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
       final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService) {
@@ -452,7 +452,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
    */
   Optional<EnvelopeKeyRecord> loadLatestKeyRecord(final String keyId) {
     logger.debug("attempting to load latest key with keyId {}", keyId);
-    return metastorePersistence.loadLatestValue(keyId)
+    return metastorePersistence.loadLatest(keyId)
         .map(Json::new)
         .map(EnvelopeKeyRecord::new);
   }

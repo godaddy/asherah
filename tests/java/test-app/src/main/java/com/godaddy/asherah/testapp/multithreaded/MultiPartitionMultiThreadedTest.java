@@ -1,7 +1,7 @@
 package com.godaddy.asherah.testapp.multithreaded;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver;
 import com.godaddy.asherah.testapp.ConfigurationParameterResolver.ConfigurationParameter;
@@ -36,7 +36,7 @@ class MultiPartitionMultiThreadedTest {
 
   private static Persistence<byte[]> persistenceBytes;
 
-  private AppEncryptionSessionFactory appEncryptionSessionFactory;
+  private SessionFactory sessionFactory;
 
   @BeforeAll
   public static void init() {
@@ -45,12 +45,12 @@ class MultiPartitionMultiThreadedTest {
 
   @BeforeEach
   public void setUp() {
-    appEncryptionSessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
   }
 
   @AfterEach
   public void tearDown() {
-    appEncryptionSessionFactory.close();
+    sessionFactory.close();
   }
 
   /**
@@ -126,7 +126,7 @@ class MultiPartitionMultiThreadedTest {
   }
 
   private void runEncryptDecryptTest(final int testIterations, final String partitionId, final int payloadSizeBytesBase) {
-    try (AppEncryption<JSONObject, byte[]> partition = appEncryptionSessionFactory.getAppEncryptionJson(partitionId)) {
+    try (Session<JSONObject, byte[]> session = sessionFactory.getSessionJson(partitionId)) {
       Map<String, byte[]> dataStore = new HashMap<>();
 
       String partitionPart = "partition-" + partitionId + "-";
@@ -137,11 +137,11 @@ class MultiPartitionMultiThreadedTest {
         String keyPart = String.format("iteration-%d", i);
         jsonObject.put("payload", partitionPart + keyPart);
 
-        dataStore.put(keyPart, partition.encrypt(jsonObject));
+        dataStore.put(keyPart, session.encrypt(jsonObject));
       }
 
       dataStore.forEach((key, value) -> {
-        JSONObject decryptedObject = partition.decrypt(value);
+        JSONObject decryptedObject = session.decrypt(value);
         assertEquals(partitionPart + key, decryptedObject.get("payload"));
       });
     }
@@ -152,7 +152,7 @@ class MultiPartitionMultiThreadedTest {
   }
 
   private void runLoadStoreTest(final int testIterations, final String partitionId, final int payloadSizeBytesBase) {
-    try (AppEncryption<JSONObject, byte[]> partition = appEncryptionSessionFactory.getAppEncryptionJson(partitionId)) {
+    try (Session<JSONObject, byte[]> session = sessionFactory.getSessionJson(partitionId)) {
       String partitionPart = "partition-" + partitionId + "-";
 
       for (int i = 0; i < testIterations; i++) {
@@ -161,8 +161,8 @@ class MultiPartitionMultiThreadedTest {
         String keyPart = String.format("iteration-%d", i);
         jsonObject.put("payload", partitionPart + keyPart);
 
-        String persistenceKey = partition.store(jsonObject, persistenceBytes);
-        Optional<JSONObject> decryptedJsonPayload = partition.load(persistenceKey, persistenceBytes);
+        String persistenceKey = session.store(jsonObject, persistenceBytes);
+        Optional<JSONObject> decryptedJsonPayload = session.load(persistenceKey, persistenceBytes);
         if (decryptedJsonPayload.isPresent()) {
           assertEquals(partitionPart + keyPart, decryptedJsonPayload.get().get("payload"));
         }
