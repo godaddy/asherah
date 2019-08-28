@@ -29,7 +29,7 @@ class MultiFactoryThreadedTest {
   private static final Logger LOG = LoggerFactory.getLogger(MultiFactoryThreadedTest.class);
 
   private void runPartitionTest(final int testIterations, final String partitionId, final int payloadSizeBytesBase) {
-    try (SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory()) {
+    try (SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory()) {
       try (Session<JSONObject, byte[]> session = sessionFactory.getSessionJson(partitionId)) {
         Map<String, byte[]> dataStore = new HashMap<>();
 

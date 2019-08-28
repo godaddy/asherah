@@ -36,7 +36,7 @@ public class SessionJsonTest {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createDefaultRandomJsonPayload();
-    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
     partitionId = DEFAULT_PARTITION_ID + "_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime();
     sessionJson = sessionFactory.getSessionJson(partitionId);
   }

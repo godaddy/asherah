@@ -35,7 +35,7 @@ public class SessionBytesTest {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createDefaultRandomBytePayload();
-    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
     partitionId = DEFAULT_PARTITION_ID + "_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime();
     sessionBytes = sessionFactory.getSessionBytes(partitionId);
   }

@@ -45,7 +45,7 @@ class MultiPartitionMultiThreadedTest {
 
   @BeforeEach
   public void setUp() {
-    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
   }
 
   @AfterEach

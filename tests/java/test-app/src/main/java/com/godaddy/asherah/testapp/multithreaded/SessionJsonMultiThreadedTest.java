@@ -38,7 +38,7 @@ public class SessionJsonMultiThreadedTest {
   @BeforeEach
   public void setupTest(@ConfigurationParameter(TEST_PARAM_PAYLOAD_SIZE_BYTES) final int payloadSizeBytes) {
     payload = PayloadGenerator.createRandomJsonPayload(payloadSizeBytes);
-    sessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
     partitionId  = DEFAULT_PARTITION_ID + "_" + LocalDateTime.now().toString();
     sessionJson = sessionFactory.getSessionJson(partitionId);
   }
@@ -50,9 +50,9 @@ public class SessionJsonMultiThreadedTest {
   }
 
   @Test
-  public void appEncryptionEncryptMultipleThreads(@ConfigurationParameter(TEST_PARAM_NUM_THREADS) final int numThreads) {
+  public void sessionEncryptMultipleThreads(@ConfigurationParameter(TEST_PARAM_NUM_THREADS) final int numThreads) {
     List<Future<byte[]>> dataRowRecord = new ArrayList<>();
-    LOG.info("Running appEncryptionEncryptMultipleThreads test with {} threads", numThreads);
+    LOG.info("Running sessionEncryptMultipleThreads test with {} threads", numThreads);
 
     ExecutorService service = Executors.newFixedThreadPool(numThreads);
 

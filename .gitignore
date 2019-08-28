@@ -32,7 +32,7 @@ Temporary Items
 
 # IntelliJ IDE
 .idea/
+*.iml
 
 out/
 
-*.iml

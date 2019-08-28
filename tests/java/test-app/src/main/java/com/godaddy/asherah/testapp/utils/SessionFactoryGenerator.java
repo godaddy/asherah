@@ -12,12 +12,12 @@ public final class SessionFactoryGenerator {
 
   }
 
-  public static SessionFactory createDefaultAppEncryptionSessionFactory() {
-    return createDefaultAppEncryptionSessionFactory(DEFAULT_PRODUCT_ID, DEFAULT_SYSTEM_ID);
+  public static SessionFactory createDefaultSessionFactory() {
+    return createDefaultSessionFactory(DEFAULT_PRODUCT_ID, DEFAULT_SYSTEM_ID);
   }
 
-  public static SessionFactory createDefaultAppEncryptionSessionFactory(final String productId,
-                                                                                     final String systemId) {
+  public static SessionFactory createDefaultSessionFactory(final String productId,
+                                                           final String systemId) {
     // Read volatile first to force other members to be read from memory
     if (!TestSetup.isInitialized()) {
       throw new IllegalStateException("initialization has not been run yet!");
