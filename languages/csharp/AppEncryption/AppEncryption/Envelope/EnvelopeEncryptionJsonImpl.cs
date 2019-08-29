@@ -475,7 +475,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Fetches a known intermediate key from metastore persistence and decrypts it using its associated system key.
+        /// Fetches a known intermediate key from metastore and decrypts it using its associated system key.
         /// </summary>
         ///
         /// <returns>The decrypted intermediate key.</returns>
@@ -494,7 +494,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Fetches a known system key from metastore persistence and decrypts it using the key management service.
+        /// Fetches a known system key from metastore and decrypts it using the key management service.
         /// </summary>
         ///
         /// <returns>The decrypted system key.</returns>

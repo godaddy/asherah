@@ -47,7 +47,7 @@ namespace GoDaddy.Asherah.AppEncryption
             // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
             ICryptoPolicyStep WithInMemoryMetastore();
 
-            ICryptoPolicyStep WithMetastore(IMetastore<JObject> persistence);
+            ICryptoPolicyStep WithMetastore(IMetastore<JObject> metastore);
         }
 
         public interface ICryptoPolicyStep
@@ -164,9 +164,9 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public ICryptoPolicyStep WithMetastore(IMetastore<JObject> persistence)
+            public ICryptoPolicyStep WithMetastore(IMetastore<JObject> metastore)
             {
-                metastore = persistence;
+                this.metastore = metastore;
                 return this;
             }
 

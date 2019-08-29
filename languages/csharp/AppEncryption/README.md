@@ -154,7 +154,7 @@ A session factory can now be built using the components we defined above.
 
 ```c#
 SessionFactory sessionFactory = SessionFactory.NewBuilder("some_product", "some_service")
-     .WithMetastor(metastore)
+     .WithMetastore(metastore)
      .WithCryptoPolicy(policy)
      .WithKeyManagementService(keyManagementService)
      .WithMetrics(metrics) // Optional
@@ -188,7 +188,7 @@ string originalPayloadString = "mysupersecretpayload";
 byte[] dataRowRecordBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
 
 // decrypt the payload
-string decryptedPayloadString = Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
+string decryptedPayloadString = Encoding.UTF8.GetString(dataRowRecordBytes.Decrypt(newDataRowRecordBytes));
 ```
 
 #### Custom Persistence via Store/Load methods

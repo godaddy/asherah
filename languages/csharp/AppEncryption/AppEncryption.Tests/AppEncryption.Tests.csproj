@@ -21,7 +21,4 @@
   <ItemGroup Label="Project References">
     <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TestResults" />
-  </ItemGroup>
 </Project>
