@@ -186,8 +186,8 @@ String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordByt
 
 #### Custom Persistence via Store/Load methods
 
-Asherah supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java)
-instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
+Asherah supports a key-value/document storage model. A [Session](src/main/java/com/godaddy/asherah/appencryption/Session.java) 
+can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
 implementation and hook into its `store` and `load` calls.
 
 An example `HashMap`-backed `Persistence` implementation:
