@@ -22,8 +22,8 @@ import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 
 import javax.sql.DataSource;
 
-public class JdbcMetastorePersistenceImpl implements MetastorePersistence<JSONObject> {
-  private static final Logger logger = LoggerFactory.getLogger(JdbcMetastorePersistenceImpl.class);
+public class JdbcMetastoreImpl implements Metastore<JSONObject> {
+  private static final Logger logger = LoggerFactory.getLogger(JdbcMetastoreImpl.class);
 
   static final String LOAD_QUERY        = "SELECT key_record from encryption_key where id = ? and created = ?";
   static final String STORE_QUERY       = "INSERT INTO encryption_key (id, created, key_record) VALUES (?, ?, ?)";
@@ -42,7 +42,7 @@ public class JdbcMetastorePersistenceImpl implements MetastorePersistence<JSONOb
     return new Builder(dataSource);
   }
 
-  JdbcMetastorePersistenceImpl(final DataSource dataSource) {
+  JdbcMetastoreImpl(final DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
@@ -90,7 +90,7 @@ public class JdbcMetastorePersistenceImpl implements MetastorePersistence<JSONOb
   }
 
   @Override
-  public Optional<JSONObject> loadLatestValue(final String key) {
+  public Optional<JSONObject> loadLatest(final String key) {
     return loadLatestTimer.record(() -> {
       try (Connection connection = getConnection();
            PreparedStatement preparedStatement = connection.prepareStatement(LOAD_LATEST_QUERY)) {
@@ -138,8 +138,8 @@ public class JdbcMetastorePersistenceImpl implements MetastorePersistence<JSONOb
       this.dataSource = dataSource;
     }
 
-    public JdbcMetastorePersistenceImpl build() {
-      return new JdbcMetastorePersistenceImpl(dataSource);
+    public JdbcMetastoreImpl build() {
+      return new JdbcMetastoreImpl(dataSource);
     }
   }
 }

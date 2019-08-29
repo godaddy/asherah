@@ -1,7 +1,7 @@
 package com.godaddy.asherah.testapp.regression;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
 import com.godaddy.asherah.testapp.utils.DateTimeUtils;
 import com.godaddy.asherah.testapp.utils.PayloadGenerator;
@@ -19,13 +19,13 @@ import java.util.Optional;
 import static com.godaddy.asherah.testapp.testhelpers.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AppEncryptionJsonTest {
+public class SessionJsonTest {
   private static Persistence<byte[]> persistenceBytes;
 
   private JSONObject payload;
-  private AppEncryptionSessionFactory appEncryptionSessionFactory;
+  private SessionFactory sessionFactory;
   private String partitionId;
-  private AppEncryption<JSONObject, byte[]> appEncryptionJson;
+  private Session<JSONObject, byte[]> sessionJson;
   // TODO Consider adding JSONObject-style envelope/persistence tests as well
 
   @BeforeAll
@@ -36,21 +36,21 @@ public class AppEncryptionJsonTest {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createDefaultRandomJsonPayload();
-    appEncryptionSessionFactory = SessionFactoryGenerator.createDefaultAppEncryptionSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
     partitionId = DEFAULT_PARTITION_ID + "_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime();
-    appEncryptionJson = appEncryptionSessionFactory.getAppEncryptionJson(partitionId);
+    sessionJson = sessionFactory.getSessionJson(partitionId);
   }
 
   @AfterEach
   public void tearDown() {
-    appEncryptionJson.close();
-    appEncryptionSessionFactory.close();
+    sessionJson.close();
+    sessionFactory.close();
   }
 
   @Test
   public void jsonEncryptDecrypt() {
-    byte[] dataRowRecord = appEncryptionJson.encrypt(payload);
-    JSONObject decryptedPayload = appEncryptionJson.decrypt(dataRowRecord);
+    byte[] dataRowRecord = sessionJson.encrypt(payload);
+    JSONObject decryptedPayload = sessionJson.decrypt(dataRowRecord);
 
     assertTrue(payload.similar(decryptedPayload));
   }
@@ -60,8 +60,8 @@ public class AppEncryptionJsonTest {
     // Just loop a bunch of times to verify no surprises
     final int iterations = 40;
     for (int i = 0; i < iterations; i++) {
-      byte[] dataRowRecord = appEncryptionJson.encrypt(payload);
-      JSONObject decryptedPayload = appEncryptionJson.decrypt(dataRowRecord);
+      byte[] dataRowRecord = sessionJson.encrypt(payload);
+      JSONObject decryptedPayload = sessionJson.decrypt(dataRowRecord);
 
       assertTrue(payload.similar(decryptedPayload));
     }
@@ -69,9 +69,9 @@ public class AppEncryptionJsonTest {
 
   @Test
   public void jsonStoreLoad() {
-    String persistenceKey = appEncryptionJson.store(payload, persistenceBytes);
+    String persistenceKey = sessionJson.store(payload, persistenceBytes);
 
-    Optional<JSONObject> decryptedJsonPayload = appEncryptionJson.load(persistenceKey, persistenceBytes);
+    Optional<JSONObject> decryptedJsonPayload = sessionJson.load(persistenceKey, persistenceBytes);
 
     if (decryptedJsonPayload.isPresent()) {
       assertTrue(payload.similar(decryptedJsonPayload.get()));
@@ -85,17 +85,17 @@ public class AppEncryptionJsonTest {
   public void jsonLoadInvalidKey() {
     String persistenceKey = "1234";
 
-    Optional<JSONObject> decryptedJsonPayload = appEncryptionJson.load(persistenceKey, persistenceBytes);
+    Optional<JSONObject> decryptedJsonPayload = sessionJson.load(persistenceKey, persistenceBytes);
 
     assertFalse(decryptedJsonPayload.isPresent());
   }
 
   @Test
   public void jsonEncryptDecryptWithDifferentSession() {
-    byte[] dataRowRecord = appEncryptionJson.encrypt(payload);
+    byte[] dataRowRecord = sessionJson.encrypt(payload);
 
-    try (AppEncryption<JSONObject, byte[]> appEncryptionJsonNew = appEncryptionSessionFactory.getAppEncryptionJson(partitionId)) {
-      JSONObject decryptedPayload = appEncryptionJsonNew.decrypt(dataRowRecord);
+    try (Session<JSONObject, byte[]> sessionJsonNew = sessionFactory.getSessionJson(partitionId)) {
+      JSONObject decryptedPayload = sessionJsonNew.decrypt(dataRowRecord);
 
       assertTrue(payload.similar(decryptedPayload));
     }
@@ -104,11 +104,11 @@ public class AppEncryptionJsonTest {
   @Test
   public void jsonEncryptDecryptWithDifferentPayloads() {
     final JSONObject otherPayload = PayloadGenerator.createDefaultRandomJsonPayload();
-    byte[] dataRowRecord1 = appEncryptionJson.encrypt(payload);
-    byte[] dataRowRecord2 = appEncryptionJson.encrypt(otherPayload);
+    byte[] dataRowRecord1 = sessionJson.encrypt(payload);
+    byte[] dataRowRecord2 = sessionJson.encrypt(otherPayload);
 
-    JSONObject decryptedPayload1 = appEncryptionJson.decrypt(dataRowRecord1);
-    JSONObject decryptedPayload2 = appEncryptionJson.decrypt(dataRowRecord2);
+    JSONObject decryptedPayload1 = sessionJson.decrypt(dataRowRecord1);
+    JSONObject decryptedPayload2 = sessionJson.decrypt(dataRowRecord2);
 
     assertTrue(payload.similar(decryptedPayload1));
     assertTrue(otherPayload.similar(decryptedPayload2));
@@ -119,9 +119,9 @@ public class AppEncryptionJsonTest {
     String key = "some_key";
     final JSONObject otherPayload = PayloadGenerator.createDefaultRandomJsonPayload();
 
-    appEncryptionJson.store(key, payload, persistenceBytes);
-    appEncryptionJson.store(key, otherPayload, persistenceBytes);
-    JSONObject actualResult = appEncryptionJson.load(key, persistenceBytes).get();
+    sessionJson.store(key, payload, persistenceBytes);
+    sessionJson.store(key, otherPayload, persistenceBytes);
+    JSONObject actualResult = sessionJson.load(key, persistenceBytes).get();
 
     assertTrue(otherPayload.similar(actualResult));
   }

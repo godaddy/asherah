@@ -18,13 +18,13 @@ the granularity of a minute with `revokeCheckMinutes()` in the builder.
 
 Due to the [hierarchical ordering](DesignAndArchitecture.md#key-hierarchy-and-storage) of the System and Intermediate
 Keys, the scope of the their respective caches are different. For System Keys, which are intended to be service-level
-keys, their lifetime is that of the `AppEncryptionSessionFactory`. Ideally an instance of `AppEncryptionSessionFactory`
+keys, their lifetime is that of the `SessionFactory`. Ideally an instance of `SessionFactory`
 is a singleton, where its lifetime is that of the application. This allows for the System Key cache to be shared
-across `AppEncryption` instances generated from the session factory. Doing so prevents each one of these "encryption
+across `Session` instances generated from the session factory. Doing so prevents each one of these "encryption
 sessions" from having to cache another copy of the same System Key in Secure Memory, as well as avoiding interaction
 with the [Key Management Service](KeyManagementService.md) to decrypt it.
 
-The cache for Intermediate Keys is scoped to the current partition's `AppEncryption` instance/session. Sharing the
+The cache for Intermediate Keys is scoped to the current partition's `Session` instance/session. Sharing the
 Intermediate Key caches across sessions would incur less security posture as the blast radius would be widened if an
 attacker somehow managed to hijack an application's session.
 

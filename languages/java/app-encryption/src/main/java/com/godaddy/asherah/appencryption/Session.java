@@ -11,7 +11,7 @@ import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
  * @param <P> The payload type of the data being encrypted (e.g. JSON, String, etc.)
  * @param <D> The Data Row Record type being used to store it and any supporting metadata.
  */
-public interface AppEncryption<P, D> extends SafeAutoCloseable {
+public interface Session<P, D> extends SafeAutoCloseable {
 
   /**
    * Uses a persistence key to load a Data Row Record from the provided data persistence store, if any, and returns the

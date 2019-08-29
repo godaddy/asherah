@@ -17,21 +17,21 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 
 ```java
 // Create a session factory. The builder steps used below are for testing only.
-try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("some_product", "some_service")
-    .withMemoryPersistence()
+try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
+    .withInMemoryMetastore()
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("secretmasterkey!")
+    .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
     .build()) {
 
   // Now create a cryptographic session for a partition.
-  try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("some_partition")) {
+  try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("some_partition")) {
 
     // Now encrypt some data
     String originalPayloadString = "mysupersecretpayload";
-    byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+    byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
     // Decrypt the data
-    String decryptedPayloadString = new String(appEncryptionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
+    String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
   }
 }
 ```
@@ -56,19 +56,19 @@ Asherah can connect to a relational database by accepting a JDBC DataSource for 
 DataSource dataSource = ...;
 
 // Build the JDBC Metastore
-MetastorePersistence jdbcMetastorePersistence = JdbcMetastorePersistenceImpl.newBuilder(dataSource).build();
+Metastore jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 ```
 
 #### DynamoDB Metastore
 
 ```java
-MetastorePersistence dynamoDbMetastorePersistence = DynamoDbMetastorePersistenceImpl.newBuilder().build();
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```java
-MetastorePersistence<JSONObject> metastorePersistence = new MemoryPersistenceImpl<>();
+Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
 ```
 
 ### Define the Key Management Service
@@ -84,7 +84,7 @@ Map<String, String> regionMap = ImmutableMap.of("us-east-1", "arn_of_us-east-1",
     ...);
 
 // Build the Key Management Service using the region map and your preferred (usually current) region
-KeyManagementService keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1").build();
+KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1").build();
 ```
 
 #### Static KMS (FOR TESTING ONLY)
@@ -145,8 +145,8 @@ and parallel encrypt calls.
 A session factory can now be built using the components we defined above.
 
 ```java
-AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory.newBuilder("some_product", "some_service")
-  .withMetastorePersistence(metastorePersistence)
+SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
+  .withMetastore(metastore)
   .withCryptoPolicy(policy)
   .withKeyManagementService(keyManagementService)
   .withMetricsEnabled() // optional
@@ -159,15 +159,15 @@ the service to ensure that all resources held by the factory, including the cach
 
 ### Performing Cryptographic Operations
 
-Create an `AppEncryption` session to be used for cryptographic operations.
+Create a `Session` to be used for cryptographic operations.
 
 ```java
-AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory.getAppEncryptionBytes("some_user");
+Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("some_user");
 ```
 
 The different usage styles are explained below.
 
-**NOTE:** Remember to close the `AppEncryption` session after all cryptographic operations to dispose of associated resources.
+**NOTE:** Remember to close the session after all cryptographic operations to dispose of associated resources.
 
 #### Plain Encrypt/Decrypt Style
 
@@ -178,16 +178,16 @@ completely up to the calling application for storage responsibility.
 String originalPayloadString = "mysupersecretpayload";
 
 // encrypt the payload
-byte[] dataRowRecordBytes = appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
 // decrypt the payload
-String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
+String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
 ```
 
 #### Custom Persistence via Store/Load methods
 
-Asherah supports a key-value/document storage model. An [AppEncryption](src/main/java/com/godaddy/asherah/appencryption/AppEncryption.java)
-instance can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
+Asherah supports a key-value/document storage model. A [Session](src/main/java/com/godaddy/asherah/appencryption/Session.java) 
+can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
 implementation and hook into its `store` and `load` calls.
 
 An example `HashMap`-backed `Persistence` implementation:
@@ -213,10 +213,10 @@ An example end-to-end use of the store and load calls:
 
 ```java
 // Encrypts the payload, stores it in the dataPersistence and returns a look up key
-String persistenceKey = appEncryptionJson.store(originalPayload.toJsonObject(), dataPersistence);
+String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
 // Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
-Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersistence);
+Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
 ```
 
 ## Deployment Notes

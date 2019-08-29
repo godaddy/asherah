@@ -27,8 +27,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DynamoDbMetastorePersistenceImpl implements MetastorePersistence<JSONObject> {
-  private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastorePersistenceImpl.class);
+public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
+  private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
   static final String TABLE_NAME = "EncryptionKey";
   static final String PARTITION_KEY = "Id";
@@ -47,7 +47,7 @@ public class DynamoDbMetastorePersistenceImpl implements MetastorePersistence<JS
     return new Builder();
   }
 
-  DynamoDbMetastorePersistenceImpl(final DynamoDB dynamoDbDocumentClient) {
+  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient) {
     table = dynamoDbDocumentClient.getTable(TABLE_NAME);
   }
 
@@ -76,7 +76,7 @@ public class DynamoDbMetastorePersistenceImpl implements MetastorePersistence<JS
   }
 
   @Override
-  public Optional<JSONObject> loadLatestValue(final String key) {
+  public Optional<JSONObject> loadLatest(final String key) {
     return loadLatestTimer.record(() -> {
       try {
         // Have to use query api to use limit and reverse sort order
@@ -134,9 +134,9 @@ public class DynamoDbMetastorePersistenceImpl implements MetastorePersistence<JS
 
   public static final class Builder {
 
-    public DynamoDbMetastorePersistenceImpl build() {
+    public DynamoDbMetastoreImpl build() {
       AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
-      return new DynamoDbMetastorePersistenceImpl(new DynamoDB(client));
+      return new DynamoDbMetastoreImpl(new DynamoDB(client));
     }
   }
 }

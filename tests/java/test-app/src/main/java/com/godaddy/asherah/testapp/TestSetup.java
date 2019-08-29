@@ -3,7 +3,7 @@ package com.godaddy.asherah.testapp;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.testapp.configuration.ServerConfiguration;
 import com.godaddy.asherah.testapp.utils.KeyManagementServiceFactory;
 import com.godaddy.asherah.testapp.utils.MetastoreFactory;
@@ -29,7 +29,7 @@ public final class TestSetup {
   private static volatile boolean initialized = false;
 
   private static KeyManagementService keyManagementService;
-  private static MetastorePersistence<JSONObject> metastorePersistence;
+  private static Metastore<JSONObject> metastore;
 
   private TestSetup() {
   }
@@ -40,7 +40,7 @@ public final class TestSetup {
     if (!initialized) {
 
       String metaStore = configuration.getMetaStoreType();
-      metastorePersistence = MetastoreFactory.createMetastore(configuration, metaStore);
+      metastore = MetastoreFactory.createMetastore(configuration, metaStore);
 
       String kms = configuration.getKmsType();
       keyManagementService = KeyManagementServiceFactory.createKeyManagementService(configuration, kms);
@@ -74,13 +74,13 @@ public final class TestSetup {
     return keyManagementService;
   }
 
-  public static MetastorePersistence<JSONObject> getMetastorePersistence() {
+  public static Metastore<JSONObject> getMetastore() {
     // Read volatile first to force other members to be read from memory
     if (!initialized) {
       throw new IllegalStateException("initialization has not been run yet!");
     }
 
-    return metastorePersistence;
+    return metastore;
   }
 
   public static boolean isInitialized() {

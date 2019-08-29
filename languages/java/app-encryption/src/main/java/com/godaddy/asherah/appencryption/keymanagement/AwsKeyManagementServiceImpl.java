@@ -43,8 +43,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class AWSKeyManagementServiceImpl implements KeyManagementService {
-  private static final Logger logger = LoggerFactory.getLogger(AWSKeyManagementServiceImpl.class);
+public class AwsKeyManagementServiceImpl implements KeyManagementService {
+  private static final Logger logger = LoggerFactory.getLogger(AwsKeyManagementServiceImpl.class);
 
   /*
    *  message format is:
@@ -82,7 +82,7 @@ public class AWSKeyManagementServiceImpl implements KeyManagementService {
     return regionToArnAndClientMap;
   }
 
-  AWSKeyManagementServiceImpl(final Map<String, String> regionToArnMap, final String preferredRegion,
+  AwsKeyManagementServiceImpl(final Map<String, String> regionToArnMap, final String preferredRegion,
                               final AeadEnvelopeCrypto crypto, final AwsKmsClientFactory awsKmsClientFactory) {
     this.preferredRegion = preferredRegion;
     this.crypto = crypto;
@@ -336,8 +336,8 @@ public class AWSKeyManagementServiceImpl implements KeyManagementService {
       this.preferredRegion = region;
     }
 
-    public AWSKeyManagementServiceImpl build() {
-      return new AWSKeyManagementServiceImpl(regionToArnMap, preferredRegion, new BouncyAes256GcmCrypto(),
+    public AwsKeyManagementServiceImpl build() {
+      return new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, new BouncyAes256GcmCrypto(),
           new AwsKmsClientFactory());
     }
   }

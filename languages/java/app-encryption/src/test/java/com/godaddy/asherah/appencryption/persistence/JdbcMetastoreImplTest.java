@@ -17,12 +17,12 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.Optional;
 
-import static com.godaddy.asherah.appencryption.persistence.JdbcMetastorePersistenceImpl.*;
+import static com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class JdbcMetastorePersistenceImplTest {
+class JdbcMetastoreImplTest {
 
   private static final String KEY_STRING =
       "{\"ParentKeyMeta\"" +
@@ -40,7 +40,7 @@ class JdbcMetastorePersistenceImplTest {
 
   @InjectMocks
   @Spy
-  JdbcMetastorePersistenceImpl jdbcMetastorePersistenceImpl;
+  JdbcMetastoreImpl jdbcMetastoreImpl;
 
   @Mock
   DataSource dataSourceMock;
@@ -64,7 +64,7 @@ class JdbcMetastorePersistenceImplTest {
     when(resultSetMock.getString(KEY_RECORD)).thenReturn(keyString);
 
     Optional<JSONObject> actualJsonObject =
-        jdbcMetastorePersistenceImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
+        jdbcMetastoreImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
 
     assertNotNull(actualJsonObject.get());
     assertEquals(keyString, actualJsonObject.get().toString());
@@ -77,7 +77,7 @@ class JdbcMetastorePersistenceImplTest {
     when(resultSetMock.next()).thenReturn(false);
 
     Optional<JSONObject> actualJsonObject =
-        jdbcMetastorePersistenceImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
+        jdbcMetastoreImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
 
     assertEquals(Optional.empty(), actualJsonObject);
   }
@@ -91,7 +91,7 @@ class JdbcMetastorePersistenceImplTest {
     when(resultSetMock.getString(KEY_RECORD)).thenReturn(MALFORMED_KEY_STRING);
 
     Optional<JSONObject> actualValue =
-        jdbcMetastorePersistenceImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
+        jdbcMetastoreImpl.executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
 
     assertEquals(Optional.empty(), actualValue);
   }
@@ -99,17 +99,17 @@ class JdbcMetastorePersistenceImplTest {
   @Test
   void testLoad() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenReturn(connectionMock);
+    when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
 
     when(connectionMock.prepareStatement(LOAD_QUERY)).thenReturn(preparedStatementMock);
 
     doNothing().when(preparedStatementMock).setString(any(Integer.class), anyString());
     doNothing().when(preparedStatementMock).setTimestamp(any(Integer.class), any(Timestamp.class));
     doReturn(Optional.of(new JSONObject(KEY_STRING)))
-        .when(jdbcMetastorePersistenceImpl)
+        .when(jdbcMetastoreImpl)
         .executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
 
-    Optional<JSONObject> actualJsonObject = jdbcMetastorePersistenceImpl.load(KEY, Instant.now());
+    Optional<JSONObject> actualJsonObject = jdbcMetastoreImpl.load(KEY, Instant.now());
 
     assertNotNull(actualJsonObject.get());
     assertEquals(KEY_STRING, actualJsonObject.get().toString());
@@ -118,37 +118,37 @@ class JdbcMetastorePersistenceImplTest {
   @Test
   void testLoadWithSQLException() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenThrow(SQLException.class);
+    when(jdbcMetastoreImpl.getConnection()).thenThrow(SQLException.class);
 
-    Optional<JSONObject> actualJsonObject = jdbcMetastorePersistenceImpl.load(KEY, Instant.now());
+    Optional<JSONObject> actualJsonObject = jdbcMetastoreImpl.load(KEY, Instant.now());
 
     assertEquals(Optional.empty(), actualJsonObject);
   }
 
 
   @Test
-  void testLoadLatestValue() throws SQLException {
+  void testLoadLatest() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenReturn(connectionMock);
+    when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
 
     when(connectionMock.prepareStatement(LOAD_LATEST_QUERY)).thenReturn(preparedStatementMock);
     doNothing().when(preparedStatementMock).setString(any(Integer.class), anyString());
     doReturn(Optional.of(new JSONObject(KEY_STRING)))
-        .when(jdbcMetastorePersistenceImpl)
+        .when(jdbcMetastoreImpl)
         .executeQueryAndLoadJsonObjectFromKey(preparedStatementMock);
 
-    Optional<JSONObject> actualJsonObject = jdbcMetastorePersistenceImpl.loadLatestValue(KEY);
+    Optional<JSONObject> actualJsonObject = jdbcMetastoreImpl.loadLatest(KEY);
 
     assertNotNull(actualJsonObject.get());
     assertEquals(KEY_STRING, actualJsonObject.get().toString());
   }
 
   @Test
-  void testLoadLatestValueWithSQLException() throws SQLException {
+  void testLoadLatestWithSQLException() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenThrow(SQLException.class);
+    when(jdbcMetastoreImpl.getConnection()).thenThrow(SQLException.class);
 
-    Optional<JSONObject> actualJsonObject = jdbcMetastorePersistenceImpl.loadLatestValue(KEY);
+    Optional<JSONObject> actualJsonObject = jdbcMetastoreImpl.loadLatest(KEY);
 
     assertEquals(Optional.empty(), actualJsonObject);
   }
@@ -156,7 +156,7 @@ class JdbcMetastorePersistenceImplTest {
   @Test
   void testStore() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenReturn(connectionMock);
+    when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
 
     when(connectionMock.prepareStatement(STORE_QUERY)).thenReturn(preparedStatementMock);
 
@@ -165,7 +165,7 @@ class JdbcMetastorePersistenceImplTest {
 
     when(preparedStatementMock.executeUpdate()).thenReturn(1);
 
-    boolean actualValue = jdbcMetastorePersistenceImpl.store(KEY, now, jsonObject);
+    boolean actualValue = jdbcMetastoreImpl.store(KEY, now, jsonObject);
 
     assertTrue(actualValue);
     // verify PS ordering isn't broken
@@ -177,7 +177,7 @@ class JdbcMetastorePersistenceImplTest {
 
   @Test
   void testStoreWithMultipleUpdatedShouldReturnFalse() throws SQLException {
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenReturn(connectionMock);
+    when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
 
     when(connectionMock.prepareStatement(STORE_QUERY)).thenReturn(preparedStatementMock);
 
@@ -185,7 +185,7 @@ class JdbcMetastorePersistenceImplTest {
 
     JSONObject jsonObject = new JSONObject();
     Instant now = Instant.now();
-    boolean actualValue = jdbcMetastorePersistenceImpl.store(KEY, now, jsonObject);
+    boolean actualValue = jdbcMetastoreImpl.store(KEY, now, jsonObject);
 
     assertFalse(actualValue);
     // verify PS ordering isn't broken
@@ -198,31 +198,31 @@ class JdbcMetastorePersistenceImplTest {
   @Test
   void testStoreWithSQLException() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenThrow(SQLException.class);
+    when(jdbcMetastoreImpl.getConnection()).thenThrow(SQLException.class);
 
     assertThrows(AppEncryptionException.class,
-        () -> jdbcMetastorePersistenceImpl.store(KEY, Instant.now(), new JSONObject()));
+        () -> jdbcMetastoreImpl.store(KEY, Instant.now(), new JSONObject()));
   }
 
   @Test
   void testStoreWithSQLIntegrityConstraintViolationException() throws SQLException {
 
-    when(jdbcMetastorePersistenceImpl.getConnection()).thenReturn(connectionMock);
+    when(jdbcMetastoreImpl.getConnection()).thenReturn(connectionMock);
     when(connectionMock.prepareStatement(STORE_QUERY)).thenReturn(preparedStatementMock);
     when(preparedStatementMock.executeUpdate()).thenThrow(SQLIntegrityConstraintViolationException.class);
 
-    boolean actualValue = jdbcMetastorePersistenceImpl.store(KEY, Instant.now(), new JSONObject());
+    boolean actualValue = jdbcMetastoreImpl.store(KEY, Instant.now(), new JSONObject());
 
     assertFalse(actualValue);
   }
 
   @Test
   void testPrimaryBuilderPath() {
-    JdbcMetastorePersistenceImpl.Builder jdbcMetastorePersistenceServicePrimaryBuilder =
-        JdbcMetastorePersistenceImpl.newBuilder(dataSourceMock);
-    JdbcMetastorePersistenceImpl jdbcMetastorePersistenceServiceBuilder
-        = jdbcMetastorePersistenceServicePrimaryBuilder.build();
-    assertNotNull(jdbcMetastorePersistenceServiceBuilder);
+    JdbcMetastoreImpl.Builder jdbcMetastoreServicePrimaryBuilder =
+        JdbcMetastoreImpl.newBuilder(dataSourceMock);
+    JdbcMetastoreImpl jdbcMetastoreServiceBuilder
+        = jdbcMetastoreServicePrimaryBuilder.build();
+    assertNotNull(jdbcMetastoreServiceBuilder);
   }
 
 }

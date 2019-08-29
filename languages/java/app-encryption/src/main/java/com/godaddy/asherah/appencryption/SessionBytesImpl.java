@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 
-public class AppEncryptionBytesImpl<D> implements AppEncryption<byte[], D> {
-  private static final Logger logger = LoggerFactory.getLogger(AppEncryptionBytesImpl.class);
+public class SessionBytesImpl<D> implements Session<byte[], D> {
+  private static final Logger logger = LoggerFactory.getLogger(SessionBytesImpl.class);
 
   private final EnvelopeEncryption<D> envelopeEncryption;
 
-  public AppEncryptionBytesImpl(final EnvelopeEncryption<D> envelopeEncryption) {
+  public SessionBytesImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;
   }
 
