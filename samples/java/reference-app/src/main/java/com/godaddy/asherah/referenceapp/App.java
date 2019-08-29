@@ -21,8 +21,8 @@ import com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceIm
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
-import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
