@@ -78,14 +78,14 @@ class AppJsonEncryptionImplTest {
     try (SecureCryptoKeyMap<Instant> systemKeyCache =
              new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis())) {
       EnvelopeEncryption<JSONObject> envelopeEncryption =
-        new EnvelopeEncryptionJsonImpl(
-          partition,
-          metastore,
-          systemKeyCache,
-          new SecureCryptoKeyMapFactory<Instant>(cryptoPolicy),
-          aeadEnvelopeCrypto,
-          cryptoPolicy,
-          keyManagementService);
+          new EnvelopeEncryptionJsonImpl(
+              partition,
+              metastore,
+              systemKeyCache,
+              new SecureCryptoKeyMapFactory<Instant>(cryptoPolicy),
+              aeadEnvelopeCrypto,
+              cryptoPolicy,
+              keyManagementService);
       try(Session<JSONObject, JSONObject> sessionJson = new SessionJsonImpl<>(envelopeEncryption)) {
 
         Json testJson = new Json();
