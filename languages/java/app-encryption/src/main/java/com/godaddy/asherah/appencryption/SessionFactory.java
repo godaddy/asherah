@@ -82,13 +82,13 @@ public class SessionFactory implements SafeAutoCloseable {
   private EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJson(final String partitionId) {
     Partition partition = getPartition(partitionId);
     return new EnvelopeEncryptionJsonImpl(
-      partition,
-      metastore,
-      systemKeyCache,
-      secureCryptoKeyMapFactory,
-      new BouncyAes256GcmCrypto(),
-      cryptoPolicy,
-      keyManagementService);
+        partition,
+        metastore,
+        systemKeyCache,
+        secureCryptoKeyMapFactory,
+        new BouncyAes256GcmCrypto(),
+        cryptoPolicy,
+        keyManagementService);
   }
 
   Partition getPartition(final String partitionId) {
