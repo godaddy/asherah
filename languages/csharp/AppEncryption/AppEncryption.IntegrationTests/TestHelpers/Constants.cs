@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         public const string MetastoreAdoConnectionString = "metastoreAdoConnectionString";
         public const string KmsAwsRegionTuples = "kmsAwsRegionArnTuples";
         public const string KmsAwsPreferredRegion = "kmsAwsPreferredRegion";
-        public const string MetaStoreType = "metastoreType";
+        public const string MetastoreType = "metastoreType";
         public const string KmsType = "kmsType";
         public const string DefaultPreferredRegion = "us-west-2";
     }

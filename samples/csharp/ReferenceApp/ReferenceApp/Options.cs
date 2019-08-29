@@ -6,10 +6,10 @@ namespace GoDaddy.Asherah.ReferenceApp
 {
     public class Options
     {
-        [Option('m', "metastore-type", Required = false,  Default = ReferenceApp.MetaStore.MEMORY, HelpText = "Type of metastore persistence to use. Enum values: MEMORY, JDBC, DYNAMODB")]
-        public ReferenceApp.MetaStore MetaStore { get; set; }
+        [Option('m', "metastore-type", Required = false,  Default = ReferenceApp.Metastore.MEMORY, HelpText = "Type of metastore to use. Enum values: MEMORY, JDBC, DYNAMODB")]
+        public ReferenceApp.Metastore Metastore { get; set; }
 
-        [Option('a', "ado-connection-string", Required = false, HelpText = "ADO connection string to use for ADO metastore persistence. Required for ADO metastore.")]
+        [Option('a', "ado-connection-string", Required = false, HelpText = "ADO connection string to use for an ADO metastore. Required for ADO metastore.")]
         public string AdoConnectionString { get; set; }
 
         [Option('k', "kms-type", Required = false, Default = ReferenceApp.Kms.STATIC, HelpText = "Type of key management service to use. Enum values: STATIC, AWS")]

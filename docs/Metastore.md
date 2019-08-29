@@ -66,7 +66,7 @@ The item data size estimates were calculated by using https://zaccharles.github.
 **SystemKey**: 1227 bytes (assumes AWS KMS with 2 regions. each additional region adds ~494 bytes)
 
 #### In-memory (FOR TESTING ONLY)
-Asherah also supports an in-memory metastore persistence model but that ***should only be used for testing purposes***.
+Asherah also supports an in-memory metastore but that ***should only be used for testing purposes***.
 
 ### Disaster Recovery
 

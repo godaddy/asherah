@@ -16,7 +16,7 @@ Until we have a formal cross language testing format in place (see [future work]
 - Try to load an invalid key and verify that no result is returned.
 
 #### Parameterized Tests
-System and Intermediate keys in the cache and metastore persistence can each exist in 3 possible states:
+System and Intermediate keys in the cache and metastore can each exist in 3 possible states:
 - ***RETIRED:*** A key is present, but it is expired or revoked.
 - ***VALID:*** A key is present and can be used for encrypt/decrypt operations.
 - ***EMPTY:*** The key does not exist.

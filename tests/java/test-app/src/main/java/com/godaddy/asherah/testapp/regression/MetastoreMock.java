@@ -26,13 +26,13 @@ final class MetastoreMock {
   private MetastoreMock() { }
 
   static Metastore<JSONObject> createMetastoreMock(final Partition partition,
-                                                              final KeyManagementService kms,
-                                                              final Metastore<JSONObject> metastore,
-                                                              final KeyState metaIK,
-                                                              final KeyState metaSK,
-                                                              final CryptoKeyHolder cryptoKeyHolder) {
+                                                   final KeyManagementService kms,
+                                                   final Metastore<JSONObject> metastore,
+                                                   final KeyState metaIK,
+                                                   final KeyState metaSK,
+                                                   final CryptoKeyHolder cryptoKeyHolder) {
 
-    Metastore<JSONObject> metaStoreSpy = spy(metastore);
+    Metastore<JSONObject> metastoreSpy = spy(metastore);
     CryptoKey systemKey = cryptoKeyHolder.getSystemKey();
 
     if (metaSK != KeyState.EMPTY) {
@@ -46,7 +46,7 @@ final class MetastoreMock {
 
       EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(systemKey.getCreated(),
           null, kms.encryptKey(systemKey), systemKey.isRevoked());
-      metaStoreSpy.store(partition.getSystemKeyId(), systemKeyRecord.getCreated(),
+      metastoreSpy.store(partition.getSystemKeyId(), systemKeyRecord.getCreated(),
           systemKeyRecord.toJson());
     }
 
@@ -63,11 +63,11 @@ final class MetastoreMock {
       EnvelopeKeyRecord intermediateKeyRecord = new EnvelopeKeyRecord(intermediateKey.getCreated(),
           new KeyMeta(partition.getSystemKeyId(), systemKey.getCreated()),
           CRYPTO.encryptKey(intermediateKey, systemKey), intermediateKey.isRevoked());
-      metaStoreSpy.store(partition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
+      metastoreSpy.store(partition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
           intermediateKeyRecord.toJson());
     }
 
-    reset(metaStoreSpy);
-    return metaStoreSpy;
+    reset(metastoreSpy);
+    return metastoreSpy;
   }
 }

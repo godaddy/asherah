@@ -21,21 +21,21 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             KeyState metaIK,
             KeyState metaSK,
             CryptoKeyHolder cryptoKeyHolder,
-            IMetastore<JObject> metaStore)
+            IMetastore<JObject> metastore)
         {
             CryptoKey systemKey = cryptoKeyHolder.SystemKey;
 
-            Mock<IMetastore<JObject>> metaStoreSpy = new Mock<IMetastore<JObject>>();
+            Mock<IMetastore<JObject>> metastoreSpy = new Mock<IMetastore<JObject>>();
 
-            metaStoreSpy
+            metastoreSpy
                 .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
-                .Returns<string, DateTimeOffset>(metaStore.Load);
-            metaStoreSpy
+                .Returns<string, DateTimeOffset>(metastore.Load);
+            metastoreSpy
                 .Setup(x => x.LoadLatest(It.IsAny<string>()))
-                .Returns<string>(metaStore.LoadLatest);
-            metaStoreSpy
+                .Returns<string>(metastore.LoadLatest);
+            metastoreSpy
                 .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
-                .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
+                .Returns<string, DateTimeOffset, JObject>(metastore.Store);
 
             if (metaSK != KeyState.Empty)
             {
@@ -49,7 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, kms.EncryptKey(systemKey), systemKey.IsRevoked());
-                metaStore.Store(
+                metastore.Store(
                     partition.SystemKeyId,
                     systemKeyRecord.Created,
                     systemKeyRecord.ToJson());
@@ -71,13 +71,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     new KeyMeta(partition.SystemKeyId, systemKey.GetCreated()),
                     Crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
-                metaStore.Store(
+                metastore.Store(
                     partition.IntermediateKeyId,
                     intermediateKeyRecord.Created,
                     intermediateKeyRecord.ToJson());
             }
 
-            return metaStoreSpy;
+            return metastoreSpy;
         }
     }
 }

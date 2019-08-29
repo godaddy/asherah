@@ -32,7 +32,7 @@ languages as we get interest in them.
 ## Features
 
 Our 1.0.0 release comprises a feature set including a first version of our memory protections library, AES256-GCM 
-encryption/decryption, AWS KMS key management store, and two backing storage engines for Metastore persistence: RDS
+encryption/decryption, AWS KMS key management store, and two backing storage engines for Metastore persistence: RDBMS
 and DynamoDB. Each implementation of the SDK at this version includes a reference app, unit tests and some kind of 
 testing app or integration test suite.
 
