@@ -1,8 +1,8 @@
 package com.godaddy.asherah.testapp.regression;
 
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionJsonImpl;
-import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;

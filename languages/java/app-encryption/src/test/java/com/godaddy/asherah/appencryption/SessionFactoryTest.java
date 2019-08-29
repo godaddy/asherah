@@ -52,7 +52,7 @@ class SessionFactoryTest {
     sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-      metastore,
+        metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);
@@ -63,7 +63,7 @@ class SessionFactoryTest {
     SessionFactory sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-      metastore,
+        metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);

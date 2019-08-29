@@ -2,7 +2,6 @@ package com.godaddy.asherah.appencryption;
 
 import java.time.Instant;
 
-import com.godaddy.asherah.appencryption.persistence.Metastore;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,7 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
@@ -131,8 +131,8 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     @Override
-    public CryptoPolicyStep withMetastore(final Metastore<JSONObject> persistence) {
-      this.metastore = persistence;
+    public CryptoPolicyStep withMetastore(final Metastore<JSONObject> metastoreObject) {
+      this.metastore = metastoreObject;
       return this;
     }
 
@@ -183,7 +183,7 @@ public class SessionFactory implements SafeAutoCloseable {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
     CryptoPolicyStep withInMemoryMetastore();
 
-    CryptoPolicyStep withMetastore(Metastore<JSONObject> persistence);
+    CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
   }
 
   public interface CryptoPolicyStep {

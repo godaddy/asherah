@@ -11,7 +11,6 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
-import com.godaddy.asherah.appencryption.persistence.Metastore;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +23,7 @@ import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServic
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.google.common.collect.ImmutableMap;

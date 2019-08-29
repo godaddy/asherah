@@ -2,9 +2,9 @@ package com.godaddy.asherah.appencryption.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionJsonImpl;
-import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
@@ -101,5 +101,4 @@ class AppJsonEncryptionImplTest {
       }
     }
   }
-
 }
