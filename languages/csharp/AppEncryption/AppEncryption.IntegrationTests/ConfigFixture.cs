@@ -30,10 +30,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                 .AddYamlFile(configFile)
                 .Build();
 
-            MetaStoreType = GetParam(Constants.MetaStoreType);
-            if (string.IsNullOrWhiteSpace(MetaStoreType))
+            MetastoreType = GetParam(Constants.MetaStoreType);
+            if (string.IsNullOrWhiteSpace(MetastoreType))
             {
-                MetaStoreType = DefaultMetastoreType;
+                MetastoreType = DefaultMetastoreType;
             }
 
             KmsType = GetParam(Constants.KmsType);
@@ -43,16 +43,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             }
 
             KeyManagementService = CreateKeyManagementService();
-            MetastorePersistence = CreateMetaStorePersistence();
+            Metastore = CreateMetastore();
         }
 
         public KeyManagementService KeyManagementService { get; }
 
-        public IMetastorePersistence<JObject> MetastorePersistence { get; }
+        public IMetastore<JObject> Metastore { get; }
 
         private string PreferredRegion { get; set; }
 
-        private string MetaStoreType { get; }
+        private string MetastoreType { get; }
 
         private string KmsType { get; }
 
@@ -72,9 +72,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return paramValue;
         }
 
-        private IMetastorePersistence<JObject> CreateMetaStorePersistence()
+        private IMetastore<JObject> CreateMetastore()
         {
-            if (MetaStoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
+            if (MetastoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
             {
                 string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
 
@@ -83,17 +83,17 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                     throw new AppEncryptionException("Missing ADO connection string");
                 }
 
-                return AdoMetastorePersistenceImpl
+                return AdoMetastoreImpl
                     .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
                     .Build();
             }
 
-            if (MetaStoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
+            if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
             {
-                return DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+                return DynamoDbMetastoreImpl.NewBuilder().Build();
             }
 
-            return new MemoryPersistenceImpl<JObject>();
+            return new InMemoryMetastoreImpl<JObject>();
         }
 
         private KeyManagementService CreateKeyManagementService()

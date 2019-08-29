@@ -6,22 +6,22 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class AppEncryptionBytesImplTest
+    public class SessionBytesImplTest
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;
-        private readonly AppEncryptionBytesImpl<string> appEncryptionBytesImpl;
+        private readonly SessionBytesImpl<string> sessionBytesImpl;
 
-        public AppEncryptionBytesImplTest()
+        public SessionBytesImplTest()
         {
             envelopeEncryptionMock = new Mock<IEnvelopeEncryption<string>>();
-            appEncryptionBytesImpl = new AppEncryptionBytesImpl<string>(envelopeEncryptionMock.Object);
+            sessionBytesImpl = new SessionBytesImpl<string>(envelopeEncryptionMock.Object);
         }
 
         [Fact]
         private void TestConstructor()
         {
-            AppEncryptionBytesImpl<string> appEncryption = new AppEncryptionBytesImpl<string>(envelopeEncryptionMock.Object);
-            Assert.NotNull(appEncryption);
+            SessionBytesImpl<string> session = new SessionBytesImpl<string>(envelopeEncryptionMock.Object);
+            Assert.NotNull(session);
         }
 
         [Fact]
@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             envelopeEncryptionMock.Setup(x => x.DecryptDataRowRecord(It.IsAny<string>())).Returns(expectedBytes);
 
-            byte[] actualBytes = appEncryptionBytesImpl.Decrypt("some data row record");
+            byte[] actualBytes = sessionBytesImpl.Decrypt("some data row record");
             Assert.Equal(expectedBytes,  actualBytes);
         }
 
@@ -42,14 +42,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             envelopeEncryptionMock.Setup(x => x.EncryptPayload(It.IsAny<byte[]>())).Returns(expectedDataRowRecord);
 
-            string actualDataRowRecord = appEncryptionBytesImpl.Encrypt(new byte[] { 0, 1, 2, 3, 4 });
+            string actualDataRowRecord = sessionBytesImpl.Encrypt(new byte[] { 0, 1, 2, 3, 4 });
             Assert.Equal(expectedDataRowRecord, actualDataRowRecord);
         }
 
         [Fact]
         private void TestDispose()
         {
-            appEncryptionBytesImpl.Dispose();
+            sessionBytesImpl.Dispose();
             envelopeEncryptionMock.Verify(x => x.Dispose());
         }
 
@@ -57,7 +57,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestCloseWithCloseFailShouldReturn()
         {
             envelopeEncryptionMock.Setup(x => x.Dispose()).Throws<SystemException>();
-            appEncryptionBytesImpl.Dispose();
+            sessionBytesImpl.Dispose();
             envelopeEncryptionMock.Verify(x => x.Dispose());
         }
     }

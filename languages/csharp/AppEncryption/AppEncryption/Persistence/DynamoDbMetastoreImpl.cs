@@ -18,7 +18,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class DynamoDbMetastorePersistenceImpl : IMetastorePersistence<JObject>
+    public class DynamoDbMetastoreImpl : IMetastore<JObject>
     {
         internal const string TableName = "EncryptionKey";
         internal const string PartitionKey = "Id";
@@ -29,12 +29,12 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.loadlatest" };
         private static readonly TimerOptions StoreTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.store" };
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<DynamoDbMetastorePersistenceImpl>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<DynamoDbMetastoreImpl>();
 
         // Note this instance is thread-safe
         private readonly Table table;
 
-        internal DynamoDbMetastorePersistenceImpl(IAmazonDynamoDB dbClient)
+        internal DynamoDbMetastoreImpl(IAmazonDynamoDB dbClient)
         {
             // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
             table = Table.LoadTable(dbClient, TableName);
@@ -73,7 +73,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public Option<JObject> LoadLatestValue(string keyId)
+        public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
             {
@@ -159,10 +159,10 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         public class Builder
         {
-            public DynamoDbMetastorePersistenceImpl Build()
+            public DynamoDbMetastoreImpl Build()
             {
                 IAmazonDynamoDB dbClient = new AmazonDynamoDBClient();
-                return new DynamoDbMetastorePersistenceImpl(dbClient);
+                return new DynamoDbMetastoreImpl(dbClient);
             }
         }
     }

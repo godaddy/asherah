@@ -58,7 +58,7 @@ namespace GoDaddy.Asherah.ReferenceApp
 
         private static async void App(Options options)
         {
-            IMetastorePersistence<JObject> metastorePersistence = null;
+            IMetastore<JObject> metastore = null;
             KeyManagementService keyManagementService = null;
 
             if (options.MetaStore == MetaStore.ADO)
@@ -66,7 +66,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 if (options.AdoConnectionString != null)
                 {
                     logger.LogInformation("using ADO-based metastore...");
-                    metastorePersistence = AdoMetastorePersistenceImpl
+                    metastore = AdoMetastoreImpl
                         .NewBuilder(MySqlClientFactory.Instance, options.AdoConnectionString)
                         .Build();
                 }
@@ -81,12 +81,12 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
-                metastorePersistence = DynamoDbMetastorePersistenceImpl.NewBuilder().Build();
+                metastore = DynamoDbMetastoreImpl.NewBuilder().Build();
             }
             else
             {
                 logger.LogInformation("using in-memory metastore...");
-                metastorePersistence = new MemoryPersistenceImpl<JObject>();
+                metastore = new InMemoryMetastoreImpl<JObject>();
             }
 
             if (options.Kms == Kms.AWS)
@@ -138,9 +138,9 @@ namespace GoDaddy.Asherah.ReferenceApp
             // Create a session factory for this app. Normally this would be done upon app startup and the
             // same factory would be used anytime a new session is needed for a partition (e.g., shopper).
             // We've split it out into multiple using blocks to underscore this point.
-            using (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
+            using (SessionFactory sessionFactory = SessionFactory
                 .NewBuilder("productId", "reference_app")
-                .WithMetaStorePersistence(metastorePersistence)
+                .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)
                 .WithMetrics(metrics)
@@ -148,8 +148,8 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
-                using (AppEncryption<byte[], byte[]> appEncryptionBytes =
-                    appEncryptionSessionFactory.GetAppEncryptionBytes("shopper123"))
+                using (Session<byte[], byte[]> sessionBytes =
+                    sessionFactory.GetSessionBytes("shopper123"))
                 {
                     const string originalPayloadString = "mysupersecretpayload";
                     foreach (int i in Enumerable.Range(0, options.Iterations))
@@ -165,7 +165,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                         {
                             // Encrypt the payload
                             byte[] dataRowRecordBytes =
-                                appEncryptionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+                                sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
 
                             // Consider this us "persisting" the DRR
                             dataRowString = Convert.ToBase64String(dataRowRecordBytes);
@@ -177,7 +177,7 @@ namespace GoDaddy.Asherah.ReferenceApp
 
                         // Decrypt the payload
                         string decryptedPayloadString =
-                            Encoding.UTF8.GetString(appEncryptionBytes.Decrypt(newDataRowRecordBytes));
+                            Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
 
                         logger.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
                         logger.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));

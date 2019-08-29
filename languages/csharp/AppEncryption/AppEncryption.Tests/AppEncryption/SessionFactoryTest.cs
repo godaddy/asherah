@@ -14,24 +14,24 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class AppEncryptionSessionFactoryTest
+    public class SessionFactoryTest
     {
         private const string TestPartitionId = "test_partition_id";
         private const string TestSystemId = "test_system_id";
         private const string TestProductId = "test_product_id";
         private const string TestMasterKey = "test_master_key";
 
-        private readonly Mock<IMetastorePersistence<JObject>> metastorePersistenceMock;
+        private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
         private readonly Mock<KeyManagementService> keyManagementServiceMock;
         private readonly Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>> secureCryptoKeyDictionaryFactoryMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheMock;
 
-        private readonly AppEncryptionSessionFactory appEncryptionSessionFactory;
+        private readonly SessionFactory sessionFactory;
 
-        public AppEncryptionSessionFactoryTest()
+        public SessionFactoryTest()
         {
-            metastorePersistenceMock = new Mock<IMetastorePersistence<JObject>>();
+            metastoreMock = new Mock<IMetastore<JObject>>();
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
             secureCryptoKeyDictionaryFactoryMock =
@@ -40,10 +40,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             secureCryptoKeyDictionaryFactoryMock.Setup(x => x.CreateSecureCryptoKeyDictionary())
                 .Returns(systemKeyCacheMock.Object);
 
-            appEncryptionSessionFactory = new AppEncryptionSessionFactory(
+            sessionFactory = new SessionFactory(
                 TestProductId,
                 TestSystemId,
-                metastorePersistenceMock.Object,
+                metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
@@ -52,72 +52,72 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestConstructor()
         {
-            AppEncryptionSessionFactory appEncryptionSessionFactory = new AppEncryptionSessionFactory(
+            SessionFactory sessionFactory = new SessionFactory(
                 TestProductId,
                 TestSystemId,
-                metastorePersistenceMock.Object,
+                metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
 
-            Assert.NotNull(appEncryptionSessionFactory);
+            Assert.NotNull(sessionFactory);
         }
 
         [Fact]
-        private void TestGetAppEncryptionJson()
+        private void TestGetSessionJson()
         {
-            AppEncryption<JObject, byte[]> appEncryptionJson =
-                appEncryptionSessionFactory.GetAppEncryptionJson(TestPartitionId);
-            Assert.NotNull(appEncryptionJson);
+            Session<JObject, byte[]> sessionJson =
+                sessionFactory.GetSessionJson(TestPartitionId);
+            Assert.NotNull(sessionJson);
         }
 
         [Fact]
-        private void TestGetAppEncryptionBytes()
+        private void TestGetSessionBytes()
         {
-            AppEncryption<byte[], byte[]> appEncryptionBytes =
-                appEncryptionSessionFactory.GetAppEncryptionBytes(TestPartitionId);
-            Assert.NotNull(appEncryptionBytes);
+            Session<byte[], byte[]> sessionBytes =
+                sessionFactory.GetSessionBytes(TestPartitionId);
+            Assert.NotNull(sessionBytes);
         }
 
         [Fact]
-        private void TestGetAppEncryptionJsonAsJson()
+        private void TestGetSessionJsonAsJson()
         {
-            AppEncryption<JObject, JObject> appEncryption =
-                appEncryptionSessionFactory.GetAppEncryptionJsonAsJson(TestPartitionId);
-            Assert.NotNull(appEncryption);
+            Session<JObject, JObject> session =
+                sessionFactory.GetSessionJsonAsJson(TestPartitionId);
+            Assert.NotNull(session);
         }
 
         [Fact]
-        private void TestGetAppEncryptionBytesAsJson()
+        private void TestGetSessionBytesAsJson()
         {
-            AppEncryption<byte[], JObject> appEncryption =
-                appEncryptionSessionFactory.GetAppEncryptionBytesAsJson(TestPartitionId);
-            Assert.NotNull(appEncryption);
+            Session<byte[], JObject> session =
+                sessionFactory.GetSessionBytesAsJson(TestPartitionId);
+            Assert.NotNull(session);
         }
 
         [Fact]
         private void TestGetEnvelopeEncryptionBytes()
         {
-            IEnvelopeEncryption<byte[]> appEncryption =
-                appEncryptionSessionFactory.GetEnvelopeEncryptionBytes(TestPartitionId);
-            Assert.NotNull(appEncryption);
+            IEnvelopeEncryption<byte[]> envelopeEncryption =
+                sessionFactory.GetEnvelopeEncryptionBytes(TestPartitionId);
+            Assert.NotNull(envelopeEncryption);
         }
 
         [Fact]
-        private void TestGetAppEncryptionPartitionWithPartition()
+        private void TestGetPartitionWithPartitionId()
         {
-            AppEncryptionPartition appEncryptionPartition =
-                appEncryptionSessionFactory.GetAppEncryptionPartition(TestPartitionId);
+            Partition partition =
+                sessionFactory.GetPartition(TestPartitionId);
 
-            Assert.Equal(TestPartitionId, appEncryptionPartition.PartitionId);
-            Assert.Equal(TestSystemId, appEncryptionPartition.SystemId);
-            Assert.Equal(TestProductId, appEncryptionPartition.ProductId);
+            Assert.Equal(TestPartitionId, partition.PartitionId);
+            Assert.Equal(TestSystemId, partition.SystemId);
+            Assert.Equal(TestProductId, partition.ProductId);
         }
 
         [Fact]
         private void TestDisposeSuccess()
         {
-            appEncryptionSessionFactory.Dispose();
+            sessionFactory.Dispose();
 
             // Verify proper resources are closed
             systemKeyCacheMock.Verify(x => x.Dispose());
@@ -127,7 +127,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestDisposeWithDisposeFailShouldReturn()
         {
             systemKeyCacheMock.Setup(x => x.Dispose()).Throws<SystemException>();
-            appEncryptionSessionFactory.Dispose();
+            sessionFactory.Dispose();
 
             // Verify proper resources are closed
             systemKeyCacheMock.Verify(x => x.Dispose());
@@ -136,56 +136,56 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestBuilderPathWithPrebuiltInterfaces()
         {
-            AppEncryptionSessionFactory.IMetastoreStep metastoreStep =
-                AppEncryptionSessionFactory.NewBuilder(TestProductId, TestSystemId);
+            SessionFactory.IMetastoreStep metastoreStep =
+                SessionFactory.NewBuilder(TestProductId, TestSystemId);
             Assert.NotNull(metastoreStep);
 
-            AppEncryptionSessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithMemoryPersistence();
+            SessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithInMemoryMetastore();
             Assert.NotNull(cryptoPolicyStep);
 
-            AppEncryptionSessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
+            SessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
                 cryptoPolicyStep.WithNeverExpiredCryptoPolicy();
             Assert.NotNull(keyManagementServiceStep);
 
-            AppEncryptionSessionFactory.IBuildStep buildStep =
+            SessionFactory.IBuildStep buildStep =
                 keyManagementServiceStep.WithStaticKeyManagementService(TestMasterKey);
             Assert.NotNull(buildStep);
 
-            AppEncryptionSessionFactory sessionFactory = buildStep.Build();
+            SessionFactory sessionFactory = buildStep.Build();
             Assert.NotNull(sessionFactory);
         }
 
         [Fact]
         private void TestBuilderPathWithSpecifiedInterfaces()
         {
-            AppEncryptionSessionFactory.IMetastoreStep metastoreStep =
-                AppEncryptionSessionFactory.NewBuilder(TestProductId, TestSystemId);
+            SessionFactory.IMetastoreStep metastoreStep =
+                SessionFactory.NewBuilder(TestProductId, TestSystemId);
             Assert.NotNull(metastoreStep);
 
-            IMetastorePersistence<JObject> metastorePersistence = new MemoryPersistenceImpl<JObject>();
-            AppEncryptionSessionFactory.ICryptoPolicyStep cryptoPolicyStep =
-                metastoreStep.WithMetaStorePersistence(metastorePersistence);
+            IMetastore<JObject> metastore = new InMemoryMetastoreImpl<JObject>();
+            SessionFactory.ICryptoPolicyStep cryptoPolicyStep =
+                metastoreStep.WithMetastore(metastore);
             Assert.NotNull(cryptoPolicyStep);
 
             CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
-            AppEncryptionSessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
+            SessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
                 cryptoPolicyStep.WithCryptoPolicy(cryptoPolicy);
             Assert.NotNull(keyManagementServiceStep);
 
             KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(TestMasterKey);
-            AppEncryptionSessionFactory.IBuildStep buildStep =
+            SessionFactory.IBuildStep buildStep =
                 keyManagementServiceStep.WithKeyManagementService(keyManagementService);
             Assert.NotNull(buildStep);
 
-            AppEncryptionSessionFactory sessionFactory = buildStep.Build();
+            SessionFactory sessionFactory = buildStep.Build();
             Assert.NotNull(sessionFactory);
         }
 
         [Fact]
         private void TestBuilderPathWithMetricsDisabled()
         {
-            AppEncryptionSessionFactory.NewBuilder(TestProductId, TestSystemId)
-                .WithMemoryPersistence()
+            SessionFactory.NewBuilder(TestProductId, TestSystemId)
+                .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)
                 .Build();
@@ -200,8 +200,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestBuilderPathWithMetricsEnabled()
         {
             IMetrics metrics = new MetricsBuilder().Build();
-            AppEncryptionSessionFactory.NewBuilder(TestProductId, TestSystemId)
-                .WithMemoryPersistence()
+            SessionFactory.NewBuilder(TestProductId, TestSystemId)
+                .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)
                 .WithMetrics(metrics)

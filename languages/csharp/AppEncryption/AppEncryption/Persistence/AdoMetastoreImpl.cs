@@ -15,7 +15,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class AdoMetastorePersistenceImpl : IMetastorePersistence<JObject>
+    public class AdoMetastoreImpl : IMetastore<JObject>
     {
         internal const string Created = "created";
         internal const string Id = "id";
@@ -29,7 +29,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private const string LoadLatestQuery =
             @"SELECT key_record from encryption_key where id = @id order by created DESC limit 1";
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<AdoMetastorePersistenceImpl>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<AdoMetastoreImpl>();
 
         private static readonly TimerOptions LoadTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.load" };
         private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.loadlatest" };
@@ -38,7 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly string connectionString;
         private readonly DbProviderFactory dbProviderFactory;
 
-        public AdoMetastorePersistenceImpl(DbProviderFactory dbProviderFactory, string connectionString)
+        public AdoMetastoreImpl(DbProviderFactory dbProviderFactory, string connectionString)
         {
             this.connectionString = connectionString;
             this.dbProviderFactory = dbProviderFactory;
@@ -76,7 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public Option<JObject> LoadLatestValue(string keyId)
+        public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
             {
@@ -188,9 +188,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 this.connectionString = connectionString;
             }
 
-            public AdoMetastorePersistenceImpl Build()
+            public AdoMetastoreImpl Build()
             {
-                return new AdoMetastorePersistenceImpl(dbProviderFactory, connectionString);
+                return new AdoMetastoreImpl(dbProviderFactory, connectionString);
             }
         }
     }

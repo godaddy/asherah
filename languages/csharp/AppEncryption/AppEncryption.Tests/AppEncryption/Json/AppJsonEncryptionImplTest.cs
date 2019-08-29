@@ -17,21 +17,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
     [Collection("Logger Fixture collection")]
     public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>
     {
-        private readonly IMetastorePersistence<JObject> metastorePersistence;
+        private readonly IMetastore<JObject> metastore;
         private readonly Persistence<JObject> dataPersistence;
-        private readonly AppEncryptionPartition appEncryptionPartition;
+        private readonly Partition partition;
         private readonly KeyManagementService keyManagementService;
 
         public AppJsonEncryptionImplTest()
         {
-            appEncryptionPartition = new AppEncryptionPartition("PARTITION", "SYSTEM", "PRODUCT");
+            partition = new Partition("PARTITION", "SYSTEM", "PRODUCT");
             Dictionary<string, JObject> memoryPersistence = new Dictionary<string, JObject>();
 
             dataPersistence = new AdhocPersistence<JObject>(
                 key => memoryPersistence.TryGetValue(key, out JObject result) ? result : Option<JObject>.None,
                 (key, jsonObject) => memoryPersistence.Add(key, jsonObject));
 
-            metastorePersistence = new MemoryPersistenceImpl<JObject>();
+            metastore = new InMemoryMetastoreImpl<JObject>();
             keyManagementService = new DummyKeyManagementService();
 
             AeadEnvelopeCrypto aeadEnvelopeCrypto = new BouncyAes256GcmCrypto();
@@ -43,7 +43,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(DateTimeOffset.UtcNow, null, encryptedSystemKey);
 
             // Write out the dummy systemKey record
-            memoryPersistence.TryAdd(appEncryptionPartition.SystemKeyId, systemKeyRecord.ToJson());
+            memoryPersistence.TryAdd(partition.SystemKeyId, systemKeyRecord.ToJson());
         }
 
         [Theory]
@@ -63,22 +63,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                 new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()))
             {
                 IEnvelopeEncryption<JObject> envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
-                    appEncryptionPartition,
-                    metastorePersistence,
+                    partition,
+                    metastore,
                     secureCryptoKeyDictionary,
                     new SecureCryptoKeyDictionaryFactory<DateTimeOffset>(cryptoPolicy),
                     aeadEnvelopeCrypto,
                     cryptoPolicy,
                     keyManagementService);
-                using (AppEncryption<JObject, JObject> appEncryptionJsonImpl =
-                    new AppEncryptionJsonImpl<JObject>(envelopeEncryptionJsonImpl))
+                using (Session<JObject, JObject> sessionJsonImpl =
+                    new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl))
                 {
                     Asherah.AppEncryption.Util.Json testJson = new Asherah.AppEncryption.Util.Json();
                     testJson.Put("Test", testData);
 
-                    string persistenceKey = appEncryptionJsonImpl.Store(testJson.ToJObject(), dataPersistence);
+                    string persistenceKey = sessionJsonImpl.Store(testJson.ToJObject(), dataPersistence);
 
-                    Option<JObject> testJson2 = appEncryptionJsonImpl.Load(persistenceKey, dataPersistence);
+                    Option<JObject> testJson2 = sessionJsonImpl.Load(persistenceKey, dataPersistence);
                     Assert.True(testJson2.IsSome);
                     string resultData = ((JObject)testJson2)["Test"].ToObject<string>();
 

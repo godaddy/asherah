@@ -26,8 +26,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private static readonly TimerOptions EncryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
         private static readonly TimerOptions DecryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
 
-        private readonly AppEncryptionPartition partition;
-        private readonly IMetastorePersistence<JObject> metastorePersistence;
+        private readonly Partition partition;
+        private readonly IMetastore<JObject> metastore;
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache; // assuming limited to 1 product/service id pair
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache;
         private readonly AeadEnvelopeCrypto crypto;
@@ -35,8 +35,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private readonly KeyManagementService keyManagementService;
 
         public EnvelopeEncryptionJsonImpl(
-            AppEncryptionPartition partition,
-            IMetastorePersistence<JObject> metastorePersistence,
+            Partition partition,
+            IMetastore<JObject> metastore,
             SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
             SecureCryptoKeyDictionaryFactory<DateTimeOffset> intermediateKeyCacheFactory,
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             KeyManagementService keyManagementService)
         {
             this.partition = partition;
-            this.metastorePersistence = metastorePersistence;
+            this.metastore = metastore;
             this.systemKeyCache = systemKeyCache;
             intermediateKeyCache = intermediateKeyCacheFactory.CreateSecureCryptoKeyDictionary();
             crypto = aeadEnvelopeCrypto;
@@ -354,7 +354,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     partition.IntermediateKeyId,
                     newIntermediateKeyRecord.Created);
 
-                if (metastorePersistence.Store(
+                if (metastore.Store(
                     partition.IntermediateKeyId, newIntermediateKeyRecord.Created, newIntermediateKeyRecord.ToJson()))
                 {
                     return intermediateKey;
@@ -438,7 +438,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     "Attempting to store new SK {keyId} for created {created}",
                     partition.SystemKeyId,
                     newSystemKeyRecord.Created);
-                if (metastorePersistence.Store(partition.SystemKeyId, newSystemKeyRecord.Created, newSystemKeyRecord.ToJson()))
+                if (metastore.Store(partition.SystemKeyId, newSystemKeyRecord.Created, newSystemKeyRecord.ToJson()))
                 {
                     return systemKey;
                 }
@@ -475,7 +475,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Fetches a known intermediate key from metastore persistence and decrypts it using its associated system key.
+        /// Fetches a known intermediate key from metastore and decrypts it using its associated system key.
         /// </summary>
         ///
         /// <returns>The decrypted intermediate key.</returns>
@@ -494,7 +494,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Fetches a known system key from metastore persistence and decrypts it using the key management service.
+        /// Fetches a known system key from metastore and decrypts it using the key management service.
         /// </summary>
         ///
         /// <returns>The decrypted system key.</returns>
@@ -535,7 +535,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         internal virtual EnvelopeKeyRecord LoadKeyRecord(string keyId, DateTimeOffset created)
         {
             Logger.LogDebug("Attempting to load key with KeyID {keyId} created {created}", keyId, created);
-            return metastorePersistence.Load(keyId, created)
+            return metastore.Load(keyId, created)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson))
                 .IfNone(() => throw new MetadataMissingException(
@@ -552,7 +552,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)
         {
             Logger.LogDebug("Attempting to load latest key with keyId {keyId}", keyId);
-            return metastorePersistence.LoadLatestValue(keyId)
+            return metastore.LoadLatest(keyId)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));
         }

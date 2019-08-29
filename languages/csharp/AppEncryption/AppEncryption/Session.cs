@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.AppEncryption
     /// </summary>
     /// <typeparam name="TP">The payload type of the data being encrypted (e.g. JSON, String, etc.)</typeparam>
     /// <typeparam name="TD">The Data Row Record type being used to store it and any supporting metadata.</typeparam>
-    public abstract class AppEncryption<TP, TD> : IDisposable
+    public abstract class Session<TP, TD> : IDisposable
     {
         public abstract void Dispose();
 

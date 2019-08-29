@@ -22,18 +22,18 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiPartitionMultiThreadedTest>();
         private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory<byte[]>.CreateInMemoryPersistence();
 
-        private readonly AppEncryptionSessionFactory appEncryptionSessionFactory;
+        private readonly SessionFactory sessionFactory;
 
         public MultiPartitionMultiThreadedTest(ConfigFixture configFixture)
         {
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+            sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
                 configFixture.KeyManagementService,
-                configFixture.MetastorePersistence);
+                configFixture.Metastore);
         }
 
         public void Dispose()
         {
-            appEncryptionSessionFactory.Dispose();
+            sessionFactory.Dispose();
         }
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         {
             try
             {
-                using (AppEncryption<JObject, byte[]> partition =
-                    appEncryptionSessionFactory.GetAppEncryptionJson(partitionId))
+                using (Session<JObject, byte[]> session =
+                    sessionFactory.GetSessionJson(partitionId))
                 {
                     Dictionary<string, byte[]> dataStore = new Dictionary<string, byte[]>();
 
@@ -85,12 +85,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
                         string keyPart = $"iteration-{i}";
                         jsonObject.Add("payload", partitionPart + keyPart);
 
-                        dataStore.Add(keyPart, partition.Encrypt(jsonObject));
+                        dataStore.Add(keyPart, session.Encrypt(jsonObject));
                     }
 
                     foreach (KeyValuePair<string, byte[]> keyValuePair in dataStore)
                     {
-                        JObject decryptedObject = partition.Decrypt(keyValuePair.Value);
+                        JObject decryptedObject = session.Decrypt(keyValuePair.Value);
                         Assert.Equal(partitionPart + keyValuePair.Key, decryptedObject.GetValue("payload").ToObject<string>());
                     }
                 }
@@ -137,8 +137,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         {
             try
             {
-                using (AppEncryption<JObject, byte[]> partition =
-                    appEncryptionSessionFactory.GetAppEncryptionJson(partitionId))
+                using (Session<JObject, byte[]> session =
+                    sessionFactory.GetSessionJson(partitionId))
                 {
                     string partitionPart = "partition-" + partitionId + "-";
 
@@ -149,8 +149,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
                         string keyPart = $"iteration-{i}";
                         jsonObject.Add("payload", partitionPart + keyPart);
 
-                        string persistenceKey = partition.Store(jsonObject, PersistenceBytes);
-                        Option<JObject> decryptedJsonPayload = partition.Load(persistenceKey, PersistenceBytes);
+                        string persistenceKey = session.Store(jsonObject, PersistenceBytes);
+                        Option<JObject> decryptedJsonPayload = session.Load(persistenceKey, PersistenceBytes);
                         if (decryptedJsonPayload.IsSome)
                         {
                             JObject decryptedJson = (JObject)decryptedJsonPayload;

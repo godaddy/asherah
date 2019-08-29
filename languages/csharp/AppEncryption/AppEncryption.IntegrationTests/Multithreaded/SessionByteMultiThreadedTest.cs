@@ -11,35 +11,35 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 {
     [Collection("Configuration collection")]
-    public class AppEncryptionByteMultiThreadedTest : IDisposable
+    public class SessionByteMultiThreadedTest : IDisposable
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<AppEncryptionByteMultiThreadedTest>();
+        private static readonly ILogger Logger = LogManager.CreateLogger<SessionByteMultiThreadedTest>();
 
         private readonly byte[] payload;
-        private readonly AppEncryptionSessionFactory appEncryptionSessionFactory;
+        private readonly SessionFactory sessionFactory;
         private readonly string partitionId;
-        private readonly AppEncryption<byte[], byte[]> appEncryptionBytes;
+        private readonly Session<byte[], byte[]> sessionBytes;
 
-        public AppEncryptionByteMultiThreadedTest(ConfigFixture configFixture)
+        public SessionByteMultiThreadedTest(ConfigFixture configFixture)
         {
             payload = PayloadGenerator.CreateDefaultRandomBytePayload();
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+            sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
                 configFixture.KeyManagementService,
-                configFixture.MetastorePersistence);
+                configFixture.Metastore);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
-            appEncryptionBytes = appEncryptionSessionFactory.GetAppEncryptionBytes(partitionId);
+            sessionBytes = sessionFactory.GetSessionBytes(partitionId);
         }
 
         public void Dispose()
         {
-            appEncryptionBytes.Dispose();
-            appEncryptionSessionFactory.Dispose();
+            sessionBytes.Dispose();
+            sessionFactory.Dispose();
         }
 
         [Fact]
-        public void AppEncryptionEncryptMultipleThreads()
+        public void SessionEncryptMultipleThreads()
         {
-            Logger.LogInformation("Running AppEncryptionEncryptMultipleThreads test with {numThreads} threads", NumThreads);
+            Logger.LogInformation("Running SessionEncryptMultipleThreads test with {numThreads} threads", NumThreads);
 
             // Get the current settings and try to force minWorkers
             ThreadPool.GetMinThreads(out _, out var currentMinIOC);
@@ -51,9 +51,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             {
                 try
                 {
-                    byte[] drr = appEncryptionBytes.Encrypt(payload);
+                    byte[] drr = sessionBytes.Encrypt(payload);
 
-                    Assert.Equal(payload, appEncryptionBytes.Decrypt(drr));
+                    Assert.Equal(payload, sessionBytes.Decrypt(drr));
                     Interlocked.Increment(ref completedTasks);
                 }
                 catch (ThreadInterruptedException e)

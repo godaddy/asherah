@@ -3,44 +3,43 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class AppEncryptionPartitionTest
+    public class PartitionTest
     {
         private const string TestPartitionId = "test_partition_id";
         private const string TestSystemId = "test_system_id";
         private const string TestProductId = "test_product_id";
 
-        private readonly AppEncryptionPartition appEncryptionPartition;
+        private readonly Partition partition;
 
-        public AppEncryptionPartitionTest()
+        public PartitionTest()
         {
-            appEncryptionPartition =
-                new AppEncryptionPartition(TestPartitionId, TestSystemId, TestProductId);
+            partition = new Partition(TestPartitionId, TestSystemId, TestProductId);
         }
 
         [Fact]
         private void TestPartitionCreation()
         {
-            Assert.NotNull(appEncryptionPartition);
+            Assert.NotNull(partition);
         }
 
         [Fact]
         private void TestGetPartitionId()
         {
-            string actualTestPartitionId = appEncryptionPartition.PartitionId;
+            string actualTestPartitionId = partition.PartitionId;
             Assert.Equal(TestPartitionId, actualTestPartitionId);
         }
 
         [Fact]
         private void TestGetSystemId()
         {
-            string actualSystemId = appEncryptionPartition.SystemId;
+            string actualSystemId = partition.SystemId;
             Assert.Equal(TestSystemId, actualSystemId);
         }
 
         [Fact]
         private void TestGetProductId()
         {
-            string actualProductId = appEncryptionPartition.ProductId;
+            string actualProductId = partition.ProductId;
             Assert.Equal(TestProductId, actualProductId);
         }
 
@@ -48,22 +47,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestGetSystemKeyId()
         {
             const string systemKeyIdString = "_SK_" + TestSystemId + "_" + TestProductId;
-            Assert.Equal(systemKeyIdString, appEncryptionPartition.SystemKeyId);
+            Assert.Equal(systemKeyIdString, partition.SystemKeyId);
         }
 
         [Fact]
         private void TestGetIntermediateKeyId()
         {
             const string intermediateKeyIdString = "_IK_" + TestPartitionId + "_" + TestSystemId + "_" + TestProductId;
-            Assert.Equal(intermediateKeyIdString, appEncryptionPartition.IntermediateKeyId);
+            Assert.Equal(intermediateKeyIdString, partition.IntermediateKeyId);
         }
 
         [Fact]
         private void TestToString()
         {
-            string expectedToStringString = appEncryptionPartition.GetType().Name + "[partitionId=" + TestPartitionId +
+            string expectedToStringString = partition.GetType().Name + "[partitionId=" + TestPartitionId +
                     ", systemId=" + TestSystemId + ", productId=" + TestProductId + "]";
-            Assert.Equal(expectedToStringString, appEncryptionPartition.ToString());
+            Assert.Equal(expectedToStringString, partition.ToString());
         }
     }
 }

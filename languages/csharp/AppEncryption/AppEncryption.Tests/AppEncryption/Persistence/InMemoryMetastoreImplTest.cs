@@ -6,13 +6,13 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     [Collection("Logger Fixture collection")]
-    public class MemoryPersistenceImplTest
+    public class InMemoryMetastoreImplTest
     {
-        private readonly MemoryPersistenceImpl<string> memoryPersistenceImpl;
+        private readonly InMemoryMetastoreImpl<string> inMemoryMetastoreImpl;
 
-        public MemoryPersistenceImplTest()
+        public InMemoryMetastoreImplTest()
         {
-            memoryPersistenceImpl = new MemoryPersistenceImpl<string>();
+            inMemoryMetastoreImpl = new InMemoryMetastoreImpl<string>();
         }
 
         [Fact]
@@ -22,9 +22,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             DateTimeOffset created = DateTimeOffset.UtcNow;
             const string value = "This is my value";
 
-            memoryPersistenceImpl.Store(keyId, created, value);
+            inMemoryMetastoreImpl.Store(keyId, created, value);
 
-            Option<string> actualValue = memoryPersistenceImpl.Load(keyId, created);
+            Option<string> actualValue = inMemoryMetastoreImpl.Load(keyId, created);
 
             Assert.Equal(value, actualValue);
         }
@@ -36,49 +36,49 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             DateTimeOffset created = DateTimeOffset.UtcNow;
             const string value = "This is my value";
 
-            memoryPersistenceImpl.Store(keyId, created, value);
+            inMemoryMetastoreImpl.Store(keyId, created, value);
 
-            Option<string> actualValue = memoryPersistenceImpl.Load("some non-existent key", created);
+            Option<string> actualValue = inMemoryMetastoreImpl.Load("some non-existent key", created);
 
             Assert.True(actualValue.IsNone);
         }
 
         [Fact]
-        private void TestLoadLatestValueMultipleCreatedAndValuesForKeyIdShouldReturnLatest()
+        private void TestLoadLatestMultipleCreatedAndValuesForKeyIdShouldReturnLatest()
         {
             const string keyId = "ThisIsMyKey";
             DateTimeOffset created = DateTimeOffset.UtcNow;
             const string value = "This is my value";
 
-            memoryPersistenceImpl.Store(keyId, created, value);
+            inMemoryMetastoreImpl.Store(keyId, created, value);
 
             DateTimeOffset createdOneHourLater = created.AddHours(1);
             string valueCreatedOneHourLater = value + createdOneHourLater;
-            memoryPersistenceImpl.Store(keyId, createdOneHourLater, valueCreatedOneHourLater);
+            inMemoryMetastoreImpl.Store(keyId, createdOneHourLater, valueCreatedOneHourLater);
 
             DateTimeOffset createdOneDayLater = created.AddDays(1);
             string valueCreatedOneDayLater = value + createdOneDayLater;
-            memoryPersistenceImpl.Store(keyId, createdOneDayLater, valueCreatedOneDayLater);
+            inMemoryMetastoreImpl.Store(keyId, createdOneDayLater, valueCreatedOneDayLater);
 
             DateTimeOffset createdOneWeekEarlier = created.AddDays(-7);
             string valueCreatedOneWeekEarlier = value + createdOneWeekEarlier;
-            memoryPersistenceImpl.Store(keyId, createdOneWeekEarlier, valueCreatedOneWeekEarlier);
+            inMemoryMetastoreImpl.Store(keyId, createdOneWeekEarlier, valueCreatedOneWeekEarlier);
 
-            Option<string> loadLatestValue = memoryPersistenceImpl.LoadLatestValue(keyId);
+            Option<string> loadLatest = inMemoryMetastoreImpl.LoadLatest(keyId);
 
-            Assert.Equal(valueCreatedOneDayLater, loadLatestValue);
+            Assert.Equal(valueCreatedOneDayLater, loadLatest);
         }
 
         [Fact]
-        private void TestLoadLatestValueNonExistentKeyIdShouldReturnNull()
+        private void TestLoadLatestNonExistentKeyIdShouldReturnNull()
         {
             const string keyId = "ThisIsMyKey";
             DateTimeOffset created = DateTimeOffset.UtcNow;
             const string value = "This is my value";
 
-            memoryPersistenceImpl.Store(keyId, created, value);
+            inMemoryMetastoreImpl.Store(keyId, created, value);
 
-            Assert.True(memoryPersistenceImpl.LoadLatestValue("some non-existent key").IsNone);
+            Assert.True(inMemoryMetastoreImpl.LoadLatest("some non-existent key").IsNone);
         }
 
         [Fact]
@@ -88,8 +88,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             DateTimeOffset created = DateTimeOffset.UtcNow;
             const string value = "This is my value";
 
-            Assert.True(memoryPersistenceImpl.Store(keyId, created, value));
-            Assert.False(memoryPersistenceImpl.Store(keyId, created, value));
+            Assert.True(inMemoryMetastoreImpl.Store(keyId, created, value));
+            Assert.False(inMemoryMetastoreImpl.Store(keyId, created, value));
         }
     }
 }

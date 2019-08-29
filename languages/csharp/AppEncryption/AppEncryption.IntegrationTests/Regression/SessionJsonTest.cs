@@ -11,37 +11,37 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     [Collection("Configuration collection")]
-    public class AppEncryptionJsonTest : IDisposable
+    public class SessionJsonTest : IDisposable
     {
         private static readonly Persistence<byte[]> PersistenceBytes =
             PersistenceFactory<byte[]>.CreateInMemoryPersistence();
 
         private readonly JObject payload;
-        private readonly AppEncryptionSessionFactory appEncryptionSessionFactory;
+        private readonly SessionFactory sessionFactory;
         private readonly string partitionId;
-        private readonly AppEncryption<JObject, byte[]> appEncryptionJson;
+        private readonly Session<JObject, byte[]> sessionJson;
 
-        public AppEncryptionJsonTest(ConfigFixture configFixture)
+        public SessionJsonTest(ConfigFixture configFixture)
         {
             payload = PayloadGenerator.CreateDefaultRandomJsonPayload();
-            appEncryptionSessionFactory = SessionFactoryGenerator.CreateDefaultAppEncryptionSessionFactory(
+            sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
                 configFixture.KeyManagementService,
-                configFixture.MetastorePersistence);
+                configFixture.Metastore);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
-            appEncryptionJson = appEncryptionSessionFactory.GetAppEncryptionJson(partitionId);
+            sessionJson = sessionFactory.GetSessionJson(partitionId);
         }
 
         public void Dispose()
         {
-            appEncryptionJson.Dispose();
-            appEncryptionSessionFactory.Dispose();
+            sessionJson.Dispose();
+            sessionFactory.Dispose();
         }
 
         [Fact]
         private void JsonEncryptDecrypt()
         {
-            byte[] dataRowRecord = appEncryptionJson.Encrypt(payload);
-            JObject decryptedPayload = appEncryptionJson.Decrypt(dataRowRecord);
+            byte[] dataRowRecord = sessionJson.Encrypt(payload);
+            JObject decryptedPayload = sessionJson.Decrypt(dataRowRecord);
 
             Assert.Equal(payload, decryptedPayload);
         }
@@ -53,8 +53,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             int iterations = 40;
             for (int i = 0; i < iterations; i++)
             {
-                byte[] dataRowRecord = appEncryptionJson.Encrypt(payload);
-                JObject decryptedPayload = appEncryptionJson.Decrypt(dataRowRecord);
+                byte[] dataRowRecord = sessionJson.Encrypt(payload);
+                JObject decryptedPayload = sessionJson.Decrypt(dataRowRecord);
 
                 Assert.Equal(payload, decryptedPayload);
             }
@@ -63,9 +63,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         [Fact]
         private void JsonStoreLoad()
         {
-            string persistenceKey = appEncryptionJson.Store(payload, PersistenceBytes);
+            string persistenceKey = sessionJson.Store(payload, PersistenceBytes);
 
-            Option<JObject> decryptedPayload = appEncryptionJson.Load(persistenceKey, PersistenceBytes);
+            Option<JObject> decryptedPayload = sessionJson.Load(persistenceKey, PersistenceBytes);
 
             if (decryptedPayload.IsSome)
             {
@@ -82,7 +82,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         {
             string persistenceKey = "1234";
 
-            Option<JObject> decryptedPayload = appEncryptionJson.Load(persistenceKey, PersistenceBytes);
+            Option<JObject> decryptedPayload = sessionJson.Load(persistenceKey, PersistenceBytes);
 
             Assert.False(decryptedPayload.IsSome);
         }
@@ -90,12 +90,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         [Fact]
         private void JsonEncryptDecryptWithDifferentSession()
         {
-            byte[] dataRowRecord = appEncryptionJson.Encrypt(payload);
+            byte[] dataRowRecord = sessionJson.Encrypt(payload);
 
-            using (AppEncryption<JObject, byte[]> appEncryptionBytesNew =
-                appEncryptionSessionFactory.GetAppEncryptionJson(partitionId))
+            using (Session<JObject, byte[]> sessionBytesNew =
+                sessionFactory.GetSessionJson(partitionId))
             {
-                JObject decryptedPayload = appEncryptionBytesNew.Decrypt(dataRowRecord);
+                JObject decryptedPayload = sessionBytesNew.Decrypt(dataRowRecord);
                 Assert.Equal(payload, decryptedPayload);
             }
         }
@@ -104,11 +104,11 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private void JsonEncryptDecryptWithDifferentPayloads()
         {
             JObject otherPayload = PayloadGenerator.CreateDefaultRandomJsonPayload();
-            byte[] dataRowRecord1 = appEncryptionJson.Encrypt(payload);
-            byte[] dataRowRecord2 = appEncryptionJson.Encrypt(otherPayload);
+            byte[] dataRowRecord1 = sessionJson.Encrypt(payload);
+            byte[] dataRowRecord2 = sessionJson.Encrypt(otherPayload);
 
-            JObject decryptedPayload1 = appEncryptionJson.Decrypt(dataRowRecord1);
-            JObject decryptedPayload2 = appEncryptionJson.Decrypt(dataRowRecord2);
+            JObject decryptedPayload1 = sessionJson.Decrypt(dataRowRecord1);
+            JObject decryptedPayload2 = sessionJson.Decrypt(dataRowRecord2);
 
             Assert.Equal(payload, decryptedPayload1);
             Assert.Equal(otherPayload, decryptedPayload2);
@@ -120,9 +120,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             string key = "some_key";
             JObject otherPayload = PayloadGenerator.CreateDefaultRandomJsonPayload();
 
-            appEncryptionJson.Store(key, payload, PersistenceBytes);
-            appEncryptionJson.Store(key, otherPayload, PersistenceBytes);
-            Option<JObject> decryptedPayload = appEncryptionJson.Load(key, PersistenceBytes);
+            sessionJson.Store(key, payload, PersistenceBytes);
+            sessionJson.Store(key, otherPayload, PersistenceBytes);
+            Option<JObject> decryptedPayload = sessionJson.Load(key, PersistenceBytes);
 
             Assert.Equal(otherPayload, (JObject)decryptedPayload);
         }

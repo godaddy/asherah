@@ -3,7 +3,7 @@ using LanguageExt;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public interface IMetastorePersistence<T>
+    public interface IMetastore<T>
     {
         /// <summary>
         /// Lookup the keyId and created time and return its associated value, if any.
@@ -26,7 +26,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// </returns>
         ///
         /// <param name="keyId">the keyId to lookup</param>
-        Option<T> LoadLatestValue(string keyId);
+        Option<T> LoadLatest(string keyId);
 
         /// <summary>
         /// Stores the value using the specified keyId and created time.
