@@ -60,7 +60,7 @@ DbProviderFactory dbProviderFactory = ...;
 string connectionString = ...;
 
 // Build the ADO Metastore
-IMetastorePersistence<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory, connectionString).Build();
+IMetastore<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory, connectionString).Build();
 ```
 
 #### DynamoDB Metastore
@@ -70,13 +70,13 @@ IMetastorePersistence<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProv
 AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
-IMetastorePersistence<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
+IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```c#
-IMetastorePersistence<JObject> metastorePersistence = new InMemoryPersistenceImpl<JObject>();
+IMetastore<JObject> metastore = new InMemoryPersistenceImpl<JObject>();
 ```
 
 ### Define the Key Management Service
@@ -154,7 +154,7 @@ A session factory can now be built using the components we defined above.
 
 ```c#
 SessionFactory sessionFactory = SessionFactory.NewBuilder("some_product", "some_service")
-     .WithMetastorePersistence(metastorePersistence)
+     .WithMetastor(metastore)
      .WithCryptoPolicy(policy)
      .WithKeyManagementService(keyManagementService)
      .WithMetrics(metrics) // Optional

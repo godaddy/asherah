@@ -64,7 +64,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetAppEncryptionJson()
+        private void TestGetSessionJson()
         {
             Session<JObject, byte[]> sessionJson =
                 sessionFactory.GetSessionJson(TestPartitionId);
@@ -72,7 +72,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetAppEncryptionBytes()
+        private void TestGetSessionBytes()
         {
             Session<byte[], byte[]> sessionBytes =
                 sessionFactory.GetSessionBytes(TestPartitionId);
@@ -80,7 +80,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetAppEncryptionJsonAsJson()
+        private void TestGetSessionJsonAsJson()
         {
             Session<JObject, JObject> session =
                 sessionFactory.GetSessionJsonAsJson(TestPartitionId);
@@ -88,7 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetAppEncryptionBytesAsJson()
+        private void TestGetSessionBytesAsJson()
         {
             Session<byte[], JObject> session =
                 sessionFactory.GetSessionBytesAsJson(TestPartitionId);

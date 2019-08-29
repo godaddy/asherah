@@ -32,7 +32,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         public void ParameterizedTests(
             IEnvelopeEncryption<byte[]> envelopeEncryptionJson,
             Mock<IMetastore<JObject>> metastore,
-            KeyState cacheIK,
+            KeyState cacheIK,e
             KeyState metaIK,
             KeyState cacheSK,
             KeyState metaSK,
