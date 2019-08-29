@@ -100,7 +100,7 @@ String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordByt
 
 #### Store / Load
 
-This pattern uses a key-value/document storage model. An `AppEncryption` instance can accept a `Persistence`
+This pattern uses a key-value/document storage model. A `Session` can accept a `Persistence`
 implementation and hooks into its load and store calls.
 
 Example `HashMap`-backed `Persistence` implementation:

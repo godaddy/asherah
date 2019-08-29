@@ -62,7 +62,7 @@ interface BuildStep {
 }
 ```
 
-Cryptographic operations are performed using the methods provided in the `AppEncryption` interface.
+Cryptographic operations are performed using the methods provided in the `Session` interface.
 
 ```java
 // <P> The payload type being encrypted
