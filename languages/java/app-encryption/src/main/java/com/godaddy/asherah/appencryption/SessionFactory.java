@@ -2,6 +2,7 @@ package com.godaddy.asherah.appencryption;
 
 import java.time.Instant;
 
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,6 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
 import com.godaddy.asherah.crypto.CryptoPolicy;
@@ -29,7 +29,7 @@ public class SessionFactory implements SafeAutoCloseable {
 
   private final String productId;
   private final String systemId;
-  private final MetastorePersistence<JSONObject> metastorePersistence;
+  private final Metastore<JSONObject> metastore;
   private final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
@@ -38,13 +38,13 @@ public class SessionFactory implements SafeAutoCloseable {
   public SessionFactory(
       final String productId,
       final String systemId,
-      final MetastorePersistence<JSONObject> metastorePersistence,
+      final Metastore<JSONObject> metastore,
       final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory,
       final CryptoPolicy cryptoPolicy,
       final KeyManagementService keyManagementService) {
     this.productId = productId;
     this.systemId = systemId;
-    this.metastorePersistence = metastorePersistence;
+    this.metastore = metastore;
     this.secureCryptoKeyMapFactory = secureCryptoKeyMapFactory;
     this.systemKeyCache = secureCryptoKeyMapFactory.createSecureCryptoKeyMap();
     this.cryptoPolicy = cryptoPolicy;
@@ -83,12 +83,12 @@ public class SessionFactory implements SafeAutoCloseable {
     Partition partition = getPartition(partitionId);
     return new EnvelopeEncryptionJsonImpl(
       partition,
-        metastorePersistence,
-        systemKeyCache,
-        secureCryptoKeyMapFactory,
-        new BouncyAes256GcmCrypto(),
-        cryptoPolicy,
-        keyManagementService);
+      metastore,
+      systemKeyCache,
+      secureCryptoKeyMapFactory,
+      new BouncyAes256GcmCrypto(),
+      cryptoPolicy,
+      keyManagementService);
   }
 
   Partition getPartition(final String partitionId) {
@@ -114,7 +114,7 @@ public class SessionFactory implements SafeAutoCloseable {
     private final String productId;
     private final String systemId;
 
-    private MetastorePersistence<JSONObject> metastorePersistence;
+    private Metastore<JSONObject> metastore;
     private CryptoPolicy cryptoPolicy;
     private KeyManagementService keyManagementService;
     private boolean metricsEnabled = false;
@@ -125,14 +125,14 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     @Override
-    public CryptoPolicyStep withMemoryPersistence() {
-      this.metastorePersistence = new InMemoryMetastoreImpl<>();
+    public CryptoPolicyStep withInMemoryMetastore() {
+      this.metastore = new InMemoryMetastoreImpl<>();
       return this;
     }
 
     @Override
-    public CryptoPolicyStep withMetastorePersistence(final MetastorePersistence<JSONObject> persistence) {
-      this.metastorePersistence = persistence;
+    public CryptoPolicyStep withMetastore(final Metastore<JSONObject> persistence) {
+      this.metastore = persistence;
       return this;
     }
 
@@ -174,16 +174,16 @@ public class SessionFactory implements SafeAutoCloseable {
         Metrics.globalRegistry.config().meterFilter(MeterFilter.denyNameStartsWith(MetricsUtil.AEL_METRICS_PREFIX));
       }
 
-      return new SessionFactory(productId, systemId, metastorePersistence,
+      return new SessionFactory(productId, systemId, metastore,
           new SecureCryptoKeyMapFactory<>(cryptoPolicy), cryptoPolicy, keyManagementService);
     }
   }
 
   public interface MetastoreStep {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
-    CryptoPolicyStep withMemoryPersistence();
+    CryptoPolicyStep withInMemoryMetastore();
 
-    CryptoPolicyStep withMetastorePersistence(MetastorePersistence<JSONObject> persistence);
+    CryptoPolicyStep withMetastore(Metastore<JSONObject> persistence);
   }
 
   public interface CryptoPolicyStep {

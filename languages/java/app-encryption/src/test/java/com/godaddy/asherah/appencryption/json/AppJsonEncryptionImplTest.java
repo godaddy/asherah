@@ -11,7 +11,7 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.AdhocPersistence;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
 import com.godaddy.asherah.appencryption.testhelpers.dummy.DummyCryptoPolicy;
 import com.godaddy.asherah.appencryption.testhelpers.dummy.DummyKeyManagementService;
@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class AppJsonEncryptionImplTest {
   private HashMap<String, JSONObject> memoryPersistence;
   private Persistence<JSONObject> dataPersistence;
-  private MetastorePersistence<JSONObject> metastorePersistence;
+  private Metastore<JSONObject> metastore;
   private Partition partition;
   private KeyManagementService keyManagementService;
 
@@ -47,7 +47,7 @@ class AppJsonEncryptionImplTest {
     dataPersistence = new AdhocPersistence<>(key -> Optional.ofNullable(memoryPersistence.get(key)),
         (key, jsonObject) -> memoryPersistence.put(key, jsonObject));
 
-    metastorePersistence = new InMemoryMetastoreImpl<>();
+    metastore = new InMemoryMetastoreImpl<>();
 
     keyManagementService = new DummyKeyManagementService();
 
@@ -81,7 +81,7 @@ class AppJsonEncryptionImplTest {
       EnvelopeEncryption<JSONObject> envelopeEncryption =
           new EnvelopeEncryptionJsonImpl(
             partition,
-              metastorePersistence,
+            metastore,
               systemKeyCache,
               new SecureCryptoKeyMapFactory<Instant>(cryptoPolicy),
               aeadEnvelopeCrypto,

@@ -4,7 +4,7 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
@@ -29,7 +29,7 @@ import java.time.Instant;
 @ExtendWith(MockitoExtension.class)
 class SessionFactoryTest {
   @Mock
-  MetastorePersistence<JSONObject> metastorePersistence;
+  Metastore<JSONObject> metastore;
   @Mock
   SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   @Mock
@@ -52,7 +52,7 @@ class SessionFactoryTest {
     sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-        metastorePersistence,
+      metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);
@@ -63,7 +63,7 @@ class SessionFactoryTest {
     SessionFactory sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-        metastorePersistence,
+      metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);
@@ -132,7 +132,7 @@ class SessionFactoryTest {
         SessionFactory.newBuilder(testProductId, testSystemId);
     assertNotNull(metastoreStep);
 
-    SessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withMemoryPersistence();
+    SessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withInMemoryMetastore();
     assertNotNull(cryptoPolicyStep);
 
     SessionFactory.KeyManagementServiceStep keyManagementServiceStep =
@@ -153,9 +153,9 @@ class SessionFactoryTest {
         SessionFactory.newBuilder(testProductId, testSystemId);
     assertNotNull(metastoreStep);
 
-    MetastorePersistence<JSONObject> metastorePersistence = new InMemoryMetastoreImpl<>();
+    Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
     SessionFactory.CryptoPolicyStep cryptoPolicyStep =
-        metastoreStep.withMetastorePersistence(metastorePersistence);
+        metastoreStep.withMetastore(metastore);
     assertNotNull(cryptoPolicyStep);
 
     CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
@@ -175,7 +175,7 @@ class SessionFactoryTest {
   @Test
   void testBuilderPathWithMetricsDisabled() {
     SessionFactory.newBuilder(testProductId, testSystemId)
-        .withMemoryPersistence()
+        .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
         .build();
@@ -185,7 +185,7 @@ class SessionFactoryTest {
   @Test
   void testBuilderPathWithMetricsEnabled() {
     SessionFactory.newBuilder(testProductId, testSystemId)
-        .withMemoryPersistence()
+        .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
         .withMetricsEnabled()

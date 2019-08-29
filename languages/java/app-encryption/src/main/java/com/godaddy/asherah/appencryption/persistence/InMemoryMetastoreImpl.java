@@ -6,7 +6,7 @@ import java.util.SortedMap;
 
 import com.google.common.collect.TreeBasedTable;
 
-public class InMemoryMetastoreImpl<T> implements MetastorePersistence<T> {
+public class InMemoryMetastoreImpl<T> implements Metastore<T> {
   private final TreeBasedTable<String, Instant, T> table = TreeBasedTable.create();
 
   @Override

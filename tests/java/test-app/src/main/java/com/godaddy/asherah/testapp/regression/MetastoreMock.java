@@ -4,7 +4,7 @@ import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
 import com.godaddy.asherah.appencryption.envelope.KeyMeta;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
@@ -25,14 +25,14 @@ final class MetastoreMock {
 
   private MetastoreMock() { }
 
-  static MetastorePersistence<JSONObject> createMetastoreMock(final Partition partition,
+  static Metastore<JSONObject> createMetastoreMock(final Partition partition,
                                                               final KeyManagementService kms,
-                                                              final MetastorePersistence<JSONObject> metastorePersistence,
+                                                              final Metastore<JSONObject> metastore,
                                                               final KeyState metaIK,
                                                               final KeyState metaSK,
                                                               final CryptoKeyHolder cryptoKeyHolder) {
 
-    MetastorePersistence<JSONObject> memoryPersistenceSpy = spy(metastorePersistence);
+    Metastore<JSONObject> metaStoreSpy = spy(metastore);
     CryptoKey systemKey = cryptoKeyHolder.getSystemKey();
 
     if (metaSK != KeyState.EMPTY) {
@@ -46,7 +46,7 @@ final class MetastoreMock {
 
       EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(systemKey.getCreated(),
           null, kms.encryptKey(systemKey), systemKey.isRevoked());
-      memoryPersistenceSpy.store(partition.getSystemKeyId(), systemKeyRecord.getCreated(),
+      metaStoreSpy.store(partition.getSystemKeyId(), systemKeyRecord.getCreated(),
           systemKeyRecord.toJson());
     }
 
@@ -63,11 +63,11 @@ final class MetastoreMock {
       EnvelopeKeyRecord intermediateKeyRecord = new EnvelopeKeyRecord(intermediateKey.getCreated(),
           new KeyMeta(partition.getSystemKeyId(), systemKey.getCreated()),
           CRYPTO.encryptKey(intermediateKey, systemKey), intermediateKey.isRevoked());
-      memoryPersistenceSpy.store(partition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
+      metaStoreSpy.store(partition.getIntermediateKeyId(), intermediateKeyRecord.getCreated(),
           intermediateKeyRecord.toJson());
     }
 
-    reset(memoryPersistenceSpy);
-    return memoryPersistenceSpy;
+    reset(metaStoreSpy);
+    return metaStoreSpy;
   }
 }

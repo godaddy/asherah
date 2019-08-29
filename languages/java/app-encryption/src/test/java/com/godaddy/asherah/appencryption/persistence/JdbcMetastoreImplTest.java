@@ -218,11 +218,11 @@ class JdbcMetastoreImplTest {
 
   @Test
   void testPrimaryBuilderPath() {
-    JdbcMetastoreImpl.Builder jdbcMetastorePersistenceServicePrimaryBuilder =
+    JdbcMetastoreImpl.Builder jdbcMetastoreServicePrimaryBuilder =
         JdbcMetastoreImpl.newBuilder(dataSourceMock);
-    JdbcMetastoreImpl jdbcMetastorePersistenceServiceBuilder
-        = jdbcMetastorePersistenceServicePrimaryBuilder.build();
-    assertNotNull(jdbcMetastorePersistenceServiceBuilder);
+    JdbcMetastoreImpl jdbcMetastoreServiceBuilder
+        = jdbcMetastoreServicePrimaryBuilder.build();
+    assertNotNull(jdbcMetastoreServiceBuilder);
   }
 
 }

@@ -24,7 +24,7 @@ public final class SessionFactoryGenerator {
     }
 
     return SessionFactory.newBuilder(productId, systemId)
-        .withMetastorePersistence(TestSetup.getMetastorePersistence())
+        .withMetastore(TestSetup.getMetastore())
         .withNeverExpiredCryptoPolicy()
         .withKeyManagementService(TestSetup.getKeyManagementService())
         .withMetricsEnabled()

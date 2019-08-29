@@ -4,7 +4,7 @@ import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.crypto.CryptoPolicy;
@@ -33,7 +33,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final Timer decryptTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".drr.decrypt");
 
   private final Partition partition;
-  private final MetastorePersistence<JSONObject> metastorePersistence;
+  private final Metastore<JSONObject> metastore;
   private final SecureCryptoKeyMap<Instant> systemKeyCache; // note assumed being limited to 1 product/service id pair
   private final SecureCryptoKeyMap<Instant> intermediateKeyCache;
   private final AeadEnvelopeCrypto crypto;
@@ -41,12 +41,12 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final KeyManagementService keyManagementService;
 
   public EnvelopeEncryptionJsonImpl(final Partition partition,
-      final MetastorePersistence<JSONObject> metastorePersistence, final SecureCryptoKeyMap<Instant> systemKeyCache,
+      final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,
       final SecureCryptoKeyMapFactory<Instant> intermediateKeyCacheFactory, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
       final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService) {
 
     this.partition = partition;
-    this.metastorePersistence = metastorePersistence;
+    this.metastore = metastore;
     this.systemKeyCache = systemKeyCache;
     this.intermediateKeyCache = intermediateKeyCacheFactory.createSecureCryptoKeyMap();
     this.crypto = aeadEnvelopeCrypto;
@@ -289,7 +289,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
       logger.debug("attempting to store new IK {} for created {}",
           partition.getIntermediateKeyId(), newIntermediateKeyRecord.getCreated());
-      if (metastorePersistence.store(partition.getIntermediateKeyId(), newIntermediateKeyRecord.getCreated(),
+      if (metastore.store(partition.getIntermediateKeyId(), newIntermediateKeyRecord.getCreated(),
           newIntermediateKeyRecord.toJson())) {
         return intermediateKey;
       }
@@ -357,7 +357,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
       logger.debug("attempting to store new SK {} for created {}", partition.getSystemKeyId(),
           newSystemKeyRecord.getCreated());
-      if (metastorePersistence.store(partition.getSystemKeyId(), newSystemKeyRecord.getCreated(),
+      if (metastore.store(partition.getSystemKeyId(), newSystemKeyRecord.getCreated(),
           newSystemKeyRecord.toJson())) {
         return systemKey;
       }
@@ -436,7 +436,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
    */
   EnvelopeKeyRecord loadKeyRecord(final String keyId, final Instant created) {
     logger.debug("attempting to load key with keyId {} created {}", keyId, created);
-    return metastorePersistence.load(keyId, created)
+    return metastore.load(keyId, created)
         .map(Json::new)
         .map(EnvelopeKeyRecord::new)
         .orElseThrow(
@@ -452,7 +452,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
    */
   Optional<EnvelopeKeyRecord> loadLatestKeyRecord(final String keyId) {
     logger.debug("attempting to load latest key with keyId {}", keyId);
-    return metastorePersistence.loadLatest(keyId)
+    return metastore.loadLatest(keyId)
         .map(Json::new)
         .map(EnvelopeKeyRecord::new);
   }

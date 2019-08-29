@@ -3,7 +3,7 @@ package com.godaddy.asherah.appencryption.persistence;
 import java.time.Instant;
 import java.util.Optional;
 
-public interface MetastorePersistence<V> {
+public interface Metastore<V> {
 
   /**
    * Lookup the keyId and created time and return its associated value, if any.

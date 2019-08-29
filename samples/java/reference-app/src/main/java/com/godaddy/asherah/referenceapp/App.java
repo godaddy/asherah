@@ -11,6 +11,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServic
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.google.common.collect.ImmutableMap;
@@ -54,20 +54,20 @@ public final class App implements Callable<Void> {
   private static final int KEY_EXPIRATION_DAYS = 30;
   private static final int CACHE_CHECK_MINUTES = 30;
 
-  enum Metastore { MEMORY, JDBC, DYNAMODB }
+  enum MetastoreType { MEMORY, JDBC, DYNAMODB }
 
-  enum Kms { STATIC, AWS }
+  enum KmsType { STATIC, AWS }
 
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
       description = "Type of metastore persistence to use. Enum values: ${COMPLETION-CANDIDATES}")
-  private Metastore metastore;
+  private MetastoreType metastoreType;
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore persistence. Required for JDBC metastore.")
   private String jdbcUrl;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
-  private Kms kms;
+  private KmsType kmsType;
   @Option(names = "--preferred-region",
       description = "Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.")
   private String preferredRegion;
@@ -92,34 +92,34 @@ public final class App implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    MetastorePersistence<JSONObject> metastorePersistence;
-    if (metastore == Metastore.JDBC) {
+    Metastore<JSONObject> metastore;
+    if (this.metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
 
         // Setup JDBC persistence from command line argument using Hikari connection pooling
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
-        metastorePersistence = JdbcMetastoreImpl.newBuilder(dataSource).build();
+        metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
       }
       else {
         CommandLine.usage(this, System.out);
         return null;
       }
     }
-    else if (metastore == Metastore.DYNAMODB) {
+    else if (this.metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
 
-      metastorePersistence = DynamoDbMetastoreImpl.newBuilder().build();
+      metastore = DynamoDbMetastoreImpl.newBuilder().build();
     }
     else {
       logger.info("using in-memory metastore...");
 
-      metastorePersistence = new InMemoryMetastoreImpl<>();
+      metastore = new InMemoryMetastoreImpl<>();
     }
 
     KeyManagementService keyManagementService;
-    if (kms == Kms.AWS) {
+    if (kmsType == KmsType.AWS) {
       if (preferredRegion != null && regionMap != null) {
         logger.info("using AWS KMS...");
 
@@ -164,7 +164,7 @@ public final class App implements Callable<Void> {
     // We've split it out into multiple try blocks to underscore this point.
     try (SessionFactory sessionFactory = SessionFactory
         .newBuilder("productId", "reference_app")
-        .withMetastorePersistence(metastorePersistence)
+        .withMetastore(metastore)
         .withCryptoPolicy(cryptoPolicy)
         .withKeyManagementService(keyManagementService)
         .withMetricsEnabled()

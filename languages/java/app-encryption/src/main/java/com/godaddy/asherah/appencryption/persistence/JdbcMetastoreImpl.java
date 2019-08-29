@@ -22,7 +22,7 @@ import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 
 import javax.sql.DataSource;
 
-public class JdbcMetastoreImpl implements MetastorePersistence<JSONObject> {
+public class JdbcMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(JdbcMetastoreImpl.class);
 
   static final String LOAD_QUERY        = "SELECT key_record from encryption_key where id = ? and created = ?";

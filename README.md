@@ -62,9 +62,8 @@ use the `withXXX` setter methods to configure the session factory properties.
 Below is an example of a session factory that uses in-memory persistence and static key management.
 
 ```java
-SessionFactory sessionFactory = SessionFactory
-    .newBuilder("myservice", "sample_code")
-    .withMemoryPersistence() // in-memory metastore persistence only
+SessionFactory sessionFactory = SessionFactory.newBuilder("myservice", "sample_code")
+    .withInMemoryMetastore() // in-memory metastore persistence only
     .withNeverExpiredCryptoPolicy()
     .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!") // hard-coded/static master key
     .build());
@@ -96,7 +95,7 @@ String originalPayloadString = "mysupersecretpayload";
 byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
 // decrypt the payload
-String decryptedPayloadString = new String(sessionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
+String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
 ```
 
 #### Store / Load

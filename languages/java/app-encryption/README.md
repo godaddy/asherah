@@ -18,7 +18,7 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 ```java
 // Create a session factory. The builder steps used below are for testing only.
 try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
-    .withMemoryPersistence()
+    .withInMemoryMetastore()
     .withNeverExpiredCryptoPolicy()
     .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
     .build()) {
@@ -56,19 +56,19 @@ Asherah can connect to a relational database by accepting a JDBC DataSource for 
 DataSource dataSource = ...;
 
 // Build the JDBC Metastore
-MetastorePersistence jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
+Metastore jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 ```
 
 #### DynamoDB Metastore
 
 ```java
-MetastorePersistence dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().build();
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
 
 ```java
-MetastorePersistence<JSONObject> metastorePersistence = new InMemoryMetastoreImpl<>();
+Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
 ```
 
 ### Define the Key Management Service
@@ -146,7 +146,7 @@ A session factory can now be built using the components we defined above.
 
 ```java
 SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
-  .withMetastorePersistence(metastorePersistence)
+  .withMetastore(metastore)
   .withCryptoPolicy(policy)
   .withKeyManagementService(keyManagementService)
   .withMetricsEnabled() // optional
@@ -181,7 +181,7 @@ String originalPayloadString = "mysupersecretpayload";
 byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
 // decrypt the payload
-String decryptedPayloadString = new String(sessionBytes.decrypt(newBytes), StandardCharsets.UTF_8);
+String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
 ```
 
 #### Custom Persistence via Store/Load methods

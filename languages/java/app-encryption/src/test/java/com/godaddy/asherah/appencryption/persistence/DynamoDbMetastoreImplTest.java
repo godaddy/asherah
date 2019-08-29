@@ -216,10 +216,10 @@ class DynamoDbMetastoreImplTest {
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
-    DynamoDbMetastoreImpl.Builder dynamoDbMetastorePersistenceServicePrimaryBuilder =
+    DynamoDbMetastoreImpl.Builder dynamoDbMetastoreServicePrimaryBuilder =
         DynamoDbMetastoreImpl.newBuilder();
     DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
-        dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
+        dynamoDbMetastoreServicePrimaryBuilder.build();
     assertNotNull(dynamoDbMetastoreImpl);
   }
 

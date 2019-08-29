@@ -4,7 +4,7 @@ import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.envelope.EnvelopeEncryptResult;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 class EnvelopeEncryptionJsonImplTest {
 
   @Mock
-  MetastorePersistence<JSONObject> metastorePersistence;
+  Metastore<JSONObject> metastore;
   @Mock
   SecureCryptoKeyMap<Instant> systemKeyCache;
   @Mock
@@ -68,7 +68,7 @@ class EnvelopeEncryptionJsonImplTest {
   @BeforeEach
   void setUp() {
     when(intermediateKeyCacheFactory.createSecureCryptoKeyMap()).thenReturn(intermediateKeyCache);
-    envelopeEncryptionJson = spy(new EnvelopeEncryptionJsonImpl(partition, metastorePersistence, systemKeyCache,
+    envelopeEncryptionJson = spy(new EnvelopeEncryptionJsonImpl(partition, metastore, systemKeyCache,
         intermediateKeyCacheFactory, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
   }
 
@@ -571,13 +571,13 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -594,7 +594,7 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    doThrow(new AppEncryptionException("fake error")).when(metastorePersistence).store(any(), any(), any());
+    doThrow(new AppEncryptionException("fake error")).when(metastore).store(any(), any(), any());
 
     assertThrows(AppEncryptionException.class, () -> envelopeEncryptionJson.getLatestOrCreateIntermediateKey());
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
@@ -618,13 +618,13 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -644,7 +644,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -662,13 +662,13 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -690,13 +690,13 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -717,7 +717,7 @@ class EnvelopeEncryptionJsonImplTest {
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     // TODO Add verify for queue key rotation once implemented
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -739,14 +739,14 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     // TODO Add verify for queue key rotation once implemented
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -769,14 +769,14 @@ class EnvelopeEncryptionJsonImplTest {
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     // TODO Add verify for queue key rotation once implemented
     verify(aeadEnvelopeCrypto).encryptKey(intermediateCryptoKey, systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getIntermediateKeyId()), eq(ikInstant), any(JSONObject.class));
     verify(intermediateCryptoKey, never()).close();
   }
 
@@ -804,7 +804,7 @@ class EnvelopeEncryptionJsonImplTest {
         .when(envelopeEncryptionJson)
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
     doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).decryptKey(keyRecord, systemCryptoKey);
 
     CryptoKey actualIntermediateKey = envelopeEncryptionJson.getLatestOrCreateIntermediateKey();
@@ -832,7 +832,7 @@ class EnvelopeEncryptionJsonImplTest {
         .when(envelopeEncryptionJson)
         .withSystemKeyForWrite(any(Function.class));
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
 
     assertThrows(MetadataMissingException.class, () -> envelopeEncryptionJson.getLatestOrCreateIntermediateKey());
     verify(unusedCryptoKey).close();
@@ -853,7 +853,7 @@ class EnvelopeEncryptionJsonImplTest {
         .apply(systemCryptoKey))
         .when(envelopeEncryptionJson)
         .withSystemKeyForWrite(any(Function.class));
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
     when(aeadEnvelopeCrypto.encryptKey(any(), any())).thenReturn(new byte[]{0, 1, 2, 3});
 
     assertThrows(AppEncryptionException.class, () -> envelopeEncryptionJson.getLatestOrCreateIntermediateKey());
@@ -867,13 +867,13 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(systemCryptoKey);
     when(keyManagementService.encryptKey(systemCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
     verify(keyManagementService).encryptKey(systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getSystemKeyId()), eq(skInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getSystemKeyId()), eq(skInstant), any(JSONObject.class));
     verify(systemCryptoKey, never()).close();
   }
 
@@ -884,7 +884,7 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(systemCryptoKey);
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
     when(keyManagementService.encryptKey(systemCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
-    doThrow(new AppEncryptionException("fake error")).when(metastorePersistence).store(any(), any(), any());
+    doThrow(new AppEncryptionException("fake error")).when(metastore).store(any(), any(), any());
 
     assertThrows(AppEncryptionException.class, () -> envelopeEncryptionJson.getLatestOrCreateSystemKey());
     verify(envelopeEncryptionJson, never()).decryptKey(any(), any());
@@ -902,13 +902,13 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(systemCryptoKey);
     when(systemCryptoKey.getCreated()).thenReturn(skInstant);
     when(keyManagementService.encryptKey(systemCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(true);
+    when(metastore.store(any(), any(), any())).thenReturn(true);
 
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
     verify(keyManagementService, never()).decryptKey(any(), any(), anyBoolean());
     verify(keyManagementService).encryptKey(systemCryptoKey);
-    verify(metastorePersistence).store(eq(partition.getSystemKeyId()), eq(skInstant), any(JSONObject.class));
+    verify(metastore).store(eq(partition.getSystemKeyId()), eq(skInstant), any(JSONObject.class));
     verify(systemCryptoKey, never()).close();
   }
 
@@ -923,7 +923,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(systemCryptoKey, never()).close();
   }
 
@@ -936,7 +936,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(systemCryptoKey, never()).close();
   }
 
@@ -953,7 +953,7 @@ class EnvelopeEncryptionJsonImplTest {
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
     // TODO Add verify for queue key rotation once implemented
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(systemCryptoKey, never()).close();
   }
 
@@ -969,7 +969,7 @@ class EnvelopeEncryptionJsonImplTest {
     CryptoKey actualSystemKey = envelopeEncryptionJson.getLatestOrCreateSystemKey();
     assertEquals(systemCryptoKey, actualSystemKey);
     // TODO Add verify for queue key rotation once implemented
-    verify(metastorePersistence, never()).store(any(), any(), any());
+    verify(metastore, never()).store(any(), any(), any());
     verify(systemCryptoKey, never()).close();
   }
 
@@ -986,7 +986,7 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(unusedCryptoKey);
     when(keyManagementService.encryptKey(unusedCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
     when(unusedCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
     when(keyManagementService
         .decryptKey(keyRecord.getEncryptedKey(), keyRecord.getCreated(), keyRecord.isRevoked().get()))
         .thenReturn(systemCryptoKey);
@@ -1009,7 +1009,7 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(unusedCryptoKey);
     when(keyManagementService.encryptKey(unusedCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
     when(unusedCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
     when(keyManagementService
         .decryptKey(keyRecord.getEncryptedKey(), keyRecord.getCreated(), false))
         .thenReturn(systemCryptoKey);
@@ -1030,7 +1030,7 @@ class EnvelopeEncryptionJsonImplTest {
     when(aeadEnvelopeCrypto.generateKey(skInstant)).thenReturn(unusedCryptoKey);
     when(keyManagementService.encryptKey(unusedCryptoKey)).thenReturn(new byte[]{0, 1, 2, 3});
     when(unusedCryptoKey.getCreated()).thenReturn(skInstant);
-    when(metastorePersistence.store(any(), any(), any())).thenReturn(false);
+    when(metastore.store(any(), any(), any())).thenReturn(false);
 
     assertThrows(AppEncryptionException.class, () -> envelopeEncryptionJson.getLatestOrCreateSystemKey());
     verify(unusedCryptoKey).close();
@@ -1107,7 +1107,7 @@ class EnvelopeEncryptionJsonImplTest {
     EnvelopeKeyRecord envelopeKeyRecord =
         new EnvelopeKeyRecord(ikInstant, new KeyMeta("KeyId", skInstant), pretendKeyBytes, false);
 
-    when(metastorePersistence.load(any(), any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
+    when(metastore.load(any(), any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
 
     EnvelopeKeyRecord returnedEnvelopeKeyRecord = envelopeEncryptionJson.loadKeyRecord("empty", ikInstant);
     assertEquals(envelopeKeyRecord.getCreated(), returnedEnvelopeKeyRecord.getCreated());
@@ -1117,7 +1117,7 @@ class EnvelopeEncryptionJsonImplTest {
 
   @Test
   void testLoadKeyRecordMissingItem() {
-    when(metastorePersistence.load(any(), any())).thenReturn(Optional.empty());
+    when(metastore.load(any(), any())).thenReturn(Optional.empty());
 
     assertThrows(MetadataMissingException.class, () -> {
       envelopeEncryptionJson.loadKeyRecord("empty", Instant.now());
@@ -1130,7 +1130,7 @@ class EnvelopeEncryptionJsonImplTest {
     EnvelopeKeyRecord envelopeKeyRecord =
         new EnvelopeKeyRecord(ikInstant, new KeyMeta("KeyId", skInstant), pretendKeyBytes, false);
 
-    when(metastorePersistence.loadLatest(any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
+    when(metastore.loadLatest(any())).thenReturn(Optional.ofNullable(envelopeKeyRecord.toJson()));
 
     Optional<EnvelopeKeyRecord> returnedOptionalEnvelopeKeyRecord = envelopeEncryptionJson.loadLatestKeyRecord("empty");
     assertTrue(returnedOptionalEnvelopeKeyRecord.isPresent());
@@ -1141,7 +1141,7 @@ class EnvelopeEncryptionJsonImplTest {
 
   @Test
   void testLoadLatestKeyRecordEmptyResult() {
-    when(metastorePersistence.loadLatest(any())).thenReturn(Optional.empty());
+    when(metastore.loadLatest(any())).thenReturn(Optional.empty());
 
     assertFalse(envelopeEncryptionJson.loadLatestKeyRecord("empty").isPresent());
   }

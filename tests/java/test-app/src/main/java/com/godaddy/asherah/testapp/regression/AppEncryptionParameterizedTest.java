@@ -7,7 +7,7 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
@@ -56,7 +56,7 @@ class AppEncryptionParameterizedTest {
   @MethodSource("generateScenarios")
   void parameterizedTests(
       final EnvelopeEncryption<byte[]> envelopeEncryptionJson,
-      final MetastorePersistence<JSONObject> metastorePersistence,
+      final Metastore<JSONObject> metastore,
       final KeyState cacheIK, final KeyState metaIK,
       final KeyState cacheSK, final KeyState metaSK,
       final Partition partition) {
@@ -72,75 +72,75 @@ class AppEncryptionParameterizedTest {
       byte[] encryptedPayload = sessionJsonImpl.encrypt(payload);
 
       assertNotNull(encryptedPayload);
-      verifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, partition);
+      verifyEncryptFlow(metastore, encryptMetastoreInteractions, partition);
 
-      reset(metastorePersistence);
+      reset(metastore);
       JSONObject decryptedPayload = sessionJsonImpl.decrypt(encryptedPayload);
 
-      verifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, partition);
+      verifyDecryptFlow(metastore, decryptMetastoreInteractions, partition);
       assertTrue(payload.similar(decryptedPayload));
     }
   }
 
-  private void verifyEncryptFlow(final MetastorePersistence<JSONObject> metastorePersistence,
+  private void verifyEncryptFlow(final Metastore<JSONObject> metastore,
       final EncryptMetastoreInteractions metastoreInteractions, final Partition partition) {
 
     // If IK is stored to metastore
     if (metastoreInteractions.shouldStoreIK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .store(eq(partition.getIntermediateKeyId()), any(Instant.class), any(JSONObject.class));
     }
     // If SK is stored to metastore
     if (metastoreInteractions.shouldStoreSK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .store(eq(partition.getSystemKeyId()), any(Instant.class), any(JSONObject.class));
     }
     // If neither IK nor SK is stored
     if (!metastoreInteractions.shouldStoreIK() && !metastoreInteractions.shouldStoreSK()) {
-      verify(metastorePersistence,
+      verify(metastore,
           never()).store(any(String.class), any(Instant.class), any(JSONObject.class));
     }
 
     // NOTE: We do not read IK from the metastore in case of Encrypt
     // If SK is loaded from metastore
     if (metastoreInteractions.shouldLoadSK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .load(eq(partition.getSystemKeyId()), any(Instant.class));
     }
     else {
-      verify(metastorePersistence,
+      verify(metastore,
           never()).load(anyString(), any(Instant.class));
     }
 
     // If latest IK is loaded from metastore
     if (metastoreInteractions.shouldLoadLatestIK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .loadLatest(eq(partition.getIntermediateKeyId()));
     }
     // If latest SK is loaded from metastore
     if (metastoreInteractions.shouldLoadLatestSK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .loadLatest(eq(partition.getSystemKeyId()));
     }
     // If neither latest IK or SK is loaded from metastore
     if (!metastoreInteractions.shouldLoadLatestSK() && !metastoreInteractions.shouldLoadLatestIK()) {
-      verify(metastorePersistence,
+      verify(metastore,
           never()).loadLatest(any(String.class));
     }
   }
 
-  private void verifyDecryptFlow(final MetastorePersistence<JSONObject> metastorePersistence,
+  private void verifyDecryptFlow(final Metastore<JSONObject> metastore,
       final DecryptMetastoreInteractions metastoreInteractions, final Partition partition) {
 
     // If IK is loaded from metastore
     if (metastoreInteractions.shouldLoadIK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .load(eq(partition.getIntermediateKeyId()), any(Instant.class));
     }
 
     // If SK is loaded from metastore
     if (metastoreInteractions.shouldLoadSK()) {
-      verify(metastorePersistence)
+      verify(metastore)
           .load(eq(partition.getSystemKeyId()), any(Instant.class));
     }
   }
@@ -176,8 +176,8 @@ class AppEncryptionParameterizedTest {
 
     CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.generateIKSK();
 
-    MetastorePersistence<JSONObject> metastorePersistence = MetastoreMock.createMetastoreMock(partition, kms,
-        TestSetup.getMetastorePersistence(), metaIK, metaSK, cryptoKeyHolder);
+    Metastore<JSONObject> metastore = MetastoreMock.createMetastoreMock(partition, kms,
+        TestSetup.getMetastore(), metaIK, metaSK, cryptoKeyHolder);
 
     CacheMock cacheMock = CacheMock.createCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 
@@ -193,14 +193,14 @@ class AppEncryptionParameterizedTest {
     SecureCryptoKeyMap<Instant> systemKeyCache = cacheMock.getSystemKeyCache();
 
     EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
-        partition, metastorePersistence, systemKeyCache,
+        partition, metastore, systemKeyCache,
         new FakeSecureCryptoKeyMapFactory<>(intermediateKeyCache), new BouncyAes256GcmCrypto(),
         cryptoPolicy, kms
     );
 
     EnvelopeEncryption<byte[]> envelopeEncryptionByteImpl = new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
 
-    return Arguments.of(envelopeEncryptionByteImpl, metastorePersistence,
+    return Arguments.of(envelopeEncryptionByteImpl, metastore,
         cacheIK, metaIK, cacheSK, metaSK, partition);
   }
 }

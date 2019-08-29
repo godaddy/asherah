@@ -27,7 +27,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DynamoDbMetastoreImpl implements MetastorePersistence<JSONObject> {
+public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
   static final String TABLE_NAME = "EncryptionKey";
