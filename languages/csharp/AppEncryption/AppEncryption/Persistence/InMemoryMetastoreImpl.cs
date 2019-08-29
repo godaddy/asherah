@@ -6,7 +6,7 @@ using LanguageExt;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class InMemoryMetastoreImpl<T> : IMetastorePersistence<T>
+    public class InMemoryMetastoreImpl<T> : IMetastore<T>
     {
         private readonly DataTable dataTable;
 

@@ -18,7 +18,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class DynamoDbMetastoreImpl : IMetastorePersistence<JObject>
+    public class DynamoDbMetastoreImpl : IMetastore<JObject>
     {
         internal const string TableName = "EncryptionKey";
         internal const string PartitionKey = "Id";

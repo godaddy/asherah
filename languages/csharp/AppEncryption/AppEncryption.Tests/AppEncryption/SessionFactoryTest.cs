@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestProductId = "test_product_id";
         private const string TestMasterKey = "test_master_key";
 
-        private readonly Mock<IMetastorePersistence<JObject>> metastorePersistenceMock;
+        private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
         private readonly Mock<KeyManagementService> keyManagementServiceMock;
         private readonly Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>> secureCryptoKeyDictionaryFactoryMock;
@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
         public SessionFactoryTest()
         {
-            metastorePersistenceMock = new Mock<IMetastorePersistence<JObject>>();
+            metastoreMock = new Mock<IMetastore<JObject>>();
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
             secureCryptoKeyDictionaryFactoryMock =
@@ -43,7 +43,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             sessionFactory = new SessionFactory(
                 TestProductId,
                 TestSystemId,
-                metastorePersistenceMock.Object,
+                metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
@@ -55,7 +55,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             SessionFactory sessionFactory = new SessionFactory(
                 TestProductId,
                 TestSystemId,
-                metastorePersistenceMock.Object,
+                metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
@@ -140,7 +140,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 SessionFactory.NewBuilder(TestProductId, TestSystemId);
             Assert.NotNull(metastoreStep);
 
-            SessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithMemoryPersistence();
+            SessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithInMemoryMetastore();
             Assert.NotNull(cryptoPolicyStep);
 
             SessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
@@ -162,9 +162,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 SessionFactory.NewBuilder(TestProductId, TestSystemId);
             Assert.NotNull(metastoreStep);
 
-            IMetastorePersistence<JObject> metastorePersistence = new InMemoryMetastoreImpl<JObject>();
+            IMetastore<JObject> metastore = new InMemoryMetastoreImpl<JObject>();
             SessionFactory.ICryptoPolicyStep cryptoPolicyStep =
-                metastoreStep.WithMetaStorePersistence(metastorePersistence);
+                metastoreStep.WithMetastore(metastore);
             Assert.NotNull(cryptoPolicyStep);
 
             CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
@@ -185,7 +185,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestBuilderPathWithMetricsDisabled()
         {
             SessionFactory.NewBuilder(TestProductId, TestSystemId)
-                .WithMemoryPersistence()
+                .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)
                 .Build();
@@ -201,7 +201,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         {
             IMetrics metrics = new MetricsBuilder().Build();
             SessionFactory.NewBuilder(TestProductId, TestSystemId)
-                .WithMemoryPersistence()
+                .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)
                 .WithMetrics(metrics)

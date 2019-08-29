@@ -94,7 +94,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
                 using (SessionFactory sessionFactory =
                     SessionFactoryGenerator.CreateDefaultSessionFactory(
                         configFixture.KeyManagementService,
-                        configFixture.MetastorePersistence))
+                        configFixture.Metastore))
                 {
                     using (Session<JObject, byte[]> session = sessionFactory.GetSessionJson(partitionId))
                     {

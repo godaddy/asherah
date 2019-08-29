@@ -23,7 +23,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             payload = PayloadGenerator.CreateDefaultRandomBytePayload();
             sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
                 configFixture.KeyManagementService,
-                configFixture.MetastorePersistence);
+                configFixture.Metastore);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             sessionBytes = sessionFactory.GetSessionBytes(partitionId);
         }

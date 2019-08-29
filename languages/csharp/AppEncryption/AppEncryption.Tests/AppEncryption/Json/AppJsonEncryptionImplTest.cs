@@ -17,7 +17,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
     [Collection("Logger Fixture collection")]
     public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>
     {
-        private readonly IMetastorePersistence<JObject> metastorePersistence;
+        private readonly IMetastore<JObject> metastore;
         private readonly Persistence<JObject> dataPersistence;
         private readonly Partition partition;
         private readonly KeyManagementService keyManagementService;
@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                 key => memoryPersistence.TryGetValue(key, out JObject result) ? result : Option<JObject>.None,
                 (key, jsonObject) => memoryPersistence.Add(key, jsonObject));
 
-            metastorePersistence = new InMemoryMetastoreImpl<JObject>();
+            metastore = new InMemoryMetastoreImpl<JObject>();
             keyManagementService = new DummyKeyManagementService();
 
             AeadEnvelopeCrypto aeadEnvelopeCrypto = new BouncyAes256GcmCrypto();
@@ -64,7 +64,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             {
                 IEnvelopeEncryption<JObject> envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
                     partition,
-                    metastorePersistence,
+                    metastore,
                     secureCryptoKeyDictionary,
                     new SecureCryptoKeyDictionaryFactory<DateTimeOffset>(cryptoPolicy),
                     aeadEnvelopeCrypto,

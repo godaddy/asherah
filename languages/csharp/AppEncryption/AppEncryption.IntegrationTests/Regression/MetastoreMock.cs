@@ -15,25 +15,25 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
     {
         private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
 
-        internal static Mock<IMetastorePersistence<JObject>> CreateMetastoreMock(
+        internal static Mock<IMetastore<JObject>> CreateMetastoreMock(
             Partition partition,
             KeyManagementService kms,
             KeyState metaIK,
             KeyState metaSK,
             CryptoKeyHolder cryptoKeyHolder,
-            IMetastorePersistence<JObject> metaStore)
+            IMetastore<JObject> metaStore)
         {
             CryptoKey systemKey = cryptoKeyHolder.SystemKey;
 
-            Mock<IMetastorePersistence<JObject>> metaStorePersistenceSpy = new Mock<IMetastorePersistence<JObject>>();
+            Mock<IMetastore<JObject>> metaStoreSpy = new Mock<IMetastore<JObject>>();
 
-            metaStorePersistenceSpy
+            metaStoreSpy
                 .Setup(x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns<string, DateTimeOffset>(metaStore.Load);
-            metaStorePersistenceSpy
+            metaStoreSpy
                 .Setup(x => x.LoadLatest(It.IsAny<string>()))
                 .Returns<string>(metaStore.LoadLatest);
-            metaStorePersistenceSpy
+            metaStoreSpy
                 .Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
                 .Returns<string, DateTimeOffset, JObject>(metaStore.Store);
 
@@ -77,7 +77,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     intermediateKeyRecord.ToJson());
             }
 
-            return metaStorePersistenceSpy;
+            return metaStoreSpy;
         }
     }
 }

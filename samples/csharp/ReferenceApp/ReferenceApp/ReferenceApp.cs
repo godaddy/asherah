@@ -58,7 +58,7 @@ namespace GoDaddy.Asherah.ReferenceApp
 
         private static async void App(Options options)
         {
-            IMetastorePersistence<JObject> metastorePersistence = null;
+            IMetastore<JObject> metastore = null;
             KeyManagementService keyManagementService = null;
 
             if (options.MetaStore == MetaStore.ADO)
@@ -66,7 +66,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 if (options.AdoConnectionString != null)
                 {
                     logger.LogInformation("using ADO-based metastore...");
-                    metastorePersistence = AdoMetastoreImpl
+                    metastore = AdoMetastoreImpl
                         .NewBuilder(MySqlClientFactory.Instance, options.AdoConnectionString)
                         .Build();
                 }
@@ -81,12 +81,12 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
-                metastorePersistence = DynamoDbMetastoreImpl.NewBuilder().Build();
+                metastore = DynamoDbMetastoreImpl.NewBuilder().Build();
             }
             else
             {
                 logger.LogInformation("using in-memory metastore...");
-                metastorePersistence = new InMemoryMetastoreImpl<JObject>();
+                metastore = new InMemoryMetastoreImpl<JObject>();
             }
 
             if (options.Kms == Kms.AWS)
@@ -140,7 +140,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             // We've split it out into multiple using blocks to underscore this point.
             using (SessionFactory sessionFactory = SessionFactory
                 .NewBuilder("productId", "reference_app")
-                .WithMetaStorePersistence(metastorePersistence)
+                .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)
                 .WithMetrics(metrics)

@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         [ClassData(typeof(AppEncryptionParameterizedTestData))]
         public void ParameterizedTests(
             IEnvelopeEncryption<byte[]> envelopeEncryptionJson,
-            Mock<IMetastorePersistence<JObject>> metastorePersistence,
+            Mock<IMetastore<JObject>> metastore,
             KeyState cacheIK,
             KeyState metaIK,
             KeyState cacheSK,
@@ -50,46 +50,46 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 byte[] encryptedPayload = sessionJsonImpl.Encrypt(payload);
 
                 Assert.NotNull(encryptedPayload);
-                VerifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, partition);
+                VerifyEncryptFlow(metastore, encryptMetastoreInteractions, partition);
 
-                metastorePersistence.Invocations.Clear();
+                metastore.Invocations.Clear();
                 JObject decryptedPayload = sessionJsonImpl.Decrypt(encryptedPayload);
 
-                VerifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, partition);
+                VerifyDecryptFlow(metastore, decryptMetastoreInteractions, partition);
                 Assert.True(JToken.DeepEquals(payload, decryptedPayload));
             }
         }
 
         private void VerifyDecryptFlow(
-            Mock<IMetastorePersistence<JObject>> metastorePersistence,
+            Mock<IMetastore<JObject>> metastore,
             DecryptMetastoreInteractions metastoreInteractions,
             Partition partition)
         {
             // If IK is loaded from metastore
             if (metastoreInteractions.ShouldLoadIK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Load(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>()), Times.Once);
             }
 
             // If SK is loaded from metastore
             if (metastoreInteractions.ShouldLoadSK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Load(partition.SystemKeyId, It.IsAny<DateTimeOffset>()),
                     Times.Once);
             }
         }
 
         private void VerifyEncryptFlow(
-            Mock<IMetastorePersistence<JObject>> metastorePersistence,
+            Mock<IMetastore<JObject>> metastore,
             EncryptMetastoreInteractions metastoreInteractions,
             Partition partition)
         {
             // If IK is stored to metastore
             if (metastoreInteractions.ShouldStoreIK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Store(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
                     Times.Once);
             }
@@ -97,7 +97,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If SK is stored to metastore
             if (metastoreInteractions.ShouldStoreSK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Store(partition.SystemKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
                     Times.Once);
             }
@@ -105,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If neither IK nor SK is stored
             if (!metastoreInteractions.ShouldStoreIK() && !metastoreInteractions.ShouldStoreSK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
                     Times.Never);
             }
@@ -114,13 +114,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If SK is loaded from metastore
             if (metastoreInteractions.ShouldLoadSK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Load(partition.SystemKeyId, It.IsAny<DateTimeOffset>()),
                     Times.Once);
             }
             else
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()),
                     Times.Never);
             }
@@ -128,7 +128,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If latest IK is loaded from metastore
             if (metastoreInteractions.ShouldLoadLatestIK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.LoadLatest(partition.IntermediateKeyId),
                     Times.Once);
             }
@@ -136,7 +136,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If latest SK is loaded from metastore
             if (metastoreInteractions.ShouldLoadLatestSK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.LoadLatest(partition.SystemKeyId),
                     Times.Once);
             }
@@ -144,7 +144,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If neither latest IK or SK is loaded from metastore
             if (!metastoreInteractions.ShouldLoadLatestSK() && !metastoreInteractions.ShouldLoadLatestIK())
             {
-                metastorePersistence.Verify(
+                metastore.Verify(
                     x => x.LoadLatest(It.IsAny<string>()),
                     Times.Never);
             }
@@ -199,8 +199,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
 
-                Mock<IMetastorePersistence<JObject>> metastorePersistence = MetastoreMock.CreateMetastoreMock(
-                    partition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.MetastorePersistence);
+                Mock<IMetastore<JObject>> metastoreMock = MetastoreMock.CreateMetastoreMock(
+                    partition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.Metastore);
 
                 CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 
@@ -217,7 +217,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
                     partition,
-                    metastorePersistence.Object,
+                    metastoreMock.Object,
                     systemKeyCache,
                     new FakeSecureCryptoKeyDictionaryFactory<DateTimeOffset>(intermediateKeyCache),
                     new BouncyAes256GcmCrypto(),
@@ -229,7 +229,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 return new object[]
                 {
-                    envelopeEncryptionByteImpl, metastorePersistence, cacheIK, metaIK, cacheSK, metaSK,
+                    envelopeEncryptionByteImpl, metastoreMock, cacheIK, metaIK, cacheSK, metaSK,
                     partition
                 };
             }

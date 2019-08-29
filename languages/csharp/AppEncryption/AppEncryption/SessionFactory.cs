@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         private readonly string productId;
         private readonly string systemId;
-        private readonly IMetastorePersistence<JObject> metastorePersistence;
+        private readonly IMetastore<JObject> metastore;
         private readonly SecureCryptoKeyDictionaryFactory<DateTimeOffset> secureCryptoKeyDictionaryFactory;
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
         private readonly CryptoPolicy cryptoPolicy;
@@ -28,14 +28,14 @@ namespace GoDaddy.Asherah.AppEncryption
         public SessionFactory(
             string productId,
             string systemId,
-            IMetastorePersistence<JObject> metastorePersistence,
+            IMetastore<JObject> metastore,
             SecureCryptoKeyDictionaryFactory<DateTimeOffset> secureCryptoKeyDictionaryFactory,
             CryptoPolicy cryptoPolicy,
             KeyManagementService keyManagementService)
         {
             this.productId = productId;
             this.systemId = systemId;
-            this.metastorePersistence = metastorePersistence;
+            this.metastore = metastore;
             this.secureCryptoKeyDictionaryFactory = secureCryptoKeyDictionaryFactory;
             systemKeyCache = secureCryptoKeyDictionaryFactory.CreateSecureCryptoKeyDictionary();
             this.cryptoPolicy = cryptoPolicy;
@@ -45,9 +45,9 @@ namespace GoDaddy.Asherah.AppEncryption
         public interface IMetastoreStep
         {
             // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
-            ICryptoPolicyStep WithMemoryPersistence();
+            ICryptoPolicyStep WithInMemoryMetastore();
 
-            ICryptoPolicyStep WithMetaStorePersistence(IMetastorePersistence<JObject> persistence);
+            ICryptoPolicyStep WithMetastore(IMetastore<JObject> persistence);
         }
 
         public interface ICryptoPolicyStep
@@ -134,7 +134,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
             return new EnvelopeEncryptionJsonImpl(
                 partition,
-                metastorePersistence,
+                metastore,
                 systemKeyCache,
                 secureCryptoKeyDictionaryFactory,
                 new BouncyAes256GcmCrypto(),
@@ -147,7 +147,7 @@ namespace GoDaddy.Asherah.AppEncryption
             private readonly string productId;
             private readonly string systemId;
 
-            private IMetastorePersistence<JObject> metastorePersistence;
+            private IMetastore<JObject> metastore;
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
             private IMetrics metrics;
@@ -158,15 +158,15 @@ namespace GoDaddy.Asherah.AppEncryption
                 this.systemId = systemId;
             }
 
-            public ICryptoPolicyStep WithMemoryPersistence()
+            public ICryptoPolicyStep WithInMemoryMetastore()
             {
-                metastorePersistence = new InMemoryMetastoreImpl<JObject>();
+                metastore = new InMemoryMetastoreImpl<JObject>();
                 return this;
             }
 
-            public ICryptoPolicyStep WithMetaStorePersistence(IMetastorePersistence<JObject> persistence)
+            public ICryptoPolicyStep WithMetastore(IMetastore<JObject> persistence)
             {
-                metastorePersistence = persistence;
+                metastore = persistence;
                 return this;
             }
 
@@ -215,7 +215,7 @@ namespace GoDaddy.Asherah.AppEncryption
                 return new SessionFactory(
                     productId,
                     systemId,
-                    metastorePersistence,
+                    metastore,
                     new SecureCryptoKeyDictionaryFactory<DateTimeOffset>(cryptoPolicy),
                     cryptoPolicy,
                     keyManagementService);

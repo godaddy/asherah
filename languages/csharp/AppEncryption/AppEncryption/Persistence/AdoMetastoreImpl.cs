@@ -15,7 +15,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
-    public class AdoMetastoreImpl : IMetastorePersistence<JObject>
+    public class AdoMetastoreImpl : IMetastore<JObject>
     {
         internal const string Created = "created";
         internal const string Id = "id";

@@ -26,7 +26,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             payload = PayloadGenerator.CreateDefaultRandomJsonPayload();
             sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
                 configFixture.KeyManagementService,
-                configFixture.MetastorePersistence);
+                configFixture.Metastore);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             sessionJson = sessionFactory.GetSessionJson(partitionId);
         }

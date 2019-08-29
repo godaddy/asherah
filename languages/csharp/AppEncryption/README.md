@@ -127,8 +127,9 @@ Asherah's C# implementation uses [App.Metrics](https://www.app-metrics.io/) for 
 If metrics are left disabled, we simply create and use an `IMetrics`instance whose 
 [Enabled flag](https://www.app-metrics.io/getting-started/fundamentals/configuration/) is disabled.
 
-To enable metrics generation, simply pass in an existing `IMetrics` instance to the final optional builder step when 
-creation an `AppEncryptionSessionFactory`.
+To enable metrics generation, simply pass in an existing `IMetrics`
+instance to the final optional builder step when creating a
+`SessionFactory`.
 
 The following metrics are available:
 - *ael.drr.decrypt:* Total time spent on all operations that were needed to decrypt.

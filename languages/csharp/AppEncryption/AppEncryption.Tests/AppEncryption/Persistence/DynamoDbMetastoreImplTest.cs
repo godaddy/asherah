@@ -232,10 +232,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 //        private void TestPrimaryBuilderPath()
 //        {
 //            AWSConfigs.AWSRegion = "us-west-2";
-//            Builder dynamoDbMetastorePersistenceServicePrimaryBuilder = NewBuilder();
-//            DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
-//                dynamoDbMetastorePersistenceServicePrimaryBuilder.Build();
-//            Assert.NotNull(dynamoDbMetastorePersistenceImpl);
+//            Builder dynamoDbMetastoreServicePrimaryBuilder = NewBuilder();
+//            DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
+//                dynamoDbMetastoreServicePrimaryBuilder.Build();
+//            Assert.NotNull(dynamoDbMetastoreImpl);
 //        }
     }
 }

@@ -270,10 +270,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestPrimaryBuilderPath()
         {
-            AdoMetastoreImpl.Builder adoMetastorePersistenceServicePrimaryBuilder =
+            AdoMetastoreImpl.Builder adoMetastoreServicePrimaryBuilder =
                 NewBuilder(dbProviderFactory, dbConnection.ConnectionString);
             AdoMetastoreImpl adoMetastoreServiceBuilder =
-                adoMetastorePersistenceServicePrimaryBuilder.Build();
+                adoMetastoreServicePrimaryBuilder.Build();
             Assert.NotNull(adoMetastoreServiceBuilder);
         }
 
