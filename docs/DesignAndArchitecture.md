@@ -56,7 +56,7 @@ Data structures:
 High-level components:
 * **KeyManagementService**
     * Represents a backing HSM or KMS implementation
-* **MetastorePersistence (aka Metastore or Metadata Persistence)**
+* **Metastore (aka Metadata Persistence)**
     * Represents a SDK-managed datastore implementation used to store SK and IK EKRs
 * **CryptoPolicy**
     * Defines the policy used to manage internal behavior of the library, such as when to expire keys

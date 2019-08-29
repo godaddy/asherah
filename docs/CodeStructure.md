@@ -42,7 +42,7 @@ class SessionFactory {
 }
  
 interface MetastoreStep {
-  CryptoPolicyStep withMetastorePersistence(MetastorePersistence<JSONObject> persistence);
+  CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
 }
 
 interface CryptoPolicyStep {
@@ -119,7 +119,7 @@ Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md)
 
 ```java
 // Defines the backing metastore
-interface MetastorePersistence<V> {
+interface Metastore<V> {
   Optional<V> load(String keyId, Instant created);
   Optional<V> loadLatest(String keyId);
 
