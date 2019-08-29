@@ -1,9 +1,9 @@
 package com.godaddy.asherah.testapp.utils;
 
-import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.JdbcMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MemoryPersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.testapp.configuration.ServerConfiguration;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -18,7 +18,7 @@ public final class MetastoreFactory {
 
   }
 
-  public static MetastorePersistence<JSONObject> createMetastore(final ServerConfiguration configuration,
+  public static Metastore<JSONObject> createMetastore(final ServerConfiguration configuration,
                                                                  final String metaStore) {
     if (metaStore.equalsIgnoreCase(METASTORE_JDBC)) {
       HikariDataSource dataSource = new HikariDataSource();
@@ -26,13 +26,13 @@ public final class MetastoreFactory {
       dataSource.setUsername(configuration.getMetaStoreJdbcUserName());
       dataSource.setPassword(configuration.getMetaStoreJdbcPassword());
       dataSource.setMaximumPoolSize(configuration.getMetaStoreJdbcConnectionPoolSize());
-      return JdbcMetastorePersistenceImpl.newBuilder(dataSource).build();
+      return JdbcMetastoreImpl.newBuilder(dataSource).build();
     }
     else if (metaStore.equalsIgnoreCase(METASTORE_DYNAMODB)) {
-      return DynamoDbMetastorePersistenceImpl.newBuilder().build();
+      return DynamoDbMetastoreImpl.newBuilder().build();
     }
     else {
-      return new MemoryPersistenceImpl<>();
+      return new InMemoryMetastoreImpl<>();
     }
 
   }

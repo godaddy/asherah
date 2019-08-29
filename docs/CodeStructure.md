@@ -30,19 +30,19 @@ implementation
 The below interfaces implement the session factory using the step builder pattern.
 
 ```java
-class AppEncryptionSessionFactory {
+class SessionFactory {
   static MetastoreStep newBuilder(String productId, String systemId);
   
-  AppEncryption<JSONObject, byte[]> getAppEncryptionJson(String partitionId);
-  AppEncryption<byte[], byte[]> getAppEncryptionBytes(String partitionId);
-  AppEncryption<JSONObject, JSONObject> getAppEncryptionJsonAsJson(String partitionId);
-  AppEncryption<byte[], JSONObject> getAppEncryptionBytesAsJson(String partitionId);
+  Session<JSONObject, byte[]> getSessionJson(String partitionId);
+  Session<byte[], byte[]> getSessionBytes(String partitionId);
+  Session<JSONObject, JSONObject> getSessionJsonAsJson(String partitionId);
+  Session<byte[], JSONObject> getSessionBytesAsJson(String partitionId);
   
   void close();
 }
  
 interface MetastoreStep {
-  CryptoPolicyStep withMetastorePersistence(MetastorePersistence<JSONObject> persistence);
+  CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
 }
 
 interface CryptoPolicyStep {
@@ -58,16 +58,16 @@ interface BuildStep {
   BuildStep withMetricsEnabled();
   // Additional optional steps can be added here
   
-  AppEncryptionSessionFactory build();
+  SessionFactory build();
 }
 ```
 
-Cryptographic operations are performed using the methods provided in the `AppEncryption` interface.
+Cryptographic operations are performed using the methods provided in the `Session` interface.
 
 ```java
 // <P> The payload type being encrypted
 // <D> The Data Row Record type
-interface AppEncryption<P, D> {
+interface Session<P, D> {
   P decrypt(D dataRowRecord);
   D encrypt(P payload);
 
@@ -119,9 +119,9 @@ Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md)
 
 ```java
 // Defines the backing metastore
-interface MetastorePersistence<V> {
+interface Metastore<V> {
   Optional<V> load(String keyId, Instant created);
-  Optional<V> loadLatestValue(String keyId);
+  Optional<V> loadLatest(String keyId);
 
   boolean store(String keyId, Instant created, V value);
 }

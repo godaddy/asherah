@@ -15,15 +15,15 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionSessionFactory;
-import com.godaddy.asherah.appencryption.keymanagement.AWSKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionFactory;
+import com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
-import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.JdbcMetastorePersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MemoryPersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.google.common.collect.ImmutableMap;
@@ -54,20 +54,20 @@ public final class App implements Callable<Void> {
   private static final int KEY_EXPIRATION_DAYS = 30;
   private static final int CACHE_CHECK_MINUTES = 30;
 
-  enum Metastore { MEMORY, JDBC, DYNAMODB }
+  enum MetastoreType { MEMORY, JDBC, DYNAMODB }
 
-  enum Kms { STATIC, AWS }
+  enum KmsType { STATIC, AWS }
 
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
       description = "Type of metastore persistence to use. Enum values: ${COMPLETION-CANDIDATES}")
-  private Metastore metastore;
+  private MetastoreType metastoreType;
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore persistence. Required for JDBC metastore.")
   private String jdbcUrl;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
-  private Kms kms;
+  private KmsType kmsType;
   @Option(names = "--preferred-region",
       description = "Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.")
   private String preferredRegion;
@@ -92,39 +92,39 @@ public final class App implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    MetastorePersistence<JSONObject> metastorePersistence;
-    if (metastore == Metastore.JDBC) {
+    Metastore<JSONObject> metastore;
+    if (this.metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
 
         // Setup JDBC persistence from command line argument using Hikari connection pooling
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
-        metastorePersistence = JdbcMetastorePersistenceImpl.newBuilder(dataSource).build();
+        metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
       }
       else {
         CommandLine.usage(this, System.out);
         return null;
       }
     }
-    else if (metastore == Metastore.DYNAMODB) {
+    else if (this.metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
 
-      metastorePersistence = DynamoDbMetastorePersistenceImpl.newBuilder().build();
+      metastore = DynamoDbMetastoreImpl.newBuilder().build();
     }
     else {
       logger.info("using in-memory metastore...");
 
-      metastorePersistence = new MemoryPersistenceImpl<>();
+      metastore = new InMemoryMetastoreImpl<>();
     }
 
     KeyManagementService keyManagementService;
-    if (kms == Kms.AWS) {
+    if (kmsType == KmsType.AWS) {
       if (preferredRegion != null && regionMap != null) {
         logger.info("using AWS KMS...");
 
         // build the ARN regions including preferred region
-        keyManagementService = AWSKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
+        keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
       }
       else {
         CommandLine.usage(this, System.out);
@@ -162,9 +162,9 @@ public final class App implements Callable<Void> {
     // Create a session factory for this app. Normally this would be done upon app startup and the
     // same factory would be used anytime a new session is needed for a partition (e.g., shopper).
     // We've split it out into multiple try blocks to underscore this point.
-    try (AppEncryptionSessionFactory appEncryptionSessionFactory = AppEncryptionSessionFactory
+    try (SessionFactory sessionFactory = SessionFactory
         .newBuilder("productId", "reference_app")
-        .withMetastorePersistence(metastorePersistence)
+        .withMetastore(metastore)
         .withCryptoPolicy(cryptoPolicy)
         .withKeyManagementService(keyManagementService)
         .withMetricsEnabled()
@@ -172,8 +172,8 @@ public final class App implements Callable<Void> {
 
       // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
-      try (AppEncryption<byte[], byte[]> appEncryptionBytes = appEncryptionSessionFactory
-          .getAppEncryptionBytes("shopper123")) {
+      try (Session<byte[], byte[]> sessionBytes = sessionFactory
+          .getSessionBytes("shopper123")) {
 
         String originalPayloadString = "mysupersecretpayload";
 
@@ -186,7 +186,7 @@ public final class App implements Callable<Void> {
           else {
             // Encrypt the payload
             byte[] dataRowRecordBytes =
-                appEncryptionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+                sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
 
             // Consider this us "persisting" the DRR
             dataRowString = Base64.getEncoder().encodeToString(dataRowRecordBytes);
@@ -196,7 +196,7 @@ public final class App implements Callable<Void> {
           byte[] newDataRowRecordBytes = Base64.getDecoder().decode(dataRowString);
 
           // Decrypt the payload
-          String decryptedPayloadString = new String(appEncryptionBytes.decrypt(newDataRowRecordBytes),
+          String decryptedPayloadString = new String(sessionBytes.decrypt(newDataRowRecordBytes),
               StandardCharsets.UTF_8);
 
           logger.info("decryptedPayloadString = {}, matches = {}", decryptedPayloadString,

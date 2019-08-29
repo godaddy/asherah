@@ -21,12 +21,12 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 
-import static com.godaddy.asherah.appencryption.keymanagement.AWSKeyManagementServiceImpl.*;
+import static com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class AWSKeyManagementServiceImplTest {
+class AwsKeyManagementServiceImplTest {
 
   static final String US_EAST_1 = "us-east-1";
   static final String ARN_US_EAST_1 = "arn-us-east-1";
@@ -48,22 +48,22 @@ class AWSKeyManagementServiceImplTest {
   @Mock
   CryptoKey cryptoKey;
 
-  AWSKeyManagementServiceImpl awsKeyManagementServiceImpl;
+  AwsKeyManagementServiceImpl awsKeyManagementServiceImpl;
 
   @BeforeEach
   void setUp() {
     // This will be fragile since it's used in the constructor itself. If unit tests need to mock different clients
     // being returned, they'll likely need to create their own new flavors of this mock and the main spy.
     when(awsKmsClientFactory.createAwsKmsClient(any())).thenReturn(awsKmsClient);
-    
+
     awsKeyManagementServiceImpl =
-        spy(new AWSKeyManagementServiceImpl(regionToArnMap, preferredRegion, crypto, awsKmsClientFactory));
+        spy(new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, crypto, awsKmsClientFactory));
   }
 
   @Test
   void testRegionToArnAndClientMapGeneration() {
-    AWSKeyManagementServiceImpl awsKeyManagementService =
-        new AWSKeyManagementServiceImpl(regionToArnMap, preferredRegion, crypto, awsKmsClientFactory);
+    AwsKeyManagementServiceImpl awsKeyManagementService =
+        new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, crypto, awsKmsClientFactory);
     Map.Entry<String, AwsKmsArnClient> record =
         awsKeyManagementService.getRegionToArnAndClientMap().entrySet().iterator().next();
     assertEquals(preferredRegion, record.getKey());
@@ -180,7 +180,7 @@ class AWSKeyManagementServiceImplTest {
     when(crypto.generateKeyFromBytes(plaintextBackingBytes)).thenReturn(cryptoKey);
     CryptoKey expectedKey = mock(CryptoKey.class);
     when(crypto.decryptKey(cipherText, now, cryptoKey, revoked)).thenReturn(expectedKey);
-    
+
     CryptoKey actualKey =
         awsKeyManagementServiceImpl.decryptKmsEncryptedKey(awsKmsClient, cipherText, now, keyEncryptionKey, revoked);
     assertEquals(expectedKey, actualKey);
@@ -192,7 +192,7 @@ class AWSKeyManagementServiceImplTest {
     byte[] cipherText = new byte[]{0, 1};
     byte[] keyEncryptionKey = new byte[]{2, 3};
     when(awsKmsClient.decrypt(any())).thenThrow(SdkBaseException.class);
-    
+
     assertThrows(SdkBaseException.class,
         () -> awsKeyManagementServiceImpl
             .decryptKmsEncryptedKey(awsKmsClient, cipherText, Instant.now(), keyEncryptionKey, false));
@@ -209,7 +209,7 @@ class AWSKeyManagementServiceImplTest {
     when(awsKmsClient.decrypt(any())).thenReturn(decryptResult);
     when(crypto.generateKeyFromBytes(plaintextBackingBytes)).thenReturn(cryptoKey);
     when(crypto.decryptKey(cipherText, now, cryptoKey, revoked)).thenThrow(AppEncryptionException.class);
-    
+
     assertThrows(AppEncryptionException.class,
         () -> awsKeyManagementServiceImpl
             .decryptKmsEncryptedKey(awsKmsClient, cipherText, now, keyEncryptionKey, revoked));
@@ -218,10 +218,10 @@ class AWSKeyManagementServiceImplTest {
 
   @Test
   void testPrimaryBuilderPath() {
-    AWSKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
-        AWSKeyManagementServiceImpl.newBuilder(regionToArnMap,
+    AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+        AwsKeyManagementServiceImpl.newBuilder(regionToArnMap,
         preferredRegion);
-    AWSKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.build();
+    AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.build();
     assertNotNull(awsKeyManagementServiceBuilder);
   }
 

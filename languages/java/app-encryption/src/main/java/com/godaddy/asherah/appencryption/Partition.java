@@ -1,12 +1,12 @@
 package com.godaddy.asherah.appencryption;
 
-public class AppEncryptionPartition {
+public class Partition {
 
   private final String partitionId;
   private final String systemId;
   private final String productId;
 
-  public AppEncryptionPartition(final String partitionId, final String systemId, final String productId) {
+  public Partition(final String partitionId, final String systemId, final String productId) {
     this.partitionId = partitionId;
     this.systemId = systemId;
     this.productId = productId;

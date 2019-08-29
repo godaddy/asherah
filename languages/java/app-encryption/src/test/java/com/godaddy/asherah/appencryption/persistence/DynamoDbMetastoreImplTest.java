@@ -30,10 +30,10 @@ import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.google.common.collect.ImmutableMap;
 
-import static com.godaddy.asherah.appencryption.persistence.DynamoDbMetastorePersistenceImpl.*;
+import static com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class DynamoDbMetastorePersistenceImplTest {
+class DynamoDbMetastoreImplTest {
 
   static final String DYNAMO_DB_PORT = "8000";
   static final String TEST_KEY = "some_key";
@@ -51,7 +51,7 @@ class DynamoDbMetastorePersistenceImplTest {
 
   Table table;
   DynamoDB dynamoDbDocumentClient;
-  DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl;
+  DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
 
   @BeforeAll
   public static void setupClass() throws Exception {
@@ -76,7 +76,7 @@ class DynamoDbMetastorePersistenceImplTest {
                 "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
             .build());
 
-    dynamoDbMetastorePersistenceImpl = new DynamoDbMetastorePersistenceImpl(dynamoDbDocumentClient);
+    dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(dynamoDbDocumentClient);
 
     // Create table schema
     dynamoDbDocumentClient.createTable(new CreateTableRequest()
@@ -106,7 +106,7 @@ class DynamoDbMetastorePersistenceImplTest {
 
   @Test
   void testLoadSuccess() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(TEST_KEY, instant);
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.load(TEST_KEY, instant);
 
     assertTrue(actualJsonObject.isPresent());
     assertEquals(keyRecord, actualJsonObject.get().toMap());
@@ -114,27 +114,27 @@ class DynamoDbMetastorePersistenceImplTest {
 
   @Test
   void testLoadWithNoResultShouldReturnEmpty() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load("fake_key", Instant.now());
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.load("fake_key", Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
   @Test
   void testLoadWithFailureShouldReturnEmpty() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.load(null, Instant.now());
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.load(null, Instant.now());
 
     assertFalse(actualJsonObject.isPresent());
   }
 
   @Test
-  void testLoadLatestValueWithSingleRecord() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(TEST_KEY);
+  void testLoadLatestWithSingleRecord() {
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
 
     assertTrue(actualJsonObject.isPresent());
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 
   @Test
-  void testLoadLatestValueWithMultipleRecords() {
+  void testLoadLatestWithMultipleRecords() {
     Instant instantMinusOneHour = instant.minus(1, ChronoUnit.HOURS);
     Instant instantPlusOneHour = instant.plus(1, ChronoUnit.HOURS);
     Instant instantMinusOneDay = instant.minus(1, ChronoUnit.DAYS);
@@ -169,29 +169,29 @@ class DynamoDbMetastorePersistenceImplTest {
     table.putItem(itemMinusOneHour);
     table.putItem(itemMinusOneDay);
 
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(TEST_KEY);
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
 
     assertTrue(actualJsonObject.isPresent());
     assertEquals(instantPlusOneDay.getEpochSecond(), actualJsonObject.get().getLong("mytime"));
   }
 
   @Test
-  void testLoadLatestValueWithNoResultShouldReturnEmpty() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue("fake_key");
+  void testLoadLatestWithNoResultShouldReturnEmpty() {
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest("fake_key");
 
     assertFalse(actualJsonObject.isPresent());
   }
 
   @Test
-  void testLoadLatestValueWithFailureShouldReturnEmpty() {
-    Optional<JSONObject> actualJsonObject = dynamoDbMetastorePersistenceImpl.loadLatestValue(null);
+  void testLoadLatestWithFailureShouldReturnEmpty() {
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(null);
 
     assertFalse(actualJsonObject.isPresent());
   }
 
   @Test
   void testStoreSuccess() {
-    boolean actualValue = dynamoDbMetastorePersistenceImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
+    boolean actualValue = dynamoDbMetastoreImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
 
     assertTrue(actualValue);
   }
@@ -199,8 +199,8 @@ class DynamoDbMetastorePersistenceImplTest {
   @Test
   void testStoreWithDuplicateShouldReturnFalse() {
     Instant now = Instant.now();
-    boolean firstAttempt = dynamoDbMetastorePersistenceImpl.store(TEST_KEY, now, new JSONObject(keyRecord));
-    boolean secondAttempt = dynamoDbMetastorePersistenceImpl.store(TEST_KEY, now, new JSONObject(keyRecord));
+    boolean firstAttempt = dynamoDbMetastoreImpl.store(TEST_KEY, now, new JSONObject(keyRecord));
+    boolean secondAttempt = dynamoDbMetastoreImpl.store(TEST_KEY, now, new JSONObject(keyRecord));
 
     assertTrue(firstAttempt);
     assertFalse(secondAttempt);
@@ -209,18 +209,18 @@ class DynamoDbMetastorePersistenceImplTest {
   @Test
   void testStoreWithFailureShouldThrowException() {
     assertThrows(AppEncryptionException.class,
-        () -> dynamoDbMetastorePersistenceImpl.store(null, Instant.now(), new JSONObject()));
+        () -> dynamoDbMetastoreImpl.store(null, Instant.now(), new JSONObject()));
   }
 
   @Test
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
-    DynamoDbMetastorePersistenceImpl.Builder dynamoDbMetastorePersistenceServicePrimaryBuilder =
-        DynamoDbMetastorePersistenceImpl.newBuilder();
-    DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
-        dynamoDbMetastorePersistenceServicePrimaryBuilder.build();
-    assertNotNull(dynamoDbMetastorePersistenceImpl);
+    DynamoDbMetastoreImpl.Builder dynamoDbMetastoreServicePrimaryBuilder =
+        DynamoDbMetastoreImpl.newBuilder();
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
+        dynamoDbMetastoreServicePrimaryBuilder.build();
+    assertNotNull(dynamoDbMetastoreImpl);
   }
 
 }

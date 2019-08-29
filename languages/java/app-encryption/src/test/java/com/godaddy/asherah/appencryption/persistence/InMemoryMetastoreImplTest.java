@@ -8,12 +8,12 @@ import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class MemoryPersistenceImplTest {
-  MemoryPersistenceImpl<String> memoryPersistenceImpl;
+class InMemoryMetastoreImplTest {
+  InMemoryMetastoreImpl<String> inMemoryMetastoreImpl;
 
   @BeforeEach
   void setUp() {
-    memoryPersistenceImpl = new MemoryPersistenceImpl<>();
+    inMemoryMetastoreImpl = new InMemoryMetastoreImpl<>();
   }
 
   @Test
@@ -22,9 +22,9 @@ class MemoryPersistenceImplTest {
     Instant created = Instant.now();
     String value = "This is my value";
 
-    memoryPersistenceImpl.store(keyId, created, value);
+    inMemoryMetastoreImpl.store(keyId, created, value);
 
-    String retrievedValue = memoryPersistenceImpl.load(keyId, created).get();
+    String retrievedValue = inMemoryMetastoreImpl.load(keyId, created).get();
 
     assertEquals(value, retrievedValue, "Value loaded from persistence doesn't match what was stored.");
   }
@@ -35,42 +35,42 @@ class MemoryPersistenceImplTest {
     Instant created = Instant.now();
     String value = "This is my value";
 
-    memoryPersistenceImpl.store(keyId, created, value);
+    inMemoryMetastoreImpl.store(keyId, created, value);
 
-    assertFalse(memoryPersistenceImpl.load("some non-existent key", created).isPresent(),
+    assertFalse(inMemoryMetastoreImpl.load("some non-existent key", created).isPresent(),
         "Found value for non-existent key");
   }
 
   @Test
-  void testLoadLatestValueMultipleCreatedAndValuesForKeyIdShouldReturnLatest() {
+  void testLoadLatestMultipleCreatedAndValuesForKeyIdShouldReturnLatest() {
     String keyId = "ThisIsMyKey";
     Instant created = Instant.now();
     String value = "created value";
-    memoryPersistenceImpl.store(keyId, created, value);
+    inMemoryMetastoreImpl.store(keyId, created, value);
 
     Instant createdOneHourLater = created.plus(1, ChronoUnit.HOURS);
     String valueCreatedOneHourLater = value + createdOneHourLater;
-    memoryPersistenceImpl.store(keyId, createdOneHourLater, valueCreatedOneHourLater);
+    inMemoryMetastoreImpl.store(keyId, createdOneHourLater, valueCreatedOneHourLater);
 
     Instant createdOneDayLater = created.plus(1, ChronoUnit.DAYS);
     String valueCreatedOneDayLater = value + createdOneDayLater;
-    memoryPersistenceImpl.store(keyId, createdOneDayLater, valueCreatedOneDayLater);
+    inMemoryMetastoreImpl.store(keyId, createdOneDayLater, valueCreatedOneDayLater);
 
     Instant createdOneWeekEarlier = created.minus(7, ChronoUnit.DAYS);
     String valueCreatedOneWeekEarlier = value + createdOneWeekEarlier;
-    memoryPersistenceImpl.store(keyId, createdOneWeekEarlier, valueCreatedOneWeekEarlier);
+    inMemoryMetastoreImpl.store(keyId, createdOneWeekEarlier, valueCreatedOneWeekEarlier);
 
-    assertEquals(valueCreatedOneDayLater, memoryPersistenceImpl.loadLatestValue(keyId).get());
+    assertEquals(valueCreatedOneDayLater, inMemoryMetastoreImpl.loadLatest(keyId).get());
   }
 
   @Test
-  void testLoadLatestValueNonExistantKeyIdShouldReturnNull() {
+  void testLoadLatestNonExistentKeyIdShouldReturnNull() {
     String keyId = "ThisIsMyKey";
     Instant created = Instant.now();
     String value = "created value";
-    memoryPersistenceImpl.store(keyId, created, value);
+    inMemoryMetastoreImpl.store(keyId, created, value);
 
-    assertFalse(memoryPersistenceImpl.loadLatestValue("some non-existent key").isPresent());
+    assertFalse(inMemoryMetastoreImpl.loadLatest("some non-existent key").isPresent());
   }
 
   @Test
@@ -79,7 +79,7 @@ class MemoryPersistenceImplTest {
     Instant created = Instant.now();
     String value = "this is the value";
 
-    assertTrue(memoryPersistenceImpl.store(keyId, created, value));
-    assertFalse(memoryPersistenceImpl.store(keyId, created, value));
+    assertTrue(inMemoryMetastoreImpl.store(keyId, created, value));
+    assertFalse(inMemoryMetastoreImpl.store(keyId, created, value));
   }
 }

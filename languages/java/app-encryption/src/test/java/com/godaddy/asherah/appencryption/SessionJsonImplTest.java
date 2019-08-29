@@ -14,17 +14,17 @@ import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.utils.Json;
 
 @ExtendWith(MockitoExtension.class)
-class AppEncryptionJsonImplTest {
+class SessionJsonImplTest {
 
   @Mock
   EnvelopeEncryption<String> envelopeEncryption;
   @InjectMocks
-  AppEncryptionJsonImpl<String> appEncryptionJsonImpl;
-  
+  SessionJsonImpl<String> sessionJsonImpl;
+
   @Test
   void testConstructor() {
-    AppEncryption<?, ?> appEncryption = new AppEncryptionJsonImpl<>(envelopeEncryption);
-    assertNotNull(appEncryption);
+    Session<?, ?> session = new SessionJsonImpl<>(envelopeEncryption);
+    assertNotNull(session);
   }
 
   @Test
@@ -33,7 +33,7 @@ class AppEncryptionJsonImplTest {
     byte[] utf8Bytes = new Json(expectedJson).toUtf8();
     when(envelopeEncryption.decryptDataRowRecord(any())).thenReturn(utf8Bytes);
 
-    JSONObject actualJson = appEncryptionJsonImpl.decrypt("some data row record");
+    JSONObject actualJson = sessionJsonImpl.decrypt("some data row record");
     assertTrue(expectedJson.similar(actualJson));
   }
 
@@ -42,14 +42,14 @@ class AppEncryptionJsonImplTest {
     String expectedDataRowRecord = "some data row record";
     when(envelopeEncryption.encryptPayload(any())).thenReturn(expectedDataRowRecord);
 
-    String actualDataRowRecord = appEncryptionJsonImpl.encrypt(new JSONObject("{\"some_key\": 123}"));
+    String actualDataRowRecord = sessionJsonImpl.encrypt(new JSONObject("{\"some_key\": 123}"));
     assertEquals(expectedDataRowRecord, actualDataRowRecord);
   }
 
   @Test
   void testCloseSuccess() {
-    appEncryptionJsonImpl.close();
-    
+    sessionJsonImpl.close();
+
     // Verify proper resources are closed
     verify(envelopeEncryption).close();
   }
@@ -57,8 +57,8 @@ class AppEncryptionJsonImplTest {
   @Test
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(envelopeEncryption).close();
-    appEncryptionJsonImpl.close();
-    
+    sessionJsonImpl.close();
+
     verify(envelopeEncryption).close();
   }
 

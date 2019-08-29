@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.utils.Json;
 
-public class AppEncryptionJsonImpl<D> implements AppEncryption<JSONObject, D> {
-  private static final Logger logger = LoggerFactory.getLogger(AppEncryptionJsonImpl.class);
+public class SessionJsonImpl<D> implements Session<JSONObject, D> {
+  private static final Logger logger = LoggerFactory.getLogger(SessionJsonImpl.class);
 
   private final EnvelopeEncryption<D> envelopeEncryption;
 
-  public AppEncryptionJsonImpl(final EnvelopeEncryption<D> envelopeEncryption) {
+  public SessionJsonImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;
   }
 

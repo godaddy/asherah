@@ -3,8 +3,8 @@ package com.godaddy.asherah.appencryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
 import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
-import com.godaddy.asherah.appencryption.persistence.MemoryPersistenceImpl;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
@@ -27,9 +27,9 @@ import static org.mockito.Mockito.*;
 import java.time.Instant;
 
 @ExtendWith(MockitoExtension.class)
-class AppEncryptionSessionFactoryTest {
+class SessionFactoryTest {
   @Mock
-  MetastorePersistence<JSONObject> metastorePersistence;
+  Metastore<JSONObject> metastore;
   @Mock
   SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   @Mock
@@ -44,15 +44,15 @@ class AppEncryptionSessionFactoryTest {
   private final static String testProductId = "test_product_id";
   private final static String testMasterKey = "test_master_key";
 
-  private AppEncryptionSessionFactory appEncryptionSessionFactory;
+  private SessionFactory sessionFactory;
 
   @BeforeEach
   void setUp() {
     when(secureCryptoKeyMapFactory.createSecureCryptoKeyMap()).thenReturn(systemKeyCache);
-    appEncryptionSessionFactory = new AppEncryptionSessionFactory(
+    sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-        metastorePersistence,
+        metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);
@@ -60,59 +60,59 @@ class AppEncryptionSessionFactoryTest {
 
   @Test
   void testConstructor() {
-    AppEncryptionSessionFactory appEncryptionSessionFactory = new AppEncryptionSessionFactory(
+    SessionFactory sessionFactory = new SessionFactory(
         testProductId,
         testSystemId,
-        metastorePersistence,
+        metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
         keyManagementService);
-    assertNotNull(appEncryptionSessionFactory);
+    assertNotNull(sessionFactory);
   }
 
   @Test
-  void testGetAppEncryptionJson() {
-    AppEncryption<?,?> appEncryption = appEncryptionSessionFactory.getAppEncryptionJson(testPartitionId);
-    assertNotNull(appEncryption);
+  void testGetSessionJson() {
+    Session<?,?> session = sessionFactory.getSessionJson(testPartitionId);
+    assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionBytes() {
-    AppEncryption<?,?> appEncryption = appEncryptionSessionFactory.getAppEncryptionBytes(testPartitionId);
-    assertNotNull(appEncryption);
+  void testGetSessionBytes() {
+    Session<?,?> session = sessionFactory.getSessionBytes(testPartitionId);
+    assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionJsonAsJson() {
-    AppEncryption<?,?> appEncryption = appEncryptionSessionFactory.getAppEncryptionJsonAsJson(testPartitionId);
-    assertNotNull(appEncryption);
+  void testGetSessionJsonAsJson() {
+    Session<?,?> session = sessionFactory.getSessionJsonAsJson(testPartitionId);
+    assertNotNull(session);
   }
 
   @Test
-  void testGetAppEncryptionBytesAsJson() {
-    AppEncryption<?,?> appEncryption = appEncryptionSessionFactory.getAppEncryptionBytesAsJson(testPartitionId);
-    assertNotNull(appEncryption);
+  void testGetSessionBytesAsJson() {
+    Session<?,?> session = sessionFactory.getSessionBytesAsJson(testPartitionId);
+    assertNotNull(session);
   }
 
   @Test
   void testGetEnvelopeEncryptionBytes() {
-    EnvelopeEncryption<?> envelopeEncryption = appEncryptionSessionFactory.getEnvelopeEncryptionBytes(testPartitionId);
+    EnvelopeEncryption<?> envelopeEncryption = sessionFactory.getEnvelopeEncryptionBytes(testPartitionId);
     assertNotNull(envelopeEncryption);
   }
 
   @Test
-  void getAppEncryptionPartitionWithPartition() {
-    AppEncryptionPartition appEncryptionPartition =
-        appEncryptionSessionFactory.getAppEncryptionPartition(testPartitionId);
-    assertEquals(testPartitionId, appEncryptionPartition.getPartitionId());
-    assertEquals(testSystemId, appEncryptionPartition.getSystemId());
-    assertEquals(testProductId, appEncryptionPartition.getProductId());
+  void testGetPartitionWithPartitionId() {
+    Partition partition =
+        sessionFactory.getPartition(testPartitionId);
+    assertEquals(testPartitionId, partition.getPartitionId());
+    assertEquals(testSystemId, partition.getSystemId());
+    assertEquals(testProductId, partition.getProductId());
   }
 
   @Test
   void testCloseSuccess() {
-    appEncryptionSessionFactory.close();
-    
+    sessionFactory.close();
+
     // Verify proper resources are closed
     verify(systemKeyCache).close();
   }
@@ -120,62 +120,62 @@ class AppEncryptionSessionFactoryTest {
   @Test
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(systemKeyCache).close();
-    appEncryptionSessionFactory.close();
-    
+    sessionFactory.close();
+
     // Verify proper resources are closed
     verify(systemKeyCache).close();
   }
 
   @Test
   void testBuilderPathWithPrebuiltInterfaces() {
-    AppEncryptionSessionFactory.MetastoreStep metastoreStep =
-        AppEncryptionSessionFactory.newBuilder(testProductId, testSystemId);
+    SessionFactory.MetastoreStep metastoreStep =
+        SessionFactory.newBuilder(testProductId, testSystemId);
     assertNotNull(metastoreStep);
 
-    AppEncryptionSessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withMemoryPersistence();
+    SessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withInMemoryMetastore();
     assertNotNull(cryptoPolicyStep);
 
-    AppEncryptionSessionFactory.KeyManagementServiceStep keyManagementServiceStep =
+    SessionFactory.KeyManagementServiceStep keyManagementServiceStep =
         cryptoPolicyStep.withNeverExpiredCryptoPolicy();
     assertNotNull(keyManagementServiceStep);
 
-    AppEncryptionSessionFactory.BuildStep buildStep =
+    SessionFactory.BuildStep buildStep =
         keyManagementServiceStep.withStaticKeyManagementService(testMasterKey);
     assertNotNull(buildStep);
 
-    AppEncryptionSessionFactory sessionFactory = buildStep.build();
+    SessionFactory sessionFactory = buildStep.build();
     assertNotNull(sessionFactory);
   }
 
   @Test
   void testBuilderPathWithSpecifiedInterfaces() {
-    AppEncryptionSessionFactory.MetastoreStep metastoreStep =
-        AppEncryptionSessionFactory.newBuilder(testProductId, testSystemId);
+    SessionFactory.MetastoreStep metastoreStep =
+        SessionFactory.newBuilder(testProductId, testSystemId);
     assertNotNull(metastoreStep);
 
-    MetastorePersistence<JSONObject> metastorePersistence = new MemoryPersistenceImpl<>();
-    AppEncryptionSessionFactory.CryptoPolicyStep cryptoPolicyStep =
-        metastoreStep.withMetastorePersistence(metastorePersistence);
+    Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
+    SessionFactory.CryptoPolicyStep cryptoPolicyStep =
+        metastoreStep.withMetastore(metastore);
     assertNotNull(cryptoPolicyStep);
 
     CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
-    AppEncryptionSessionFactory.KeyManagementServiceStep keyManagementServiceStep =
+    SessionFactory.KeyManagementServiceStep keyManagementServiceStep =
         cryptoPolicyStep.withCryptoPolicy(cryptoPolicy);
     assertNotNull(keyManagementServiceStep);
 
     KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(testMasterKey);
-    AppEncryptionSessionFactory.BuildStep buildStep =
+    SessionFactory.BuildStep buildStep =
         keyManagementServiceStep.withKeyManagementService(keyManagementService);
     assertNotNull(buildStep);
 
-    AppEncryptionSessionFactory sessionFactory = buildStep.build();
+    SessionFactory sessionFactory = buildStep.build();
     assertNotNull(sessionFactory);
   }
 
   @Test
   void testBuilderPathWithMetricsDisabled() {
-    AppEncryptionSessionFactory.newBuilder(testProductId, testSystemId)
-        .withMemoryPersistence()
+    SessionFactory.newBuilder(testProductId, testSystemId)
+        .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
         .build();
@@ -184,8 +184,8 @@ class AppEncryptionSessionFactoryTest {
   }
   @Test
   void testBuilderPathWithMetricsEnabled() {
-    AppEncryptionSessionFactory.newBuilder(testProductId, testSystemId)
-        .withMemoryPersistence()
+    SessionFactory.newBuilder(testProductId, testSystemId)
+        .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
         .withMetricsEnabled()

@@ -1,13 +1,13 @@
 package com.godaddy.asherah.testapp.regression;
 
-import com.godaddy.asherah.appencryption.AppEncryption;
-import com.godaddy.asherah.appencryption.AppEncryptionJsonImpl;
-import com.godaddy.asherah.appencryption.AppEncryptionPartition;
+import com.godaddy.asherah.appencryption.Partition;
+import com.godaddy.asherah.appencryption.Session;
+import com.godaddy.asherah.appencryption.SessionJsonImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.persistence.MetastorePersistence;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
@@ -56,92 +56,92 @@ class AppEncryptionParameterizedTest {
   @MethodSource("generateScenarios")
   void parameterizedTests(
       final EnvelopeEncryption<byte[]> envelopeEncryptionJson,
-      final MetastorePersistence<JSONObject> metastorePersistence,
+      final Metastore<JSONObject> metastore,
       final KeyState cacheIK, final KeyState metaIK,
       final KeyState cacheSK, final KeyState metaSK,
-      final AppEncryptionPartition appEncryptionPartition) {
+      final Partition partition) {
 
-    try (AppEncryption<JSONObject, byte[]> appEncryptionJsonImpl = new AppEncryptionJsonImpl<>(envelopeEncryptionJson)) {
+    try (Session<JSONObject, byte[]> sessionJsonImpl = new SessionJsonImpl<>(envelopeEncryptionJson)) {
 
       EncryptMetastoreInteractions encryptMetastoreInteractions =
           new EncryptMetastoreInteractions(cacheIK, metaIK, cacheSK, metaSK);
       DecryptMetastoreInteractions decryptMetastoreInteractions =
           new DecryptMetastoreInteractions(cacheIK, cacheSK);
 
-      //encrypt with library object(appEncryptionJsonImpl)
-      byte[] encryptedPayload = appEncryptionJsonImpl.encrypt(payload);
+      //encrypt with library object(sessionJsonImpl)
+      byte[] encryptedPayload = sessionJsonImpl.encrypt(payload);
 
       assertNotNull(encryptedPayload);
-      verifyEncryptFlow(metastorePersistence, encryptMetastoreInteractions, appEncryptionPartition);
+      verifyEncryptFlow(metastore, encryptMetastoreInteractions, partition);
 
-      reset(metastorePersistence);
-      JSONObject decryptedPayload = appEncryptionJsonImpl.decrypt(encryptedPayload);
+      reset(metastore);
+      JSONObject decryptedPayload = sessionJsonImpl.decrypt(encryptedPayload);
 
-      verifyDecryptFlow(metastorePersistence, decryptMetastoreInteractions, appEncryptionPartition);
+      verifyDecryptFlow(metastore, decryptMetastoreInteractions, partition);
       assertTrue(payload.similar(decryptedPayload));
     }
   }
 
-  private void verifyEncryptFlow(final MetastorePersistence<JSONObject> metastorePersistence,
-      final EncryptMetastoreInteractions metastoreInteractions, final AppEncryptionPartition appEncryptionPartition) {
+  private void verifyEncryptFlow(final Metastore<JSONObject> metastore,
+      final EncryptMetastoreInteractions metastoreInteractions, final Partition partition) {
 
     // If IK is stored to metastore
     if (metastoreInteractions.shouldStoreIK()) {
-      verify(metastorePersistence)
-          .store(eq(appEncryptionPartition.getIntermediateKeyId()), any(Instant.class), any(JSONObject.class));
+      verify(metastore)
+          .store(eq(partition.getIntermediateKeyId()), any(Instant.class), any(JSONObject.class));
     }
     // If SK is stored to metastore
     if (metastoreInteractions.shouldStoreSK()) {
-      verify(metastorePersistence)
-          .store(eq(appEncryptionPartition.getSystemKeyId()), any(Instant.class), any(JSONObject.class));
+      verify(metastore)
+          .store(eq(partition.getSystemKeyId()), any(Instant.class), any(JSONObject.class));
     }
     // If neither IK nor SK is stored
     if (!metastoreInteractions.shouldStoreIK() && !metastoreInteractions.shouldStoreSK()) {
-      verify(metastorePersistence,
+      verify(metastore,
           never()).store(any(String.class), any(Instant.class), any(JSONObject.class));
     }
 
     // NOTE: We do not read IK from the metastore in case of Encrypt
     // If SK is loaded from metastore
     if (metastoreInteractions.shouldLoadSK()) {
-      verify(metastorePersistence)
-          .load(eq(appEncryptionPartition.getSystemKeyId()), any(Instant.class));
+      verify(metastore)
+          .load(eq(partition.getSystemKeyId()), any(Instant.class));
     }
     else {
-      verify(metastorePersistence,
+      verify(metastore,
           never()).load(anyString(), any(Instant.class));
     }
 
     // If latest IK is loaded from metastore
     if (metastoreInteractions.shouldLoadLatestIK()) {
-      verify(metastorePersistence)
-          .loadLatestValue(eq(appEncryptionPartition.getIntermediateKeyId()));
+      verify(metastore)
+          .loadLatest(eq(partition.getIntermediateKeyId()));
     }
     // If latest SK is loaded from metastore
     if (metastoreInteractions.shouldLoadLatestSK()) {
-      verify(metastorePersistence)
-          .loadLatestValue(eq(appEncryptionPartition.getSystemKeyId()));
+      verify(metastore)
+          .loadLatest(eq(partition.getSystemKeyId()));
     }
     // If neither latest IK or SK is loaded from metastore
     if (!metastoreInteractions.shouldLoadLatestSK() && !metastoreInteractions.shouldLoadLatestIK()) {
-      verify(metastorePersistence,
-          never()).loadLatestValue(any(String.class));
+      verify(metastore,
+          never()).loadLatest(any(String.class));
     }
   }
 
-  private void verifyDecryptFlow(final MetastorePersistence<JSONObject> metastorePersistence,
-      final DecryptMetastoreInteractions metastoreInteractions, final AppEncryptionPartition appEncryptionPartition) {
+  private void verifyDecryptFlow(final Metastore<JSONObject> metastore,
+      final DecryptMetastoreInteractions metastoreInteractions, final Partition partition) {
 
     // If IK is loaded from metastore
     if (metastoreInteractions.shouldLoadIK()) {
-      verify(metastorePersistence)
-          .load(eq(appEncryptionPartition.getIntermediateKeyId()), any(Instant.class));
+      verify(metastore)
+          .load(eq(partition.getIntermediateKeyId()), any(Instant.class));
     }
 
     // If SK is loaded from metastore
     if (metastoreInteractions.shouldLoadSK()) {
-      verify(metastorePersistence)
-          .load(eq(appEncryptionPartition.getSystemKeyId()), any(Instant.class));
+      verify(metastore)
+          .load(eq(partition.getSystemKeyId()), any(Instant.class));
     }
   }
 
@@ -165,7 +165,7 @@ class AppEncryptionParameterizedTest {
   private static Arguments generateMocks(final KeyState cacheIK, final KeyState metaIK,
                                          final KeyState cacheSK, final KeyState metaSK) {
 
-    AppEncryptionPartition appEncryptionPartition = new AppEncryptionPartition(
+    Partition partition = new Partition(
         cacheIK.toString() + "CacheIK_" + metaIK.toString() + "MetaIK_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime() +
             "_" + RANDOM.nextInt(),
         cacheSK.toString() + "CacheSK_" + metaSK.toString() + "MetaSK_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime() +
@@ -176,8 +176,8 @@ class AppEncryptionParameterizedTest {
 
     CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.generateIKSK();
 
-    MetastorePersistence<JSONObject> metastorePersistence = MetastoreMock.createMetastoreMock(appEncryptionPartition, kms,
-        TestSetup.getMetastorePersistence(), metaIK, metaSK, cryptoKeyHolder);
+    Metastore<JSONObject> metastore = MetastoreMock.createMetastoreMock(partition, kms,
+        TestSetup.getMetastore(), metaIK, metaSK, cryptoKeyHolder);
 
     CacheMock cacheMock = CacheMock.createCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 
@@ -193,14 +193,14 @@ class AppEncryptionParameterizedTest {
     SecureCryptoKeyMap<Instant> systemKeyCache = cacheMock.getSystemKeyCache();
 
     EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
-        appEncryptionPartition, metastorePersistence, systemKeyCache,
+        partition, metastore, systemKeyCache,
         new FakeSecureCryptoKeyMapFactory<>(intermediateKeyCache), new BouncyAes256GcmCrypto(),
         cryptoPolicy, kms
     );
 
     EnvelopeEncryption<byte[]> envelopeEncryptionByteImpl = new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
 
-    return Arguments.of(envelopeEncryptionByteImpl, metastorePersistence,
-        cacheIK, metaIK, cacheSK, metaSK, appEncryptionPartition);
+    return Arguments.of(envelopeEncryptionByteImpl, metastore,
+        cacheIK, metaIK, cacheSK, metaSK, partition);
   }
 }

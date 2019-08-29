@@ -5,50 +5,50 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AppEncryptionPartitionTest {
+class PartitionTest {
 
     private final static String testPartitionId = "test_partition_id";
     private final static String testSystemId = "test_system_id";
     private final static String testProductId = "test_product_id";
 
-    private AppEncryptionPartition appEncryptionPartition;
+    private Partition partition;
 
     @BeforeEach
     void setUp() {
-        appEncryptionPartition = new AppEncryptionPartition(testPartitionId, testSystemId, testProductId);
+        partition = new Partition(testPartitionId, testSystemId, testProductId);
     }
 
     @Test
     void testGetPartitionId() {
-        assertEquals(testPartitionId, appEncryptionPartition.getPartitionId());
+        assertEquals(testPartitionId, partition.getPartitionId());
     }
 
     @Test
     void testGetSystemId() {
-        assertEquals(testSystemId, appEncryptionPartition.getSystemId());
+        assertEquals(testSystemId, partition.getSystemId());
     }
 
     @Test
     void testGetProductId() {
-        assertEquals(testProductId, appEncryptionPartition.getProductId());
+        assertEquals(testProductId, partition.getProductId());
     }
 
     @Test
     void testGetSystemKeyId() {
         String systemKeyIdString = "_SK_" + testSystemId + "_" + testProductId;
-        assertEquals(systemKeyIdString, appEncryptionPartition.getSystemKeyId());
+        assertEquals(systemKeyIdString, partition.getSystemKeyId());
     }
 
     @Test
     void testGetIntermediateKeyId() {
         String intermediateKeyIdString = "_IK_" + testPartitionId + "_" + testSystemId + "_" + testProductId;
-        assertEquals(intermediateKeyIdString, appEncryptionPartition.getIntermediateKeyId());
+        assertEquals(intermediateKeyIdString, partition.getIntermediateKeyId());
     }
 
     @Test
     void testToString() {
-        String toStringString = appEncryptionPartition.getClass().getSimpleName() + "[partitionId=" + testPartitionId +
+        String toStringString = partition.getClass().getSimpleName() + "[partitionId=" + testPartitionId +
                 ", systemId=" + testSystemId + ", productId=" + testProductId + "]";
-        assertEquals(toStringString, appEncryptionPartition.toString());
+        assertEquals(toStringString, partition.toString());
     }
 }

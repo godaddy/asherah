@@ -42,8 +42,9 @@ Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iteration
 
 ## General Notes
 
-- Both the `AppEncryptionSessionFactory` and the `AppEncryption` session classes implement the AutoCloseable interface for easy resource management.
-- The `AppEncryptionSessionFactory` class is intended to have as large of scope as possible to leverage caching and minimize resource usage. If your service/app is responsible for only one service, then ideally use a global instance. If it hosts multiple services, then ideally have one instance per product id and system id pairing.
+- Both the `SessionFactory` and the `Session` classes implement the AutoCloseable interface for easy resource
+ management.
+- The `SessionFactory` class is intended to have as large of scope as possible to leverage caching and minimize resource usage. If your service/app is responsible for only one service, then ideally use a global instance. If it hosts multiple services, then ideally have one instance per product id and system id pairing.
 
 ## External Resource Setup
 To run the reference app with external metastores or KMS implementations, some additional setup may be required as specified below.

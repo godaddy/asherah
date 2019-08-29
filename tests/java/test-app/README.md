@@ -43,8 +43,8 @@ GET /v1/java/appencryption/multithreaded
 
 Description: Runs a suite of multi-threaded tests intended to stress test various concurrency semantics of primary client-side
 interfaces used in the AppEncryption library. Tests include encrypting the same payload concurrently and verifying being able to
-decrypt all resulting DRRs, using multiple AppEncryptionSessionFactory instances concurrently with the same and multiple
-partitions (uncommon use cases), and using the same AppEncryptionSessionFactory instance concurrently with multiple partitions
+decrypt all resulting DRRs, using multiple SessionFactory instances concurrently with the same and multiple
+partitions (uncommon use cases), and using the same SessionFactory instance concurrently with multiple partitions
 (common use case).
 
 Query Parameters:
