@@ -19,8 +19,8 @@ public final class MetastoreFactory {
   }
 
   public static Metastore<JSONObject> createMetastore(final ServerConfiguration configuration,
-                                                                 final String metaStore) {
-    if (metaStore.equalsIgnoreCase(METASTORE_JDBC)) {
+                                                      final String metastore) {
+    if (metastore.equalsIgnoreCase(METASTORE_JDBC)) {
       HikariDataSource dataSource = new HikariDataSource();
       dataSource.setJdbcUrl(configuration.getMetaStoreJdbcUrl());
       dataSource.setUsername(configuration.getMetaStoreJdbcUserName());
@@ -28,7 +28,7 @@ public final class MetastoreFactory {
       dataSource.setMaximumPoolSize(configuration.getMetaStoreJdbcConnectionPoolSize());
       return JdbcMetastoreImpl.newBuilder(dataSource).build();
     }
-    else if (metaStore.equalsIgnoreCase(METASTORE_DYNAMODB)) {
+    else if (metastore.equalsIgnoreCase(METASTORE_DYNAMODB)) {
       return DynamoDbMetastoreImpl.newBuilder().build();
     }
     else {

@@ -15,7 +15,7 @@ Table of Contents
     * [Using a Docker read-only container](#using-a-docker-read-only-container)
   * [General Notes](#general-notes)
   * [External Resource Setup](#external-resource-setup)
-    * [Using an ADO MetaStore](#using-an-ado-metastore)
+    * [Using an ADO Metastore](#using-an-ado-metastore)
     * [Using a DynamoDB Metastore](#using-a-dynamodb-metastore)
 
 ## How to Run Reference App
@@ -66,9 +66,9 @@ The ReferenceApp can be tested/used in a docker container having only the dotnet
 ## External Resource Setup
 To run the reference app with external metastores or KMS implementations, some additional setup may be required as specified below.
 
-### Using an ADO MetaStore
+### Using an ADO Metastore
 
-To use the ADO-compliant MetaStore included with the App Encryption library, the following table should be created:
+To use the ADO-compliant Metastore included with the App Encryption library, the following table should be created:
 
 ``` sql
 CREATE TABLE encryption_key (

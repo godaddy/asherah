@@ -63,7 +63,7 @@ Below is an example of a session factory that uses in-memory persistence and sta
 
 ```java
 SessionFactory sessionFactory = SessionFactory.newBuilder("myservice", "sample_code")
-    .withInMemoryMetastore() // in-memory metastore persistence only
+    .withInMemoryMetastore() // in-memory metastore
     .withNeverExpiredCryptoPolicy()
     .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!") // hard-coded/static master key
     .build());
@@ -126,10 +126,10 @@ Putting it all together, an example end-to-end use of the store and load calls:
 
 ```java
 // Encrypts the payload, stores it in the dataPersistence and returns a look up key
-String persistenceKey = appEncryptionJson.store(originalPayload.toJsonObject(), dataPersistence);
+String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
 // Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
-Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersistence);
+Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
 ```
 
 ## Further Reading
@@ -137,7 +137,7 @@ Optional<JSONObject> payload = appEncryptionJson.load(persistenceKey, dataPersis
 * [Design And Architecture](docs/DesignAndArchitecture.md)
 * [System Requirements](docs/SystemRequirements.md)
 * [Key Management Service](docs/KeyManagementService.md)
-* [Metastore Persistence](docs/Metastore.md)
+* [Metastore](docs/Metastore.md)
 * [Key Caching](docs/KeyCaching.md)
 * [Code Structure](docs/CodeStructure.md)
 * [SDK Internals](docs/Internals.md)

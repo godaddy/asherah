@@ -14,7 +14,7 @@ Table of Contents
   * [How to Run Reference App](#how-to-run-reference-app)
   * [General Notes](#general-notes)
   * [External Resource Setup](#external-resource-setup)
-    * [Using a JDBC MetaStore](#using-a-jdbc-metaStore)
+    * [Using a JDBC Metastore](#using-a-jdbc-metastore)
     * [Using a DynamoDB Metastore](#using-a-dynamodb-metastore)
 
 ## How to Run Reference App
@@ -49,9 +49,9 @@ Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iteration
 ## External Resource Setup
 To run the reference app with external metastores or KMS implementations, some additional setup may be required as specified below.
 
-### Using a JDBC MetaStore
+### Using a JDBC Metastore
 
-To use the JDBC-compliant MetaStore included with the App Encryption library, the following table should be created:
+To use the JDBC-compliant Metastore included with the App Encryption library, the following table should be created:
 
 ``` sql
 CREATE TABLE encryption_key (

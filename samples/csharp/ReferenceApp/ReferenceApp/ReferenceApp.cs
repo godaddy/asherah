@@ -27,7 +27,7 @@ namespace GoDaddy.Asherah.ReferenceApp
         private static ILogger logger;
         private static ParserResult<Options> cmdOptions;
 
-        public enum MetaStore
+        public enum Metastore
         {
             MEMORY,
             ADO,
@@ -61,7 +61,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             IMetastore<JObject> metastore = null;
             KeyManagementService keyManagementService = null;
 
-            if (options.MetaStore == MetaStore.ADO)
+            if (options.Metastore == Metastore.ADO)
             {
                 if (options.AdoConnectionString != null)
                 {
@@ -72,12 +72,12 @@ namespace GoDaddy.Asherah.ReferenceApp
                 }
                 else
                 {
-                    logger.LogError("ADO connection string is a mandatory parameter with MetaStore Type: ADO");
+                    logger.LogError("ADO connection string is a mandatory parameter with Metastore Type: ADO");
                     Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                     return;
                 }
             }
-            else if (options.MetaStore == MetaStore.DYNAMODB)
+            else if (options.Metastore == Metastore.DYNAMODB)
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";

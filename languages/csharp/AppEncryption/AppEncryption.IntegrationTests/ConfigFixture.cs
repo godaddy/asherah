@@ -30,7 +30,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                 .AddYamlFile(configFile)
                 .Build();
 
-            MetastoreType = GetParam(Constants.MetaStoreType);
+            MetastoreType = GetParam(Constants.MetastoreType);
             if (string.IsNullOrWhiteSpace(MetastoreType))
             {
                 MetastoreType = DefaultMetastoreType;

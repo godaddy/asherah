@@ -59,10 +59,10 @@ public final class App implements Callable<Void> {
   enum KmsType { STATIC, AWS }
 
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
-      description = "Type of metastore persistence to use. Enum values: ${COMPLETION-CANDIDATES}")
+      description = "Type of metastore to use. Enum values: ${COMPLETION-CANDIDATES}")
   private MetastoreType metastoreType;
   @Option(names = "--jdbc-url",
-      description = "JDBC URL to use for JDBC metastore persistence. Required for JDBC metastore.")
+      description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
