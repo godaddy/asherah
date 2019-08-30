@@ -19,7 +19,7 @@ public final class MetastoreFactory {
   }
 
   public static Metastore<JSONObject> createMetastore(final ServerConfiguration configuration,
-                                                                 final String metastore) {
+                                                      final String metastore) {
     if (metastore.equalsIgnoreCase(METASTORE_JDBC)) {
       HikariDataSource dataSource = new HikariDataSource();
       dataSource.setJdbcUrl(configuration.getMetaStoreJdbcUrl());
