@@ -40,7 +40,7 @@ class SessionFactoryTest {
   KeyManagementService keyManagementService;
 
   private final static String testPartitionId = "test_partition_id";
-  private final static String testSystemId = "test_system_id";
+  private final static String testServiceId = "test_service_id";
   private final static String testProductId = "test_product_id";
   private final static String testMasterKey = "test_master_key";
 
@@ -51,7 +51,7 @@ class SessionFactoryTest {
     when(secureCryptoKeyMapFactory.createSecureCryptoKeyMap()).thenReturn(systemKeyCache);
     sessionFactory = new SessionFactory(
         testProductId,
-        testSystemId,
+        testServiceId,
         metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
@@ -62,7 +62,7 @@ class SessionFactoryTest {
   void testConstructor() {
     SessionFactory sessionFactory = new SessionFactory(
         testProductId,
-        testSystemId,
+        testServiceId,
         metastore,
         secureCryptoKeyMapFactory,
         cryptoPolicy,
@@ -105,7 +105,7 @@ class SessionFactoryTest {
     Partition partition =
         sessionFactory.getPartition(testPartitionId);
     assertEquals(testPartitionId, partition.getPartitionId());
-    assertEquals(testSystemId, partition.getSystemId());
+    assertEquals(testServiceId, partition.getServiceId());
     assertEquals(testProductId, partition.getProductId());
   }
 
@@ -129,7 +129,7 @@ class SessionFactoryTest {
   @Test
   void testBuilderPathWithPrebuiltInterfaces() {
     SessionFactory.MetastoreStep metastoreStep =
-        SessionFactory.newBuilder(testProductId, testSystemId);
+        SessionFactory.newBuilder(testProductId, testServiceId);
     assertNotNull(metastoreStep);
 
     SessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withInMemoryMetastore();
@@ -150,7 +150,7 @@ class SessionFactoryTest {
   @Test
   void testBuilderPathWithSpecifiedInterfaces() {
     SessionFactory.MetastoreStep metastoreStep =
-        SessionFactory.newBuilder(testProductId, testSystemId);
+        SessionFactory.newBuilder(testProductId, testServiceId);
     assertNotNull(metastoreStep);
 
     Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
@@ -174,7 +174,7 @@ class SessionFactoryTest {
 
   @Test
   void testBuilderPathWithMetricsDisabled() {
-    SessionFactory.newBuilder(testProductId, testSystemId)
+    SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
@@ -184,7 +184,7 @@ class SessionFactoryTest {
   }
   @Test
   void testBuilderPathWithMetricsEnabled() {
-    SessionFactory.newBuilder(testProductId, testSystemId)
+    SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testMasterKey)
