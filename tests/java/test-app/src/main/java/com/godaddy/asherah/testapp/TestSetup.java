@@ -2,7 +2,7 @@ package com.godaddy.asherah.testapp;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.testapp.configuration.ServerConfiguration;
 import com.godaddy.asherah.testapp.utils.KeyManagementServiceFactory;
