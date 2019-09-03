@@ -28,7 +28,7 @@ public class SessionFactory implements SafeAutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(SessionFactory.class);
 
   private final String productId;
-  private final String systemId;
+  private final String serviceId;
   private final Metastore<JSONObject> metastore;
   private final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
@@ -37,13 +37,13 @@ public class SessionFactory implements SafeAutoCloseable {
 
   public SessionFactory(
       final String productId,
-      final String systemId,
+      final String serviceId,
       final Metastore<JSONObject> metastore,
       final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory,
       final CryptoPolicy cryptoPolicy,
       final KeyManagementService keyManagementService) {
     this.productId = productId;
-    this.systemId = systemId;
+    this.serviceId = serviceId;
     this.metastore = metastore;
     this.secureCryptoKeyMapFactory = secureCryptoKeyMapFactory;
     this.systemKeyCache = secureCryptoKeyMapFactory.createSecureCryptoKeyMap();
@@ -92,7 +92,7 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   Partition getPartition(final String partitionId) {
-    return new Partition(partitionId, systemId, productId);
+    return new Partition(partitionId, serviceId, productId);
   }
 
   @Override
@@ -106,22 +106,22 @@ public class SessionFactory implements SafeAutoCloseable {
     }
   }
 
-  public static MetastoreStep newBuilder(final String productId, final String systemId) {
-    return new Builder(productId, systemId);
+  public static MetastoreStep newBuilder(final String productId, final String serviceId) {
+    return new Builder(productId, serviceId);
   }
 
   public static final class Builder implements MetastoreStep, CryptoPolicyStep, KeyManagementServiceStep, BuildStep {
     private final String productId;
-    private final String systemId;
+    private final String serviceId;
 
     private Metastore<JSONObject> metastore;
     private CryptoPolicy cryptoPolicy;
     private KeyManagementService keyManagementService;
     private boolean metricsEnabled = false;
 
-    private Builder(final String productId, final String systemId) {
+    private Builder(final String productId, final String serviceId) {
       this.productId = productId;
-      this.systemId = systemId;
+      this.serviceId = serviceId;
     }
 
     @Override
@@ -174,7 +174,7 @@ public class SessionFactory implements SafeAutoCloseable {
         Metrics.globalRegistry.config().meterFilter(MeterFilter.denyNameStartsWith(MetricsUtil.AEL_METRICS_PREFIX));
       }
 
-      return new SessionFactory(productId, systemId, metastore,
+      return new SessionFactory(productId, serviceId, metastore,
           new SecureCryptoKeyMapFactory<>(cryptoPolicy), cryptoPolicy, keyManagementService);
     }
   }

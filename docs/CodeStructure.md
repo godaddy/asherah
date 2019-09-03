@@ -31,7 +31,7 @@ The below interfaces implement the session factory using the step builder patter
 
 ```java
 class SessionFactory {
-  static MetastoreStep newBuilder(String productId, String systemId);
+  static MetastoreStep newBuilder(String productId, String serviceId);
   
   Session<JSONObject, byte[]> getSessionJson(String partitionId);
   Session<byte[], byte[]> getSessionBytes(String partitionId);

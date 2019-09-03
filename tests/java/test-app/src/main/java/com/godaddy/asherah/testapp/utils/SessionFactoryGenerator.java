@@ -17,13 +17,13 @@ public final class SessionFactoryGenerator {
   }
 
   public static SessionFactory createDefaultSessionFactory(final String productId,
-                                                           final String systemId) {
+                                                           final String serviceId) {
     // Read volatile first to force other members to be read from memory
     if (!TestSetup.isInitialized()) {
       throw new IllegalStateException("initialization has not been run yet!");
     }
 
-    return SessionFactory.newBuilder(productId, systemId)
+    return SessionFactory.newBuilder(productId, serviceId)
         .withMetastore(TestSetup.getMetastore())
         .withNeverExpiredCryptoPolicy()
         .withKeyManagementService(TestSetup.getKeyManagementService())

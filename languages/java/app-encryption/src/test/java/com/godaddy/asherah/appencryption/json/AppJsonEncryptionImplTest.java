@@ -40,8 +40,7 @@ class AppJsonEncryptionImplTest {
 
   @BeforeEach
   void setUp() {
-    partition = new Partition("PARTITION", "SYSTEM",
-        "PRODUCT");
+    partition = new Partition("PARTITION", "SERVICE",  "PRODUCT");
 
     memoryPersistence = new HashMap<>();
     dataPersistence = new AdhocPersistence<>(key -> Optional.ofNullable(memoryPersistence.get(key)),

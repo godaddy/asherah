@@ -62,7 +62,7 @@ use the `withXXX` setter methods to configure the session factory properties.
 Below is an example of a session factory that uses in-memory persistence and static key management.
 
 ```java
-SessionFactory sessionFactory = SessionFactory.newBuilder("myservice", "sample_code")
+SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
     .withInMemoryMetastore() // in-memory metastore
     .withNeverExpiredCryptoPolicy()
     .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!") // hard-coded/static master key

@@ -3,12 +3,12 @@ package com.godaddy.asherah.appencryption;
 public class Partition {
 
   private final String partitionId;
-  private final String systemId;
+  private final String serviceId;
   private final String productId;
 
-  public Partition(final String partitionId, final String systemId, final String productId) {
+  public Partition(final String partitionId, final String serviceId, final String productId) {
     this.partitionId = partitionId;
-    this.systemId = systemId;
+    this.serviceId = serviceId;
     this.productId = productId;
   }
 
@@ -16,8 +16,8 @@ public class Partition {
     return partitionId;
   }
 
-  String getSystemId() {
-    return systemId;
+  String getServiceId() {
+    return serviceId;
   }
 
   String getProductId() {
@@ -25,16 +25,16 @@ public class Partition {
   }
 
   public String getSystemKeyId() {
-    return "_SK_" + systemId + "_" + productId;
+    return "_SK_" + serviceId + "_" + productId;
   }
 
   public String getIntermediateKeyId() {
-    return "_IK_" + partitionId + "_" + systemId + "_" + productId;
+    return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
   }
 
   @Override
   public String toString() {
     return getClass().getSimpleName() + "[partitionId=" + partitionId +
-      ", systemId=" + systemId + ", productId=" + productId + "]";
+      ", serviceId=" + serviceId + ", productId=" + productId + "]";
   }
 }
