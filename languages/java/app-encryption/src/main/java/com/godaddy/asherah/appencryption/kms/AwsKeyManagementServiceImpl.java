@@ -8,7 +8,7 @@ import com.amazonaws.services.kms.model.EncryptResult;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.godaddy.asherah.appencryption.exceptions.KMSException;
+import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
@@ -203,7 +203,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
    * Attempt to generate a KMS datakey using the first successful response using a sorted map of available KMS clients.
    * @param sortedRegionToArnAndClient A sorted dictionary mapping regions and their arns and kms clients
    * @return A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key
-   * @exception KMSException Throws a KMSException if we're unable to generate a datakey in any AWS
+   * @exception KmsException Throws a KmsException if we're unable to generate a datakey in any AWS
    * region
    */
   GenerateDataKeyResult generateDataKey(final Map<String, AwsKmsArnClient> sortedRegionToArnAndClient) {
@@ -226,7 +226,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
       }
     }
 
-    throw new KMSException("could not successfully generate data key using any regions");
+    throw new KmsException("could not successfully generate data key using any regions");
   }
 
   /**
@@ -277,7 +277,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
         }
       }
 
-      throw new KMSException("could not successfully decrypt key using any regions");
+      throw new KmsException("could not successfully decrypt key using any regions");
     });
   }
 

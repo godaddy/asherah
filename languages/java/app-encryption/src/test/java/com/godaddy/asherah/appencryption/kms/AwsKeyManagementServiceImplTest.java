@@ -4,7 +4,7 @@ import com.amazonaws.SdkBaseException;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.*;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.godaddy.asherah.appencryption.exceptions.KMSException;
+import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
@@ -124,7 +124,7 @@ class AwsKeyManagementServiceImplTest {
   }
 
   @Test
-  void testDecryptKeyWithKmsFailureShouldThrowKeyManagementException() {
+  void testDecryptKeyWithKmsFailureShouldThrowKmsException() {
     byte[] encryptedKey = new byte[]{0, 1};
     byte[] kmsKeyEncryptionKey = new byte[]{2, 3};
     JSONObject kmsKeyEnvelope = new JSONObject(ImmutableMap.of(
@@ -142,7 +142,7 @@ class AwsKeyManagementServiceImplTest {
     doThrow(SdkBaseException.class)
         .when(awsKeyManagementServiceImpl).decryptKmsEncryptedKey(any(), any(), any(), any(), anyBoolean());
 
-    assertThrows(KMSException.class,
+    assertThrows(KmsException.class,
         () -> awsKeyManagementServiceImpl.decryptKey(new Json(kmsKeyEnvelope).toUtf8(), Instant.now(), false));
   }
 
@@ -239,11 +239,11 @@ class AwsKeyManagementServiceImplTest {
   }
 
   @Test
-  void testGenerateDataKeyWithKmsFailureShouldThrowKeyManagementException() {
+  void testGenerateDataKeyWithKmsFailureShouldThrowKmsException() {
     Map<String, AwsKmsArnClient> sortedRegionToArnAndClient = awsKeyManagementServiceImpl.getRegionToArnAndClientMap();
     when(awsKmsClient.generateDataKey(any(GenerateDataKeyRequest.class))).thenThrow(SdkBaseException.class);
 
-    assertThrows(KMSException.class,
+    assertThrows(KmsException.class,
         () -> awsKeyManagementServiceImpl.generateDataKey(sortedRegionToArnAndClient));
   }
 
