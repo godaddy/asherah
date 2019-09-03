@@ -1,10 +1,10 @@
-package com.godaddy.asherah.appencryption.keymanagement;
+package com.godaddy.asherah.appencryption.kms;
 
 import com.amazonaws.SdkBaseException;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.*;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.godaddy.asherah.appencryption.exceptions.KeyManagementException;
+import com.godaddy.asherah.appencryption.exceptions.KMSException;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 
-import static com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceImpl.*;
+import static com.godaddy.asherah.appencryption.kms.AwsKeyManagementServiceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -142,7 +142,7 @@ class AwsKeyManagementServiceImplTest {
     doThrow(SdkBaseException.class)
         .when(awsKeyManagementServiceImpl).decryptKmsEncryptedKey(any(), any(), any(), any(), anyBoolean());
 
-    assertThrows(KeyManagementException.class,
+    assertThrows(KMSException.class,
         () -> awsKeyManagementServiceImpl.decryptKey(new Json(kmsKeyEnvelope).toUtf8(), Instant.now(), false));
   }
 
@@ -243,7 +243,7 @@ class AwsKeyManagementServiceImplTest {
     Map<String, AwsKmsArnClient> sortedRegionToArnAndClient = awsKeyManagementServiceImpl.getRegionToArnAndClientMap();
     when(awsKmsClient.generateDataKey(any(GenerateDataKeyRequest.class))).thenThrow(SdkBaseException.class);
 
-    assertThrows(KeyManagementException.class,
+    assertThrows(KMSException.class,
         () -> awsKeyManagementServiceImpl.generateDataKey(sortedRegionToArnAndClient));
   }
 

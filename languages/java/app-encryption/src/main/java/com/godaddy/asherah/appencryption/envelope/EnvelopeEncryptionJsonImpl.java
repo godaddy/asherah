@@ -3,7 +3,7 @@ package com.godaddy.asherah.appencryption.envelope;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;

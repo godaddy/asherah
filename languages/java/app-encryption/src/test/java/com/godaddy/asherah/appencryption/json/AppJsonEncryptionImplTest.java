@@ -8,7 +8,7 @@ import com.godaddy.asherah.appencryption.SessionJsonImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.AdhocPersistence;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.Metastore;

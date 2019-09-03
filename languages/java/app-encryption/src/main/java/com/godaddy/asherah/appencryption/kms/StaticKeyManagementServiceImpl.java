@@ -1,4 +1,4 @@
-package com.godaddy.asherah.appencryption.keymanagement;
+package com.godaddy.asherah.appencryption.kms;
 
 import java.time.Instant;
 

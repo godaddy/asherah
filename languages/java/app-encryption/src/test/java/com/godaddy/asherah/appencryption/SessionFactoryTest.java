@@ -1,8 +1,8 @@
 package com.godaddy.asherah.appencryption;
 
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;

@@ -1,4 +1,4 @@
-package com.godaddy.asherah.appencryption.keymanagement;
+package com.godaddy.asherah.appencryption.kms;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

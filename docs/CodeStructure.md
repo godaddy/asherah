@@ -9,7 +9,7 @@ for an example of how the code should be structured:
     * Interfaces and types a user interacts with during primary cryptographic operations.
 * envelope (`com.godaddy.asherah.appencryption.envelope`)
     * Core envelope encryption algorithm and models used
-* keymanagement (`com.godaddy.asherah.appencryption.keymanagement`)
+* kms (`com.godaddy.asherah.appencryption.kms`)
     * Interfaces and types related to the external Key Management Service (KMS/HSM)
 * persistence (`com.godaddy.asherah.appencryption.persistence`)
     * Interfaces and types related to the Metastore and store/load model's persistence functionality
