@@ -8,7 +8,7 @@ using App.Metrics;
 using CommandLine;
 using CommandLine.Text;
 using GoDaddy.Asherah.AppEncryption;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Logging;
