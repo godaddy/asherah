@@ -6,14 +6,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
     public class PartitionTest
     {
         private const string TestPartitionId = "test_partition_id";
-        private const string TestSystemId = "test_system_id";
+        private const string TestServiceId = "test_service_id";
         private const string TestProductId = "test_product_id";
 
         private readonly Partition partition;
 
         public PartitionTest()
         {
-            partition = new Partition(TestPartitionId, TestSystemId, TestProductId);
+            partition = new Partition(TestPartitionId, TestServiceId, TestProductId);
         }
 
         [Fact]
@@ -30,10 +30,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetSystemId()
+        private void TestGetServiceId()
         {
-            string actualSystemId = partition.SystemId;
-            Assert.Equal(TestSystemId, actualSystemId);
+            string actualServiceId = partition.ServiceId;
+            Assert.Equal(TestServiceId, actualServiceId);
         }
 
         [Fact]
@@ -46,14 +46,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestGetSystemKeyId()
         {
-            const string systemKeyIdString = "_SK_" + TestSystemId + "_" + TestProductId;
+            const string systemKeyIdString = "_SK_" + TestServiceId + "_" + TestProductId;
             Assert.Equal(systemKeyIdString, partition.SystemKeyId);
         }
 
         [Fact]
         private void TestGetIntermediateKeyId()
         {
-            const string intermediateKeyIdString = "_IK_" + TestPartitionId + "_" + TestSystemId + "_" + TestProductId;
+            const string intermediateKeyIdString = "_IK_" + TestPartitionId + "_" + TestServiceId + "_" + TestProductId;
             Assert.Equal(intermediateKeyIdString, partition.IntermediateKeyId);
         }
 
@@ -61,7 +61,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestToString()
         {
             string expectedToStringString = partition.GetType().Name + "[partitionId=" + TestPartitionId +
-                    ", systemId=" + TestSystemId + ", productId=" + TestProductId + "]";
+                    ", serviceId=" + TestServiceId + ", productId=" + TestProductId + "]";
             Assert.Equal(expectedToStringString, partition.ToString());
         }
     }
