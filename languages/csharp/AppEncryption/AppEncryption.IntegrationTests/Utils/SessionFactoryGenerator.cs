@@ -10,16 +10,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
         public static SessionFactory CreateDefaultSessionFactory(
             KeyManagementService keyManagementService, IMetastore<JObject> metastore)
         {
-            return CreateDefaultSessionFactory(DefaultProductId, DefaultSystemId, keyManagementService, metastore);
+            return CreateDefaultSessionFactory(DefaultProductId, DefaultServiceId, keyManagementService, metastore);
         }
 
         private static SessionFactory CreateDefaultSessionFactory(
             string productId,
-            string systemId,
+            string serviceId,
             KeyManagementService keyManagementService,
             IMetastore<JObject> metastore)
         {
-            return SessionFactory.NewBuilder(productId, systemId)
+            return SessionFactory.NewBuilder(productId, serviceId)
                 .WithMetastore(metastore)
                 .WithNeverExpiredCryptoPolicy()
                 .WithKeyManagementService(keyManagementService)

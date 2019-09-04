@@ -2,27 +2,27 @@ namespace GoDaddy.Asherah.AppEncryption
 {
     public class Partition
     {
-        public Partition(string partitionId, string systemId, string productId)
+        public Partition(string partitionId, string serviceId, string productId)
         {
             PartitionId = partitionId;
-            SystemId = systemId;
+            ServiceId = serviceId;
             ProductId = productId;
         }
 
-        public string SystemKeyId => "_SK_" + SystemId + "_" + ProductId;
+        public string SystemKeyId => "_SK_" + ServiceId + "_" + ProductId;
 
-        public string IntermediateKeyId => "_IK_" + PartitionId + "_" + SystemId + "_" + ProductId;
+        public string IntermediateKeyId => "_IK_" + PartitionId + "_" + ServiceId + "_" + ProductId;
 
         internal string PartitionId { get; }
 
-        internal string SystemId { get; }
+        internal string ServiceId { get; }
 
         internal string ProductId { get; }
 
         public override string ToString()
         {
             return GetType().Name + "[partitionId=" + PartitionId +
-                   ", systemId=" + SystemId + ", productId=" + ProductId + "]";
+                   ", serviceId=" + ServiceId + ", productId=" + ProductId + "]";
         }
     }
 }

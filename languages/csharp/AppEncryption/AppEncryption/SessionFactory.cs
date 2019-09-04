@@ -18,7 +18,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
 
         private readonly string productId;
-        private readonly string systemId;
+        private readonly string serviceId;
         private readonly IMetastore<JObject> metastore;
         private readonly SecureCryptoKeyDictionaryFactory<DateTimeOffset> secureCryptoKeyDictionaryFactory;
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
@@ -27,14 +27,14 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public SessionFactory(
             string productId,
-            string systemId,
+            string serviceId,
             IMetastore<JObject> metastore,
             SecureCryptoKeyDictionaryFactory<DateTimeOffset> secureCryptoKeyDictionaryFactory,
             CryptoPolicy cryptoPolicy,
             KeyManagementService keyManagementService)
         {
             this.productId = productId;
-            this.systemId = systemId;
+            this.serviceId = serviceId;
             this.metastore = metastore;
             this.secureCryptoKeyDictionaryFactory = secureCryptoKeyDictionaryFactory;
             systemKeyCache = secureCryptoKeyDictionaryFactory.CreateSecureCryptoKeyDictionary();
@@ -72,9 +72,9 @@ namespace GoDaddy.Asherah.AppEncryption
             SessionFactory Build();
         }
 
-        public static IMetastoreStep NewBuilder(string productId, string systemId)
+        public static IMetastoreStep NewBuilder(string productId, string serviceId)
         {
-            return new Builder(productId, systemId);
+            return new Builder(productId, serviceId);
         }
 
         public virtual void Dispose()
@@ -125,7 +125,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         internal Partition GetPartition(string partitionId)
         {
-            return new Partition(partitionId, systemId, productId);
+            return new Partition(partitionId, serviceId, productId);
         }
 
         private EnvelopeEncryptionJsonImpl GetEnvelopeEncryptionJson(string partitionId)
@@ -145,17 +145,17 @@ namespace GoDaddy.Asherah.AppEncryption
         private class Builder : IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
         {
             private readonly string productId;
-            private readonly string systemId;
+            private readonly string serviceId;
 
             private IMetastore<JObject> metastore;
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
             private IMetrics metrics;
 
-            internal Builder(string productId, string systemId)
+            internal Builder(string productId, string serviceId)
             {
                 this.productId = productId;
-                this.systemId = systemId;
+                this.serviceId = serviceId;
             }
 
             public ICryptoPolicyStep WithInMemoryMetastore()
@@ -214,7 +214,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
                 return new SessionFactory(
                     productId,
-                    systemId,
+                    serviceId,
                     metastore,
                     new SecureCryptoKeyDictionaryFactory<DateTimeOffset>(cryptoPolicy),
                     cryptoPolicy,

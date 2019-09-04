@@ -17,7 +17,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
     public class SessionFactoryTest
     {
         private const string TestPartitionId = "test_partition_id";
-        private const string TestSystemId = "test_system_id";
+        private const string TestServiceId = "test_service_id";
         private const string TestProductId = "test_product_id";
         private const string TestMasterKey = "test_master_key";
 
@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             sessionFactory = new SessionFactory(
                 TestProductId,
-                TestSystemId,
+                TestServiceId,
                 metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
@@ -54,7 +54,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         {
             SessionFactory sessionFactory = new SessionFactory(
                 TestProductId,
-                TestSystemId,
+                TestServiceId,
                 metastoreMock.Object,
                 secureCryptoKeyDictionaryFactoryMock.Object,
                 cryptoPolicyMock.Object,
@@ -110,7 +110,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 sessionFactory.GetPartition(TestPartitionId);
 
             Assert.Equal(TestPartitionId, partition.PartitionId);
-            Assert.Equal(TestSystemId, partition.SystemId);
+            Assert.Equal(TestServiceId, partition.ServiceId);
             Assert.Equal(TestProductId, partition.ProductId);
         }
 
@@ -137,7 +137,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestBuilderPathWithPrebuiltInterfaces()
         {
             SessionFactory.IMetastoreStep metastoreStep =
-                SessionFactory.NewBuilder(TestProductId, TestSystemId);
+                SessionFactory.NewBuilder(TestProductId, TestServiceId);
             Assert.NotNull(metastoreStep);
 
             SessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithInMemoryMetastore();
@@ -159,7 +159,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestBuilderPathWithSpecifiedInterfaces()
         {
             SessionFactory.IMetastoreStep metastoreStep =
-                SessionFactory.NewBuilder(TestProductId, TestSystemId);
+                SessionFactory.NewBuilder(TestProductId, TestServiceId);
             Assert.NotNull(metastoreStep);
 
             IMetastore<JObject> metastore = new InMemoryMetastoreImpl<JObject>();
@@ -184,7 +184,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestBuilderPathWithMetricsDisabled()
         {
-            SessionFactory.NewBuilder(TestProductId, TestSystemId)
+            SessionFactory.NewBuilder(TestProductId, TestServiceId)
                 .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)
@@ -200,7 +200,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestBuilderPathWithMetricsEnabled()
         {
             IMetrics metrics = new MetricsBuilder().Build();
-            SessionFactory.NewBuilder(TestProductId, TestSystemId)
+            SessionFactory.NewBuilder(TestProductId, TestServiceId)
                 .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestMasterKey)

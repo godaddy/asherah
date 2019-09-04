@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         /// <summary>
         /// IDs & Keys
         /// </summary>
-        public const string DefaultSystemId = "system";
+        public const string DefaultServiceId = "service";
         public const string DefaultProductId = "product";
         public const string DefaultPartitionId = "partition";
         public const int KeyExpiryDays = 30;
