@@ -23,7 +23,7 @@ using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
-namespace GoDaddy.Asherah.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Kms
 {
     public class AwsKeyManagementServiceImpl : KeyManagementService
     {
@@ -201,7 +201,7 @@ namespace GoDaddy.Asherah.AppEncryption.KeyManagement
                     }
                 }
 
-                throw new KeyManagementException("could not successfully decrypt key using any regions");
+                throw new KmsException("could not successfully decrypt key using any regions");
             }
         }
 
@@ -245,7 +245,7 @@ namespace GoDaddy.Asherah.AppEncryption.KeyManagement
         /// <param name="sortedRegionToArnAndClientDictionary"> A sorted dictionary mapping regions and their arns and kms clients</param>
         /// <param name="dateKeyKeyId">The KMS arn used to generate the data key</param>
         /// <returns>A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key</returns>
-        /// <exception cref="KeyManagementException">Throw an exception if we're unable to generate a datakey in any AWS region</exception>
+        /// <exception cref="KmsException">Throw an exception if we're unable to generate a datakey in any AWS region</exception>
         internal virtual GenerateDataKeyResult GenerateDataKey(OrderedDictionary sortedRegionToArnAndClientDictionary, out string dateKeyKeyId)
         {
             foreach (DictionaryEntry regionToArnAndClient in sortedRegionToArnAndClientDictionary)
@@ -276,7 +276,7 @@ namespace GoDaddy.Asherah.AppEncryption.KeyManagement
                 }
             }
 
-            throw new KeyManagementException("could not successfully generate data key using any regions");
+            throw new KmsException("could not successfully generate data key using any regions");
         }
 
         /// <summary>

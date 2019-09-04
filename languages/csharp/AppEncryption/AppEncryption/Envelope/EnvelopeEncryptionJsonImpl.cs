@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;

@@ -1,10 +1,10 @@
 using System;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Xunit;
 
-namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
     [Collection("Logger Fixture collection")]
     public class KeyManagementServiceTest

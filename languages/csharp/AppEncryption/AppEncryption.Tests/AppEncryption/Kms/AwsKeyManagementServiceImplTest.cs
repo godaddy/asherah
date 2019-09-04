@@ -11,7 +11,7 @@ using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
 using Amazon.Runtime.SharedInterfaces;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
@@ -20,9 +20,7 @@ using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-using static GoDaddy.Asherah.AppEncryption.KeyManagement.AwsKeyManagementServiceImpl;
-
-namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
     [Collection("Logger Fixture collection")]
     public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>
@@ -86,15 +84,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
 
             JObject kmsKeyEnvelopeTest = JObject.FromObject(new Dictionary<string, object>
             {
-                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                { AwsKeyManagementServiceImpl.EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    KmsKeksKey, new List<Dictionary<string, object>>
+                    AwsKeyManagementServiceImpl.KmsKeksKey, new List<Dictionary<string, object>>
                 {
                     new Dictionary<string, object>
                     {
-                        { RegionKey, UsWest1 },
-                        { ArnKey, ArnUsWest1 },
-                        { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
+                        { AwsKeyManagementServiceImpl.RegionKey, UsWest1 },
+                        { AwsKeyManagementServiceImpl.ArnKey, ArnUsWest1 },
+                        { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
                     }
                 }
             }
@@ -125,21 +123,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
 
             JObject kmsKeyEnvelope = JObject.FromObject(new Dictionary<string, object>
             {
-                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                { AwsKeyManagementServiceImpl.EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    KmsKeksKey, new List<Dictionary<string, object>>
+                    AwsKeyManagementServiceImpl.KmsKeksKey, new List<Dictionary<string, object>>
                     {
                         new Dictionary<string, object>
                         {
-                            { RegionKey, "some_region" },  // should appear before valid us-east region
-                            { ArnKey, "some_arn" },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
+                            { AwsKeyManagementServiceImpl.RegionKey, "some_region" },  // should appear before valid us-east region
+                            { AwsKeyManagementServiceImpl.ArnKey, "some_arn" },
+                            { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
                         },
                         new Dictionary<string, object>
                         {
-                            { RegionKey, UsEast1 },
-                            { ArnKey, ArnUsEast1 },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
+                            { AwsKeyManagementServiceImpl.RegionKey, UsEast1 },
+                            { AwsKeyManagementServiceImpl.ArnKey, ArnUsEast1 },
+                            { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
                         }
                     }
                 }
@@ -163,21 +161,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         }
 
         [Fact]
-        private void TestDecryptKeyWithKmsFailureShouldThrowKeyManagementException()
+        private void TestDecryptKeyWithKmsFailureShouldThrowKmsException()
         {
             byte[] encryptedKey = { 0, 1 };
             byte[] kmsKeyEncryptionKey = { 2, 3 };
             JObject kmsKeyEnvelope = JObject.FromObject(new Dictionary<string, object>
             {
-                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                { AwsKeyManagementServiceImpl.EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    KmsKeksKey, new List<Dictionary<string, object>>
+                    AwsKeyManagementServiceImpl.KmsKeksKey, new List<Dictionary<string, object>>
                     {
                         new Dictionary<string, object>
                         {
-                            { RegionKey, UsWest1 },
-                            { ArnKey, ArnUsWest1 },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
+                            { AwsKeyManagementServiceImpl.RegionKey, UsWest1 },
+                            { AwsKeyManagementServiceImpl.ArnKey, ArnUsWest1 },
+                            { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
                         }
                     }
                 }
@@ -191,7 +189,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
                     It.IsAny<byte[]>(),
                     It.IsAny<bool>()))
                 .Throws<AmazonServiceException>();
-            Assert.Throws<KeyManagementException>(() =>
+            Assert.Throws<KmsException>(() =>
                 awsKeyManagementServiceImplSpy.Object.DecryptKey(
                     new Asherah.AppEncryption.Util.Json(kmsKeyEnvelope).ToUtf8(), DateTimeOffset.UtcNow, false));
         }
@@ -200,14 +198,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         private void TestGetPrioritizedKmsRegionKeyJsonList()
         {
             string json =
-                $@"[{{ '{RegionKey}':'{UsEast1}' }}, {{ '{RegionKey}':'a' }},
-                    {{ '{RegionKey}':'zzzzzz' }}, {{ '{RegionKey}':'{preferredRegion}' }}]";
+                $@"[{{ '{AwsKeyManagementServiceImpl.RegionKey}':'{UsEast1}' }}, {{ '{AwsKeyManagementServiceImpl.RegionKey}':'a' }},
+                    {{ '{AwsKeyManagementServiceImpl.RegionKey}':'zzzzzz' }}, {{ '{AwsKeyManagementServiceImpl.RegionKey}':'{preferredRegion}' }}]";
 
             // region 'a' should always be lexicographically first and region 'zzzzzz' should always be lexicographically last
             JArray regionArray = JArray.Parse(json);
             List<Asherah.AppEncryption.Util.Json> ret =
                 awsKeyManagementServiceImplSpy.Object.GetPrioritizedKmsRegionKeyJsonList(regionArray);
-            Assert.Equal(preferredRegion, ret[0].GetString(RegionKey));
+            Assert.Equal(preferredRegion, ret[0].GetString(AwsKeyManagementServiceImpl.RegionKey));
 
             // If we ever add geo awareness, add unit tests appropriately
         }
@@ -268,7 +266,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         private void TestPrimaryBuilderPath()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
-                NewBuilder(regionToArnDictionary, preferredRegion);
+                AwsKeyManagementServiceImpl.NewBuilder(regionToArnDictionary, preferredRegion);
             AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.Build();
             Assert.NotNull(awsKeyManagementServiceBuilder);
         }
@@ -288,14 +286,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         }
 
         [Fact]
-        private void TestGenerateDataKeyWithKmsFailureShouldThrowKeyManagementException()
+        private void TestGenerateDataKeyWithKmsFailureShouldThrowKmsException()
         {
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
             amazonKeyManagementServiceClientMock
                 .Setup(x => x.GenerateDataKey(It.IsAny<string>(), null, It.IsAny<string>()))
                 .Throws<AmazonServiceException>();
-            Assert.Throws<KeyManagementException>(() =>
+            Assert.Throws<KmsException>(() =>
                 awsKeyManagementServiceImplSpy.Object.GenerateDataKey(sortedRegionToArnAndClient, out _));
         }
 
@@ -315,9 +313,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
             Option<JObject> actualResult = awsKeyManagementServiceImplSpy.Object.EncryptKeyAndBuildResult(
                 amazonKeyManagementServiceClientMock.Object, preferredRegion, ArnUsWest1, dataKeyPlainText);
 
-            Assert.Equal(preferredRegion, ((JObject)actualResult).GetValue(RegionKey).ToString());
-            Assert.Equal(ArnUsWest1, ((JObject)actualResult).GetValue(ArnKey).ToString());
-            Assert.Equal(encryptedKey, Convert.FromBase64String(((JObject)actualResult).GetValue(EncryptedKek).ToString()));
+            Assert.Equal(preferredRegion, ((JObject)actualResult).GetValue(AwsKeyManagementServiceImpl.RegionKey).ToString());
+            Assert.Equal(ArnUsWest1, ((JObject)actualResult).GetValue(AwsKeyManagementServiceImpl.ArnKey).ToString());
+            Assert.Equal(encryptedKey, Convert.FromBase64String(((JObject)actualResult).GetValue(AwsKeyManagementServiceImpl.EncryptedKek).ToString()));
         }
 
         [Fact]
@@ -346,24 +344,24 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
 
             JObject encryptKeyAndBuildResultJson = JObject.FromObject(new Dictionary<string, object>
             {
-                { RegionKey, UsEast1 },
-                { ArnKey, ArnUsEast1 },
-                { EncryptedKek, Convert.ToBase64String(encryptKeyCipherText) }
+                { AwsKeyManagementServiceImpl.RegionKey, UsEast1 },
+                { AwsKeyManagementServiceImpl.ArnKey, ArnUsEast1 },
+                { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(encryptKeyCipherText) }
             });
 
             JObject kmsKeyEnvelope = JObject.FromObject(new Dictionary<string, object>
             {
-                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                { AwsKeyManagementServiceImpl.EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
                     // For some reason we have to use ConcurrentBag here. Likely due to internal ConcurrentBag list structure
                     // failing to compare against regular List?
-                    KmsKeksKey, new ConcurrentBag<object>
+                    AwsKeyManagementServiceImpl.KmsKeksKey, new ConcurrentBag<object>
                     {
                         new Dictionary<string, object>
                         {
-                            { RegionKey, UsWest1 },
-                            { ArnKey, ArnUsWest1 },
-                            { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) }
+                            { AwsKeyManagementServiceImpl.RegionKey, UsWest1 },
+                            { AwsKeyManagementServiceImpl.ArnKey, ArnUsWest1 },
+                            { AwsKeyManagementServiceImpl.EncryptedKek, Convert.ToBase64String(dataKeyCipherText) }
                         },
                         encryptKeyAndBuildResultJson
                     }

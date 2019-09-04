@@ -1,5 +1,5 @@
 using System;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 

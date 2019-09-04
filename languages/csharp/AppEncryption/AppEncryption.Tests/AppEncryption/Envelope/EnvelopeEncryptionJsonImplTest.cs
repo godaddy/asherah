@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Envelope;

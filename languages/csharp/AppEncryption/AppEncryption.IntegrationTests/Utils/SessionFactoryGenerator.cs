@@ -1,4 +1,4 @@
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using Newtonsoft.Json.Linq;
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;

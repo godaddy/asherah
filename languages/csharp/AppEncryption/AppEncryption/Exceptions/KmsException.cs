@@ -2,9 +2,9 @@ using GoDaddy.Asherah.Crypto.Exceptions;
 
 namespace GoDaddy.Asherah.AppEncryption.Exceptions
 {
-    public class KeyManagementException : AppEncryptionException
+    public class KmsException : AppEncryptionException
     {
-        public KeyManagementException(string message)
+        public KmsException(string message)
             : base(message)
         {
         }

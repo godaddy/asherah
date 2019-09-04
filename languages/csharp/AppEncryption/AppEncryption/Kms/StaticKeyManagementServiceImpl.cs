@@ -4,7 +4,7 @@ using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
 
-namespace GoDaddy.Asherah.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Kms
 {
     public class StaticKeyManagementServiceImpl : KeyManagementService
     {
