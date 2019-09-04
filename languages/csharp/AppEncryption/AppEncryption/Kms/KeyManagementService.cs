@@ -1,7 +1,7 @@
 using System;
 using GoDaddy.Asherah.Crypto.Keys;
 
-namespace GoDaddy.Asherah.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Kms
 {
     public abstract class KeyManagementService
     {

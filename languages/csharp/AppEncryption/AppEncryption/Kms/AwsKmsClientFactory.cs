@@ -1,7 +1,7 @@
 using Amazon;
 using Amazon.KeyManagementService;
 
-namespace GoDaddy.Asherah.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Kms
 {
     public class AwsKmsClientFactory
     {

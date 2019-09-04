@@ -2,7 +2,7 @@ using System;
 using App.Metrics;
 using App.Metrics.Meter;
 using GoDaddy.Asherah.AppEncryption.Envelope;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;

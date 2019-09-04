@@ -11,7 +11,7 @@ using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
 using Amazon.Runtime.SharedInterfaces;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
-using GoDaddy.Asherah.AppEncryption.KeyManagement;
+using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
@@ -20,9 +20,9 @@ using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-using static GoDaddy.Asherah.AppEncryption.KeyManagement.AwsKeyManagementServiceImpl;
+using static GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl;
 
-namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
+namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
     [Collection("Logger Fixture collection")]
     public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>
@@ -163,7 +163,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         }
 
         [Fact]
-        private void TestDecryptKeyWithKmsFailureShouldThrowKeyManagementException()
+        private void TestDecryptKeyWithKmsFailureShouldThrowKmsException()
         {
             byte[] encryptedKey = { 0, 1 };
             byte[] kmsKeyEncryptionKey = { 2, 3 };
@@ -191,7 +191,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
                     It.IsAny<byte[]>(),
                     It.IsAny<bool>()))
                 .Throws<AmazonServiceException>();
-            Assert.Throws<KeyManagementException>(() =>
+            Assert.Throws<KmsException>(() =>
                 awsKeyManagementServiceImplSpy.Object.DecryptKey(
                     new Asherah.AppEncryption.Util.Json(kmsKeyEnvelope).ToUtf8(), DateTimeOffset.UtcNow, false));
         }
@@ -203,7 +203,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
                 $@"[{{ '{RegionKey}':'{UsEast1}' }}, {{ '{RegionKey}':'a' }},
                     {{ '{RegionKey}':'zzzzzz' }}, {{ '{RegionKey}':'{preferredRegion}' }}]";
 
-            // region 'a' should always be lexicographically first and region 'zzzzzz' should always be lexicographically last
+            // region 'a' should always be lexicographically first and region 'zzzzzz' should always be
+            // lexicographically last
             JArray regionArray = JArray.Parse(json);
             List<Asherah.AppEncryption.Util.Json> ret =
                 awsKeyManagementServiceImplSpy.Object.GetPrioritizedKmsRegionKeyJsonList(regionArray);
@@ -241,7 +242,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
                 .Throws<AmazonServiceException>();
             Assert.Throws<AmazonServiceException>(() =>
                 awsKeyManagementServiceImplSpy.Object.DecryptKmsEncryptedKey(
-                    amazonKeyManagementServiceClientMock.Object, cipherText, DateTimeOffset.UtcNow, keyEncryptionKey, false));
+                    amazonKeyManagementServiceClientMock.Object,
+                    cipherText,
+                    DateTimeOffset.UtcNow,
+                    keyEncryptionKey,
+                    false));
         }
 
         [Fact]
@@ -279,8 +284,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
             Mock<GenerateDataKeyResult> dataKeyResultMock = new Mock<GenerateDataKeyResult>();
+
+            // preferred region's ARN, verify it's the first and hence returned
             amazonKeyManagementServiceClientMock
-                .Setup(x => x.GenerateDataKey(ArnUsWest1, null, DataKeySpec.AES_256)) // preferred region's ARN, verify it's the first and hence returned
+                .Setup(x => x.GenerateDataKey(ArnUsWest1, null, DataKeySpec.AES_256))
                 .Returns(dataKeyResultMock.Object);
             GenerateDataKeyResult dataKeyResponseActual =
                 awsKeyManagementServiceImplSpy.Object.GenerateDataKey(sortedRegionToArnAndClient, out _);
@@ -288,14 +295,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
         }
 
         [Fact]
-        private void TestGenerateDataKeyWithKmsFailureShouldThrowKeyManagementException()
+        private void TestGenerateDataKeyWithKmsFailureShouldThrowKmsException()
         {
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
             amazonKeyManagementServiceClientMock
                 .Setup(x => x.GenerateDataKey(It.IsAny<string>(), null, It.IsAny<string>()))
                 .Throws<AmazonServiceException>();
-            Assert.Throws<KeyManagementException>(() =>
+            Assert.Throws<KmsException>(() =>
                 awsKeyManagementServiceImplSpy.Object.GenerateDataKey(sortedRegionToArnAndClient, out _));
         }
 
@@ -317,7 +324,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
 
             Assert.Equal(preferredRegion, ((JObject)actualResult).GetValue(RegionKey).ToString());
             Assert.Equal(ArnUsWest1, ((JObject)actualResult).GetValue(ArnKey).ToString());
-            Assert.Equal(encryptedKey, Convert.FromBase64String(((JObject)actualResult).GetValue(EncryptedKek).ToString()));
+            Assert.Equal(
+                encryptedKey, Convert.FromBase64String(((JObject)actualResult).GetValue(EncryptedKek).ToString()));
         }
 
         [Fact]
@@ -355,8 +363,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
             {
                 { EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    // For some reason we have to use ConcurrentBag here. Likely due to internal ConcurrentBag list structure
-                    // failing to compare against regular List?
+                    // For some reason we have to use ConcurrentBag here. Likely due to internal ConcurrentBag list
+                    // structure failing to compare against regular List?
                     KmsKeksKey, new ConcurrentBag<object>
                     {
                         new Dictionary<string, object>
@@ -379,7 +387,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
             string keyId = ArnUsWest1;
 
             awsKeyManagementServiceImplSpy
-                .Setup(x => x.GenerateDataKey(awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out keyId))
+                .Setup(x =>
+                    x.GenerateDataKey(awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out keyId))
                 .Returns(generateDataKeyResult);
             cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.KeyPlaintext))
                 .Returns(generatedDataKeyCryptoKey.Object);
@@ -413,7 +422,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.KeyManagement
             Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
             string someKey = "some_key";
             awsKeyManagementServiceImplSpy
-                .Setup(x => x.GenerateDataKey(awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out someKey))
+                .Setup(x =>
+                    x.GenerateDataKey(
+                        awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out someKey))
                 .Returns(generateDataKeyResult);
             cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.KeyPlaintext))
                 .Returns(generatedDataKeyCryptoKey.Object);
