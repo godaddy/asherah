@@ -1,4 +1,4 @@
-package com.godaddy.asherah.appencryption.keymanagement;
+package com.godaddy.asherah.appencryption.kms;
 
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;

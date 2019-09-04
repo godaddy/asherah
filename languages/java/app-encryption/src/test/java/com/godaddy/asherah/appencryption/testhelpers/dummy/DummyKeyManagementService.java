@@ -1,6 +1,6 @@
 package com.godaddy.asherah.appencryption.testhelpers.dummy;
 
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 

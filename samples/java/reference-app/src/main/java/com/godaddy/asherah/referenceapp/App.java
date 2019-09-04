@@ -17,9 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
-import com.godaddy.asherah.appencryption.keymanagement.AwsKeyManagementServiceImpl;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
-import com.godaddy.asherah.appencryption.keymanagement.StaticKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.kms.AwsKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;

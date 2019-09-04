@@ -3,7 +3,7 @@ package com.godaddy.asherah.testapp.regression;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeKeyRecord;
 import com.godaddy.asherah.appencryption.envelope.KeyMeta;
-import com.godaddy.asherah.appencryption.keymanagement.KeyManagementService;
+import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
