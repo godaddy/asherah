@@ -80,7 +80,14 @@ class EncryptMetastoreInteractions {
     }
 
     if (metaIK == KeyState.VALID) {
-      return false;
+      // Because cacheSK points to a retired and latest value in cache,
+      // we need to loadLatest SK from metastore
+      if (cacheSK == KeyState.RETIRED) {
+        return true;
+      }
+
+      // We know it's not in the cache, so can we need to load the latest SK in metastore
+      return cacheSK == KeyState.EMPTY && metaSK != KeyState.VALID;
     }
 
     return cacheSK != KeyState.VALID;

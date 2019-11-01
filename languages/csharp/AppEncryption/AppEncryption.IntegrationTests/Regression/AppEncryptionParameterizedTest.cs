@@ -93,6 +93,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     x => x.Store(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
                     Times.Once);
             }
+            else
+            {
+                metastore.Verify(
+                    x => x.Store(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
+                    Times.Never);
+            }
 
             // If SK is stored to metastore
             if (metastoreInteractions.ShouldStoreSK())
@@ -100,6 +106,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 metastore.Verify(
                     x => x.Store(partition.SystemKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
                     Times.Once);
+            }
+            else
+            {
+                metastore.Verify(
+                    x => x.Store(partition.SystemKeyId, It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()),
+                    Times.Never);
             }
 
             // If neither IK nor SK is stored
@@ -128,17 +140,21 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // If latest IK is loaded from metastore
             if (metastoreInteractions.ShouldLoadLatestIK())
             {
-                metastore.Verify(
-                    x => x.LoadLatest(partition.IntermediateKeyId),
-                    Times.Once);
+                metastore.Verify(x => x.LoadLatest(partition.IntermediateKeyId), Times.Once);
+            }
+            else
+            {
+                metastore.Verify(x => x.LoadLatest(partition.IntermediateKeyId), Times.Never);
             }
 
             // If latest SK is loaded from metastore
             if (metastoreInteractions.ShouldLoadLatestSK())
             {
-                metastore.Verify(
-                    x => x.LoadLatest(partition.SystemKeyId),
-                    Times.Once);
+                metastore.Verify(x => x.LoadLatest(partition.SystemKeyId), Times.Once);
+            }
+            else
+            {
+                metastore.Verify(x => x.LoadLatest(partition.SystemKeyId), Times.Never);
             }
 
             // If neither latest IK or SK is loaded from metastore

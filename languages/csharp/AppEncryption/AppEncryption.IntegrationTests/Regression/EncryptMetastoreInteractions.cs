@@ -92,7 +92,15 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             if (metaIK == KeyState.Valid)
             {
-                return false;
+                // Because cacheSK points to a retired and latest value in cache,
+                // we need to loadLatest SK from metastore
+                if (cacheSK == KeyState.Retired)
+                {
+                    return true;
+                }
+
+                // We know it's not in the cache, so can we need to load the latest SK in metastore
+                return cacheSK == KeyState.Empty && metaSK != KeyState.Valid;
             }
 
             return cacheSK != KeyState.Valid;
