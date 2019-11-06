@@ -80,7 +80,16 @@ class EncryptMetastoreInteractions {
     }
 
     if (metaIK == KeyState.VALID) {
-      return false;
+      // Since the cache SK is retired, we create a new IK.
+      // Because the cache SK happens to be the latest one in cache,
+      // we need to load the latest SK from metastore during IK creation flow
+      if (cacheSK == KeyState.RETIRED) {
+        return true;
+      }
+
+      // Since the SK is not in the cache and not valid in the metastore, we have to create a new IK.
+      // This requires loading the latest SK from metastore during IK creation flow
+      return cacheSK == KeyState.EMPTY && metaSK != KeyState.VALID;
     }
 
     return cacheSK != KeyState.VALID;

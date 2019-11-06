@@ -90,10 +90,18 @@ class AppEncryptionParameterizedTest {
       verify(metastore)
           .store(eq(partition.getIntermediateKeyId()), any(Instant.class), any(JSONObject.class));
     }
+    else {
+      verify(metastore,
+          never()).store(eq(partition.getIntermediateKeyId()), any(Instant.class), any(JSONObject.class));
+    }
     // If SK is stored to metastore
     if (metastoreInteractions.shouldStoreSK()) {
       verify(metastore)
           .store(eq(partition.getSystemKeyId()), any(Instant.class), any(JSONObject.class));
+    }
+    else {
+      verify(metastore,
+          never()).store(eq(partition.getSystemKeyId()), any(Instant.class), any(JSONObject.class));
     }
     // If neither IK nor SK is stored
     if (!metastoreInteractions.shouldStoreIK() && !metastoreInteractions.shouldStoreSK()) {
@@ -117,10 +125,18 @@ class AppEncryptionParameterizedTest {
       verify(metastore)
           .loadLatest(eq(partition.getIntermediateKeyId()));
     }
+    else {
+      verify(metastore,
+          never()).loadLatest(eq(partition.getIntermediateKeyId()));
+    }
     // If latest SK is loaded from metastore
     if (metastoreInteractions.shouldLoadLatestSK()) {
       verify(metastore)
           .loadLatest(eq(partition.getSystemKeyId()));
+    }
+    else {
+      verify(metastore,
+          never()).loadLatest(eq(partition.getSystemKeyId()));
     }
     // If neither latest IK or SK is loaded from metastore
     if (!metastoreInteractions.shouldLoadLatestSK() && !metastoreInteractions.shouldLoadLatestIK()) {
