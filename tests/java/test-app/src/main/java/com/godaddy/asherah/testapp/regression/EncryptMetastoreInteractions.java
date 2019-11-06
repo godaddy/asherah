@@ -87,8 +87,8 @@ class EncryptMetastoreInteractions {
         return true;
       }
 
-      // Since the SK is not in the cache, and not valid in the metastore, we have to create a new IK
-      // This would require to load the latest SK from metastore during IK creation flow
+      // Since the SK is not in the cache and not valid in the metastore, we have to create a new IK.
+      // This requires loading the latest SK from metastore during IK creation flow
       return cacheSK == KeyState.EMPTY && metaSK != KeyState.VALID;
     }
 
