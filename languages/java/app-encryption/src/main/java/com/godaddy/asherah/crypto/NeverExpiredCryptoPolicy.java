@@ -25,6 +25,16 @@ public class NeverExpiredCryptoPolicy implements CryptoPolicy {
   }
 
   @Override
+  public boolean useSharedIntermediateKeyCache() {
+    return false;
+  }
+
+  @Override
+  public long getSharedIkCacheExpireAfterAccessMillis() {
+    return Long.MAX_VALUE;
+  }
+
+  @Override
   public boolean notifyExpiredIntermediateKeyOnRead() {
     return true;
   }

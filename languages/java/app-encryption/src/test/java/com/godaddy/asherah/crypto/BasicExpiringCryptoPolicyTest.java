@@ -44,6 +44,8 @@ class BasicExpiringCryptoPolicyTest {
   void testDefaultsDontChange() {
     assertTrue(policy.canCacheSystemKeys());
     assertTrue(policy.canCacheIntermediateKeys());
+    assertFalse(policy.useSharedIntermediateKeyCache());
+    assertEquals(2 * 60 * 60 * 1000, policy.getSharedIkCacheExpireAfterAccessMillis());
     assertEquals(CryptoPolicy.KeyRotationStrategy.INLINE, policy.keyRotationStrategy());
     assertFalse(policy.notifyExpiredSystemKeyOnRead());
     assertFalse(policy.notifyExpiredIntermediateKeyOnRead());
@@ -68,6 +70,8 @@ class BasicExpiringCryptoPolicyTest {
         .withRotationStrategy(CryptoPolicy.KeyRotationStrategy.QUEUED)
         .withCanCacheSystemKeys(false)
         .withCanCacheIntermediateKeys(false)
+        .withUseSharedIntermediateKeyCache(true)
+        .withSharedIkCacheExpireAfterAccessMinutes(33)
         .withNotifyExpiredSystemKeyOnRead(true)
         .withNotifyExpiredIntermediateKeyOnRead(true)
         .build();
@@ -76,6 +80,8 @@ class BasicExpiringCryptoPolicyTest {
     assertEquals(CryptoPolicy.KeyRotationStrategy.QUEUED, policy.keyRotationStrategy());
     assertFalse(policy.canCacheSystemKeys());
     assertFalse(policy.canCacheIntermediateKeys());
+    assertTrue(policy.useSharedIntermediateKeyCache());
+    assertEquals(TimeUnit.MINUTES.toMillis(33), policy.getSharedIkCacheExpireAfterAccessMillis());
     assertTrue(policy.notifyExpiredSystemKeyOnRead());
     assertTrue(policy.notifyExpiredIntermediateKeyOnRead());
   }

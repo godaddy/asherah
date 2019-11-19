@@ -41,6 +41,7 @@
     <guava.version>22.0</guava.version>
     <aws.sdk.version>1.11.468</aws.sdk.version>
     <micrometer.version>1.1.1</micrometer.version>
+    <caffeine.version>2.8.0</caffeine.version>
     <junit.jupiter.version>5.1.1</junit.jupiter.version>
     <junit.platform.version>1.1.1</junit.platform.version>
     <mockito.core.version>2.22.0</mockito.core.version>
@@ -198,6 +199,12 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>${caffeine.version}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.json/json -->

@@ -10,7 +10,6 @@ import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.envelope.EnvelopeEncryptResult;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
-import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMapFactory;
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
@@ -36,8 +35,6 @@ class EnvelopeEncryptionJsonImplTest {
   Metastore<JSONObject> metastore;
   @Mock
   SecureCryptoKeyMap<Instant> systemKeyCache;
-  @Mock
-  SecureCryptoKeyMapFactory<Instant> intermediateKeyCacheFactory;
   @Mock
   SecureCryptoKeyMap<Instant> intermediateKeyCache;
   @Mock
@@ -67,9 +64,8 @@ class EnvelopeEncryptionJsonImplTest {
 
   @BeforeEach
   void setUp() {
-    when(intermediateKeyCacheFactory.createSecureCryptoKeyMap()).thenReturn(intermediateKeyCache);
     envelopeEncryptionJson = spy(new EnvelopeEncryptionJsonImpl(partition, metastore, systemKeyCache,
-        intermediateKeyCacheFactory, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
+        intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
   }
 
   @SuppressWarnings("unchecked")
@@ -151,6 +147,17 @@ class EnvelopeEncryptionJsonImplTest {
     // Verify proper resources are closed
     verify(intermediateKeyCache).close();
     verify(systemKeyCache, never()).close(); // shouldn't be closed
+  }
+
+  @Test
+  void testCloseSuccessWithSharedIkCacheShouldNotClose() {
+    when(cryptoPolicy.useSharedIntermediateKeyCache()).thenReturn(true);
+
+    envelopeEncryptionJson.close();
+
+    // Neither should be closed
+    verify(intermediateKeyCache, never()).close();
+    verify(systemKeyCache, never()).close();
   }
 
   @Test

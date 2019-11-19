@@ -210,7 +210,7 @@ class AppEncryptionParameterizedTest {
 
     EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
         partition, metastore, systemKeyCache,
-        new FakeSecureCryptoKeyMapFactory<>(intermediateKeyCache), new BouncyAes256GcmCrypto(),
+        intermediateKeyCache, new BouncyAes256GcmCrypto(),
         cryptoPolicy, kms
     );
 

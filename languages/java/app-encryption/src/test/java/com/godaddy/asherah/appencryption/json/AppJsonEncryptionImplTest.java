@@ -21,7 +21,6 @@ import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
-import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMapFactory;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -81,7 +80,7 @@ class AppJsonEncryptionImplTest {
               partition,
               metastore,
               systemKeyCache,
-              new SecureCryptoKeyMapFactory<Instant>(cryptoPolicy),
+              new SecureCryptoKeyMap<Instant>(cryptoPolicy.getRevokeCheckPeriodMillis()),
               aeadEnvelopeCrypto,
               cryptoPolicy,
               keyManagementService);

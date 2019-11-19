@@ -1,11 +1,18 @@
 package com.godaddy.asherah.appencryption;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
@@ -19,7 +26,6 @@ import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
-import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMapFactory;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.config.MeterFilter;
@@ -30,25 +36,57 @@ public class SessionFactory implements SafeAutoCloseable {
   private final String productId;
   private final String serviceId;
   private final Metastore<JSONObject> metastore;
-  private final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
+  private final LoadingCache<String, SecureCryptoKeyMap<Instant>> ikCacheCache;
 
   public SessionFactory(
       final String productId,
       final String serviceId,
       final Metastore<JSONObject> metastore,
-      final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory,
+      final SecureCryptoKeyMap<Instant> systemKeyCache,
       final CryptoPolicy cryptoPolicy,
       final KeyManagementService keyManagementService) {
     this.productId = productId;
     this.serviceId = serviceId;
     this.metastore = metastore;
-    this.secureCryptoKeyMapFactory = secureCryptoKeyMapFactory;
-    this.systemKeyCache = secureCryptoKeyMapFactory.createSecureCryptoKeyMap();
+    this.systemKeyCache = systemKeyCache;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
+
+    this.ikCacheCache = Caffeine.newBuilder()
+        .expireAfter(new Expiry<String, SecureCryptoKeyMap<Instant>>() {
+          @Override
+          public long expireAfterCreate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
+              final long currentTime) {
+            return Long.MAX_VALUE;
+          }
+
+          @Override
+          public long expireAfterRead(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
+              final long currentTime, @NonNegative final long currentDuration) {
+            // If we know it's still in use, don't expire it yet
+            if (value.isUsed()) {
+              return Long.MAX_VALUE;
+            }
+
+            // No longer in use, so use last used time to calculate when it should expire
+            long millisTillExpiration = (System.currentTimeMillis() - value.getLastUsedTime())
+                + cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis();
+            return TimeUnit.MILLISECONDS.toNanos(millisTillExpiration);
+          }
+
+          @Override
+          public long expireAfterUpdate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
+              final long currentTime, @NonNegative final long currentDuration) {
+            return currentDuration;
+          }
+        })
+        .removalListener(
+            (String intermediateKeyId, SecureCryptoKeyMap<Instant> intermediateKeyCache, RemovalCause cause) ->
+                intermediateKeyCache.close())
+        .build(k -> new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()));
   }
 
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
@@ -81,11 +119,22 @@ public class SessionFactory implements SafeAutoCloseable {
 
   private EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJson(final String partitionId) {
     Partition partition = getPartition(partitionId);
+
+    SecureCryptoKeyMap<Instant> ikCache;
+    if (cryptoPolicy.useSharedIntermediateKeyCache()) {
+      ikCache = ikCacheCache.get(partition.getIntermediateKeyId());
+      // Need to track our number of concurrent users to reliably close without consequences
+      ikCache.incrementUsageTracker();
+    }
+    else {
+      ikCache = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
+    }
+
     return new EnvelopeEncryptionJsonImpl(
         partition,
         metastore,
         systemKeyCache,
-        secureCryptoKeyMapFactory,
+        ikCache,
         new BouncyAes256GcmCrypto(),
         cryptoPolicy,
         keyManagementService);
@@ -98,12 +147,15 @@ public class SessionFactory implements SafeAutoCloseable {
   @Override
   public void close() {
     try {
-      // only close system key cache since we invoke its creation
       systemKeyCache.close();
     }
     catch (Exception e) {
-      logger.error("unexpected exception during close", e);
+      logger.error("unexpected exception during skCache close", e);
     }
+
+    // This should force everything to be evicted and process the cleanup
+    ikCacheCache.invalidateAll();
+    ikCacheCache.cleanUp();
   }
 
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
@@ -175,7 +227,7 @@ public class SessionFactory implements SafeAutoCloseable {
       }
 
       return new SessionFactory(productId, serviceId, metastore,
-          new SecureCryptoKeyMapFactory<>(cryptoPolicy), cryptoPolicy, keyManagementService);
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService);
     }
   }
 

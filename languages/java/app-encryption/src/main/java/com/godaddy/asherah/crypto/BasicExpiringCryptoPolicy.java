@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  *   - Key Rotation Strategy: Inline<br>
  *   - Caching of System and Intermediate Keys is allowed<br>
+ *   - Shared Intermediate Key Cache is disabled<br>
  *   - Notifications of reads using expired keys is disabled<br>
  * <p>
  * All of the default values can be modified using the optional builder methods.
@@ -22,6 +23,8 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   private final KeyRotationStrategy keyRotationStrategy;
   private final boolean canCacheSystemKeys;
   private final boolean canCacheIntermediateKeys;
+  private final long sharedIkCacheExpireAfterAccessMillis;
+  private final boolean useSharedIntermediateKeyCache;
   private final boolean notifyExpiredSystemKeyOnRead;
   private final boolean notifyExpiredIntermediateKeyOnRead;
 
@@ -36,6 +39,9 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     this.keyRotationStrategy = builder.keyRotationStrategy;
     this.canCacheSystemKeys = builder.canCacheSystemKeys;
     this.canCacheIntermediateKeys = builder.canCacheIntermediateKeys;
+    this.useSharedIntermediateKeyCache = builder.useSharedIntermediateKeyCache;
+    this.sharedIkCacheExpireAfterAccessMillis =
+        TimeUnit.MINUTES.toMillis(builder.sharedIkCacheExpireAfterAccessMinutes);
     this.notifyExpiredSystemKeyOnRead = builder.notifyExpiredSystemKeyOnRead;
     this.notifyExpiredIntermediateKeyOnRead = builder.notifyExpiredIntermediateKeyOnRead;
   }
@@ -58,6 +64,16 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   @Override
   public boolean canCacheIntermediateKeys() {
     return canCacheIntermediateKeys;
+  }
+
+  @Override
+  public boolean useSharedIntermediateKeyCache() {
+    return useSharedIntermediateKeyCache;
+  }
+
+  @Override
+  public long getSharedIkCacheExpireAfterAccessMillis() {
+    return sharedIkCacheExpireAfterAccessMillis;
   }
 
   @Override
@@ -84,6 +100,8 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     private KeyRotationStrategy keyRotationStrategy = KeyRotationStrategy.INLINE;
     private boolean canCacheSystemKeys = true;
     private boolean canCacheIntermediateKeys = true;
+    private boolean useSharedIntermediateKeyCache = false;
+    private int sharedIkCacheExpireAfterAccessMinutes = (int) TimeUnit.HOURS.toMinutes(2);
     private boolean notifyExpiredSystemKeyOnRead = false;
     private boolean notifyExpiredIntermediateKeyOnRead = false;
 
@@ -114,6 +132,18 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     @Override
     public BuildStep withCanCacheIntermediateKeys(final boolean cacheIntermediateKeys) {
       this.canCacheIntermediateKeys = cacheIntermediateKeys;
+      return this;
+    }
+
+    @Override
+    public BuildStep withUseSharedIntermediateKeyCache(final boolean sharedIntermediateKeyCache) {
+      this.useSharedIntermediateKeyCache = sharedIntermediateKeyCache;
+      return this;
+    }
+
+    @Override
+    public BuildStep withSharedIkCacheExpireAfterAccessMinutes(final int ikCacheExpireAfterAccessMinutes) {
+      this.sharedIkCacheExpireAfterAccessMinutes = ikCacheExpireAfterAccessMinutes;
       return this;
     }
 
@@ -150,6 +180,10 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     BuildStep withCanCacheSystemKeys(boolean cacheSystemKeys);
 
     BuildStep withCanCacheIntermediateKeys(boolean cacheIntermediateKeys);
+
+    BuildStep withUseSharedIntermediateKeyCache(boolean useSharedIntermediateKeyCache);
+
+    BuildStep withSharedIkCacheExpireAfterAccessMinutes(int sharedIkCacheExpireAfterAccessMinutes);
 
     BuildStep withNotifyExpiredSystemKeyOnRead(boolean notify);
 

@@ -17,6 +17,10 @@ public interface CryptoPolicy {
 
   boolean canCacheIntermediateKeys();
 
+  boolean useSharedIntermediateKeyCache();
+
+  long getSharedIkCacheExpireAfterAccessMillis();
+
   boolean notifyExpiredIntermediateKeyOnRead();
 
   boolean notifyExpiredSystemKeyOnRead();
