@@ -83,7 +83,8 @@ class AppJsonEncryptionImplTest {
               new SecureCryptoKeyMap<Instant>(cryptoPolicy.getRevokeCheckPeriodMillis()),
               aeadEnvelopeCrypto,
               cryptoPolicy,
-              keyManagementService);
+              keyManagementService,
+              key -> {});
       try(Session<JSONObject, JSONObject> sessionJson = new SessionJsonImpl<>(envelopeEncryption)) {
 
         Json testJson = new Json();

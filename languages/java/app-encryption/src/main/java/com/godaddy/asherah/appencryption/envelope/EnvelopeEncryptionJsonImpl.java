@@ -18,6 +18,7 @@ import io.micrometer.core.instrument.Timer;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.json.JSONObject;
@@ -38,11 +39,13 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final AeadEnvelopeCrypto crypto;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
+  private final Consumer<String> ikCacheClose;
 
   public EnvelopeEncryptionJsonImpl(final Partition partition,
       final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,
       final SecureCryptoKeyMap<Instant> intermediateKeyCache, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
-      final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService) {
+      final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService,
+      final Consumer<String> ikCacheClose) {
 
     this.partition = partition;
     this.metastore = metastore;
@@ -51,6 +54,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     this.crypto = aeadEnvelopeCrypto;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
+    this.ikCacheClose = ikCacheClose;
   }
 
   @Override
@@ -107,7 +111,8 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     }
     else {
       // if sharing IK cache, decrement our running counter of concurrent users
-      intermediateKeyCache.decrementUsageTracker();
+//      intermediateKeyCache.decrementUsageTracker();
+      ikCacheClose.accept(partition.getIntermediateKeyId());
     }
   }
 

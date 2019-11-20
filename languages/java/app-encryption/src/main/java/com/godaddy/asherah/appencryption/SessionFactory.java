@@ -9,9 +9,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
@@ -39,7 +39,7 @@ public class SessionFactory implements SafeAutoCloseable {
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
-  private final LoadingCache<String, SecureCryptoKeyMap<Instant>> ikCacheCache;
+  private final Cache<String, SecureCryptoKeyMap<Instant>> ikCacheCache;
 
   public SessionFactory(
       final String productId,
@@ -56,37 +56,62 @@ public class SessionFactory implements SafeAutoCloseable {
     this.keyManagementService = keyManagementService;
 
     this.ikCacheCache = Caffeine.newBuilder()
+//        .expireAfterAccess(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis(), TimeUnit.MILLISECONDS)
+        .weigher((String intermediateKeyId, SecureCryptoKeyMap<Instant> value) -> (value.isUsed()) ? 0 : 1)
+        .maximumWeight(2000)
         .expireAfter(new Expiry<String, SecureCryptoKeyMap<Instant>>() {
           @Override
           public long expireAfterCreate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime) {
+//            System.out.println("JOEY ENTERED expireAfterCreate");
             return Long.MAX_VALUE;
           }
 
           @Override
           public long expireAfterRead(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
-            // If we know it's still in use, don't expire it yet
-            if (value.isUsed()) {
-              return Long.MAX_VALUE;
-            }
-
+//            System.out.println("JOEY ENTERED expireAfterRead");
             // No longer in use, so use last used time to calculate when it should expire
-            long millisTillExpiration = (System.currentTimeMillis() - value.getLastUsedTime())
-                + cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis();
-            return TimeUnit.MILLISECONDS.toNanos(millisTillExpiration);
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
 
           @Override
           public long expireAfterUpdate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
-            return currentDuration;
+//            System.out.println("JOEY ENTERED expireAfterUpdate");
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
         })
         .removalListener(
-            (String intermediateKeyId, SecureCryptoKeyMap<Instant> intermediateKeyCache, RemovalCause cause) ->
-                intermediateKeyCache.close())
-        .build(k -> new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()));
+            (String intermediateKeyId, SecureCryptoKeyMap<Instant> intermediateKeyCache, RemovalCause cause) -> {
+              System.out.println("JOEY removing " + intermediateKeyId + " isUsed = " + intermediateKeyCache.isUsed() + " cause = " + cause);
+              intermediateKeyCache.close();
+            })
+        .build();
+//        .build(k -> new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()));
+  }
+
+  SecureCryptoKeyMap<Instant> acquireShared(String key) {
+    SecureCryptoKeyMap<Instant> reference = ikCacheCache.asMap().compute(key, (key1, ref)-> {
+      if (ref == null) {
+        SecureCryptoKeyMap<Instant> newMap = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
+        newMap.incrementUsageTracker();
+        return newMap;
+      }
+
+      ref.incrementUsageTracker();
+      return ref;
+    });
+
+    return reference;
+  }
+
+  void releaseShared(String key) {
+    ikCacheCache.asMap().computeIfPresent(key, (key1, ref) -> {
+      ref.decrementUsageTracker();
+      System.out.println("JOEY still used after decrement = " + ref.isUsed());
+      return ref;
+    });
   }
 
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
@@ -122,9 +147,9 @@ public class SessionFactory implements SafeAutoCloseable {
 
     SecureCryptoKeyMap<Instant> ikCache;
     if (cryptoPolicy.useSharedIntermediateKeyCache()) {
-      ikCache = ikCacheCache.get(partition.getIntermediateKeyId());
+      ikCache = acquireShared(partition.getIntermediateKeyId());
       // Need to track our number of concurrent users to reliably close without consequences
-      ikCache.incrementUsageTracker();
+//      ikCache.incrementUsageTracker();
     }
     else {
       ikCache = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
@@ -137,7 +162,8 @@ public class SessionFactory implements SafeAutoCloseable {
         ikCache,
         new BouncyAes256GcmCrypto(),
         cryptoPolicy,
-        keyManagementService);
+        keyManagementService,
+        key -> releaseShared(key));
   }
 
   Partition getPartition(final String partitionId) {

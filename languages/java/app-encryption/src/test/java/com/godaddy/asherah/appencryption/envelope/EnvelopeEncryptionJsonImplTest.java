@@ -65,7 +65,7 @@ class EnvelopeEncryptionJsonImplTest {
   @BeforeEach
   void setUp() {
     envelopeEncryptionJson = spy(new EnvelopeEncryptionJsonImpl(partition, metastore, systemKeyCache,
-        intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
+        intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService, key -> {}));
   }
 
   @SuppressWarnings("unchecked")
