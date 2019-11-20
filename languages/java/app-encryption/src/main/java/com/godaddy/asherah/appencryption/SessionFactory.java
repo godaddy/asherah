@@ -63,14 +63,14 @@ public class SessionFactory implements SafeAutoCloseable {
           @Override
           public long expireAfterCreate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime) {
-//            System.out.println("JOEY ENTERED expireAfterCreate");
+            System.out.println("JOEY expireAfterCreate entered");
             return Long.MAX_VALUE;
           }
 
           @Override
           public long expireAfterRead(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
-//            System.out.println("JOEY ENTERED expireAfterRead");
+            System.out.println("JOEY expireAfterRead entered");
             // No longer in use, so use last used time to calculate when it should expire
             return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
@@ -78,13 +78,13 @@ public class SessionFactory implements SafeAutoCloseable {
           @Override
           public long expireAfterUpdate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
-//            System.out.println("JOEY ENTERED expireAfterUpdate");
+            System.out.println("JOEY expireAfterUpdate entered");
             return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
         })
         .removalListener(
             (String intermediateKeyId, SecureCryptoKeyMap<Instant> intermediateKeyCache, RemovalCause cause) -> {
-              System.out.println("JOEY removing " + intermediateKeyId + " isUsed = " + intermediateKeyCache.isUsed() + " cause = " + cause);
+              System.out.println("JOEY removalListener removing " + intermediateKeyId + " isUsed = " + intermediateKeyCache.isUsed() + " cause = " + cause);
               intermediateKeyCache.close();
             })
         .build();
@@ -93,25 +93,31 @@ public class SessionFactory implements SafeAutoCloseable {
 
   SecureCryptoKeyMap<Instant> acquireShared(String key) {
     SecureCryptoKeyMap<Instant> reference = ikCacheCache.asMap().compute(key, (key1, ref)-> {
+      System.out.println("JOEY acquireShared entered, key = " + key1);
       if (ref == null) {
+        System.out.println("JOEY acquireShared added new cache for key = " + key1);
         SecureCryptoKeyMap<Instant> newMap = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
         newMap.incrementUsageTracker();
         return newMap;
       }
 
+      System.out.println("JOEY acquireShared reused cache for key = " + key1);
       ref.incrementUsageTracker();
       return ref;
     });
 
+    System.out.println("JOEY acquireShared leaving (compute finished), key = " + key);
     return reference;
   }
 
   void releaseShared(String key) {
+    System.out.println("JOEY releaseShared entered, key = " + key);
     ikCacheCache.asMap().computeIfPresent(key, (key1, ref) -> {
       ref.decrementUsageTracker();
-      System.out.println("JOEY still used after decrement = " + ref.isUsed());
+      System.out.println("JOEY releaseShared still used after decrement = " + ref.isUsed());
       return ref;
     });
+    System.out.println("JOEY releaseShared leaving (computeIfPresent finished), key = " + key);
   }
 
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
