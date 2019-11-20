@@ -155,11 +155,21 @@ class SessionFactoryTest {
         fail(e.getMessage());
       }
 
+      System.out.println("JOEY testSharedIkCacheWtihEvictionCheckNotUsedAndAfter done with session 1");
+
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
         Thread.sleep(sharedIkCacheExpireMillis * 30);
         byte[] decryptedPayload = session.decrypt(drr);
 
         assertArrayEquals(payload, decryptedPayload);
+      } catch (Exception e) {
+        fail(e.getMessage());
+      }
+
+      System.out.println("JOEY testSharedIkCacheWtihEvictionCheckNotUsedAndAfter done with session 2, sleeping to trigger expiry");
+
+      try {
+        Thread.sleep(sharedIkCacheExpireMillis * 3);
       } catch (Exception e) {
         fail(e.getMessage());
       }
@@ -201,11 +211,17 @@ class SessionFactoryTest {
       }
 
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
-        Thread.sleep(5);
+        Thread.sleep(sharedIkCacheExpireMillis * 3);
 
         byte[] decryptedPayload = session.decrypt(drr);
 
         assertArrayEquals(payload, decryptedPayload);
+      } catch (Exception e) {
+        fail(e.getMessage());
+      }
+
+      try {
+        Thread.sleep(sharedIkCacheExpireMillis * 3);
       } catch (Exception e) {
         fail(e.getMessage());
       }

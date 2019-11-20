@@ -64,6 +64,7 @@ public class SessionFactory implements SafeAutoCloseable {
           public long expireAfterCreate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime) {
             System.out.println("JOEY expireAfterCreate entered");
+            // Always pin on create since we known it will be used
             return Long.MAX_VALUE;
           }
 
@@ -71,7 +72,14 @@ public class SessionFactory implements SafeAutoCloseable {
           public long expireAfterRead(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
             System.out.println("JOEY expireAfterRead entered");
-            // No longer in use, so use last used time to calculate when it should expire
+            // If we know it's still in use, don't expire it yet
+            if (value.isUsed()) {
+              System.out.println("JOEY expireAfterCreate still used, pin entry");
+              return Long.MAX_VALUE;
+            }
+
+            // No longer in use, so now kickoff the expire timer
+            System.out.println("JOEY expireAfterCreate no longer used, use expiry");
             return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
 
@@ -79,6 +87,14 @@ public class SessionFactory implements SafeAutoCloseable {
           public long expireAfterUpdate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
               final long currentTime, @NonNegative final long currentDuration) {
             System.out.println("JOEY expireAfterUpdate entered");
+            // If we know it's still in use, don't expire it yet
+            if (value.isUsed()) {
+              System.out.println("JOEY expireAfterUpdate still used, pin entry");
+              return Long.MAX_VALUE;
+            }
+
+            // No longer in use, so now kickoff the expire timer
+            System.out.println("JOEY expireAfterUpdate no longer used, use expiry");
             return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
           }
         })
