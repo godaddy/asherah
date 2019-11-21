@@ -18,7 +18,6 @@ import io.micrometer.core.instrument.Timer;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.json.JSONObject;
@@ -39,14 +38,11 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final AeadEnvelopeCrypto crypto;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
-  private final Consumer<String> ikCacheClose;
 
   public EnvelopeEncryptionJsonImpl(final Partition partition,
       final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,
       final SecureCryptoKeyMap<Instant> intermediateKeyCache, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
-      final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService,
-      final Consumer<String> ikCacheClose) {
-
+      final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService) {
     this.partition = partition;
     this.metastore = metastore;
     this.systemKeyCache = systemKeyCache;
@@ -54,7 +50,6 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     this.crypto = aeadEnvelopeCrypto;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
-    this.ikCacheClose = ikCacheClose;
   }
 
   @Override
@@ -101,18 +96,11 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   public void close() {
     // close intermediate key cache if not shared. we never close the system key cache as that's always tied to the
     // SessionFactory
-    if (!cryptoPolicy.useSharedIntermediateKeyCache()) {
-      try {
-        intermediateKeyCache.close();
-      }
-      catch (Exception e) {
-        logger.error("unexpected exception during close", e);
-      }
+    try {
+      intermediateKeyCache.close();
     }
-    else {
-      // if sharing IK cache, decrement our running counter of concurrent users
-//      intermediateKeyCache.decrementUsageTracker();
-      ikCacheClose.accept(partition.getIntermediateKeyId());
+    catch (Exception e) {
+      logger.error("unexpected exception during close", e);
     }
   }
 

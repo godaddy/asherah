@@ -85,7 +85,7 @@ class SessionFactoryTest {
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
-        .withUseSharedIntermediateKeyCache(true)
+        .withCanCacheSessions(true)
         .build();
     try (SessionFactory sessionFactory = new SessionFactory(
         testProductId,
@@ -105,7 +105,7 @@ class SessionFactoryTest {
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
-        .withUseSharedIntermediateKeyCache(true)
+        .withCanCacheSessions(true)
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
@@ -133,9 +133,9 @@ class SessionFactoryTest {
     CryptoPolicy policy = spy(BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
-        .withUseSharedIntermediateKeyCache(true)
+        .withCanCacheSessions(true)
         .build());
-    when(policy.getSharedIkCacheExpireAfterAccessMillis()).thenReturn(sharedIkCacheExpireMillis);
+    when(policy.getSessionCacheExpireMillis()).thenReturn(sharedIkCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
@@ -191,9 +191,9 @@ class SessionFactoryTest {
     CryptoPolicy policy = spy(BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
-        .withUseSharedIntermediateKeyCache(true)
+        .withCanCacheSessions(true)
         .build());
-    when(policy.getSharedIkCacheExpireAfterAccessMillis()).thenReturn(sharedIkCacheExpireMillis);
+    when(policy.getSessionCacheExpireMillis()).thenReturn(sharedIkCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
@@ -234,9 +234,9 @@ class SessionFactoryTest {
     CryptoPolicy policy = spy(BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
-        .withUseSharedIntermediateKeyCache(true)
+        .withCanCacheSessions(true)
         .build());
-    when(policy.getSharedIkCacheExpireAfterAccessMillis()).thenReturn(sharedIkCacheExpireMillis);
+    when(policy.getSessionCacheExpireMillis()).thenReturn(sharedIkCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()

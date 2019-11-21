@@ -17,9 +17,11 @@ public interface CryptoPolicy {
 
   boolean canCacheIntermediateKeys();
 
-  boolean useSharedIntermediateKeyCache();
+  boolean canCacheSessions();
 
-  long getSharedIkCacheExpireAfterAccessMillis();
+  long getSessionCacheMaxSize();
+
+  long getSessionCacheExpireMillis();
 
   boolean notifyExpiredIntermediateKeyOnRead();
 

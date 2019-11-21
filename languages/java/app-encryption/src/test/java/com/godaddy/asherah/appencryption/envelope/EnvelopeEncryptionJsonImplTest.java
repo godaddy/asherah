@@ -65,7 +65,7 @@ class EnvelopeEncryptionJsonImplTest {
   @BeforeEach
   void setUp() {
     envelopeEncryptionJson = spy(new EnvelopeEncryptionJsonImpl(partition, metastore, systemKeyCache,
-        intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService, key -> {}));
+        intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
   }
 
   @SuppressWarnings("unchecked")
@@ -147,17 +147,6 @@ class EnvelopeEncryptionJsonImplTest {
     // Verify proper resources are closed
     verify(intermediateKeyCache).close();
     verify(systemKeyCache, never()).close(); // shouldn't be closed
-  }
-
-  @Test
-  void testCloseSuccessWithSharedIkCacheShouldNotClose() {
-    when(cryptoPolicy.useSharedIntermediateKeyCache()).thenReturn(true);
-
-    envelopeEncryptionJson.close();
-
-    // Neither should be closed
-    verify(intermediateKeyCache, never()).close();
-    verify(systemKeyCache, never()).close();
   }
 
   @Test

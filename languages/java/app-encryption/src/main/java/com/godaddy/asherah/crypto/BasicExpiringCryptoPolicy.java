@@ -23,8 +23,9 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   private final KeyRotationStrategy keyRotationStrategy;
   private final boolean canCacheSystemKeys;
   private final boolean canCacheIntermediateKeys;
-  private final long sharedIkCacheExpireAfterAccessMillis;
-  private final boolean useSharedIntermediateKeyCache;
+  private final boolean canCacheSessions;
+  private final long sessionCacheMaxSize;
+  private final long sessionCacheExpireMillis;
   private final boolean notifyExpiredSystemKeyOnRead;
   private final boolean notifyExpiredIntermediateKeyOnRead;
 
@@ -39,9 +40,10 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     this.keyRotationStrategy = builder.keyRotationStrategy;
     this.canCacheSystemKeys = builder.canCacheSystemKeys;
     this.canCacheIntermediateKeys = builder.canCacheIntermediateKeys;
-    this.useSharedIntermediateKeyCache = builder.useSharedIntermediateKeyCache;
-    this.sharedIkCacheExpireAfterAccessMillis =
-        TimeUnit.MINUTES.toMillis(builder.sharedIkCacheExpireAfterAccessMinutes);
+    this.canCacheSessions = builder.canCacheSessions;
+    this.sessionCacheMaxSize = builder.sessionCacheMaxSize;
+    this.sessionCacheExpireMillis =
+        TimeUnit.MINUTES.toMillis(builder.sessionCacheExpireMinutes);
     this.notifyExpiredSystemKeyOnRead = builder.notifyExpiredSystemKeyOnRead;
     this.notifyExpiredIntermediateKeyOnRead = builder.notifyExpiredIntermediateKeyOnRead;
   }
@@ -67,13 +69,18 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   }
 
   @Override
-  public boolean useSharedIntermediateKeyCache() {
-    return useSharedIntermediateKeyCache;
+  public boolean canCacheSessions() {
+    return canCacheSessions;
   }
 
   @Override
-  public long getSharedIkCacheExpireAfterAccessMillis() {
-    return sharedIkCacheExpireAfterAccessMillis;
+  public long getSessionCacheMaxSize() {
+    return sessionCacheMaxSize;
+  }
+
+  @Override
+  public long getSessionCacheExpireMillis() {
+    return sessionCacheExpireMillis;
   }
 
   @Override
@@ -93,6 +100,8 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
 
 
   public static final class Builder implements KeyExpirationDaysStep, RevokeCheckMinutesStep, BuildStep {
+    static final long DEFAULT_SESSION_CACHE_SIZE = 1000;
+
     private int keyExpirationDays;
     private int revokeCheckMinutes;
 
@@ -100,8 +109,9 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     private KeyRotationStrategy keyRotationStrategy = KeyRotationStrategy.INLINE;
     private boolean canCacheSystemKeys = true;
     private boolean canCacheIntermediateKeys = true;
-    private boolean useSharedIntermediateKeyCache = false;
-    private int sharedIkCacheExpireAfterAccessMinutes = (int) TimeUnit.HOURS.toMinutes(2);
+    private boolean canCacheSessions = false;
+    private long sessionCacheMaxSize = DEFAULT_SESSION_CACHE_SIZE;
+    private int sessionCacheExpireMinutes = (int) TimeUnit.HOURS.toMinutes(2);
     private boolean notifyExpiredSystemKeyOnRead = false;
     private boolean notifyExpiredIntermediateKeyOnRead = false;
 
@@ -136,14 +146,20 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     }
 
     @Override
-    public BuildStep withUseSharedIntermediateKeyCache(final boolean sharedIntermediateKeyCache) {
-      this.useSharedIntermediateKeyCache = sharedIntermediateKeyCache;
+    public BuildStep withCanCacheSessions(final boolean cacheSessions) {
+      this.canCacheSessions = cacheSessions;
       return this;
     }
 
     @Override
-    public BuildStep withSharedIkCacheExpireAfterAccessMinutes(final int ikCacheExpireAfterAccessMinutes) {
-      this.sharedIkCacheExpireAfterAccessMinutes = ikCacheExpireAfterAccessMinutes;
+    public BuildStep withSessionCacheMaxSize(final long cacheMaxSize) {
+      this.sessionCacheMaxSize = cacheMaxSize;
+      return this;
+    }
+
+    @Override
+    public BuildStep withSessionCacheExpireMinutes(final int sessionExpireMinutes) {
+      this.sessionCacheExpireMinutes = sessionExpireMinutes;
       return this;
     }
 
@@ -181,9 +197,11 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
 
     BuildStep withCanCacheIntermediateKeys(boolean cacheIntermediateKeys);
 
-    BuildStep withUseSharedIntermediateKeyCache(boolean useSharedIntermediateKeyCache);
+    BuildStep withCanCacheSessions(boolean cacheSessions);
 
-    BuildStep withSharedIkCacheExpireAfterAccessMinutes(int sharedIkCacheExpireAfterAccessMinutes);
+    BuildStep withSessionCacheMaxSize(long sessionCacheMaxSize);
+
+    BuildStep withSessionCacheExpireMinutes(int sessionCacheExpireMinutes);
 
     BuildStep withNotifyExpiredSystemKeyOnRead(boolean notify);
 

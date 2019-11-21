@@ -3,7 +3,6 @@ package com.godaddy.asherah.crypto.keys;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.LongAdder;
 
 import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
 
@@ -12,20 +11,12 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
   private final AtomicBoolean isClosed = new AtomicBoolean(false);
   private final long revokeCheckPeriodMillis;
 
-  // These are used for supporting being cached at a higher level with proper eviction policies. The lastUsedTime
-  // is updated any time a caller has interacted with this cache. The usageCounter is used to determine if any callers
-  // are still using this instance.
-  private volatile long lastUsedTime = System.currentTimeMillis(); // TODO May not really be needed
-  private LongAdder usageCounter = new LongAdder();
-
   public SecureCryptoKeyMap(final long revokeCheckPeriodMillis) {
     this.revokeCheckPeriodMillis = revokeCheckPeriodMillis;
   }
 
   public CryptoKey get(final K key) {
     if (!isClosed.get()) {
-      lastUsedTime = System.currentTimeMillis();
-
       SharedCryptoKeyEntry entry = sharedCryptoKeyMap.get(key);
       if (entry != null) {
         // If the key is already revoked, we can just return it since it's the key's final state.
@@ -45,8 +36,6 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
 
   public CryptoKey getLast() {
     if (!isClosed.get()) {
-      lastUsedTime = System.currentTimeMillis();
-
       Map.Entry<K, SharedCryptoKeyEntry> lastEntry = sharedCryptoKeyMap.lastEntry();
       if (lastEntry != null) {
         // If the key is already revoked, we can just return it since it's the key's final state.
@@ -91,8 +80,6 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
    */
   public CryptoKey putAndGetUsable(final K key, final CryptoKey cryptoKey) {
     if (!isClosed.get()) {
-      lastUsedTime = System.currentTimeMillis();
-
       SharedCryptoKeyEntry cacheValue = sharedCryptoKeyMap.putIfAbsent(key,
           new SharedCryptoKeyEntry(new SharedCryptoKey(cryptoKey), System.currentTimeMillis()));
 
@@ -133,22 +120,6 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
     }
 
     // else already closed/closing
-  }
-
-  public long getLastUsedTime() {
-    return lastUsedTime;
-  }
-
-  public void incrementUsageTracker() {
-    usageCounter.increment();
-  }
-
-  public void decrementUsageTracker() {
-    usageCounter.decrement();
-  }
-
-  public boolean isUsed() {
-    return usageCounter.sum() > 0;
   }
 
   private static class SharedCryptoKeyEntry {

@@ -27,12 +27,17 @@ public class DummyCryptoPolicy implements CryptoPolicy {
   }
 
   @Override
-  public boolean useSharedIntermediateKeyCache() {
+  public boolean canCacheSessions() {
     return false;
   }
 
   @Override
-  public long getSharedIkCacheExpireAfterAccessMillis() {
+  public long getSessionCacheMaxSize() {
+    return Long.MAX_VALUE;
+  }
+
+  @Override
+  public long getSessionCacheExpireMillis() {
     return Long.MAX_VALUE;
   }
 

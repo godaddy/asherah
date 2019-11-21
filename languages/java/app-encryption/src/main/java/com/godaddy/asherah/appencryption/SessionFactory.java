@@ -2,6 +2,8 @@ package com.godaddy.asherah.appencryption;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -39,7 +41,7 @@ public class SessionFactory implements SafeAutoCloseable {
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
-  private final Cache<String, SecureCryptoKeyMap<Instant>> ikCacheCache;
+  private final Cache<String, CachedEnvelopeEncryptionJsonImpl> sessionCache;
 
   public SessionFactory(
       final String productId,
@@ -55,85 +57,79 @@ public class SessionFactory implements SafeAutoCloseable {
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
 
-    this.ikCacheCache = Caffeine.newBuilder()
-//        .expireAfterAccess(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis(), TimeUnit.MILLISECONDS)
-        .weigher((String intermediateKeyId, SecureCryptoKeyMap<Instant> value) -> (value.isUsed()) ? 0 : 1)
-        .maximumWeight(2000)
-        .expireAfter(new Expiry<String, SecureCryptoKeyMap<Instant>>() {
+    this.sessionCache = Caffeine.newBuilder()
+        .weigher((String intermediateKeyId, CachedEnvelopeEncryptionJsonImpl session) -> {
+          if (session.isUsed()) {
+            return 0;
+          }
+          return 1;
+        })
+        .maximumWeight(cryptoPolicy.getSessionCacheMaxSize())
+        .expireAfter(new Expiry<String, CachedEnvelopeEncryptionJsonImpl>() {
           @Override
-          public long expireAfterCreate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
-              final long currentTime) {
-            System.out.println("JOEY expireAfterCreate entered");
+          public long expireAfterCreate(@NonNull final String key,
+              @NonNull final CachedEnvelopeEncryptionJsonImpl value, final long currentTime) {
             // Always pin on create since we known it will be used
             return Long.MAX_VALUE;
           }
 
           @Override
-          public long expireAfterRead(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
+          public long expireAfterRead(@NonNull final String key, @NonNull final CachedEnvelopeEncryptionJsonImpl value,
               final long currentTime, @NonNegative final long currentDuration) {
-            System.out.println("JOEY expireAfterRead entered");
             // If we know it's still in use, don't expire it yet
             if (value.isUsed()) {
-              System.out.println("JOEY expireAfterCreate still used, pin entry");
               return Long.MAX_VALUE;
             }
 
             // No longer in use, so now kickoff the expire timer
-            System.out.println("JOEY expireAfterCreate no longer used, use expiry");
-            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSessionCacheExpireMillis());
           }
 
           @Override
-          public long expireAfterUpdate(@NonNull final String key, @NonNull final SecureCryptoKeyMap<Instant> value,
-              final long currentTime, @NonNegative final long currentDuration) {
-            System.out.println("JOEY expireAfterUpdate entered");
+          public long expireAfterUpdate(@NonNull final String key,
+              @NonNull final CachedEnvelopeEncryptionJsonImpl value, final long currentTime,
+              @NonNegative final long currentDuration) {
             // If we know it's still in use, don't expire it yet
             if (value.isUsed()) {
-              System.out.println("JOEY expireAfterUpdate still used, pin entry");
               return Long.MAX_VALUE;
             }
 
             // No longer in use, so now kickoff the expire timer
-            System.out.println("JOEY expireAfterUpdate no longer used, use expiry");
-            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSharedIkCacheExpireAfterAccessMillis());
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSessionCacheExpireMillis());
           }
         })
         .removalListener(
-            (String intermediateKeyId, SecureCryptoKeyMap<Instant> intermediateKeyCache, RemovalCause cause) -> {
-              System.out.println("JOEY removalListener removing " + intermediateKeyId + " isUsed = " + intermediateKeyCache.isUsed() + " cause = " + cause);
-              intermediateKeyCache.close();
+            (String key, CachedEnvelopeEncryptionJsonImpl session, RemovalCause cause) -> {
+              // actually close the real thing
+              session.getEnvelopeEncryptionJsonImpl().close();
             })
         .build();
-//        .build(k -> new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()));
   }
 
-  SecureCryptoKeyMap<Instant> acquireShared(String key) {
-    SecureCryptoKeyMap<Instant> reference = ikCacheCache.asMap().compute(key, (key1, ref)-> {
-      System.out.println("JOEY acquireShared entered, key = " + key1);
-      if (ref == null) {
-        System.out.println("JOEY acquireShared added new cache for key = " + key1);
-        SecureCryptoKeyMap<Instant> newMap = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
-        newMap.incrementUsageTracker();
-        return newMap;
+  CachedEnvelopeEncryptionJsonImpl acquireShared(final Function<String, EnvelopeEncryptionJsonImpl> createSession,
+      final String partitionId) {
+    return sessionCache.asMap().compute(partitionId, (k, cachedSession) -> {
+      if (cachedSession == null) {
+        // Creating for first time and increment usage counter as we're the first user
+        CachedEnvelopeEncryptionJsonImpl newSession =
+            new CachedEnvelopeEncryptionJsonImpl(createSession.apply(partitionId), partitionId);
+        newSession.incrementUsageTracker();
+
+        return newSession;
       }
 
-      System.out.println("JOEY acquireShared reused cache for key = " + key1);
-      ref.incrementUsageTracker();
-      return ref;
+      // Already exists in cache, so just increment usage counter
+      cachedSession.incrementUsageTracker();
+      return cachedSession;
     });
-
-    System.out.println("JOEY acquireShared leaving (compute finished), key = " + key);
-    return reference;
   }
 
-  void releaseShared(String key) {
-    System.out.println("JOEY releaseShared entered, key = " + key);
-    ikCacheCache.asMap().computeIfPresent(key, (key1, ref) -> {
-      ref.decrementUsageTracker();
-      System.out.println("JOEY releaseShared still used after decrement = " + ref.isUsed());
-      return ref;
+  void releaseShared(final String partitionId) {
+    // Decrements the usage counter if still in the cache
+    sessionCache.asMap().computeIfPresent(partitionId, (k, cachedSession) -> {
+      cachedSession.decrementUsageTracker();
+      return cachedSession;
     });
-    System.out.println("JOEY releaseShared leaving (computeIfPresent finished), key = " + key);
   }
 
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
@@ -164,28 +160,25 @@ public class SessionFactory implements SafeAutoCloseable {
     return new EnvelopeEncryptionBytesImpl(getEnvelopeEncryptionJson(partitionId));
   }
 
-  private EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJson(final String partitionId) {
-    Partition partition = getPartition(partitionId);
+  private EnvelopeEncryption<JSONObject> getEnvelopeEncryptionJson(final String partitionId) {
+    Function<String, EnvelopeEncryptionJsonImpl> createFunc = id -> {
+      Partition partition = getPartition(partitionId);
 
-    SecureCryptoKeyMap<Instant> ikCache;
-    if (cryptoPolicy.useSharedIntermediateKeyCache()) {
-      ikCache = acquireShared(partition.getIntermediateKeyId());
-      // Need to track our number of concurrent users to reliably close without consequences
-//      ikCache.incrementUsageTracker();
-    }
-    else {
-      ikCache = new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis());
+      return new EnvelopeEncryptionJsonImpl(
+          partition,
+          metastore,
+          systemKeyCache,
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()),
+          new BouncyAes256GcmCrypto(),
+          cryptoPolicy,
+          keyManagementService);
+    };
+
+    if (cryptoPolicy.canCacheSessions()) {
+      return acquireShared(createFunc, partitionId);
     }
 
-    return new EnvelopeEncryptionJsonImpl(
-        partition,
-        metastore,
-        systemKeyCache,
-        ikCache,
-        new BouncyAes256GcmCrypto(),
-        cryptoPolicy,
-        keyManagementService,
-        key -> releaseShared(key));
+    return createFunc.apply(partitionId);
   }
 
   Partition getPartition(final String partitionId) {
@@ -202,8 +195,8 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     // This should force everything to be evicted and process the cleanup
-    ikCacheCache.invalidateAll();
-    ikCacheCache.cleanUp();
+    sessionCache.invalidateAll();
+    sessionCache.cleanUp();
   }
 
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
@@ -303,5 +296,48 @@ public class SessionFactory implements SafeAutoCloseable {
     BuildStep withMetricsEnabled();
 
     SessionFactory build();
+  }
+
+  class CachedEnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject> {
+    private final EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
+    // The usageCounter is used to determine if any callers are still using this instance.
+    private final LongAdder usageCounter = new LongAdder();
+    private final String key;
+
+    CachedEnvelopeEncryptionJsonImpl(final EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl, final String key) {
+      this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
+      this.key = key;
+    }
+
+    @Override
+    public JSONObject encryptPayload(final byte[] payload) {
+      return envelopeEncryptionJsonImpl.encryptPayload(payload);
+    }
+
+    @Override
+    public byte[] decryptDataRowRecord(final JSONObject dataRowRecord) {
+      return envelopeEncryptionJsonImpl.decryptDataRowRecord(dataRowRecord);
+    }
+
+    @Override
+    public void close() {
+      releaseShared(key);
+    }
+
+    EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJsonImpl() {
+      return envelopeEncryptionJsonImpl;
+    }
+
+    void incrementUsageTracker() {
+      usageCounter.increment();
+    }
+
+    void decrementUsageTracker() {
+      usageCounter.decrement();
+    }
+
+    boolean isUsed() {
+      return usageCounter.sum() > 0;
+    }
   }
 }
