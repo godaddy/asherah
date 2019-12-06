@@ -8,6 +8,7 @@ namespace GoDaddy.Asherah.Crypto
     /// <para>
     ///   - Key Rotation Strategy: Inline<br/>
     ///   - Caching of System and Intermediate Keys is allowed<br/>
+    ///   - Shared Intermediate Key Cache is disabled<br/>
     ///   - Notifications of reads using expired keys is disabled<br/>
     /// </para>
     /// All of the default values can be modified using the optional builder methods.
@@ -21,6 +22,9 @@ namespace GoDaddy.Asherah.Crypto
         private readonly KeyRotationStrategy keyRotationStrategy;
         private readonly bool canCacheSystemKeys;
         private readonly bool canCacheIntermediateKeys;
+        private readonly bool canCacheSessions;
+        private readonly long sessionCacheMaxSize;
+        private readonly long sessionCacheExpireMillis;
         private readonly bool notifyExpiredSystemKeyOnRead;
         private readonly bool notifyExpiredIntermediateKeyOnRead;
 
@@ -31,6 +35,9 @@ namespace GoDaddy.Asherah.Crypto
             keyRotationStrategy = builder.KeyRotationStrategy;
             canCacheSystemKeys = builder.CanCacheSystemKeys;
             canCacheIntermediateKeys = builder.CanCacheIntermediateKeys;
+            canCacheSessions = builder.CanCacheSessions;
+            sessionCacheMaxSize = builder.SessionCacheMaxSize;
+            sessionCacheExpireMillis = (int)TimeSpan.FromMinutes(builder.SessionCacheExpireMinutes).TotalMilliseconds;
             notifyExpiredSystemKeyOnRead = builder.NotifyExpiredSystemKeyOnRead;
             notifyExpiredIntermediateKeyOnRead = builder.NotifyExpiredIntermediateKeyOnRead;
         }
@@ -52,6 +59,12 @@ namespace GoDaddy.Asherah.Crypto
             IBuildStep WithCanCacheSystemKeys(bool cacheSystemKeys);
 
             IBuildStep WithCanCacheIntermediateKeys(bool cacheIntermediateKeys);
+
+            IBuildStep WithCanCacheSessions(bool cacheSessions);
+
+            IBuildStep WithSessionCacheMaxSize(long sessionCacheMaxSize);
+
+            IBuildStep WithSessionCacheExpireMinutes(int sessionExpireMinutes);
 
             IBuildStep WithNotifyExpiredSystemKeyOnRead(bool notify);
 
@@ -87,6 +100,21 @@ namespace GoDaddy.Asherah.Crypto
             return canCacheIntermediateKeys;
         }
 
+        public override bool CanCacheSessions()
+        {
+            return canCacheSessions;
+        }
+
+        public override long GetSessionCacheMaxSize()
+        {
+            return sessionCacheMaxSize;
+        }
+
+        public override long GetSessionCacheExpireMillis()
+        {
+            return sessionCacheExpireMillis;
+        }
+
         public override bool NotifyExpiredIntermediateKeyOnRead()
         {
             return notifyExpiredIntermediateKeyOnRead;
@@ -112,9 +140,14 @@ namespace GoDaddy.Asherah.Crypto
             internal KeyRotationStrategy KeyRotationStrategy = KeyRotationStrategy.Inline;
             internal bool CanCacheSystemKeys = true;
             internal bool CanCacheIntermediateKeys = true;
+            internal bool CanCacheSessions = false;
+            internal long SessionCacheMaxSize = DefaultSessionCacheSize;
+            internal int SessionCacheExpireMinutes = 120;
             internal bool NotifyExpiredSystemKeyOnRead = false;
             internal bool NotifyExpiredIntermediateKeyOnRead = false;
             #pragma warning restore SA1401
+
+            private const long DefaultSessionCacheSize = 1000;
 
             public IRevokeCheckMinutesStep WithKeyExpirationDays(int days)
             {
@@ -143,6 +176,24 @@ namespace GoDaddy.Asherah.Crypto
             public IBuildStep WithCanCacheIntermediateKeys(bool cacheIntermediateKeys)
             {
                 CanCacheIntermediateKeys = cacheIntermediateKeys;
+                return this;
+            }
+
+            public IBuildStep WithCanCacheSessions(bool cacheSessions)
+            {
+                CanCacheSessions = cacheSessions;
+                return this;
+            }
+
+            public IBuildStep WithSessionCacheMaxSize(long sessionCacheMaxSize)
+            {
+                SessionCacheMaxSize = sessionCacheMaxSize;
+                return this;
+            }
+
+            public IBuildStep WithSessionCacheExpireMinutes(int sessionExpireMinutes)
+            {
+                SessionCacheExpireMinutes = sessionExpireMinutes;
                 return this;
             }
 

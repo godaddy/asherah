@@ -8,6 +8,7 @@ using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -24,6 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
+        private readonly IMemoryCache sessionCache;
 
         public SessionFactory(
             string productId,
@@ -40,6 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption
             systemKeyCache = secureCryptoKeyDictionaryFactory.CreateSecureCryptoKeyDictionary();
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
+            sessionCache = new MemoryCache(new MemoryCacheOptions());
         }
 
         public interface IMetastoreStep

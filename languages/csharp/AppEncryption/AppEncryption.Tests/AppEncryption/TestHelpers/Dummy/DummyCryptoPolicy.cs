@@ -25,6 +25,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
             return true;
         }
 
+        public override bool CanCacheSessions()
+        {
+            return false;
+        }
+
+        public override long GetSessionCacheMaxSize()
+        {
+            return long.MaxValue;
+        }
+
+        public override long GetSessionCacheExpireMillis()
+        {
+            return long.MaxValue;
+        }
+
         public override bool NotifyExpiredIntermediateKeyOnRead()
         {
             return true;

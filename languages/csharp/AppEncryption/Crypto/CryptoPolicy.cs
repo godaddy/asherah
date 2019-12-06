@@ -19,6 +19,12 @@ namespace GoDaddy.Asherah.Crypto
 
         public abstract bool CanCacheIntermediateKeys();
 
+        public abstract bool CanCacheSessions();
+
+        public abstract long GetSessionCacheMaxSize();
+
+        public abstract long GetSessionCacheExpireMillis();
+
         public abstract bool NotifyExpiredIntermediateKeyOnRead();
 
         public abstract bool NotifyExpiredSystemKeyOnRead();

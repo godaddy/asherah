@@ -46,6 +46,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         {
             Assert.True(policy.CanCacheSystemKeys());
             Assert.True(policy.CanCacheIntermediateKeys());
+            Assert.False(policy.CanCacheSessions());
+            Assert.Equal(1000, policy.GetSessionCacheMaxSize());
+            Assert.Equal(2 * 60 * 60 * 1000, policy.GetSessionCacheExpireMillis());
             Assert.Equal(CryptoPolicy.KeyRotationStrategy.Inline, policy.GetKeyRotationStrategy());
             Assert.False(policy.NotifyExpiredSystemKeyOnRead());
             Assert.False(policy.NotifyExpiredIntermediateKeyOnRead());
@@ -73,6 +76,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
                 .WithRotationStrategy(CryptoPolicy.KeyRotationStrategy.Queued)
                 .WithCanCacheSystemKeys(false)
                 .WithCanCacheIntermediateKeys(false)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(42)
+                .WithSessionCacheExpireMinutes(33)
                 .WithNotifyExpiredSystemKeyOnRead(true)
                 .WithNotifyExpiredIntermediateKeyOnRead(true)
                 .Build();
@@ -81,6 +87,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
             Assert.Equal(CryptoPolicy.KeyRotationStrategy.Queued, basicExpiringCryptoPolicy.GetKeyRotationStrategy());
             Assert.False(basicExpiringCryptoPolicy.CanCacheSystemKeys());
             Assert.False(basicExpiringCryptoPolicy.CanCacheIntermediateKeys());
+            Assert.True(basicExpiringCryptoPolicy.CanCacheSessions());
+            Assert.Equal(42, basicExpiringCryptoPolicy.GetSessionCacheMaxSize());
+            Assert.Equal(33 * 60 * 1000, basicExpiringCryptoPolicy.GetSessionCacheExpireMillis());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredSystemKeyOnRead());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredIntermediateKeyOnRead());
         }
