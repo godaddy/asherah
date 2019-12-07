@@ -66,7 +66,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                     partition,
                     metastore,
                     secureCryptoKeyDictionary,
-                    new SecureCryptoKeyDictionaryFactory<DateTimeOffset>(cryptoPolicy),
+                    new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     aeadEnvelopeCrypto,
                     cryptoPolicy,
                     keyManagementService);

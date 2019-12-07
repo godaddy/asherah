@@ -24,7 +24,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
         private readonly Mock<KeyManagementService> keyManagementServiceMock;
-        private readonly Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>> secureCryptoKeyDictionaryFactoryMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheMock;
 
         private readonly SessionFactory sessionFactory;
@@ -34,17 +33,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             metastoreMock = new Mock<IMetastore<JObject>>();
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
-            secureCryptoKeyDictionaryFactoryMock =
-                new Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>>(cryptoPolicyMock.Object);
             systemKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1);
-            secureCryptoKeyDictionaryFactoryMock.Setup(x => x.CreateSecureCryptoKeyDictionary())
-                .Returns(systemKeyCacheMock.Object);
 
             sessionFactory = new SessionFactory(
                 TestProductId,
                 TestServiceId,
                 metastoreMock.Object,
-                secureCryptoKeyDictionaryFactoryMock.Object,
+                systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
         }
@@ -56,7 +51,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 TestProductId,
                 TestServiceId,
                 metastoreMock.Object,
-                secureCryptoKeyDictionaryFactoryMock.Object,
+                systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
 

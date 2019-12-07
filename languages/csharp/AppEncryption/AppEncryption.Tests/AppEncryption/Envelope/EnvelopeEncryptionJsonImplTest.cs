@@ -30,7 +30,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 
         private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheMock;
-        private readonly Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>> intermediateKeyCacheFactoryMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> intermediateKeyCacheMock;
         private readonly Mock<AeadEnvelopeCrypto> aeadEnvelopeCryptoMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
@@ -54,21 +53,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             intermediateKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1000);
             aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>();
             cryptoPolicyMock = new Mock<CryptoPolicy>();
-            intermediateKeyCacheFactoryMock = new Mock<SecureCryptoKeyDictionaryFactory<DateTimeOffset>>(cryptoPolicyMock.Object);
             keyManagementServiceMock = new Mock<KeyManagementService>();
 
             intermediateCryptoKeyMock = new Mock<CryptoKey>();
             systemCryptoKeyMock = new Mock<CryptoKey>();
             keyMetaMock = new Mock<KeyMeta>("some_keyid", DateTimeOffset.UtcNow);
 
-            intermediateKeyCacheFactoryMock.Setup(x => x.CreateSecureCryptoKeyDictionary())
-                .Returns(intermediateKeyCacheMock.Object);
-
             envelopeEncryptionJsonImplSpy = new Mock<EnvelopeEncryptionJsonImpl>(
                 partition,
                 metastoreMock.Object,
                 systemKeyCacheMock.Object,
-                intermediateKeyCacheFactoryMock.Object,
+                intermediateKeyCacheMock.Object,
                 aeadEnvelopeCryptoMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object) { CallBase = true };

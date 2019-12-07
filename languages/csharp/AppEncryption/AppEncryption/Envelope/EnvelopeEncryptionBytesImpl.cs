@@ -2,6 +2,7 @@ using System;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Envelope
 {
@@ -9,18 +10,18 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionBytesImpl>();
 
-        private readonly EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
+        private readonly IEnvelopeEncryption<JObject> envelopeEncryptionJson;
 
-        public EnvelopeEncryptionBytesImpl(EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl)
+        public EnvelopeEncryptionBytesImpl(IEnvelopeEncryption<JObject> envelopeEncryptionJson)
         {
-            this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
+            this.envelopeEncryptionJson = envelopeEncryptionJson;
         }
 
         public void Dispose()
         {
             try
             {
-                envelopeEncryptionJsonImpl.Dispose();
+                envelopeEncryptionJson.Dispose();
             }
             catch (Exception e)
             {
@@ -31,12 +32,12 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         public virtual byte[] DecryptDataRowRecord(byte[] dataRowRecord)
         {
             Json dataRowRecordJson = new Json(dataRowRecord);
-            return envelopeEncryptionJsonImpl.DecryptDataRowRecord(dataRowRecordJson.ToJObject());
+            return envelopeEncryptionJson.DecryptDataRowRecord(dataRowRecordJson.ToJObject());
         }
 
         public virtual byte[] EncryptPayload(byte[] payload)
         {
-            Json drrJson = new Json(envelopeEncryptionJsonImpl.EncryptPayload(payload));
+            Json drrJson = new Json(envelopeEncryptionJson.EncryptPayload(payload));
             return drrJson.ToUtf8();
         }
     }

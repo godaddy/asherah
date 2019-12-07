@@ -235,7 +235,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     partition,
                     metastoreMock.Object,
                     systemKeyCache,
-                    new FakeSecureCryptoKeyDictionaryFactory<DateTimeOffset>(intermediateKeyCache),
+                    intermediateKeyCache,
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
                     kms);
