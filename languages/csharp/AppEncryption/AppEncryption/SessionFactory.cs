@@ -1,6 +1,7 @@
 using System;
 using App.Metrics;
 using App.Metrics.Concurrency;
+using CacheManager.Core;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -9,7 +10,6 @@ using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -25,7 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
-        private readonly IMemoryCache sessionCache;
+        private readonly ICacheManager<CachedEnvelopeEncryptionJsonImpl> sessionCacheManager;
 
         public SessionFactory(
             string productId,
@@ -41,7 +41,9 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
-            sessionCache = new MemoryCache(new MemoryCacheOptions());
+            sessionCacheManager = CacheFactory.Build<CachedEnvelopeEncryptionJsonImpl>(settings => settings
+                .WithMicrosoftMemoryCacheHandle("sessionCache")
+                .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromSeconds(10)));
         }
 
         public interface IMetastoreStep
@@ -90,6 +92,8 @@ namespace GoDaddy.Asherah.AppEncryption
             {
                 Logger.LogError(e, "unexpected exception during close");
             }
+
+            // TODO : This should force everything to be evicted and process the cleanup
         }
 
         public Session<JObject, byte[]> GetSessionJson(string partitionId)
@@ -130,23 +134,40 @@ namespace GoDaddy.Asherah.AppEncryption
             return new Partition(partitionId, serviceId, productId);
         }
 
-        private static void ReleaseShared(string partitionId)
+        private void ReleaseShared(string partitionId)
         {
+            CacheItem<CachedEnvelopeEncryptionJsonImpl> cacheItem = sessionCacheManager.GetCacheItem(partitionId);
+            cacheItem.Value.DecrementUsageTracker();
+            if (!cacheItem.Value.IsUsed())
+            {
+                sessionCacheManager.Put(
+                cacheItem.WithAbsoluteExpiration(
+                    TimeSpan.FromMilliseconds(cryptoPolicy.GetSessionCacheExpireMillis())));
+            }
         }
 
         private CachedEnvelopeEncryptionJsonImpl AcquireShared(
-            Func<string, EnvelopeEncryptionJsonImpl> createSession, string partitionId)
+            Func<string, CacheItem<CachedEnvelopeEncryptionJsonImpl>> createSession, string partitionId)
         {
-            return null;
+            sessionCacheManager.TryGetOrAdd(
+                partitionId,
+                createSession,
+                out CacheItem<CachedEnvelopeEncryptionJsonImpl> cachedItem);
+
+            cachedItem.Value.IncrementUsageTracker();
+            sessionCacheManager.Put(cachedItem.WithNoExpiration());
+
+            return cachedItem.Value;
         }
 
         private IEnvelopeEncryption<JObject> GetEnvelopeEncryptionJson(string partitionId)
         {
-            Func<string, EnvelopeEncryptionJsonImpl> createFunc = id =>
+            Func<string, CacheItem<CachedEnvelopeEncryptionJsonImpl>> createFunc = id =>
             {
                 Partition partition = GetPartition(partitionId);
 
-                return new EnvelopeEncryptionJsonImpl(
+                // Creating for first time and increment usage counter as we're the first user
+                EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastore,
                     systemKeyCache,
@@ -154,6 +175,11 @@ namespace GoDaddy.Asherah.AppEncryption
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
                     keyManagementService);
+
+                CachedEnvelopeEncryptionJsonImpl cachedEnvelopeEncryptionJsonImpl =
+                    new CachedEnvelopeEncryptionJsonImpl(envelopeEncryptionJsonImpl, partitionId);
+
+                return new CacheItem<CachedEnvelopeEncryptionJsonImpl>(partitionId, cachedEnvelopeEncryptionJsonImpl);
             };
 
             if (cryptoPolicy.CanCacheSessions())
@@ -161,7 +187,7 @@ namespace GoDaddy.Asherah.AppEncryption
                 return AcquireShared(createFunc, partitionId);
             }
 
-            return createFunc.Invoke(partitionId);
+            return createFunc.Invoke(partitionId).Value;
         }
 
         private class Builder : IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
@@ -262,7 +288,6 @@ namespace GoDaddy.Asherah.AppEncryption
             {
                 try
                 {
-                    envelopeEncryptionJsonImpl.Dispose();
                     ReleaseShared(key);
                 }
                 catch (Exception e)
@@ -286,17 +311,17 @@ namespace GoDaddy.Asherah.AppEncryption
                 return envelopeEncryptionJsonImpl;
             }
 
-            private void IncrementUsageTracker()
+            internal void IncrementUsageTracker()
             {
                 usageCounter.Increment();
             }
 
-            private void DecrementUsageTracker()
+            internal void DecrementUsageTracker()
             {
                 usageCounter.Decrement();
             }
 
-            private bool IsUsed()
+            internal bool IsUsed()
             {
                 return usageCounter.GetValue() > 0;
             }
