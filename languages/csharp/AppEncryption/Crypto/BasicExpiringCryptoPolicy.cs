@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.Crypto
     /// <para>
     ///   - Key Rotation Strategy: Inline<br/>
     ///   - Caching of System and Intermediate Keys is allowed<br/>
-    ///   - Shared Intermediate Key Cache is disabled<br/>
+    ///   - Session Caching is disabled<br/>
     ///   - Notifications of reads using expired keys is disabled<br/>
     /// </para>
     /// All of the default values can be modified using the optional builder methods.
@@ -54,22 +54,70 @@ namespace GoDaddy.Asherah.Crypto
 
         public interface IBuildStep
         {
+            /// <summary>
+            /// Specifies the key rotation strategy to use. Defaults to <value>DefaultKeyRotationStrategy</value>.
+            /// </summary>
+            /// <param name="rotationStrategy">the strategy to use.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithRotationStrategy(KeyRotationStrategy rotationStrategy);
 
+            /// <summary>
+            /// Specifies whether to cache system keys. Defaults to <value>DefaultCanCacheSystemKeys</value>.
+            /// </summary>
+            /// <param name="cacheSystemKeys">whether to cache system keys.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithCanCacheSystemKeys(bool cacheSystemKeys);
 
+            /// <summary>
+            /// Specifies whether to cache intermediate keys. Defaults to <value>DefaultCanCacheIntermediateKeys</value>.
+            /// </summary>
+            /// <param name="cacheIntermediateKeys">whether to cache intermediate keys.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithCanCacheIntermediateKeys(bool cacheIntermediateKeys);
 
+            /// <summary>
+            /// Specifies whether to cache sessions. Defaults to <value>DefaultCanCacheSessions</value>.
+            /// </summary>
+            /// <param name="cacheSessions">whether to cache sessions.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithCanCacheSessions(bool cacheSessions);
 
+            /// <summary>
+            /// Specifies the session cache max size to use if session caching is enabled. Defaults to
+            /// <value>DefaultSessionCacheSize</value>.
+            /// </summary>
+            /// <param name="sessionCacheMaxSize">the session cache max size to use.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithSessionCacheMaxSize(long sessionCacheMaxSize);
 
+            /// <summary>
+            /// Specifies the session cache expiration in minutes if session caching is enabled. Defaults to
+            /// <value>DefaultSessionCacheExpiryMinutes</value>.
+            /// </summary>
+            /// <param name="sessionExpireMinutes">the session cache expiration to use, in minutes.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithSessionCacheExpireMinutes(int sessionExpireMinutes);
 
+            /// <summary>
+            /// Specifies whether to notify when expired system keys are read. Defaults to
+            /// <value>DefaultNotifyExpiredSystemKeyOnRead</value>.
+            /// </summary>
+            /// <param name="notify">whether to notify.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithNotifyExpiredSystemKeyOnRead(bool notify);
 
+            /// <summary>
+            /// Specifies whether to notify when expired intermediate keys are read. Defaults to
+            /// <value>DefaultNotifyExpiredIntermediateKeyOnRead</value>.
+            /// </summary>
+            /// <param name="notify">whether to notify.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithNotifyExpiredIntermediateKeyOnRead(bool notify);
 
+            /// <summary>
+            /// Builds the finalized <code>BasicExpiringCryptoPolicy</code> with the parameters specified in the builder.
+            /// </summary>
+            /// <returns>The fully instantiated <code>BasicExpiringCryptoPolicy</code>.</returns>
             BasicExpiringCryptoPolicy Build();
         }
 
@@ -137,17 +185,24 @@ namespace GoDaddy.Asherah.Crypto
             internal int RevokeCheckMinutes;
 
             // Set some reasonable defaults since these aren't required by the builder steps
-            internal KeyRotationStrategy KeyRotationStrategy = KeyRotationStrategy.Inline;
-            internal bool CanCacheSystemKeys = true;
-            internal bool CanCacheIntermediateKeys = true;
-            internal bool CanCacheSessions = false;
+            internal KeyRotationStrategy KeyRotationStrategy = DefaultKeyRotationStrategy;
+            internal bool CanCacheSystemKeys = DefaultCanCacheSystemKeys;
+            internal bool CanCacheIntermediateKeys = DefaultCanCacheIntermediateKeys;
+            internal bool CanCacheSessions = DefaultCanCacheSessions;
             internal long SessionCacheMaxSize = DefaultSessionCacheSize;
-            internal int SessionCacheExpireMinutes = 120;
-            internal bool NotifyExpiredSystemKeyOnRead = false;
-            internal bool NotifyExpiredIntermediateKeyOnRead = false;
+            internal int SessionCacheExpireMinutes = DefaultSessionCacheExpiryMinutes;
+            internal bool NotifyExpiredSystemKeyOnRead = DefaultNotifyExpiredSystemKeyOnRead;
+            internal bool NotifyExpiredIntermediateKeyOnRead = DefaultNotifyExpiredIntermediateKeyOnRead;
             #pragma warning restore SA1401
 
+            private const KeyRotationStrategy DefaultKeyRotationStrategy = KeyRotationStrategy.Inline;
+            private const bool DefaultCanCacheSystemKeys = true;
+            private const bool DefaultCanCacheIntermediateKeys = true;
+            private const bool DefaultCanCacheSessions = false;
             private const long DefaultSessionCacheSize = 1000;
+            private const int DefaultSessionCacheExpiryMinutes = 2 * 60;
+            private const bool DefaultNotifyExpiredSystemKeyOnRead = false;
+            private const bool DefaultNotifyExpiredIntermediateKeyOnRead = false;
 
             public IRevokeCheckMinutesStep WithKeyExpirationDays(int days)
             {

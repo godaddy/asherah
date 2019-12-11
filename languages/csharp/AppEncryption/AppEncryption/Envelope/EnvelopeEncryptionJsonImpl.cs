@@ -105,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             try
             {
-                // only close intermediate key cache since we invoke its creation
+                // only close intermediate key cache since its lifecycle is tied to this "session"
                 intermediateKeyCache.Dispose();
             }
             catch (Exception e)
