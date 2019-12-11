@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  *   - Key Rotation Strategy: Inline<br>
  *   - Caching of System and Intermediate Keys is allowed<br>
- *   - Shared Intermediate Key Cache is disabled<br>
+ *   - Session Caching is disabled<br>
  *   - Notifications of reads using expired keys is disabled<br>
  * <p>
  * All of the default values can be modified using the optional builder methods.
@@ -100,20 +100,27 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
 
 
   public static final class Builder implements KeyExpirationDaysStep, RevokeCheckMinutesStep, BuildStep {
+    static final KeyRotationStrategy DEFAULT_KEY_ROTATION_STRATEGY = KeyRotationStrategy.INLINE;
+    static final boolean DEFAULT_CAN_CACHE_SYSTEM_KEYS = true;
+    static final boolean DEFAULT_CAN_CACHE_INTERMEDIATE_KEYS = true;
+    static final boolean DEFAULT_CAN_CACHE_SESSIONS = false;
     static final long DEFAULT_SESSION_CACHE_SIZE = 1000;
+    static final int DEFAULT_SESSION_CACHE_EXPIRY_MINUTES = 2 * 60;
+    static final boolean DEFAULT_NOTIFY_EXPIRED_SYSTEM_KEY_ON_READ = false;
+    static final boolean DEFAULT_NOTIFY_EXPIRED_INTERMEDIATE_KEY_ON_READ = false;
 
     private int keyExpirationDays;
     private int revokeCheckMinutes;
 
     // Set some reasonable defaults since these aren't required by the builder steps
-    private KeyRotationStrategy keyRotationStrategy = KeyRotationStrategy.INLINE;
-    private boolean canCacheSystemKeys = true;
-    private boolean canCacheIntermediateKeys = true;
-    private boolean canCacheSessions = false;
+    private KeyRotationStrategy keyRotationStrategy = DEFAULT_KEY_ROTATION_STRATEGY;
+    private boolean canCacheSystemKeys = DEFAULT_CAN_CACHE_SYSTEM_KEYS;
+    private boolean canCacheIntermediateKeys = DEFAULT_CAN_CACHE_INTERMEDIATE_KEYS;
+    private boolean canCacheSessions = DEFAULT_CAN_CACHE_SESSIONS;
     private long sessionCacheMaxSize = DEFAULT_SESSION_CACHE_SIZE;
-    private int sessionCacheExpireMinutes = (int) TimeUnit.HOURS.toMinutes(2);
-    private boolean notifyExpiredSystemKeyOnRead = false;
-    private boolean notifyExpiredIntermediateKeyOnRead = false;
+    private int sessionCacheExpireMinutes = DEFAULT_SESSION_CACHE_EXPIRY_MINUTES;
+    private boolean notifyExpiredSystemKeyOnRead = DEFAULT_NOTIFY_EXPIRED_SYSTEM_KEY_ON_READ;
+    private boolean notifyExpiredIntermediateKeyOnRead = DEFAULT_NOTIFY_EXPIRED_INTERMEDIATE_KEY_ON_READ;
 
     @Override
     public RevokeCheckMinutesStep withKeyExpirationDays(final int days) {
@@ -191,22 +198,70 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   }
 
   public interface BuildStep {
+    /**
+     * Specifies the key rotation strategy to use. Defaults to {@value Builder#DEFAULT_KEY_ROTATION_STRATEGY}.
+     * @param rotationStrategy the strategy to use
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withRotationStrategy(KeyRotationStrategy rotationStrategy);
 
+    /**
+     * Specifies whether to cache system keys. Defaults to {@value Builder#DEFAULT_CAN_CACHE_SYSTEM_KEYS}.
+     * @param cacheSystemKeys whether to cache system keys
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withCanCacheSystemKeys(boolean cacheSystemKeys);
 
+    /**
+     * Specifies whether to cache intermediate keys. Defaults to {@value Builder#DEFAULT_CAN_CACHE_INTERMEDIATE_KEYS}.
+     * @param cacheIntermediateKeys whether to cache intermediate keys
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withCanCacheIntermediateKeys(boolean cacheIntermediateKeys);
 
+    /**
+     * Specifies whether to cache sessions. Defaults to {@value Builder#DEFAULT_CAN_CACHE_SESSIONS}.
+     * @param cacheSessions whether to cache sessions
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withCanCacheSessions(boolean cacheSessions);
 
+    /**
+     * Specifies the session cache max size to use if session caching is enabled. Defaults to
+     * {@value Builder#DEFAULT_SESSION_CACHE_SIZE}.
+     * @param sessionCacheMaxSize the session cache max size to use
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withSessionCacheMaxSize(long sessionCacheMaxSize);
 
+    /**
+     * Specifies the session cache expiration in minutes if session caching is enabled. Defaults to
+     * {@value Builder#DEFAULT_SESSION_CACHE_EXPIRY_MINUTES}.
+     * @param sessionCacheExpireMinutes the session cache expiration to use, in minutes
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withSessionCacheExpireMinutes(int sessionCacheExpireMinutes);
 
+    /**
+     * Specifies whether to notify when expired system keys are read. Defaults to
+     * {@value Builder#DEFAULT_NOTIFY_EXPIRED_SYSTEM_KEY_ON_READ}. NOTE: not currently implemented.
+     * @param notify whether to notify
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withNotifyExpiredSystemKeyOnRead(boolean notify);
 
+    /**
+     * Specifies whether to notify when expired intermediate keys are read. Defaults to
+     * {@value Builder#DEFAULT_NOTIFY_EXPIRED_INTERMEDIATE_KEY_ON_READ}. NOTE: not currently implemented.
+     * @param notify whether to notify
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withNotifyExpiredIntermediateKeyOnRead(boolean notify);
 
+    /**
+     * Builds the finalized {@code BasicExpiringCryptoPolicy} with the parameters specified in the builder.
+     * @return The fully instantiated {@code BasicExpiringCryptoPolicy}.
+     */
     BasicExpiringCryptoPolicy build();
   }
 }
