@@ -94,9 +94,8 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   @Override
   public void close() {
-    // close intermediate key cache if not shared. we never close the system key cache as that's always tied to the
-    // SessionFactory
     try {
+      // only close intermediate key cache since its lifecycle is tied to this "session"
       intermediateKeyCache.close();
     }
     catch (Exception e) {
