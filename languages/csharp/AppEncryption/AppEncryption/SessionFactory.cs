@@ -42,8 +42,12 @@ namespace GoDaddy.Asherah.AppEncryption
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
             sessionCacheManager = CacheFactory.Build<CachedEnvelopeEncryptionJsonImpl>(settings => settings
-                .WithMicrosoftMemoryCacheHandle("sessionCache")
-                .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromSeconds(10)));
+                .WithMicrosoftMemoryCacheHandle("sessionCache"));
+
+            sessionCacheManager.OnRemove += (sender, args) =>
+            {
+                sessionCacheManager.Get(args.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
+            };
         }
 
         public interface IMetastoreStep
@@ -94,6 +98,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
 
             // TODO : This should force everything to be evicted and process the cleanup
+            sessionCacheManager.Clear();
         }
 
         public Session<JObject, byte[]> GetSessionJson(string partitionId)
@@ -134,18 +139,6 @@ namespace GoDaddy.Asherah.AppEncryption
             return new Partition(partitionId, serviceId, productId);
         }
 
-        private void ReleaseShared(string partitionId)
-        {
-            CacheItem<CachedEnvelopeEncryptionJsonImpl> cacheItem = sessionCacheManager.GetCacheItem(partitionId);
-            cacheItem.Value.DecrementUsageTracker();
-            if (!cacheItem.Value.IsUsed())
-            {
-                sessionCacheManager.Put(
-                cacheItem.WithAbsoluteExpiration(
-                    TimeSpan.FromMilliseconds(cryptoPolicy.GetSessionCacheExpireMillis())));
-            }
-        }
-
         private CachedEnvelopeEncryptionJsonImpl AcquireShared(
             Func<string, CacheItem<CachedEnvelopeEncryptionJsonImpl>> createSession, string partitionId)
         {
@@ -177,7 +170,11 @@ namespace GoDaddy.Asherah.AppEncryption
                     keyManagementService);
 
                 CachedEnvelopeEncryptionJsonImpl cachedEnvelopeEncryptionJsonImpl =
-                    new CachedEnvelopeEncryptionJsonImpl(envelopeEncryptionJsonImpl, partitionId);
+                    new CachedEnvelopeEncryptionJsonImpl(
+                        envelopeEncryptionJsonImpl,
+                        sessionCacheManager,
+                        partitionId,
+                        cryptoPolicy.GetSessionCacheExpireMillis());
 
                 return new CacheItem<CachedEnvelopeEncryptionJsonImpl>(partitionId, cachedEnvelopeEncryptionJsonImpl);
             };
@@ -276,19 +273,35 @@ namespace GoDaddy.Asherah.AppEncryption
 
             // The usageCounter is used to determine if any callers are still using this instance.
             private readonly StripedLongAdder usageCounter = new StripedLongAdder();
+            private readonly ICacheManager<CachedEnvelopeEncryptionJsonImpl> sessionCacheManager;
             private readonly string key;
 
-            public CachedEnvelopeEncryptionJsonImpl(EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl, string key)
+            private readonly long sessionCacheExpireMillis;
+
+            public CachedEnvelopeEncryptionJsonImpl(
+                EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl,
+                ICacheManager<CachedEnvelopeEncryptionJsonImpl> sessionCacheManager,
+                string key,
+                long sessionCacheExpireMillis)
             {
                 this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
+                this.sessionCacheManager = sessionCacheManager;
                 this.key = key;
+                this.sessionCacheExpireMillis = sessionCacheExpireMillis;
             }
 
             public void Dispose()
             {
                 try
                 {
-                    ReleaseShared(key);
+                    CacheItem<CachedEnvelopeEncryptionJsonImpl> cacheItem = sessionCacheManager.GetCacheItem(key);
+                    cacheItem.Value.DecrementUsageTracker();
+                    if (!cacheItem.Value.IsUsed())
+                    {
+                        // No longer in use, so now kickoff the expire timer
+                        sessionCacheManager.Put(
+                            cacheItem.WithAbsoluteExpiration(TimeSpan.FromMilliseconds(sessionCacheExpireMillis)));
+                    }
                 }
                 catch (Exception e)
                 {
@@ -306,22 +319,22 @@ namespace GoDaddy.Asherah.AppEncryption
                 return envelopeEncryptionJsonImpl.EncryptPayload(payload);
             }
 
-            private EnvelopeEncryptionJsonImpl GetEnvelopeEncryptionJsonImpl()
-            {
-                return envelopeEncryptionJsonImpl;
-            }
-
             internal void IncrementUsageTracker()
             {
                 usageCounter.Increment();
             }
 
-            internal void DecrementUsageTracker()
+            internal EnvelopeEncryptionJsonImpl GetEnvelopeEncryptionJsonImpl()
+            {
+                return envelopeEncryptionJsonImpl;
+            }
+
+            private void DecrementUsageTracker()
             {
                 usageCounter.Decrement();
             }
 
-            internal bool IsUsed()
+            private bool IsUsed()
             {
                 return usageCounter.GetValue() > 0;
             }
