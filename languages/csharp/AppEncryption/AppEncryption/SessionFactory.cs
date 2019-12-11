@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.AppEncryption
             sessionCacheManager = CacheFactory.Build<CachedEnvelopeEncryptionJsonImpl>(settings => settings
                 .WithMicrosoftMemoryCacheHandle("sessionCache"));
 
-            sessionCacheManager.OnRemove += (sender, args) =>
+            sessionCacheManager.OnRemoveByHandle += (sender, args) =>
             {
                 sessionCacheManager.Get(args.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
             };
@@ -300,7 +300,7 @@ namespace GoDaddy.Asherah.AppEncryption
                     {
                         // No longer in use, so now kickoff the expire timer
                         sessionCacheManager.Put(
-                            cacheItem.WithAbsoluteExpiration(TimeSpan.FromMilliseconds(sessionCacheExpireMillis)));
+                            cacheItem.WithSlidingExpiration(TimeSpan.FromMilliseconds(sessionCacheExpireMillis)));
                     }
                 }
                 catch (Exception e)

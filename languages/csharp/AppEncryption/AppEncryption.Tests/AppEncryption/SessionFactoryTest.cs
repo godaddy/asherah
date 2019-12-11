@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using App.Metrics;
 using App.Metrics.Meter;
 using GoDaddy.Asherah.AppEncryption.Envelope;
@@ -6,6 +7,7 @@ using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
+using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
@@ -19,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestPartitionId = "test_partition_id";
         private const string TestServiceId = "test_service_id";
         private const string TestProductId = "test_product_id";
-        private const string TestMasterKey = "test_master_key";
+        private const string TestMasterKey = "test_master_key_that_is_32_bytes";
 
         private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
@@ -56,6 +58,92 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 keyManagementServiceMock.Object);
 
             Assert.NotNull(sessionFactory);
+        }
+
+        [Fact]
+        private void TestSessionCacheSetup()
+        {
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .Build();
+
+            SessionFactory sess = new SessionFactory(
+                TestProductId,
+                TestServiceId,
+                metastoreMock.Object,
+                systemKeyCacheMock.Object,
+                policy,
+                keyManagementServiceMock.Object);
+
+            Session<byte[], byte[]> sessionBytes = sess.GetSessionBytes("1234");
+
+            Assert.NotNull(sessionBytes);
+        }
+
+        [Fact]
+        private void TestSessionCacheIsUsed()
+        {
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheExpireMinutes(1)
+                .Build();
+
+            SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build();
+
+            Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId);
+
+            byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+            byte[] drr = sessionBytes.Encrypt(payload);
+
+            Session<byte[], byte[]> session2 = factory.GetSessionBytes(TestPartitionId);
+            byte[] decryptedPayload = session2.Decrypt(drr);
+
+            Assert.Equal(payload, decryptedPayload);
+        }
+
+        [Fact]
+        private void TestSessionCacheAfterExpiryShouldFail()
+        {
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheExpireMinutes(1)
+                .Build();
+
+            SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build();
+
+            Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId);
+
+            byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+            byte[] drr = sessionBytes.Encrypt(payload);
+
+            Session<byte[], byte[]> session2 = factory.GetSessionBytes(TestPartitionId);
+            byte[] decryptedPayload = session2.Decrypt(drr);
+
+            Assert.Equal(payload, decryptedPayload);
+
+            session2.Dispose();
+            sessionBytes.Dispose();
+            Thread.Sleep(70000);
+
+            Session<byte[], byte[]> session3 = factory.GetSessionBytes(TestPartitionId);
+
+            Assert.Throws<AppEncryptionException>(() => session3.Decrypt(drr));
         }
 
         [Fact]
