@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using App.Metrics;
 using App.Metrics.Meter;
 using GoDaddy.Asherah.AppEncryption.Envelope;
@@ -144,6 +147,44 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             Session<byte[], byte[]> session3 = factory.GetSessionBytes(TestPartitionId);
 
             Assert.Throws<AppEncryptionException>(() => session3.Decrypt(drr));
+        }
+
+        [Fact]
+        private void TestMultipleThreadsWithSamePartitionIdShouldAcquireSameSession()
+        {
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .Build();
+
+            SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build();
+
+            ConcurrentQueue<Session<byte[], byte[]>> v1 = new ConcurrentQueue<Session<byte[], byte[]>>();
+
+            // Get the current settings and try to force minWorkers
+            ThreadPool.GetMinThreads(out _, out var currentMinIOC);
+            Assert.True(ThreadPool.SetMinThreads(10000, currentMinIOC));
+
+            long completedTasks = 0;
+
+            Parallel.ForEach(Enumerable.Range(0, 10000), i =>
+            {
+                v1.Enqueue(factory.GetSessionBytes(TestPartitionId));
+                Interlocked.Increment(ref completedTasks);
+            });
+
+            // Wait for all threads to complete
+            Assert.Equal(10000, completedTasks);
+
+            Assert.Equal(10000, v1.Count);
+            Assert.Equal(1, factory.SessionCacheManager.CacheHandles.Sum(baseCacheHandle => baseCacheHandle.Count));
+            Assert.Single(factory.SessionCacheKeys);
+            Assert.Contains(TestPartitionId, factory.SessionCacheKeys);
         }
 
         [Fact]
