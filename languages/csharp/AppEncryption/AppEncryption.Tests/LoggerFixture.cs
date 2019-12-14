@@ -11,9 +11,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests
             LoggerFactory = new LoggerFactory();
 
             // TODO Not sure if there's a better way to handle LoggerProvider?
-#pragma warning disable 618
+            #pragma warning disable 618
             LoggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level >= LogLevel.Information, true));
-#pragma warning restore 618
+            #pragma warning restore 618
             LogManager.SetLoggerFactory(LoggerFactory);
         }
 

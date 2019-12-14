@@ -37,7 +37,7 @@ namespace GoDaddy.Asherah.Crypto
             canCacheIntermediateKeys = builder.CanCacheIntermediateKeys;
             canCacheSessions = builder.CanCacheSessions;
             sessionCacheMaxSize = builder.SessionCacheMaxSize;
-            sessionCacheExpireMillis = (int)TimeSpan.FromMinutes(builder.SessionCacheExpireMinutes).TotalMilliseconds;
+            sessionCacheExpireMillis = builder.SessionCacheExpireMillis;
             notifyExpiredSystemKeyOnRead = builder.NotifyExpiredSystemKeyOnRead;
             notifyExpiredIntermediateKeyOnRead = builder.NotifyExpiredIntermediateKeyOnRead;
         }
@@ -92,11 +92,11 @@ namespace GoDaddy.Asherah.Crypto
 
             /// <summary>
             /// Specifies the session cache expiration in minutes if session caching is enabled. Defaults to
-            /// <value>DefaultSessionCacheExpiryMinutes</value>.
+            /// <value>DefaultSessionCacheExpiryMillis</value>.
             /// </summary>
-            /// <param name="sessionExpireMinutes">the session cache expiration to use, in minutes.</param>
+            /// <param name="sessionCacheExpireMillis">the session cache expiration to use, in minutes.</param>
             /// <returns>The current <code>IBuildStep</code> instance.</returns>
-            IBuildStep WithSessionCacheExpireMinutes(int sessionExpireMinutes);
+            IBuildStep WithSessionCacheExpireMillis(long sessionCacheExpireMillis);
 
             /// <summary>
             /// Specifies whether to notify when expired system keys are read. Defaults to
@@ -190,7 +190,7 @@ namespace GoDaddy.Asherah.Crypto
             internal bool CanCacheIntermediateKeys = DefaultCanCacheIntermediateKeys;
             internal bool CanCacheSessions = DefaultCanCacheSessions;
             internal long SessionCacheMaxSize = DefaultSessionCacheSize;
-            internal int SessionCacheExpireMinutes = DefaultSessionCacheExpiryMinutes;
+            internal long SessionCacheExpireMillis = DefaultSessionCacheExpiryMillis;
             internal bool NotifyExpiredSystemKeyOnRead = DefaultNotifyExpiredSystemKeyOnRead;
             internal bool NotifyExpiredIntermediateKeyOnRead = DefaultNotifyExpiredIntermediateKeyOnRead;
             #pragma warning restore SA1401
@@ -200,7 +200,7 @@ namespace GoDaddy.Asherah.Crypto
             private const bool DefaultCanCacheIntermediateKeys = true;
             private const bool DefaultCanCacheSessions = false;
             private const long DefaultSessionCacheSize = 1000;
-            private const int DefaultSessionCacheExpiryMinutes = 2 * 60;
+            private const long DefaultSessionCacheExpiryMillis = 120000;
             private const bool DefaultNotifyExpiredSystemKeyOnRead = false;
             private const bool DefaultNotifyExpiredIntermediateKeyOnRead = false;
 
@@ -246,9 +246,9 @@ namespace GoDaddy.Asherah.Crypto
                 return this;
             }
 
-            public IBuildStep WithSessionCacheExpireMinutes(int sessionExpireMinutes)
+            public IBuildStep WithSessionCacheExpireMillis(long sessionCacheExpireMillis)
             {
-                SessionCacheExpireMinutes = sessionExpireMinutes;
+                SessionCacheExpireMillis = sessionCacheExpireMillis;
                 return this;
             }
 

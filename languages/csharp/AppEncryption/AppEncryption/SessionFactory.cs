@@ -22,7 +22,6 @@ namespace GoDaddy.Asherah.AppEncryption
     {
         #pragma warning disable SA1401
         protected internal readonly ICacheManager<CachedSession> SessionCacheManager;
-        protected internal readonly HashSet<string> SessionCacheKeys;
         #pragma warning restore SA1401
 
         private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
@@ -34,6 +33,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreLocks;
+        private readonly ConcurrentDictionary<string, char> sessionCacheKeys;
 
         public SessionFactory(
             string productId,
@@ -49,15 +49,15 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
-            SessionCacheKeys = new HashSet<string>();
+            sessionCacheKeys = new ConcurrentDictionary<string, char>();
             semaphoreLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
             SessionCacheManager = CacheFactory.Build<CachedSession>(settings => settings
-                .WithMicrosoftMemoryCacheHandle("sessionCache"));
+                .WithDictionaryHandle("sessionCache"));
 
             SessionCacheManager.OnRemoveByHandle += (sender, args) =>
             {
                 SessionCacheManager.Get(args.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
-                SessionCacheKeys.Remove(args.Key);
+                sessionCacheKeys.TryRemove(args.Key, out char _);
             };
         }
 
@@ -109,9 +109,9 @@ namespace GoDaddy.Asherah.AppEncryption
             }
 
             // Actually dispose of all the remaining sessions that might be active in the cache.
-            foreach (string sessionCacheKey in SessionCacheKeys)
+            foreach (KeyValuePair<string, char> sessionCacheKey in sessionCacheKeys)
             {
-                SessionCacheManager.Get(sessionCacheKey).GetEnvelopeEncryptionJsonImpl().Dispose();
+                SessionCacheManager.Get(sessionCacheKey.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
             }
 
             SessionCacheManager.Clear();
@@ -222,7 +222,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
             if (cryptoPolicy.CanCacheSessions())
             {
-                SessionCacheKeys.Add(partitionId);
+                sessionCacheKeys.TryAdd(partitionId, '_');
                 return AcquireShared(createFunc, partitionId);
             }
 
