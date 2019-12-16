@@ -56,8 +56,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
             SessionCacheManager.OnRemoveByHandle += (sender, args) =>
             {
-                SessionCacheManager.Get(args.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
-                sessionCacheKeys.TryRemove(args.Key, out char _);
+                ((CachedSession)args.Value).Dispose();
             };
         }
 
@@ -109,12 +108,23 @@ namespace GoDaddy.Asherah.AppEncryption
             }
 
             // Actually dispose of all the remaining sessions that might be active in the cache.
-            foreach (KeyValuePair<string, char> sessionCacheKey in sessionCacheKeys)
+            lock (SessionCacheManager)
             {
-                SessionCacheManager.Get(sessionCacheKey.Key).GetEnvelopeEncryptionJsonImpl().Dispose();
-            }
+                foreach (KeyValuePair<string, char> sessionCacheKey in sessionCacheKeys)
+                {
+                    CachedSession cachedSession = SessionCacheManager.Get(sessionCacheKey.Key);
 
-            SessionCacheManager.Clear();
+                    // We need to check this to ensure that the entry was not removed by the expiration policy
+                    if (cachedSession != null)
+                    {
+                        // actually close the real thing
+                        cachedSession.GetEnvelopeEncryptionJsonImpl().Dispose();
+                    }
+
+                    // now remove the entry from the cache
+                    SessionCacheManager.Remove(sessionCacheKey.Key);
+                }
+            }
         }
 
         public Session<JObject, byte[]> GetSessionJson(string partitionId)
@@ -183,7 +193,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
                 SessionCacheManager.Put(cachedItem.WithNoExpiration());
 
-                // Creating for first time and increment usage counter as we're the first user
+                // Increment the usage counter of the entry
                 cachedItem.Value.IncrementUsageTracker();
             }
             finally
@@ -258,7 +268,11 @@ namespace GoDaddy.Asherah.AppEncryption
                 try
                 {
                     CacheItem<CachedSession> cacheItem = sessionCacheManager.GetCacheItem(key);
+
+                    // Decrements the usage counter of the entry
                     cacheItem.Value.DecrementUsageTracker();
+
+                    // If we know it's still in use, don't expire it yet
                     if (!cacheItem.Value.IsUsed())
                     {
                         // No longer in use, so now kickoff the expire timer
