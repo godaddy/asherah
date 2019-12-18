@@ -475,15 +475,19 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
+      assertEquals(1, factory.getSessionCache().estimatedSize());
     }
   }
 
   @Test
   void testSessionCacheMultiThreadedDifferentSessionsNoEviction() {
+    int numThreads = 100;
+    int numTasks = numThreads * 100;
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
         .withCanCacheSessions(true)
+        .withSessionCacheMaxSize(numTasks)
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
@@ -491,8 +495,6 @@ class SessionFactoryTest {
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testMasterKey)
         .build()) {
-      int numThreads = 100;
-      int numTasks = numThreads * 100;
       ExecutorService pool = Executors.newFixedThreadPool(numThreads);
       LongAdder tasksCompleted = new LongAdder();
       IntStream.range(0, numTasks)
@@ -520,6 +522,7 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
+      assertEquals(numTasks, factory.getSessionCache().estimatedSize());
     }
   }
 
@@ -566,6 +569,7 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
+      assertEquals(1, factory.getSessionCache().estimatedSize());
     }
   }
 
@@ -612,6 +616,7 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
+      assertEquals(1, factory.getSessionCache().estimatedSize());
     }
   }
 
