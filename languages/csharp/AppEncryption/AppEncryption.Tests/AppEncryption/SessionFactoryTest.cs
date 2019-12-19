@@ -72,7 +72,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithCanCacheSessions(true)
                 .Build();
 
-            MemoryCache sessionCacheManager;
+            MemoryCache sessionCache;
             using (SessionFactory factory = new SessionFactory(
                 TestProductId,
                 TestServiceId,
@@ -81,18 +81,18 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 policy,
                 keyManagementServiceMock.Object))
             {
-                sessionCacheManager = factory.SessionCacheManager;
+                sessionCache = factory.SessionCache;
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes("1234"))
                 {
                     Assert.NotNull(sessionBytes);
                 }
 
                 // Verify nothing evicted yet
-                Assert.True(factory.SessionCacheManager.Count > 0);
+                Assert.True(sessionCache.Count > 0);
             }
 
             // Verify closing the factory invalidated and cleaned up entries
-            Assert.True(sessionCacheManager.Count == 0);
+            Assert.True(sessionCache.Count == 0);
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     }
 
                     // Even after timeout, verify that we have one entry in cache
-                    Assert.Equal(1, factory.SessionCacheManager.Count);
+                    Assert.Equal(1, factory.SessionCache.Count);
 
                     // Reset so we can examine 2nd session's interactions
                     metastoreSpy.Reset();
@@ -290,6 +290,101 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
+        private void TestSessionCacheGetSessionWithMaxSessionNotReachedShouldNotEvict()
+        {
+            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(2)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithMetastore(metastoreSpy.Object)
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                byte[] drr = null;
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    drr = sessionBytes.Encrypt(payload);
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                    Assert.Equal(payload, decryptedPayload);
+                }
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + 1))
+                {
+                }
+
+                // Sleep to attempt to trigger eviction on next access if it were going to
+                try
+                {
+                    Thread.Sleep(100);
+                }
+                catch (Exception e)
+                {
+                    Assert.True(false, e.Message);
+                }
+
+                // Reset so we can examine 2nd session's interactions
+                metastoreSpy.Reset();
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                    Assert.Equal(payload, decryptedPayload);
+
+                    // verify no metastore interactions in the decrypt flow (since IKs cached via session caching)
+                    metastoreSpy.Verify(
+                        x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
+                }
+            }
+        }
+
+        [Fact]
+        private void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
+        {
+            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(2)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithMetastore(metastoreSpy.Object)
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                byte[] drr = null;
+                Partition partition = factory.GetPartition(TestPartitionId);
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    drr = sessionBytes.Encrypt(payload);
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                    Assert.Equal(payload, decryptedPayload);
+                }
+
+                Parallel.ForEach(Enumerable.Range(0, 5), i =>
+                {
+                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
+                    {
+                    }
+                });
+            }
+        }
+
+        [Fact]
         private void TestSessionCacheMultiThreadedSameSessionNoEviction()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -329,7 +424,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that cache has only 1 entry
-                Assert.Equal(1, factory.SessionCacheManager.Count);
+                Assert.Equal(1, factory.SessionCache.Count);
             }
         }
 
@@ -373,7 +468,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that number of entries in cache equal number of partitions
-                Assert.Equal(numRequests, factory.SessionCacheManager.Count);
+                Assert.Equal(numRequests, factory.SessionCache.Count);
             }
         }
 
@@ -422,7 +517,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that cache has only 1 entry
-                Assert.Equal(1, factory.SessionCacheManager.Count);
+                Assert.Equal(1, factory.SessionCache.Count);
             }
         }
 
@@ -471,7 +566,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that number of entries in cache equal number of partitions
-                Assert.Equal(numRequests, factory.SessionCacheManager.Count);
+                Assert.Equal(numRequests, factory.SessionCache.Count);
             }
         }
 
