@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using App.Metrics;
 using App.Metrics.Concurrency;
-using CacheManager.Core;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -13,6 +12,7 @@ using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption
     public class SessionFactory : IDisposable
     {
         #pragma warning disable SA1401
-        protected internal readonly ICacheManager<CachedSession> SessionCacheManager;
+        protected internal readonly MemoryCache SessionCacheManager;
         #pragma warning restore SA1401
 
         private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
@@ -51,13 +51,10 @@ namespace GoDaddy.Asherah.AppEncryption
             this.keyManagementService = keyManagementService;
             sessionCacheKeys = new ConcurrentDictionary<string, char>();
             semaphoreLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
-            SessionCacheManager = CacheFactory.Build<CachedSession>(settings => settings
-                .WithDictionaryHandle("sessionCache"));
-
-            SessionCacheManager.OnRemoveByHandle += (sender, args) =>
+            SessionCacheManager = new MemoryCache(new MemoryCacheOptions()
             {
-                ((CachedSession)args.Value).Dispose();
-            };
+                SizeLimit = 1000
+            });
         }
 
         public interface IMetastoreStep
@@ -112,7 +109,7 @@ namespace GoDaddy.Asherah.AppEncryption
             {
                 foreach (KeyValuePair<string, char> sessionCacheKey in sessionCacheKeys)
                 {
-                    CachedSession cachedSession = SessionCacheManager.Get(sessionCacheKey.Key);
+                    CachedSession cachedSession = SessionCacheManager.Get<CachedSession>(sessionCacheKey.Key);
 
                     // We need to check this to ensure that the entry was not removed by the expiration policy
                     if (cachedSession != null)
@@ -176,38 +173,46 @@ namespace GoDaddy.Asherah.AppEncryption
         /// <param name="createSession">the function to create a new session if there is no current mapping</param>
         /// <param name="partitionId">the partition id for a session</param>
         private CachedSession AcquireShared(
-            Func<string, CacheItem<CachedSession>> createSession, string partitionId)
+            Func<CachedSession> createSession, string partitionId)
         {
             SemaphoreSlim getCachedItemLock = semaphoreLocks.GetOrAdd(partitionId, k => new SemaphoreSlim(1, 1));
-            CacheItem<CachedSession> cachedItem;
+            CachedSession cachedItem;
 
             // Get or add is not thread same and hence we need a lock
             // https://github.com/MichaCo/CacheManager/issues/268
             getCachedItemLock.Wait();
             try
             {
-                SessionCacheManager.TryGetOrAdd(
-                    partitionId,
-                    createSession,
-                    out cachedItem);
+                if (!SessionCacheManager.TryGetValue(partitionId, out cachedItem))
+                {
+                    cachedItem = createSession();
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
 
-                SessionCacheManager.Put(cachedItem.WithNoExpiration());
+                        // Size amount
+                        .SetSize(1)
+
+                        // Priority on removing when reaching size limit (memory pressure)
+                        .SetPriority(CacheItemPriority.NeverRemove);
+
+                    // Save data in cache.
+                    SessionCacheManager.Set(partitionId, cachedItem, cacheEntryOptions);
+                }
 
                 // Increment the usage counter of the entry
-                cachedItem.Value.IncrementUsageTracker();
+                    cachedItem.IncrementUsageTracker();
             }
             finally
             {
                 getCachedItemLock.Release();
             }
 
-            return cachedItem.Value;
+            return cachedItem;
         }
 
         private IEnvelopeEncryption<JObject> GetEnvelopeEncryptionJson(string partitionId)
         {
             // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
-            Func<string, CacheItem<CachedSession>> createFunc = id =>
+            Func<CachedSession> createFunc = () =>
             {
                 Partition partition = GetPartition(partitionId);
 
@@ -220,14 +225,11 @@ namespace GoDaddy.Asherah.AppEncryption
                     cryptoPolicy,
                     keyManagementService);
 
-                CachedSession cachedSession =
-                    new CachedSession(
+                return new CachedSession(
                         envelopeEncryptionJsonImpl,
                         SessionCacheManager,
                         partitionId,
                         cryptoPolicy.GetSessionCacheExpireMillis());
-
-                return new CacheItem<CachedSession>(partitionId, cachedSession);
             };
 
             if (cryptoPolicy.CanCacheSessions())
@@ -236,7 +238,7 @@ namespace GoDaddy.Asherah.AppEncryption
                 return AcquireShared(createFunc, partitionId);
             }
 
-            return createFunc.Invoke(partitionId).Value;
+            return createFunc();
         }
 
         protected internal class CachedSession : IEnvelopeEncryption<JObject>
@@ -245,14 +247,14 @@ namespace GoDaddy.Asherah.AppEncryption
 
             // The usageCounter is used to determine if any callers are still using this instance.
             private readonly StripedLongAdder usageCounter = new StripedLongAdder();
-            private readonly ICacheManager<CachedSession> sessionCacheManager;
+            private readonly MemoryCache sessionCacheManager;
             private readonly string key;
 
             private readonly long sessionCacheExpireMillis;
 
             public CachedSession(
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl,
-                ICacheManager<CachedSession> sessionCacheManager,
+                MemoryCache sessionCacheManager,
                 string key,
                 long sessionCacheExpireMillis)
             {
@@ -267,17 +269,31 @@ namespace GoDaddy.Asherah.AppEncryption
                 // Instead of closing the session, we atomically update the usage counter
                 try
                 {
-                    CacheItem<CachedSession> cacheItem = sessionCacheManager.GetCacheItem(key);
+                    CachedSession cacheItem = sessionCacheManager.Get<CachedSession>(key);
 
                     // Decrements the usage counter of the entry
-                    cacheItem.Value.DecrementUsageTracker();
+                    cacheItem.DecrementUsageTracker();
 
                     // If we know it's still in use, don't expire it yet
-                    if (!cacheItem.Value.IsUsed())
+                    if (!cacheItem.IsUsed())
                     {
                         // No longer in use, so now kickoff the expire timer
-                        sessionCacheManager.Put(
-                            cacheItem.WithSlidingExpiration(TimeSpan.FromMilliseconds(sessionCacheExpireMillis)));
+                        var cacheEntryOptions = new MemoryCacheEntryOptions()
+
+                            // Size amount
+                            .SetSize(1)
+
+                            // Priority on removing when reaching size limit (memory pressure)
+                            .SetPriority(CacheItemPriority.Low)
+
+                            // Keep in cache for this time, reset time if accessed.
+                            .SetSlidingExpiration(TimeSpan.FromMilliseconds(cacheItem.sessionCacheExpireMillis))
+                            .RegisterPostEvictionCallback((key, value, reason, state) =>
+                            {
+                                CachedSession cachedSession = (CachedSession)value;
+                                cachedSession.GetEnvelopeEncryptionJsonImpl().Dispose();
+                            });
+                        sessionCacheManager.Set(key, cacheItem, cacheEntryOptions);
                     }
                 }
                 catch (Exception e)

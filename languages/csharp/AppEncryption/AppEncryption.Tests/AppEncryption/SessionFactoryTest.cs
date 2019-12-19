@@ -4,13 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using App.Metrics;
 using App.Metrics.Meter;
-using CacheManager.Core;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -72,7 +72,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithCanCacheSessions(true)
                 .Build();
 
-            ICacheManager<SessionFactory.CachedSession> sessionCacheManager;
+            MemoryCache sessionCacheManager;
             using (SessionFactory factory = new SessionFactory(
                 TestProductId,
                 TestServiceId,
@@ -88,11 +88,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 }
 
                 // Verify nothing evicted yet
-                Assert.True(GetCacheItemsCount(factory.SessionCacheManager) > 0);
+                Assert.True(factory.SessionCacheManager.Count > 0);
             }
 
             // Verify closing the factory invalidated and cleaned up entries
-            Assert.True(GetCacheItemsCount(sessionCacheManager) == 0);
+            Assert.True(sessionCacheManager.Count == 0);
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     }
 
                     // Even after timeout, verify that we have one entry in cache
-                    Assert.Equal(1, GetCacheItemsCount(factory.SessionCacheManager));
+                    Assert.Equal(1, factory.SessionCacheManager.Count);
 
                     // Reset so we can examine 2nd session's interactions
                     metastoreSpy.Reset();
@@ -329,7 +329,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that cache has only 1 entry
-                Assert.Equal(1, GetCacheItemsCount(factory.SessionCacheManager));
+                Assert.Equal(1, factory.SessionCacheManager.Count);
             }
         }
 
@@ -373,7 +373,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that number of entries in cache equal number of partitions
-                Assert.Equal(numRequests, GetCacheItemsCount(factory.SessionCacheManager));
+                Assert.Equal(numRequests, factory.SessionCacheManager.Count);
             }
         }
 
@@ -422,7 +422,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that cache has only 1 entry
-                Assert.Equal(1, GetCacheItemsCount(factory.SessionCacheManager));
+                Assert.Equal(1, factory.SessionCacheManager.Count);
             }
         }
 
@@ -471,7 +471,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 Assert.Equal(numRequests, completedTasks);
 
                 // Verify that number of entries in cache equal number of partitions
-                Assert.Equal(numRequests, GetCacheItemsCount(factory.SessionCacheManager));
+                Assert.Equal(numRequests, factory.SessionCacheManager.Count);
             }
         }
 
@@ -623,11 +623,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             // Verify metrics were recorded
             Assert.NotEmpty(MetricsUtil.MetricsInstance.Snapshot.Get().Contexts);
-        }
-
-        private long GetCacheItemsCount(ICacheManager<SessionFactory.CachedSession> cacheManager)
-        {
-            return cacheManager.CacheHandles.Sum(baseCacheHandle => baseCacheHandle.Count);
         }
     }
 }
