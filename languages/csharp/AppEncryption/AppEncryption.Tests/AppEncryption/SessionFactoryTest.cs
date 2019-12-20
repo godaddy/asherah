@@ -64,8 +64,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheSetupAndClose()
+        private void TestSessionCacheSetupAndDispose()
         {
+            // Test flows around session cache setup, including cache loader and removal flows (via dispose)
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -173,7 +174,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     // Reset so we can examine 2nd session's interactions
                     metastoreSpy.Reset();
 
-                    // Use same partition to get the same cached session while it's still in use
+                    // Use same partition to get the same cached (but expired) session while it's still in use
                     using (Session<byte[], byte[]> session2 = factory.GetSessionBytes(TestPartitionId))
                     {
                         byte[] decryptedPayload = session2.Decrypt(drr);
@@ -231,6 +232,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     metastoreSpy.Verify(
                         x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
                 }
+
+                // Verify that nothing is evicted from cache since the session is still in use.
+                Assert.Equal(1, factory.SessionCache.Count);
             }
         }
 
@@ -282,7 +286,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     byte[] decryptedPayload = sessionBytes.Decrypt(drr);
                     Assert.Equal(payload, decryptedPayload);
 
-                    // metastore should have an interaction in the decrypt flow since the cached session expire
+                    // metastore should have an interaction in the decrypt flow since the cached session expired
                     metastoreSpy.Verify(
                 x => x.Load(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>()));
                 }
@@ -333,13 +337,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 // Reset so we can examine 2nd session's interactions
                 metastoreSpy.Reset();
 
+                // Try to use same partition to get the same cached session while it's still in use
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
                 {
                     byte[] decryptedPayload = sessionBytes.Decrypt(drr);
 
                     Assert.Equal(payload, decryptedPayload);
 
-                    // verify no metastore interactions in the decrypt flow (since IKs cached via session caching)
+                    // we should not hit the metastore since the session should not have been evicted
                     metastoreSpy.Verify(
                         x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
                 }
@@ -347,7 +352,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
+        private void TestSessionCacheGetSessionWithMaxSessionReachedNotExpiredShouldNotEvict()
         {
             metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -375,12 +380,141 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     Assert.Equal(payload, decryptedPayload);
                 }
 
+                // Try to create more sessions to exceed the max size
                 Parallel.ForEach(Enumerable.Range(0, 5), i =>
                 {
                     using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
                     {
                     }
                 });
+
+                // Reset so we can examine 2nd session's interactions
+                metastoreSpy.Reset();
+
+                // Try to use same partition to get the same cached session while it's still in use
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                    Assert.Equal(payload, decryptedPayload);
+
+                    // we should not hit the metastore since the session should not have been evicted as it was not expired yet
+                    metastoreSpy.Verify(
+                        x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
+                }
+            }
+        }
+
+        [Fact]
+        private void TestSessionCacheGetSessionWithMaxSessionReachedExpiredShouldEvict()
+        {
+            long cacheExpireMillis = 30;
+            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheExpireMillis(cacheExpireMillis)
+                .WithSessionCacheMaxSize(2)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithMetastore(metastoreSpy.Object)
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                byte[] drr = null;
+                Partition partition = factory.GetPartition(TestPartitionId);
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    drr = sessionBytes.Encrypt(payload);
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                    Assert.Equal(payload, decryptedPayload);
+                }
+
+                // Try to create more sessions to exceed the max size
+                Parallel.ForEach(Enumerable.Range(0, 5), i =>
+                {
+                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
+                    {
+                    }
+                });
+
+                // Sleep for a while so that the sessions in cache expire
+                try
+                {
+                    Thread.Sleep((int)(cacheExpireMillis * 3));
+                }
+                catch (Exception e)
+                {
+                    Assert.True(false, e.Message);
+                }
+
+                // This will actually create a new session and the previous one will be removed/closed due to expiry
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+                    Assert.Equal(payload, decryptedPayload);
+
+                    // metastore should have an interaction in the decrypt flow since the cached session expired
+                    metastoreSpy.Verify(
+                        x => x.Load(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>()));
+                }
+            }
+        }
+
+        [Fact]
+        private void TestSessionCacheGetSessionWithMaxSessionReachedButStillUsedShouldNotEvict()
+        {
+            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(1)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithMetastore(metastoreSpy.Object)
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                Partition partition = factory.GetPartition(TestPartitionId);
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                {
+                    byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                    byte[] drr = sessionBytes.Encrypt(payload);
+
+                    // Force us to hit the max cache size
+                    using (Session<byte[], byte[]> session2 = factory.GetSessionBytes(TestPartitionId + 1))
+                    {
+                        byte[] drr1 = sessionBytes.Encrypt(payload);
+                        byte[] decryptedPayload = sessionBytes.Decrypt(drr1);
+
+                        Assert.Equal(payload, decryptedPayload);
+
+                        // Reset so we can examine 2nd session's interactions
+                        metastoreSpy.Reset();
+
+                        // Get same session as the outter-most block since this should force both of the sessions to stay
+                        using (Session<byte[], byte[]> sessionBytesDup = factory.GetSessionBytes(TestPartitionId))
+                        {
+                            byte[] decryptedPayloadDup = sessionBytesDup.Decrypt(drr);
+
+                            Assert.Equal(payload, decryptedPayloadDup);
+
+                            // we should not hit the metastore since the session should not have been evicted
+                            metastoreSpy.Verify(
+                                x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
+                        }
+                    }
+                }
             }
         }
 
@@ -469,6 +603,98 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
                 // Verify that number of entries in cache equal number of partitions
                 Assert.Equal(numRequests, factory.SessionCache.Count);
+            }
+        }
+
+        [Fact]
+        private void TestSessionCacheMultiThreadedWithMaxSessionReachedSameSession()
+        {
+            long sessionCacheMaxSize = 1;
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(sessionCacheMaxSize)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                int numThreads = 100;
+                int numRequests = 100;
+
+                // Get the current settings and try to force minWorkers
+                ThreadPool.GetMinThreads(out _, out var currentMinIOC);
+                Assert.True(ThreadPool.SetMinThreads(numThreads, currentMinIOC));
+
+                long completedTasks = 0;
+                Parallel.ForEach(Enumerable.Range(0, numRequests), i =>
+                {
+                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
+                    {
+                        byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                        byte[] drr = sessionBytes.Encrypt(payload);
+                        byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                        Assert.Equal(payload, decryptedPayload);
+                        Interlocked.Increment(ref completedTasks);
+
+                        // Verify that cache does not have more entries than max size
+                        Assert.True(factory.SessionCache.Count <= sessionCacheMaxSize);
+                    }
+                });
+
+                // Wait for all threads to complete
+                Assert.Equal(numRequests, completedTasks);
+            }
+        }
+
+        [Fact]
+        private void TestSessionCacheMultiThreadedWithMaxSessionReachedDifferentSessions()
+        {
+            long sessionCacheMaxSize = 2;
+            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
+                .WithKeyExpirationDays(1)
+                .WithRevokeCheckMinutes(30)
+                .WithCanCacheSessions(true)
+                .WithSessionCacheMaxSize(sessionCacheMaxSize)
+                .Build();
+
+            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithCryptoPolicy(policy)
+                .WithStaticKeyManagementService(TestMasterKey)
+                .Build())
+            {
+                int numThreads = 100;
+                int numRequests = 100;
+
+                // Get the current settings and try to force minWorkers
+                ThreadPool.GetMinThreads(out _, out var currentMinIOC);
+                Assert.True(ThreadPool.SetMinThreads(numThreads, currentMinIOC));
+
+                long completedTasks = 0;
+                Parallel.ForEach(Enumerable.Range(0, numRequests), i =>
+                {
+                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
+                    {
+                        byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                        byte[] drr = sessionBytes.Encrypt(payload);
+                        byte[] decryptedPayload = sessionBytes.Decrypt(drr);
+
+                        Assert.Equal(payload, decryptedPayload);
+                        Interlocked.Increment(ref completedTasks);
+
+                        // Verify that cache size does not exceed the defined max size
+                        Assert.True(factory.SessionCache.Count <= sessionCacheMaxSize);
+                    }
+                });
+
+                // Wait for all threads to complete
+                Assert.Equal(numRequests, completedTasks);
             }
         }
 

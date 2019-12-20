@@ -33,7 +33,6 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
         private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreLocks;
-        private readonly ConcurrentDictionary<string, char> sessionCacheKeys;
 
         public SessionFactory(
             string productId,
@@ -49,7 +48,6 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
-            sessionCacheKeys = new ConcurrentDictionary<string, char>();
             semaphoreLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
             SessionCache = new MemoryCache(new MemoryCacheOptions()
             {
@@ -107,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption
             // Actually dispose of all the remaining sessions that might be active in the cache.
             lock (SessionCache)
             {
-                foreach (KeyValuePair<string, char> sessionCacheKey in sessionCacheKeys)
+                foreach (KeyValuePair<string, SemaphoreSlim> sessionCacheKey in semaphoreLocks)
                 {
                     CachedSession cachedSession = SessionCache.Get<CachedSession>(sessionCacheKey.Key);
 
@@ -230,7 +228,6 @@ namespace GoDaddy.Asherah.AppEncryption
 
             if (cryptoPolicy.CanCacheSessions())
             {
-                sessionCacheKeys.TryAdd(partitionId, '_');
                 return AcquireShared(createFunc, partitionId);
             }
 
