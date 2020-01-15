@@ -522,7 +522,7 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
-      assertEquals(numTasks, factory.getSessionCache().estimatedSize());
+//      assertEquals(numTasks, factory.getSessionCache().estimatedSize());
     }
   }
 
@@ -616,7 +616,8 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
-      assertEquals(1, factory.getSessionCache().estimatedSize());
+      // Note we can't reliably assert the estimated size matches (see Cache.estimatedSize documentation). The
+      // important part of this test is to just make sure all the operations succeeded properly.
     }
   }
 
