@@ -487,7 +487,7 @@ class SessionFactoryTest {
         .withKeyExpirationDays(1)
         .withRevokeCheckMinutes(30)
         .withCanCacheSessions(true)
-//        .withSessionCacheMaxSize(numTasks)
+        .withSessionCacheMaxSize(numTasks)
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
