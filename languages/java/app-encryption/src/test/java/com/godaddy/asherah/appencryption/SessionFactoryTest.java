@@ -522,7 +522,7 @@ class SessionFactoryTest {
       }
 
       assertEquals(numTasks, tasksCompleted.sum());
-//      assertEquals(numTasks, factory.getSessionCache().estimatedSize());
+      assertEquals(numTasks, factory.getSessionCache().estimatedSize());
     }
   }
 
