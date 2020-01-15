@@ -469,7 +469,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -516,7 +516,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -563,7 +563,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -610,7 +610,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -663,7 +663,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -714,7 +714,7 @@ class SessionFactoryTest {
 
       try {
         pool.shutdown();
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
