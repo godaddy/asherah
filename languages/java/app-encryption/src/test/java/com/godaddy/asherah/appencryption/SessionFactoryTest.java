@@ -173,6 +173,7 @@ class SessionFactoryTest {
           fail(e.getMessage());
         }
 
+        assertEquals(1, factory.getSessionCache().estimatedSize());
         // Reset so we can examine 2nd session's interactions
         reset(metastoreSpy);
 
@@ -216,6 +217,7 @@ class SessionFactoryTest {
 
       // Note we do not sleep
 
+      assertEquals(1, factory.getSessionCache().estimatedSize());
       // Reset so we can examine 2nd session's interactions
       reset(metastoreSpy);
 
