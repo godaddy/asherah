@@ -462,7 +462,7 @@ class SessionFactoryTest {
                 assertArrayEquals(payload, decryptedPayload);
                 tasksCompleted.increment();
               } catch (Exception e) {
-                fail(e.getMessage());
+                e.printStackTrace();
               }
             });
         });
@@ -481,7 +481,8 @@ class SessionFactoryTest {
 
   @Test
   void testSessionCacheMultiThreadedDifferentSessionsNoEviction() {
-    int numThreads = 100;
+    // Have to limit cache size due to memory constraints in build container
+    int numThreads = 10;
     int numTasks = numThreads * 100;
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
@@ -508,9 +509,8 @@ class SessionFactoryTest {
 
                 assertArrayEquals(payload, decryptedPayload);
                 tasksCompleted.increment();
-              } catch (Throwable e) {
+              } catch (Exception e) {
                 e.printStackTrace();
-                fail(e.getMessage());
               }
             });
         });
@@ -520,10 +520,8 @@ class SessionFactoryTest {
         assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
-        fail(e.getMessage());
       }
 
-      System.out.println("estimatedSize = " + factory.getSessionCache().estimatedSize());
       assertEquals(numTasks, tasksCompleted.sum());
       assertEquals(numTasks, factory.getSessionCache().estimatedSize());
     }
@@ -559,7 +557,7 @@ class SessionFactoryTest {
                 assertArrayEquals(payload, decryptedPayload);
                 tasksCompleted.increment();
               } catch (Exception e) {
-                fail(e.getMessage());
+                e.printStackTrace();
               }
             });
         });
@@ -606,7 +604,7 @@ class SessionFactoryTest {
                 assertArrayEquals(payload, decryptedPayload);
                 tasksCompleted.increment();
               } catch (Exception e) {
-                fail(e.getMessage());
+                e.printStackTrace();
               }
             });
         });
@@ -659,7 +657,7 @@ class SessionFactoryTest {
                 // TODO Consider refactoring Caffeine usage to allow injecting a ticker if sleeping becomes unreliable
                 Thread.sleep(sessionCacheExpireMillis * 3);
               } catch (Exception e) {
-                fail(e.getMessage());
+                e.printStackTrace();
               }
             });
         });
@@ -710,7 +708,7 @@ class SessionFactoryTest {
                 // TODO Consider refactoring Caffeine usage to allow injecting a ticker if sleeping becomes unreliable
                 Thread.sleep(sessionCacheExpireMillis * 3);
               } catch (Exception e) {
-                fail(e.getMessage());
+                e.printStackTrace();
               }
             });
         });
