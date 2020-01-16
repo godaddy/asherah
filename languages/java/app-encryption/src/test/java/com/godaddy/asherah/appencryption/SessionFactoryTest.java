@@ -509,6 +509,7 @@ class SessionFactoryTest {
                 assertArrayEquals(payload, decryptedPayload);
                 tasksCompleted.increment();
               } catch (Throwable e) {
+                e.printStackTrace();
                 fail(e.getMessage());
               }
             });
@@ -519,6 +520,7 @@ class SessionFactoryTest {
         assertTrue(pool.awaitTermination(60, TimeUnit.SECONDS));
       } catch (InterruptedException e) {
         e.printStackTrace();
+        fail(e.getMessage());
       }
 
       System.out.println("estimatedSize = " + factory.getSessionCache().estimatedSize());
