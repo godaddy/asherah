@@ -66,12 +66,11 @@ class ProtectedMemorySecretTest {
     }));
   }
 
-  // TODO Borderline integration test, but still runs fast. Consider moving out or meh?
   @Test
   void testWithSecretBytesMultiThreadedAccess() {
     SecretFactory secretFactory = new ProtectedMemorySecretFactory();
     byte[] secretBytes = new byte[] {0, 1, 2, 3};
-    Secret secret = secretFactory.createSecret(secretBytes);
+    Secret secret = secretFactory.createSecret(secretBytes.clone());
 
     // Submit large number of tasks to a reasonably sized thread pool to verify concurrency
     // semantics around the protected memory management
@@ -84,9 +83,8 @@ class ProtectedMemorySecretTest {
       .forEach(i -> {
           pool.submit(() -> {
             secret.withSecretBytes(decryptedBytes -> {
-              tasksCompleted.increment();
-              // For some reason assert has to execute last or it skips any other statements
               assertArrayEquals(secretBytes, decryptedBytes);
+              tasksCompleted.increment();
             });
           });
       });

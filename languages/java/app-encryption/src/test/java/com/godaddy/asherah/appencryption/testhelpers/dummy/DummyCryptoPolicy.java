@@ -27,6 +27,21 @@ public class DummyCryptoPolicy implements CryptoPolicy {
   }
 
   @Override
+  public boolean canCacheSessions() {
+    return false;
+  }
+
+  @Override
+  public long getSessionCacheMaxSize() {
+    return Long.MAX_VALUE;
+  }
+
+  @Override
+  public long getSessionCacheExpireMillis() {
+    return Long.MAX_VALUE;
+  }
+
+  @Override
   public boolean notifyExpiredIntermediateKeyOnRead() {
     return true;
   }

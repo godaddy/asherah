@@ -80,7 +80,6 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
    */
   public CryptoKey putAndGetUsable(final K key, final CryptoKey cryptoKey) {
     if (!isClosed.get()) {
-
       SharedCryptoKeyEntry cacheValue = sharedCryptoKeyMap.putIfAbsent(key,
           new SharedCryptoKeyEntry(new SharedCryptoKey(cryptoKey), System.currentTimeMillis()));
 
