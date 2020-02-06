@@ -12,7 +12,6 @@ import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.envelope.EnvelopeEncryptResult;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
-import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMapFactory;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
@@ -42,13 +41,12 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   public EnvelopeEncryptionJsonImpl(final Partition partition,
       final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,
-      final SecureCryptoKeyMapFactory<Instant> intermediateKeyCacheFactory, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
+      final SecureCryptoKeyMap<Instant> intermediateKeyCache, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
       final CryptoPolicy cryptoPolicy, final KeyManagementService keyManagementService) {
-
     this.partition = partition;
     this.metastore = metastore;
     this.systemKeyCache = systemKeyCache;
-    this.intermediateKeyCache = intermediateKeyCacheFactory.createSecureCryptoKeyMap();
+    this.intermediateKeyCache = intermediateKeyCache;
     this.crypto = aeadEnvelopeCrypto;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
@@ -97,7 +95,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   @Override
   public void close() {
     try {
-      // only close intermediate key cache since we invoke its creation
+      // only close intermediate key cache since its lifecycle is tied to this "session"
       intermediateKeyCache.close();
     }
     catch (Exception e) {

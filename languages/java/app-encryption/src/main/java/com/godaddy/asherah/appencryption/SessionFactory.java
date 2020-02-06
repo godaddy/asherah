@@ -1,11 +1,20 @@
 package com.godaddy.asherah.appencryption;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl;
 import com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl;
@@ -19,7 +28,7 @@ import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
-import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMapFactory;
+import com.google.common.annotations.VisibleForTesting;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.config.MeterFilter;
@@ -30,25 +39,132 @@ public class SessionFactory implements SafeAutoCloseable {
   private final String productId;
   private final String serviceId;
   private final Metastore<JSONObject> metastore;
-  private final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory;
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
+  private final Cache<String, CachedSession> sessionCache;
 
   public SessionFactory(
       final String productId,
       final String serviceId,
       final Metastore<JSONObject> metastore,
-      final SecureCryptoKeyMapFactory<Instant> secureCryptoKeyMapFactory,
+      final SecureCryptoKeyMap<Instant> systemKeyCache,
       final CryptoPolicy cryptoPolicy,
       final KeyManagementService keyManagementService) {
     this.productId = productId;
     this.serviceId = serviceId;
     this.metastore = metastore;
-    this.secureCryptoKeyMapFactory = secureCryptoKeyMapFactory;
-    this.systemKeyCache = secureCryptoKeyMapFactory.createSecureCryptoKeyMap();
+    this.systemKeyCache = systemKeyCache;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
+
+    this.sessionCache = Caffeine.newBuilder()
+        .weigher((String intermediateKeyId, CachedSession session) -> {
+          // Invoked immediately before any expireXXX calls
+
+          // If a session is still in use, give it a weight of 0 to prevent it from being removed
+          if (session.isUsed()) {
+            return 0;
+          }
+
+          // Session no longer in use, so give regular weight of 1 (using weight as number of entries)
+          return 1;
+        })
+        .maximumWeight(cryptoPolicy.getSessionCacheMaxSize())
+        .expireAfter(new Expiry<String, CachedSession>() {
+          @Override
+          public long expireAfterCreate(@NonNull final String key, @NonNull final CachedSession value,
+              final long currentTime) {
+            // Invoked when acquireShared is called for new entry, after the compute mapping call completes
+
+            // Always pin on create since we known it will be used
+            return Long.MAX_VALUE;
+          }
+
+          @Override
+          public long expireAfterRead(@NonNull final String key, @NonNull final CachedSession value,
+              final long currentTime, @NonNegative final long currentDuration) {
+            // Invoked when acquireShared is called for existing entry and the entry is already in use,
+            // and when releaseShared is called when an entry is still in use
+
+            // If we know it's still in use, don't expire it yet
+            if (value.isUsed()) {
+              return Long.MAX_VALUE;
+            }
+
+            // No longer in use, so now kickoff the expire timer.
+            // May not be reachable since we always use compute-based calls, but good to leave in place anyway
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSessionCacheExpireMillis());
+          }
+
+          @Override
+          public long expireAfterUpdate(@NonNull final String key, @NonNull final CachedSession value,
+              final long currentTime, @NonNegative final long currentDuration) {
+            // Invoked when acquireShared is called for existing entry, after compute mapping call completes,
+            // and when releaseShared is called, after computeIfPresent mapping call completes.
+
+            // If we know it's still in use, don't expire it yet
+            if (value.isUsed()) {
+              return Long.MAX_VALUE;
+            }
+
+            // No longer in use, so now kickoff the expire timer
+            return TimeUnit.MILLISECONDS.toNanos(cryptoPolicy.getSessionCacheExpireMillis());
+          }
+        })
+        .removalListener((String key, CachedSession session, RemovalCause cause) -> {
+          // Since evictions are delayed/amortized as part of other operations, this may be invoked while a caller
+          // is attempting to access this session after it already expired. In that scenario, the caller will
+          // go through the create entry flow while this current instance is safely closed.
+
+          // actually close the real thing
+          session.getEnvelopeEncryptionJsonImpl().close();
+        })
+        .build();
+  }
+
+  @VisibleForTesting
+  Cache<String, CachedSession> getSessionCache() {
+    return sessionCache;
+  }
+
+  /**
+   * Atomically acquires a shared {@code CachedSession} from the session cache for the {@code partitionId}, creating
+   * a new one using the given function if needed. This is used to track the number of concurrent users so cache
+   * eviction policies don't remove an entry while it's still potentially in use.
+   * @param createSession the function to create a new session if there is no current mapping
+   * @param partitionId
+   * @return The cached session that's mapped for the given {@code partitionId}.
+   */
+  CachedSession acquireShared(final Function<String, EnvelopeEncryptionJsonImpl> createSession,
+      final String partitionId) {
+    return sessionCache.asMap().compute(partitionId, (k, cachedSession) -> {
+      if (cachedSession == null) {
+        // Creating for first time and increment usage counter as we're the first user
+        CachedSession newSession = new CachedSession(createSession.apply(partitionId), partitionId);
+        newSession.incrementUsageTracker();
+
+        return newSession;
+      }
+
+      // Already exists in cache, so just increment usage counter
+      cachedSession.incrementUsageTracker();
+      return cachedSession;
+    });
+  }
+
+  /**
+   * Atomically marks a shared {@code CachedSession} in the session cache as no longer being used by the current
+   * caller for the {@code partitionId}. This is used to track the number of concurrent users so cache eviction
+   * policies don't remove an entry while it's still potentially in use.
+   * @param partitionId
+   */
+  void releaseShared(final String partitionId) {
+    // Decrements the usage counter if still in the cache
+    sessionCache.asMap().computeIfPresent(partitionId, (k, cachedSession) -> {
+      cachedSession.decrementUsageTracker();
+      return cachedSession;
+    });
   }
 
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
@@ -79,16 +195,26 @@ public class SessionFactory implements SafeAutoCloseable {
     return new EnvelopeEncryptionBytesImpl(getEnvelopeEncryptionJson(partitionId));
   }
 
-  private EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJson(final String partitionId) {
-    Partition partition = getPartition(partitionId);
-    return new EnvelopeEncryptionJsonImpl(
-        partition,
-        metastore,
-        systemKeyCache,
-        secureCryptoKeyMapFactory,
-        new BouncyAes256GcmCrypto(),
-        cryptoPolicy,
-        keyManagementService);
+  private EnvelopeEncryption<JSONObject> getEnvelopeEncryptionJson(final String partitionId) {
+    // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
+    Function<String, EnvelopeEncryptionJsonImpl> createFunc = id -> {
+      Partition partition = getPartition(partitionId);
+
+      return new EnvelopeEncryptionJsonImpl(
+          partition,
+          metastore,
+          systemKeyCache,
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()),
+          new BouncyAes256GcmCrypto(),
+          cryptoPolicy,
+          keyManagementService);
+    };
+
+    if (cryptoPolicy.canCacheSessions()) {
+      return acquireShared(createFunc, partitionId);
+    }
+
+    return createFunc.apply(partitionId);
   }
 
   Partition getPartition(final String partitionId) {
@@ -98,12 +224,15 @@ public class SessionFactory implements SafeAutoCloseable {
   @Override
   public void close() {
     try {
-      // only close system key cache since we invoke its creation
       systemKeyCache.close();
     }
     catch (Exception e) {
-      logger.error("unexpected exception during close", e);
+      logger.error("unexpected exception during skCache close", e);
     }
+
+    // This should force everything to be evicted and process the cleanup
+    sessionCache.invalidateAll();
+    sessionCache.cleanUp();
   }
 
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
@@ -175,7 +304,7 @@ public class SessionFactory implements SafeAutoCloseable {
       }
 
       return new SessionFactory(productId, serviceId, metastore,
-          new SecureCryptoKeyMapFactory<>(cryptoPolicy), cryptoPolicy, keyManagementService);
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService);
     }
   }
 
@@ -203,5 +332,51 @@ public class SessionFactory implements SafeAutoCloseable {
     BuildStep withMetricsEnabled();
 
     SessionFactory build();
+  }
+
+  // Calling it CachedSession but we actually cache the implementing envelope encryption class. Tried
+  // to cache Session instances but the generics and current implementation made it overly difficult to do so.
+  class CachedSession implements EnvelopeEncryption<JSONObject> {
+    private final EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
+    // The usageCounter is used to determine if any callers are still using this instance.
+    private final LongAdder usageCounter = new LongAdder();
+    private final String key;
+
+    CachedSession(final EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl, final String key) {
+      this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
+      this.key = key;
+    }
+
+    @Override
+    public JSONObject encryptPayload(final byte[] payload) {
+      return envelopeEncryptionJsonImpl.encryptPayload(payload);
+    }
+
+    @Override
+    public byte[] decryptDataRowRecord(final JSONObject dataRowRecord) {
+      return envelopeEncryptionJsonImpl.decryptDataRowRecord(dataRowRecord);
+    }
+
+    @Override
+    public void close() {
+      // Instead of closing the session, we call the release function so it can atomically update the usage counter
+      releaseShared(key);
+    }
+
+    EnvelopeEncryptionJsonImpl getEnvelopeEncryptionJsonImpl() {
+      return envelopeEncryptionJsonImpl;
+    }
+
+    void incrementUsageTracker() {
+      usageCounter.increment();
+    }
+
+    void decrementUsageTracker() {
+      usageCounter.decrement();
+    }
+
+    boolean isUsed() {
+      return usageCounter.sum() > 0;
+    }
   }
 }
