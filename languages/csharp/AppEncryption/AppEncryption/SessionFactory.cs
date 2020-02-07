@@ -203,6 +203,42 @@ namespace GoDaddy.Asherah.AppEncryption
             return cachedItem;
         }
 
+#pragma warning disable SA1204
+        private static void ReleaseShared(MemoryCache sessionCache, string key)
+#pragma warning restore SA1204
+        {
+            try
+            {
+                CachedSession cacheItem = sessionCache.Get<CachedSession>(key);
+
+                // Decrements the usage counter of the entry
+                cacheItem.DecrementUsageTracker();
+
+                // If we know it's still in use, don't expire it yet
+                if (!cacheItem.IsUsed())
+                {
+                    // No longer in use, so now kickoff the expire timer
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSize(1) // Size amount
+
+                        // Priority on removing when reaching size limit (memory pressure)
+                        .SetPriority(CacheItemPriority.Low)
+
+                        // Keep in cache for this time, reset time if accessed.
+                        .SetSlidingExpiration(TimeSpan.FromMilliseconds(cacheItem.SessionCacheExpireMillis))
+                        .RegisterPostEvictionCallback((id, value, reason, state) =>
+                        {
+                            ((CachedSession)value).GetEnvelopeEncryptionJsonImpl().Dispose();
+                        });
+                    sessionCache.Set(key, cacheItem, cacheEntryOptions);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Unexpected exception during dispose");
+            }
+        }
+
         private IEnvelopeEncryption<JObject> GetEnvelopeEncryptionJson(string partitionId)
         {
             // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
@@ -236,14 +272,16 @@ namespace GoDaddy.Asherah.AppEncryption
 
         private class CachedSession : IEnvelopeEncryption<JObject>
         {
+#pragma warning disable SA1401
+            internal readonly long SessionCacheExpireMillis;
+#pragma warning restore SA1401
+
             private readonly EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
 
             // The usageCounter is used to determine if any callers are still using this instance.
             private readonly StripedLongAdder usageCounter = new StripedLongAdder();
             private readonly MemoryCache sessionCache;
             private readonly string key;
-
-            private readonly long sessionCacheExpireMillis;
 
             public CachedSession(
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl,
@@ -254,42 +292,13 @@ namespace GoDaddy.Asherah.AppEncryption
                 this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
                 this.sessionCache = sessionCache;
                 this.key = key;
-                this.sessionCacheExpireMillis = sessionCacheExpireMillis;
+                SessionCacheExpireMillis = sessionCacheExpireMillis;
             }
 
             public void Dispose()
             {
-                // Instead of closing the session, we atomically update the usage counter
-                try
-                {
-                    CachedSession cacheItem = sessionCache.Get<CachedSession>(key);
-
-                    // Decrements the usage counter of the entry
-                    cacheItem.DecrementUsageTracker();
-
-                    // If we know it's still in use, don't expire it yet
-                    if (!cacheItem.IsUsed())
-                    {
-                        // No longer in use, so now kickoff the expire timer
-                        var cacheEntryOptions = new MemoryCacheEntryOptions()
-                            .SetSize(1) // Size amount
-
-                            // Priority on removing when reaching size limit (memory pressure)
-                            .SetPriority(CacheItemPriority.Low)
-
-                            // Keep in cache for this time, reset time if accessed.
-                            .SetSlidingExpiration(TimeSpan.FromMilliseconds(cacheItem.sessionCacheExpireMillis))
-                            .RegisterPostEvictionCallback((id, value, reason, state) =>
-                            {
-                                ((CachedSession)value).GetEnvelopeEncryptionJsonImpl().Dispose();
-                            });
-                        sessionCache.Set(key, cacheItem, cacheEntryOptions);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e, "Unexpected exception during dispose");
-                }
+                // Instead of closing the session, we call the release function so it can atomically update the usage counter
+                ReleaseShared(sessionCache, key);
             }
 
             public byte[] DecryptDataRowRecord(JObject dataRowRecord)
@@ -312,12 +321,12 @@ namespace GoDaddy.Asherah.AppEncryption
                 return envelopeEncryptionJsonImpl;
             }
 
-            private void DecrementUsageTracker()
+            internal void DecrementUsageTracker()
             {
                 usageCounter.Decrement();
             }
 
-            private bool IsUsed()
+            internal bool IsUsed()
             {
                 return usageCounter.GetValue() > 0;
             }
