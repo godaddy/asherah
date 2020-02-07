@@ -49,10 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
             semaphoreLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
-            SessionCache = new MemoryCache(new MemoryCacheOptions()
-            {
-                SizeLimit = cryptoPolicy.GetSessionCacheMaxSize()
-            });
+            SessionCache = new MemoryCache(new MemoryCacheOptions());
         }
 
         public interface IMetastoreStep
@@ -161,31 +158,38 @@ namespace GoDaddy.Asherah.AppEncryption
         }
 
         /// <summary>
-        /// Acquires a shared <code>CachedSession</code> from the session cache for the <code>partitionId</code>,
-        /// creating a new one if needed using the given function. This is used to track the number of concurrent
-        /// users so cache eviction policies don't remove an entry while it's still potentially in use.
+        /// Atomically acquires a shared <code>CachedSession</code> from the session cache for the
+        /// <code>partitionId</code>, creating a new one using the given function if needed. This is used to track the
+        /// number of concurrent users so cache eviction policies don't remove an entry while it's still potentially in
+        /// use.
         /// </summary>
         ///
         /// <returns>The cached session that's mapped for the given <code>partitionId</code></returns>
         ///
-        /// <param name="createSession">the function to create a new session if there is no current mapping</param>
+        /// <param name="createSessionFunc">the function to create a new session if there is no current mapping</param>
         /// <param name="partitionId">the partition id for a session</param>
         private CachedSession AcquireShared(
-            Func<CachedSession> createSession, string partitionId)
+            Func<CachedSession> createSessionFunc, string partitionId)
         {
             SemaphoreSlim getCachedItemLock = semaphoreLocks.GetOrAdd(partitionId, k => new SemaphoreSlim(1, 1));
             CachedSession cachedItem;
 
-            // Get or add is not thread safe and hence we need a lock
+            // TryGetValue is not thread safe and hence we need a lock
             getCachedItemLock.Wait();
             try
             {
                 if (!SessionCache.TryGetValue(partitionId, out cachedItem))
                 {
-                    cachedItem = createSession();
+                    // If the cache size is greater than the maximum count, compact the cache
+                    // This will remove all the unused sessions
+                    if (SessionCache.Count >= cryptoPolicy.GetSessionCacheMaxSize())
+                    {
+                        SessionCache.Compact(50);
+                    }
+
+                    // Creating for first time
+                    cachedItem = createSessionFunc();
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSize(1) // Size amount
-                        // Priority on removing when reaching size limit (memory pressure)
                         .SetPriority(CacheItemPriority.NeverRemove);
 
                     // Save data in cache.
@@ -203,13 +207,18 @@ namespace GoDaddy.Asherah.AppEncryption
             return cachedItem;
         }
 
-#pragma warning disable SA1204
-        private static void ReleaseShared(MemoryCache sessionCache, string key)
-#pragma warning restore SA1204
+        /// <summary>
+        /// Atomically marks a shared <code>CachedSession</code> in the session cache as no longer being used by the
+        /// current caller for the <code>partitionId</code>. This is used to track the number of concurrent users so
+        /// cache eviction policies don't remove an entry while it's still potentially in use.
+        /// </summary>
+        ///
+        /// <param name="partitionId">the partition id for a session</param>
+        private void ReleaseShared(string partitionId)
         {
             try
             {
-                CachedSession cacheItem = sessionCache.Get<CachedSession>(key);
+                CachedSession cacheItem = SessionCache.Get<CachedSession>(partitionId);
 
                 // Decrements the usage counter of the entry
                 cacheItem.DecrementUsageTracker();
@@ -219,18 +228,13 @@ namespace GoDaddy.Asherah.AppEncryption
                 {
                     // No longer in use, so now kickoff the expire timer
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSize(1) // Size amount
-
-                        // Priority on removing when reaching size limit (memory pressure)
                         .SetPriority(CacheItemPriority.Low)
-
-                        // Keep in cache for this time, reset time if accessed.
-                        .SetSlidingExpiration(TimeSpan.FromMilliseconds(cacheItem.SessionCacheExpireMillis))
+                        .SetSlidingExpiration(TimeSpan.FromMilliseconds(cryptoPolicy.GetSessionCacheExpireMillis()))
                         .RegisterPostEvictionCallback((id, value, reason, state) =>
                         {
                             ((CachedSession)value).GetEnvelopeEncryptionJsonImpl().Dispose();
                         });
-                    sessionCache.Set(key, cacheItem, cacheEntryOptions);
+                    SessionCache.Set(partitionId, cacheItem, cacheEntryOptions);
                 }
             }
             catch (Exception e)
@@ -242,7 +246,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private IEnvelopeEncryption<JObject> GetEnvelopeEncryptionJson(string partitionId)
         {
             // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
-            Func<CachedSession> createFunc = () =>
+            Func<CachedSession> createSessionFunc = () =>
             {
                 Partition partition = GetPartition(partitionId);
 
@@ -255,50 +259,40 @@ namespace GoDaddy.Asherah.AppEncryption
                     cryptoPolicy,
                     keyManagementService);
 
-                return new CachedSession(
-                        envelopeEncryptionJsonImpl,
-                        SessionCache,
-                        partitionId,
-                        cryptoPolicy.GetSessionCacheExpireMillis());
+                return new CachedSession(envelopeEncryptionJsonImpl, partitionId, this);
             };
 
             if (cryptoPolicy.CanCacheSessions())
             {
-                return AcquireShared(createFunc, partitionId);
+                return AcquireShared(createSessionFunc, partitionId);
             }
 
-            return createFunc();
+            return createSessionFunc();
         }
 
         private class CachedSession : IEnvelopeEncryption<JObject>
         {
-#pragma warning disable SA1401
-            internal readonly long SessionCacheExpireMillis;
-#pragma warning restore SA1401
-
             private readonly EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
 
             // The usageCounter is used to determine if any callers are still using this instance.
             private readonly StripedLongAdder usageCounter = new StripedLongAdder();
-            private readonly MemoryCache sessionCache;
             private readonly string key;
+            private readonly SessionFactory sessionFactory;
 
             public CachedSession(
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl,
-                MemoryCache sessionCache,
                 string key,
-                long sessionCacheExpireMillis)
+                SessionFactory sessionFactory)
             {
                 this.envelopeEncryptionJsonImpl = envelopeEncryptionJsonImpl;
-                this.sessionCache = sessionCache;
                 this.key = key;
-                SessionCacheExpireMillis = sessionCacheExpireMillis;
+                this.sessionFactory = sessionFactory;
             }
 
             public void Dispose()
             {
                 // Instead of closing the session, we call the release function so it can atomically update the usage counter
-                ReleaseShared(sessionCache, key);
+                sessionFactory.ReleaseShared(key);
             }
 
             public byte[] DecryptDataRowRecord(JObject dataRowRecord)

@@ -352,7 +352,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionReachedNotExpiredShouldNotEvict()
+        private void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
         {
             metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -381,88 +381,27 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 }
 
                 // Try to create more sessions to exceed the max size
-                Parallel.ForEach(Enumerable.Range(0, 5), i =>
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + 1))
                 {
-                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
-                    {
-                    }
-                });
+                }
+
+                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + 2))
+                {
+                }
 
                 // Reset so we can examine 2nd session's interactions
                 metastoreSpy.Reset();
 
-                // Try to use same partition to get the same cached session while it's still in use
+                // Try to use same partition to get the same session we might have cached earlier
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
                 {
                     byte[] decryptedPayload = sessionBytes.Decrypt(drr);
 
                     Assert.Equal(payload, decryptedPayload);
 
-                    // we should not hit the metastore since the session should not have been evicted as it was not expired yet
+                    // we should hit the metastore since the session should have been evicted as the size limit was reached
                     metastoreSpy.Verify(
-                        x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
-                }
-            }
-        }
-
-        [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionReachedExpiredShouldEvict()
-        {
-            long cacheExpireMillis = 30;
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
-            CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
-                .WithKeyExpirationDays(1)
-                .WithRevokeCheckMinutes(30)
-                .WithCanCacheSessions(true)
-                .WithSessionCacheExpireMillis(cacheExpireMillis)
-                .WithSessionCacheMaxSize(2)
-                .Build();
-
-            using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
-                .WithMetastore(metastoreSpy.Object)
-                .WithCryptoPolicy(policy)
-                .WithStaticKeyManagementService(TestMasterKey)
-                .Build())
-            {
-                byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
-                byte[] drr = null;
-                Partition partition = factory.GetPartition(TestPartitionId);
-
-                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
-                {
-                    drr = sessionBytes.Encrypt(payload);
-                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
-
-                    Assert.Equal(payload, decryptedPayload);
-                }
-
-                // Try to create more sessions to exceed the max size
-                Parallel.ForEach(Enumerable.Range(0, 5), i =>
-                {
-                    using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId + i))
-                    {
-                    }
-                });
-
-                // Sleep for a while so that the sessions in cache expire
-                try
-                {
-                    Thread.Sleep((int)(cacheExpireMillis * 3));
-                }
-                catch (Exception e)
-                {
-                    Assert.True(false, e.Message);
-                }
-
-                // This will actually create a new session and the previous one will be removed/closed due to expiry
-                using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
-                {
-                    byte[] decryptedPayload = sessionBytes.Decrypt(drr);
-                    Assert.Equal(payload, decryptedPayload);
-
-                    // metastore should have an interaction in the decrypt flow since the cached session expired
-                    metastoreSpy.Verify(
-                        x => x.Load(partition.IntermediateKeyId, It.IsAny<DateTimeOffset>()));
+                        x => x.Load(It.IsAny<string>(), It.IsAny<DateTimeOffset>()));
                 }
             }
         }
@@ -502,7 +441,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                         // Reset so we can examine 2nd session's interactions
                         metastoreSpy.Reset();
 
-                        // Get same session as the outter-most block since this should force both of the sessions to stay
+                        // Get same session as the outer-most block since this should force both of the sessions to stay
                         using (Session<byte[], byte[]> sessionBytesDup = factory.GetSessionBytes(TestPartitionId))
                         {
                             byte[] decryptedPayloadDup = sessionBytesDup.Decrypt(drr);
@@ -687,9 +626,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
                         Assert.Equal(payload, decryptedPayload);
                         Interlocked.Increment(ref completedTasks);
-
-                        // Verify that cache size does not exceed the defined max size
-                        Assert.True(factory.SessionCache.Count <= sessionCacheMaxSize);
                     }
                 });
 
