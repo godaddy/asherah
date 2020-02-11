@@ -107,6 +107,10 @@ interface CryptoPolicy {
 
   boolean canCacheSystemKeys();
   boolean canCacheIntermediateKeys();
+  
+  boolean canCacheSessions();
+  long getSessionCacheMaxSize();
+  long getSessionCacheExpireMillis();
 
   boolean notifyExpiredIntermediateKeyOnRead();
   boolean notifyExpiredSystemKeyOnRead();
