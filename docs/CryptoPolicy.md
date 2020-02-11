@@ -6,6 +6,12 @@ The crypto policy interface dictates the various behaviors of Asherah and can be
   * enables/disables caching of System Keys
 * **canCacheIntermediateKeys**
   * enables/disables caching of Intermediate Keys
+* **canCacheSessions**
+  * enables/disables caching of Sessions
+* **getSessionCacheMaxSize**
+  * the maximum numbers of sessions to cache
+* **getSessionCacheExpireMillis**
+  * the time period to expire the sessions present in the cache
 * **getRevokeCheckPeriodMillis**
   * the time period to revoke keys present in cache
 * **isKeyExpired**
