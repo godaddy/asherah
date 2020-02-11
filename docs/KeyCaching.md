@@ -3,13 +3,15 @@
 Asherah supports caching of Intermediate and System Keys to minimize calls against external resource and reducing
 latency. This is especially important for minimizing calls to the configured
 [Key Management Service](KeyManagementService.md) as that is often the most expensive and latent interaction of the
-resources involved. The cache is built on top of the Secure Memory implementation.
+resources involved. The cache is built on top of the Secure Memory implementation. 
+The API also supports caching of Sessions, which further helps in reducing the latency. If 2 different users try to
+interact with the same session, the SDK makes use of the cached session instead of creating a new one.
 
 ## Crypto Policy Configuration
 
-The [Crypto Policy](CryptoPolicy.md) can be used to enable or disable the caching of the keys. Since keys can be
-flagged as "revoked" before their expiration period (i.e. irregular key rotation), the status of a cached key is
-periodically retrieved from the Metastore. This "Revoke Check" period is configured using the
+The [Crypto Policy](CryptoPolicy.md) can be used to enable or disable the caching of the keys and session. Since keys
+can be flagged as "revoked" before their expiration period (i.e. irregular key rotation), the status of a cached key 
+is periodically retrieved from the Metastore. This "Revoke Check" period is configured using the
 [Crypto Policy](CryptoPolicy.md)'s `revokeCheckPeriodMillis`. The
 [Basic Expiring Crypto Policy](CryptoPolicy.md#basic-expiring-crypto-policy) provided by the library simplifies this to
 the granularity of a minute with `revokeCheckMinutes()` in the builder.
@@ -24,7 +26,8 @@ across `Session` instances generated from the session factory. Doing so prevents
 sessions" from having to cache another copy of the same System Key in Secure Memory, as well as avoiding interaction
 with the [Key Management Service](KeyManagementService.md) to decrypt it.
 
-The cache for Intermediate Keys is scoped to the current partition's `Session` instance/session. Sharing the
+The cache for Intermediate Keys is scoped to the current partition's `Session` instance/session. This session has its
+lifecycle maintained by the Session cache, which is configured by the [Crypto Policy](CryptoPolicy.md). Sharing the
 Intermediate Key caches across sessions would incur less security posture as the blast radius would be widened if an
 attacker somehow managed to hijack an application's session.
 
