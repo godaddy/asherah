@@ -13,7 +13,6 @@ endlegend
 participant Caller
 participant API
 boundary SessionFactory
-collections "Session Cache"
 collections "SK Cache"
 boundary Session
 collections "IK Cache"
@@ -22,17 +21,14 @@ entity KMS
 
 API -> API : startup initiated
 API -> SessionFactory : create new factory
-SessionFactory -> "Session Cache" : create new \nSession cache
-activate "Session Cache"
-SessionFactory -> "SK Cache" : create new \nSK cache
+SessionFactory -> "SK Cache" : create new cache
 activate "SK Cache"
 API -> API : startup completes
 |||
 Caller -> API : API call User 1
 API -> SessionFactory : create new session
-SessionFactory -> "Session Cache" : cache session
 SessionFactory -> Session : create new instance
-Session -> "IK Cache" : create new IK cache
+Session -> "IK Cache" : create new cache
 activate "IK Cache"
 API -> Session : operation 1
 Session -> Metastore : fetch IK
@@ -48,14 +44,15 @@ Session -> "IK Cache" : get IK from cache
 Session -> API : complete operation 2
 |||
 API -> Session : close session
-Session -> "Session Cache" : cache session
-deactivate "IK Cache"
+Session -> "IK Cache" : securely close cache
+destroy "IK Cache"
 API -> Caller : API call User 1 result
 |||
 |||
 Caller -> API : API call User 2
 API -> SessionFactory : create new session
-"Session Cache" -> Session : get cached session
+SessionFactory -> Session : create new instance
+Session -> "IK Cache" : create new cache
 activate "IK Cache"
 API -> Session : operation 1
 Session -> Metastore : fetch IK
@@ -65,22 +62,15 @@ Session -> "IK Cache" : cache IK
 Session -> API : complete operation 1
 |||
 API -> Session : close session
-Session -> "Session Cache" : cache session
-deactivate "IK Cache"
+Session -> "IK Cache" : securely close cache
+destroy "IK Cache"
 API -> Caller : API call User 2 result
 |||
 |||
-SessionFactory -> SessionFactory : session cache \nexpire timeout triggered
-SessionFactory -> "Session Cache" : expire session
-Session -> "IK Cache" : securely close IK cache
-destroy "IK Cache"
-|||
 API -> API : shutdown initiated
 API -> SessionFactory : close session factory
-SessionFactory -> "SK Cache" : securely close SK cache
+SessionFactory -> "SK Cache" : securely close cache
 destroy "SK Cache"
-SessionFactory -> "Session Cache" : close Session cache
-destroy "Session Cache"
 API -> API : shutdown completes
 
 @enduml
