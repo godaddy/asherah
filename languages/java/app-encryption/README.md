@@ -6,6 +6,7 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
     * [Define the Metastore](#define-the-metastore)
     * [Define the Key Management Service](#define-the-key-management-service)
     * [Define the Crypto Policy](#define-the-crypto-policy)
+      * [(Optional) Enable Session Caching](#optional-enable-session-caching)
     * [(Optional) Enable Metrics](#optional-enable-metrics)
     * [Build a Session Factory](#build-a-session-factory)
     * [Performing Cryptographic Operations](#performing-cryptographic-operations)
@@ -105,6 +106,23 @@ on key caching is explained [here](../../../docs/KeyCaching.md).
 CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
     .withKeyExpirationDays(90)
     .withRevokeCheckMinutes(60)
+    .build();
+```
+
+#### (Optional) Enable Session Caching
+
+Session caching is disabled by default. If there is a use case where multiple users/threads are trying to access 
+the same session after some operations, you can enable session cache.
+
+To enable session caching, simply use the optional builder step `withCanCacheSessions(true)` when building a crypto policy.
+
+```java
+CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
+    .withKeyExpirationDays(90)
+    .withRevokeCheckMinutes(60)
+    .withCanCacheSessions(true)    // Enable session cache
+    .withSessionCacheMaxSize(200)    // Define the number of maximum sessions to cache
+    .withSessionCacheExpireMinutes(5)    // Evict the session from cache after some minutes
     .build();
 ```
 
