@@ -111,8 +111,8 @@ CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
 
 #### (Optional) Enable Session Caching
 
-Session caching is disabled by default. If there is a use case where multiple users/threads are trying to access 
-the same session after some operations, you can enable session cache.
+Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the 
+shared session can't be used by the calling app.
 
 To enable session caching, simply use the optional builder step `withCanCacheSessions(true)` when building a crypto policy.
 
