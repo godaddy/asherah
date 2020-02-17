@@ -4,8 +4,9 @@ Asherah supports caching of Intermediate and System Keys to minimize calls again
 latency. This is especially important for minimizing calls to the configured
 [Key Management Service](KeyManagementService.md) as that is often the most expensive and latent interaction of the
 resources involved. The cache is built on top of the Secure Memory implementation. 
-The API also supports caching of Sessions, which further helps in reducing the latency. If 2 different users try to
-interact with the same session, the SDK makes use of the cached session instead of creating a new one.
+The API also supports caching of Sessions, which further helps in reducing the latency by minimizing the number of API
+calls to the metastore. In case of stateless workloads, when the calling app can't make use of the shared session, the
+SDK makes use of the cached session instead of creating a new one. 
 
 ## Crypto Policy Configuration
 
