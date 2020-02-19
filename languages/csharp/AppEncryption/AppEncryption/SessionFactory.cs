@@ -24,6 +24,9 @@ namespace GoDaddy.Asherah.AppEncryption
         protected internal readonly MemoryCache SessionCache;
         #pragma warning restore SA1401
 
+        // Percentage of session cache to compact if it exceeds size limits and remove unused sessions
+        private const int CompactionPercentage = 50;
+
         private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
 
         private readonly string productId;
@@ -169,7 +172,7 @@ namespace GoDaddy.Asherah.AppEncryption
         /// <param name="createSessionFunc">the function to create a new session if there is no current mapping</param>
         /// <param name="partitionId">the partition id for a session</param>
         private CachedSession AcquireShared(
-            Func<CachedSession> createSessionFunc, string partitionId)
+            Func<EnvelopeEncryptionJsonImpl> createSessionFunc, string partitionId)
         {
             SemaphoreSlim getCachedItemLock = semaphoreLocks.GetOrAdd(partitionId, k => new SemaphoreSlim(1, 1));
             CachedSession cachedItem;
@@ -188,7 +191,7 @@ namespace GoDaddy.Asherah.AppEncryption
                     }
 
                     // Creating for first time
-                    cachedItem = createSessionFunc();
+                    cachedItem = new CachedSession(createSessionFunc(), partitionId, this);
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
                         .SetPriority(CacheItemPriority.NeverRemove);
 
@@ -246,11 +249,11 @@ namespace GoDaddy.Asherah.AppEncryption
         private IEnvelopeEncryption<JObject> GetEnvelopeEncryptionJson(string partitionId)
         {
             // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
-            Func<CachedSession> createSessionFunc = () =>
+            Func<EnvelopeEncryptionJsonImpl> createSessionFunc = () =>
             {
                 Partition partition = GetPartition(partitionId);
 
-                EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
+                return new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastore,
                     systemKeyCache,
@@ -258,8 +261,6 @@ namespace GoDaddy.Asherah.AppEncryption
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
                     keyManagementService);
-
-                return new CachedSession(envelopeEncryptionJsonImpl, partitionId, this);
             };
 
             if (cryptoPolicy.CanCacheSessions())
@@ -270,6 +271,7 @@ namespace GoDaddy.Asherah.AppEncryption
             return createSessionFunc();
         }
 
+        // Calling it CachedSession but we actually cache the implementing envelope encryption class.
         private class CachedSession : IEnvelopeEncryption<JObject>
         {
             private readonly EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;

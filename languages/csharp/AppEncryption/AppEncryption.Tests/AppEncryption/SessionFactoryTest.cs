@@ -26,12 +26,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestMasterKey = "test_master_key_that_is_32_bytes";
 
         private readonly Mock<IMetastore<JObject>> metastoreMock;
+        private readonly Mock<InMemoryMetastoreImpl<JObject>> metastoreSpy;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
         private readonly Mock<KeyManagementService> keyManagementServiceMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheMock;
         private readonly SessionFactory sessionFactory;
-
-        private Mock<InMemoryMetastoreImpl<JObject>> metastoreSpy;
 
         public SessionFactoryTest()
         {
@@ -39,6 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
             systemKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1);
+            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
 
             sessionFactory = new SessionFactory(
                 TestProductId,
@@ -47,20 +47,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
                 keyManagementServiceMock.Object);
+            sessionFactory.Dispose();
         }
 
         [Fact]
         private void TestConstructor()
         {
-            SessionFactory sessionFactory = new SessionFactory(
+            using (SessionFactory sessionFactory = new SessionFactory(
                 TestProductId,
                 TestServiceId,
                 metastoreMock.Object,
                 systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
-                keyManagementServiceMock.Object);
-
-            Assert.NotNull(sessionFactory);
+                keyManagementServiceMock.Object))
+            {
+                Assert.NotNull(sessionFactory);
+            }
         }
 
         [Fact]
@@ -99,7 +101,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestSessionCacheGetSessionWhileStillUsedAndNotExpiredShouldNotEvict()
         {
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -139,7 +140,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestSessionCacheGetSessionWhileStillUsedAndExpiredShouldNotEvict()
         {
             long sessionCacheExpireMillis = 30;
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -192,7 +192,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestSessionCacheGetSessionAfterUseAndNotExpiredShouldNotEvict()
         {
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -242,7 +241,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestSessionCacheGetSessionAfterUseAndExpiredShouldEvict()
         {
             long sessionCacheExpireMillis = 10;
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -296,12 +294,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestSessionCacheGetSessionWithMaxSessionNotReachedShouldNotEvict()
         {
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            long sessionCacheMaxSize = 2;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
                 .WithCanCacheSessions(true)
-                .WithSessionCacheMaxSize(2)
+                .WithSessionCacheMaxSize(sessionCacheMaxSize)
                 .Build();
 
             using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
@@ -354,12 +352,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
         {
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            long sessionCacheMaxSize = 2;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
                 .WithCanCacheSessions(true)
-                .WithSessionCacheMaxSize(2)
+                .WithSessionCacheMaxSize(sessionCacheMaxSize)
                 .Build();
 
             using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
@@ -409,12 +407,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestSessionCacheGetSessionWithMaxSessionReachedButStillUsedShouldNotEvict()
         {
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
+            long sessionCacheMaxSize = 1;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
                 .WithCanCacheSessions(true)
-                .WithSessionCacheMaxSize(1)
+                .WithSessionCacheMaxSize(sessionCacheMaxSize)
                 .Build();
 
             using (SessionFactory factory = SessionFactory.NewBuilder(TestProductId, TestServiceId)
@@ -423,8 +421,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithStaticKeyManagementService(TestMasterKey)
                 .Build())
             {
-                Partition partition = factory.GetPartition(TestPartitionId);
-
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
                 {
                     byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -638,7 +634,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestSessionCacheMultiThreadedWithExpirationSameSession()
         {
             long sessionCacheExpireMillis = 10;
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -671,6 +666,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                         Assert.Equal(payload, decryptedPayload);
                         Interlocked.Increment(ref completedTasks);
 
+                        // Sleep to trigger expiration
                         Thread.Sleep((int)sessionCacheExpireMillis * 3);
                     }
                 });
@@ -687,7 +683,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private void TestSessionCacheMultiThreadedWithExpirationDifferentSessions()
         {
             long sessionCacheExpireMillis = 10;
-            metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
                 .WithRevokeCheckMinutes(30)
@@ -720,6 +715,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                         Assert.Equal(payload, decryptedPayload);
                         Interlocked.Increment(ref completedTasks);
 
+                        // Sleep to trigger expiration
                         Thread.Sleep((int)sessionCacheExpireMillis * 3);
                     }
                 });

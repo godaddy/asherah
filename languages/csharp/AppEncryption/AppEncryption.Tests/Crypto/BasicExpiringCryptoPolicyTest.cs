@@ -89,7 +89,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
             Assert.False(basicExpiringCryptoPolicy.CanCacheIntermediateKeys());
             Assert.True(basicExpiringCryptoPolicy.CanCacheSessions());
             Assert.Equal(42, basicExpiringCryptoPolicy.GetSessionCacheMaxSize());
-            Assert.Equal(33 * 1000, basicExpiringCryptoPolicy.GetSessionCacheExpireMillis());
+            Assert.Equal(33000, basicExpiringCryptoPolicy.GetSessionCacheExpireMillis());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredSystemKeyOnRead());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredIntermediateKeyOnRead());
         }
