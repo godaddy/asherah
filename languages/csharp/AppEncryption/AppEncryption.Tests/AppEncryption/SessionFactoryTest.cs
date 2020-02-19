@@ -576,14 +576,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
                         Assert.Equal(payload, decryptedPayload);
                         Interlocked.Increment(ref completedTasks);
-
-                        // Verify that cache does not have more entries than max size
-                        Assert.True(factory.SessionCache.Count <= sessionCacheMaxSize);
                     }
                 });
 
                 // Wait for all threads to complete
                 Assert.Equal(numRequests, completedTasks);
+                Assert.Equal(1, factory.SessionCache.Count);
             }
         }
 
