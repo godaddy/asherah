@@ -187,7 +187,7 @@ namespace GoDaddy.Asherah.AppEncryption
                     // This will remove all the unused sessions
                     if (SessionCache.Count >= cryptoPolicy.GetSessionCacheMaxSize())
                     {
-                        SessionCache.Compact(50);
+                        SessionCache.Compact(CompactionPercentage);
                     }
 
                     // Creating for first time
