@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> semaphoreLocks;
+        private readonly ConcurrentDictionary<string, object> semaphoreLocks;
 
         public SessionFactory(
             string productId,
@@ -51,7 +51,7 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
-            semaphoreLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
+            semaphoreLocks = new ConcurrentDictionary<string, object>();
             SessionCache = new MemoryCache(new MemoryCacheOptions());
         }
 
@@ -105,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption
             // Actually dispose of all the remaining sessions that might be active in the cache.
             lock (SessionCache)
             {
-                foreach (KeyValuePair<string, SemaphoreSlim> sessionCacheKey in semaphoreLocks)
+                foreach (KeyValuePair<string, object> sessionCacheKey in semaphoreLocks)
                 {
                     CachedSession cachedSession = SessionCache.Get<CachedSession>(sessionCacheKey.Key);
 
@@ -174,12 +174,11 @@ namespace GoDaddy.Asherah.AppEncryption
         private CachedSession AcquireShared(
             Func<EnvelopeEncryptionJsonImpl> createSessionFunc, string partitionId)
         {
-            SemaphoreSlim getCachedItemLock = semaphoreLocks.GetOrAdd(partitionId, k => new SemaphoreSlim(1, 1));
+            object getCachedItemLock = semaphoreLocks.GetOrAdd(partitionId, new object());
             CachedSession cachedItem;
 
             // TryGetValue is not thread safe and hence we need a lock
-            getCachedItemLock.Wait();
-            try
+            lock (getCachedItemLock)
             {
                 if (!SessionCache.TryGetValue(partitionId, out cachedItem))
                 {
@@ -201,10 +200,6 @@ namespace GoDaddy.Asherah.AppEncryption
 
                 // Increment the usage counter of the entry
                 cachedItem.IncrementUsageTracker();
-            }
-            finally
-            {
-                getCachedItemLock.Release();
             }
 
             return cachedItem;
