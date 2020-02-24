@@ -29,8 +29,8 @@ API -> API : startup completes
 |||
 Caller -> API : API call User 1
 API -> SessionFactory : create new session
-SessionFactory -> "Session Cache" : cache session
 SessionFactory -> Session : create new instance
+SessionFactory -> "Session Cache" : cache session
 Session -> "IK Cache" : create new IK cache
 activate "IK Cache"
 API -> Session : operation 1
@@ -47,14 +47,14 @@ Session -> "IK Cache" : get IK from cache
 Session -> API : complete operation 2
 |||
 API -> Session : close session
-Session -> "Session Cache" : cache session
+Session -> "Session Cache" : update Session cache
 deactivate "IK Cache"
 API -> Caller : API call User 1 result
 |||
 |||
 Caller -> API : API call User 2
 API -> SessionFactory : create new session
-"Session Cache" -> Session : get cached session
+"Session Cache" -> Session : get cached session if available\nelse create new instance
 activate "IK Cache"
 API -> Session : operation 1
 Session -> Metastore : fetch IK
@@ -64,7 +64,7 @@ Session -> "IK Cache" : cache IK
 Session -> API : complete operation 1
 |||
 API -> Session : close session
-Session -> "Session Cache" : cache session
+Session -> "Session Cache" : update Session cache
 deactivate "IK Cache"
 API -> Caller : API call User 2 result
 |||
