@@ -6,6 +6,7 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
     * [Define the Metastore](#define-the-metastore)
     * [Define the Key Management Service](#define-the-key-management-service)
     * [Define the Crypto Policy](#define-the-crypto-policy)
+      * [(Optional) Enable Session Caching](#optional-enable-session-caching)
     * [(Optional) Enable Metrics](#optional-enable-metrics)
     * [Build a Session Factory](#build-a-session-factory)
     * [Performing Cryptographic Operations](#performing-cryptographic-operations)
@@ -113,6 +114,23 @@ on key caching is explained [here](../../../docs/KeyCaching.md).
 CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
     .WithKeyExpirationDays(90)
     .WithRevokeCheckMinutes(60)
+    .Build();
+```
+
+#### (Optional) Enable Session Caching
+
+Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the 
+shared session can't be used by the calling app.
+
+To enable session caching, simply use the optional builder step `WithCanCacheSessions(true)` when building a crypto policy.
+
+```c#
+CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
+    .WithKeyExpirationDays(90)
+    .WithRevokeCheckMinutes(60)
+    .WithCanCacheSessions(true)    // Enable session cache
+    .WithSessionCacheMaxSize(200)    // Define the number of maximum sessions to cache
+    .WithSessionCacheExpireMillis(5000)    // Evict the session from cache after some milliseconds
     .Build();
 ```
 
