@@ -70,11 +70,11 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
                 if (position != outputLen)
                 {
                     if (Debug.On)
-#pragma warning disable 162
+                    #pragma warning disable 162
                     {
                         Logger.LogError("position {position} not equal to outputLength {outputLen}", position, outputLen);
                     }
-#pragma warning restore 162
+                    #pragma warning restore 162
 
                     throw new AppEncryptionException("unexpected error during decrypt cipher finalization");
                 }

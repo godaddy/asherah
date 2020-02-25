@@ -38,7 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             Partition partition,
             IMetastore<JObject> metastore,
             SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
-            SecureCryptoKeyDictionaryFactory<DateTimeOffset> intermediateKeyCacheFactory,
+            SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
             CryptoPolicy cryptoPolicy,
             KeyManagementService keyManagementService)
@@ -46,7 +46,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             this.partition = partition;
             this.metastore = metastore;
             this.systemKeyCache = systemKeyCache;
-            intermediateKeyCache = intermediateKeyCacheFactory.CreateSecureCryptoKeyDictionary();
+            this.intermediateKeyCache = intermediateKeyCache;
             crypto = aeadEnvelopeCrypto;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
@@ -105,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             try
             {
-                // only close intermediate key cache since we invoke its creation
+                // only close intermediate key cache since its lifecycle is tied to this "session"
                 intermediateKeyCache.Dispose();
             }
             catch (Exception e)

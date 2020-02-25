@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using GoDaddy.Asherah.Crypto.ExtensionMethods;
 
 namespace GoDaddy.Asherah.Crypto.Keys
 {
@@ -149,9 +148,9 @@ namespace GoDaddy.Asherah.Crypto.Keys
 
         private class SharedCryptoKeyEntry
         {
-#pragma warning disable SA1401
+            #pragma warning disable SA1401
             internal long CachedTimeMillis;
-#pragma warning restore SA1401
+            #pragma warning restore SA1401
 
             public SharedCryptoKeyEntry(SharedCryptoKey sharedCryptoKey, long cachedTimeMillis)
             {
