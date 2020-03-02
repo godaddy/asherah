@@ -419,6 +419,10 @@ jobs:
   cross-language:
     docker:
       - image: centos
+      - image: mysql:5.7
+        environment:
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
       - run:
@@ -442,7 +446,7 @@ jobs:
           command: |
             cp -R /home/circleci/.m2/ ~/.m2
             ls -ltr /home/circleci/.m2/repository/com/godaddy/asherah/appencryption/
-            rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
+            rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
             yum update -y
             yum install -y java-11-openjdk
             yum install -y maven
