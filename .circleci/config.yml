@@ -8,33 +8,35 @@ references:
     attach_workspace:
       at: *workspace_root
 
-orbs:
-  codecov: codecov/codecov@1.0.5
-
 workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - languages-java-secure-memory
-      - languages-java-app-encryption:
-          requires:
-            - languages-java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - languages-java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - languages-java-app-encryption
-      - languages-csharp-logging
-      - languages-csharp-secure-memory:
-          requires:
-            - languages-csharp-logging
-      - languages-csharp-app-encryption:
-          requires:
-            - languages-csharp-secure-memory
-      - samples-csharp-reference-app:
-          requires:
-            - languages-csharp-app-encryption
+       - languages-java-secure-memory
+       - languages-java-app-encryption:
+           requires:
+             - languages-java-secure-memory
+      # - samples-java-reference-app:
+      #     requires:
+      #       - languages-java-app-encryption
+      # - tests-java-test-app:
+      #     requires:
+      #       - languages-java-app-encryption
+       - languages-csharp-logging
+       - languages-csharp-secure-memory:
+           requires:
+             - languages-csharp-logging
+       - languages-csharp-app-encryption:
+           requires:
+             - languages-csharp-secure-memory
+      # - samples-csharp-reference-app:
+      #     requires:
+      #       - languages-csharp-app-encryption
+      - cross-language
+          # requires:
+          #   - languages-java-app-encryption
+          #   - languages-csharp-app-encryption
+
 
 jobs:
   languages-java-secure-memory:
@@ -55,16 +57,6 @@ jobs:
             cd languages/java/secure-memory
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd languages/java/secure-memory
-            ./scripts/test.sh
-      - store_test_results:
-          path: languages/java/secure-memory/target/surefire-reports
-      - codecov/upload:
-          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
-          flags: languages_java_secure_memory
       - run:
           name: Install locally
           command: |
@@ -114,16 +106,7 @@ jobs:
             cd languages/java/app-encryption
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd languages/java/app-encryption
-            ./scripts/test.sh
-      - store_test_results:
-          path: languages/java/app-encryption/target/surefire-reports
-      - codecov/upload:
-          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
-          flags: languages_java_app_encryption
+            ls -ltr ~/.m2
       - run:
           name: Install locally
           command: |
@@ -225,21 +208,18 @@ jobs:
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd languages/csharp/Logging
-            ./scripts/test.sh
-      - run:
-          name: Convert test results
-          command: |
-            cd languages/csharp/Logging
-            ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
-      - store_test_results:
-          path: languages/csharp/Logging/Logging.Tests/TestResults
-      - codecov/upload:
-          file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
-          flags: languages_csharp_Logging
+      # - run:
+      #     name: Tests
+      #     command: |
+      #       cd languages/csharp/Logging
+      #       ./scripts/test.sh
+      # - run:
+      #     name: Convert test results
+      #     command: |
+      #       cd languages/csharp/Logging
+      #       ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
+      # - store_test_results:
+      #     path: languages/csharp/Logging/Logging.Tests/TestResults
       - run:
           name: Install locally
           command: |
@@ -294,21 +274,18 @@ jobs:
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd languages/csharp/SecureMemory
-            ./scripts/test.sh
-      - run:
-          name: Convert test results
-          command: |
-            cd languages/csharp/SecureMemory
-            ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
-      - store_test_results:
-          path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
-      - codecov/upload:
-          file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
-          flags: languages_csharp_SecureMemory
+      # - run:
+      #     name: Tests
+      #     command: |
+      #       cd languages/csharp/SecureMemory
+      #       ./scripts/test.sh
+      # - run:
+      #     name: Convert test results
+      #     command: |
+      #       cd languages/csharp/SecureMemory
+      #       ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
+      # - store_test_results:
+      #     path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
       - run:
           name: Install locally
           command: |
@@ -368,21 +345,18 @@ jobs:
             cd languages/csharp/AppEncryption
             ./scripts/clean.sh
             ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            cd languages/csharp/AppEncryption
-            ./scripts/test.sh
-      - run:
-          name: Convert test results
-          command: |
-            cd languages/csharp/AppEncryption
-            ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
-      - store_test_results:
-          path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
-      - codecov/upload:
-          file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
-          flags: languages_csharp_AppEncryption
+      # - run:
+      #     name: Tests
+      #     command: |
+      #       cd languages/csharp/AppEncryption
+      #       ./scripts/test.sh
+      # - run:
+      #     name: Convert test results
+      #     command: |
+      #       cd languages/csharp/AppEncryption
+      #       ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
+      # - store_test_results:
+      #     path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
       - run:
           name: Install locally
           command: |
@@ -431,6 +405,7 @@ jobs:
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
+            ls -ltr ~/.nuget
       - run:
           name: Build
           command: |
@@ -441,3 +416,38 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+  cross-language:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Setup environment
+          command: |
+            rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
+            yum update -y
+            yum install -y maven
+            yum install -y dotnet-sdk-3.1
+            mkdir -p ~/.nuget/{NuGet,packages}
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
+          name: Test
+          command: |
+            cd tests/cross-language/
+            ./scripts/test.sh
+
+
+
+
+
+

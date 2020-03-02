@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Rules for StyleCop.Analyzers" Description="App Services Standard Rules" ToolsVersion="15.0">
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+
+    <!-- SA1101:PrefixLocalCallsWithThis - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1101.md -->
+    <Rule Id="SA1101" Action="None" />
+
+    <!-- SA1200:UsingDirectivesMustBePlacedCorrectly - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1200.md -->
+    <Rule Id="SA1200" Action="None" />
+
+    <!-- SA1633:FileMustHaveHeader - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1633.md -->
+    <Rule Id="SA1633" Action="None" />
+
+    <!-- SA1652:EnableXmlDocumentationOutput - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1652.md -->
+    <Rule Id="SA1652" Action="None" />
+
+    <!-- Work-around for https://youtrack.jetbrains.com/issue/RIDER-27333) -->
+    <!-- SX1309:FieldNamesMustBeginWithUnderscore - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SX1309.md -->
+    <Rule Id="SX1309" Action="None" />
+
+    <!-- Work-around for https://youtrack.jetbrains.com/issue/RIDER-27333) -->
+    <!-- SX1309S:StaticFieldNamesMustBeginWithUnderscore - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SX1309S.md -->
+    <Rule Id="SX1309S" Action="None" />
+
+    <!-- Work-around for https://youtrack.jetbrains.com/issue/RIDER-27333) -->
+    <!-- SA1305:FieldNamesMustNotUseHungarianNotation - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1305.md -->
+    <Rule Id="SA1305" Action="None" />
+
+    <Rule Id="SA0001" Action="None" />
+  </Rules>
+</RuleSet>
