@@ -3,9 +3,9 @@ set -e
 
 mkdir -p encrypted_files
 
-#cd java
-#mvn -Dtest=RunEncryptTest test
-#mv java_encrypted ../encrypted_files
+cd java
+mvn -Dtest=RunEncryptTest test
+mv java_encrypted ../encrypted_files
 
 cd csharp
 cp ../features/* .
