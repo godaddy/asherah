@@ -428,6 +428,7 @@ jobs:
       - run:
           name: Setup db
           command: |
+            yum install -y mysql
             mysql -h 0.0.0.0 -u root -pPassword123 -e "CREATE DATABASE test;
             CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
@@ -458,7 +459,6 @@ jobs:
             cp -R /home/circleci/.m2/ ~/.m2
             rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
             yum update -y
-            yum install -y mysql
             yum install -y java-11-openjdk
             yum install -y maven
             yum install -y dotnet-sdk-3.1
