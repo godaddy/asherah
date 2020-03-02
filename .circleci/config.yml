@@ -430,7 +430,8 @@ jobs:
           # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
           command: |
-            apt-get upgrade
+            apt-get update
+            apt-get -y upgrade
             apt-get install -y netcat
             for i in `seq 1 20`;
             do
