@@ -32,10 +32,10 @@ workflows:
       # - samples-csharp-reference-app:
       #     requires:
       #       - languages-csharp-app-encryption
-      - cross-language
-          # requires:
-          #   - languages-java-app-encryption
-          #   - languages-csharp-app-encryption
+       - cross-language:
+           requires:
+             - languages-java-app-encryption
+             - languages-csharp-app-encryption
 
 
 jobs:
