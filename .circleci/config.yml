@@ -427,22 +427,10 @@ jobs:
     steps:
       - checkout
       - run:
-          # Our primary container isn't MYSQL so run a sleep command until it's ready.
-          name: Waiting for MySQL to be ready
+          name: Setup db
           command: |
             apt-get update
             apt-get -y upgrade
-            apt-get install -y netcat
-            for i in `seq 1 20`;
-            do
-              nc -z 127.0.0.1 3306 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for MySQL && exit 1
-      - run:
-          name: Setup db
-          command: |
             apt-get install -y mysql-server
             mysql -h 127.0.0.1 -u root -pPassword123 -e "CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
@@ -452,14 +440,10 @@ jobs:
               INDEX (created)
             );"
             mysql -h 127.0.0.1 -u root -pPassword123 -e "use test; desc encryption_key;"
-      - run:
-          name: Setup csharp environment
-          command: |
-            mkdir -p ~/.nuget/{NuGet,packages}
+      # when project files change, use increasingly general patterns to restore cache.
+      # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
           keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
             - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
@@ -469,20 +453,18 @@ jobs:
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
-          name: Setup test environment
+          name: Setup csharp environment
           command: |
-            cp -R /home/circleci/.m2/ ~/.m2
+            mkdir -p ~/.nuget/{NuGet,packages}
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
+          name: Setup java environment
+          command: |
+            cp -R /home/circleci/.m2/ ~/.m2/
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
-            cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Test
           command: |
             cd tests/cross-language/
             ./scripts/test.sh
-
-
-
-
-
-

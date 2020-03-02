@@ -7,7 +7,7 @@ cd java
 mvn -Dtest=RunEncryptTest test
 mv java_encrypted ../encrypted_files
 
-cd csharp
+cd ../csharp
 cp ../features/* .
 dotnet test --filter FullyQualifiedName=csharp.EncryptDataUsingInMemoryMetastoreStaticKMSFeature.EncryptingData
 mv bin/Debug/csharp_encrypted ../encrypted_files/
