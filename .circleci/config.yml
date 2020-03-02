@@ -428,49 +428,46 @@ jobs:
       - run:
           name: Setup db
           command: |
-            mysql -h 0.0.0.0 -u root -pPassword123
-            CREATE DATABASE test;
-            USE test;
-            CREATE TABLE encryption_key (
+            mysql -h 0.0.0.0 -u root -pPassword123 -e "CREATE DATABASE test;
+            CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
               key_record     TEXT         NOT NULL,
               PRIMARY KEY (id, created),
               INDEX (created)
-            );
-            SHOW TABLES;
-#      - run:
-#          name: Setup csharp environment
-#          command: |
-#            mkdir -p ~/.nuget/{NuGet,packages}
-#      - restore_cache:
-#          keys:
-#            # when project files change, use increasingly general patterns to restore cache.
-#            # vN prefix in case we ever need to regenerate all caches
-#            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-#            - v1-nuget-{{ .Branch }}-
-#            - v1-nuget-
-#      - restore_cache:
-#          keys:
-#            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-#            - v1-maven-{{ .Branch }}-
-#            - v1-maven-
-#      - run:
-#          name: Setup test environment
-#          command: |
-#            cp -R /home/circleci/.m2/ ~/.m2
-#            ls -ltr /home/circleci/.m2/repository/com/godaddy/asherah/appencryption/
-#            rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
-#            yum update -y
-#            yum install -y java-11-openjdk
-#            yum install -y maven
-#            yum install -y dotnet-sdk-3.1
-#            cp build/NuGet.Config ~/.nuget/NuGet/
-#      - run:
-#          name: Test
-#          command: |
-#            cd tests/cross-language/
-#            ./scripts/test.sh
+            );"
+      - run:
+          name: Setup csharp environment
+          command: |
+            mkdir -p ~/.nuget/{NuGet,packages}
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
+      - restore_cache:
+          keys:
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Setup test environment
+          command: |
+            cp -R /home/circleci/.m2/ ~/.m2
+            rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
+            yum update -y
+            yum install -y mysql
+            yum install -y java-11-openjdk
+            yum install -y maven
+            yum install -y dotnet-sdk-3.1
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
+          name: Test
+          command: |
+            cd tests/cross-language/
+            ./scripts/test.sh
 
 
 
