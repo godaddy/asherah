@@ -428,8 +428,9 @@ jobs:
       - run:
           name: Setup db
           command: |
+            docker ps
             yum install -y mysql
-            mysql -h 0.0.0.0 -u root -pPassword123 -e "CREATE DATABASE test;
+            mysql -h localhost -u root -pPassword123 -e "CREATE DATABASE test;
             CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
