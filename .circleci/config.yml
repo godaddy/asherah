@@ -424,6 +424,7 @@ jobs:
           MYSQL_USER: root
           MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_ROOT_HOST: %
     steps:
       - checkout
       - run:
@@ -431,7 +432,7 @@ jobs:
           name: Waiting for MySQL to be ready
           command: |
             yum install -y nc
-            for i in `seq 1 10`;
+            for i in `seq 1 20`;
             do
               nc -z 127.0.0.1 3306 && echo Success && exit 0
               echo -n .
