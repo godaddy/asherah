@@ -36,3 +36,6 @@ Temporary Items
 
 out/
 
+**/encrypted_files
+**/*_encrypted
+
