@@ -439,19 +439,20 @@ jobs:
               PRIMARY KEY (id, created),
               INDEX (created)
             );"
-            mysql -h 127.0.0.1 -u root -pPassword123 -e "use test; desc encryption_key;"
       # when project files change, use increasingly general patterns to restore cache.
       # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
           keys:
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
-      - restore_cache:
-          keys:
+            # Restore packages for java
             - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
+      - restore_cache:
+          keys:
+            # Restore packages for csharp
+            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v1-nuget-{{ .Branch }}-
+            - v1-nuget-
       - run:
           name: Setup java environment
           command: |
@@ -471,15 +472,11 @@ jobs:
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
-          name: Setup GO environment
+          name: Setup go environment
           command: |
             wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
             tar -C /usr/local/ -xzf go*.tar.gz
             export PATH=$PATH:/usr/local/go/bin
-      - run:
-          name: Check Path
-          command: |
-            echo $PATH
       - run:
           name: Test
           command: |
