@@ -418,7 +418,7 @@ jobs:
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
+      - image: ubuntu
       - image: mysql:5.7
         environment:
           MYSQL_USER: root
@@ -453,16 +453,31 @@ jobs:
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
-          name: Setup csharp environment
-          command: |
-            mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
-      - run:
           name: Setup java environment
           command: |
             cp -R /home/circleci/.m2/ ~/.m2/
             apt-get install -y openjdk-11-jdk
             apt-get install -y maven
+      - run:
+          name: Setup csharp environment
+          command: |
+            apt-get install wget
+            apt-get update
+            apt-get install -y apt-transport-https
+            apt-get update
+            apt-get install -y dotnet-sdk-3.1
+            mkdir -p ~/.nuget/{NuGet,packages}
+            cp build/NuGet.Config ~/.nuget/NuGet/
+      - run:
+          name: Setup GO environment
+          command: |
+            wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+            tar -C /usr/local/ -xzf go*.tar.gz
+            export PATH=$PATH:/usr/local/go/bin
+      - run:
+          name: Check Path
+          command: |
+            echo $PATH
       - run:
           name: Test
           command: |
