@@ -418,7 +418,7 @@ jobs:
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
-      - image: centos
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
       - image: mysql:5.7
         environment:
           MYSQL_USER: root
@@ -430,7 +430,8 @@ jobs:
           # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
           command: |
-            yum install -y nc
+            apt-get upgrade
+            apt-get install -y netcat
             for i in `seq 1 20`;
             do
               nc -z 127.0.0.1 3306 && echo Success && exit 0
@@ -441,7 +442,7 @@ jobs:
       - run:
           name: Setup db
           command: |
-            yum install -y mysql
+            apt-get install -y mysql-server
             mysql -h 127.0.0.1 -u root -pPassword123 -e "CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -470,11 +471,8 @@ jobs:
           name: Setup test environment
           command: |
             cp -R /home/circleci/.m2/ ~/.m2
-            rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
-            yum update -y
-            yum install -y java-11-openjdk
-            yum install -y maven
-            yum install -y dotnet-sdk-3.1
+            apt-get install -y java-8-openjdk
+            apt-get install -y maven
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Test
