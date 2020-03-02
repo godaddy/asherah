@@ -1,4 +1,4 @@
-Feature: Encrypt Data using InMemory metastore static KMS
+Feature: Encrypt Data using an RDBMS metastore and static KMS
     I want to encrypt data
 
     Scenario Outline: Encrypting Data

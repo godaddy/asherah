@@ -63,7 +63,7 @@ namespace Csharp
         public void ThenIGetShouldGetEncrypted_Data()
         {
             var path = Directory.GetParent(Directory.GetCurrentDirectory());
-            File.WriteAllText(path + "/csharp_encrypted", encryptedPayloadString);
+            File.WriteAllText("../../../../encrypted_files/csharp_encrypted", encryptedPayloadString);
         }
 
         [Then(@"encrypted_data should not equal data")]

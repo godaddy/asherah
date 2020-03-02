@@ -19,7 +19,7 @@ namespace csharp
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "3.1.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class DecryptDataUsingInMemoryMetastoreStaticKMSFeature : object, Xunit.IClassFixture<DecryptDataUsingInMemoryMetastoreStaticKMSFeature.FixtureData>, System.IDisposable
+    public partial class DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature : object, Xunit.IClassFixture<DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData>, System.IDisposable
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -31,7 +31,7 @@ namespace csharp
 #line 1 "decrypt.feature"
 #line hidden
         
-        public DecryptDataUsingInMemoryMetastoreStaticKMSFeature(DecryptDataUsingInMemoryMetastoreStaticKMSFeature.FixtureData fixtureData, csharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature(DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData fixtureData, csharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
             this.TestInitialize();
@@ -40,7 +40,7 @@ namespace csharp
         public static void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Decrypt Data using InMemory metastore static KMS", "    I want to decrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Decrypt Data using an RDBMS metastore and static KMS", "    I want to decrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -81,10 +81,11 @@ namespace csharp
         }
         
         [Xunit.SkippableTheoryAttribute(DisplayName="Decrypting Data")]
-        [Xunit.TraitAttribute("FeatureTitle", "Decrypt Data using InMemory metastore static KMS")]
+        [Xunit.TraitAttribute("FeatureTitle", "Decrypt Data using an RDBMS metastore and static KMS")]
         [Xunit.TraitAttribute("Description", "Decrypting Data")]
-        [Xunit.InlineDataAttribute("mySuperSecretPayload", new string[0])]
-        public virtual void DecryptingData(string data, string[] exampleTags)
+        [Xunit.InlineDataAttribute("mySuperSecretPayload", "java_encrypted", new string[0])]
+        [Xunit.InlineDataAttribute("mySuperSecretPayload", "csharp_encrypted", new string[0])]
+        public virtual void DecryptingData(string data, string file_Name, string[] exampleTags)
         {
             string[] tagsOfScenario = exampleTags;
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Decrypting Data", null, exampleTags);
@@ -109,7 +110,7 @@ namespace csharp
             {
                 this.ScenarioStart();
 #line 5
-        testRunner.Given("I have encrypted_data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+        testRunner.Given(string.Format("I have encrypted_data from \"{0}\"", file_Name), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
 #line 6
         testRunner.When("I decrypt the encrypted_data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
@@ -131,12 +132,12 @@ namespace csharp
             
             public FixtureData()
             {
-                DecryptDataUsingInMemoryMetastoreStaticKMSFeature.FeatureSetup();
+                DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FeatureSetup();
             }
             
             void System.IDisposable.Dispose()
             {
-                DecryptDataUsingInMemoryMetastoreStaticKMSFeature.FeatureTearDown();
+                DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FeatureTearDown();
             }
         }
     }

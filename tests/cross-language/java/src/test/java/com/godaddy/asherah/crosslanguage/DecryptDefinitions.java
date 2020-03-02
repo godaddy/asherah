@@ -25,10 +25,10 @@ public class DecryptDefinitions {
   private static String temp;
 
 
-  @Given("I have encrypted_data")
-  public void i_have_encrypted_data() throws FileNotFoundException {
+  @Given("I have encrypted_data from {string}")
+  public void i_have_encrypted_data_from(String fileName) throws FileNotFoundException {
     // Write code here that turns the phrase above into concrete actions
-    Scanner sc = new Scanner(new File("java_encrypted.txt"));
+    Scanner sc = new Scanner(new File("../encrypted_files/"+fileName));
     temp = sc.nextLine();
     sc.close();
   }
@@ -38,7 +38,9 @@ public class DecryptDefinitions {
     // Write code here that turns the phrase above into concrete actions
     CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
     HikariDataSource dataSource = new HikariDataSource();
-    dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/test?user=root&password=Password123");
+    dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1/test");
+    dataSource.setUsername("root");
+    dataSource.setPassword("Password123");
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
     try (SessionFactory sessionFactory = SessionFactory
       .newBuilder("productId", "reference_app")

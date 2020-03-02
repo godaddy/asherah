@@ -17,10 +17,10 @@ namespace Csharp
         private byte[] encryptedPayload;
         private string decryptedPayload;
 
-        [Given(@"I have encrypted_data")]
-        public void GivenIHaveEncrypted_Data()
+        [Given(@"I have encrypted_data from ""(.*)""")]
+        public void GivenIHaveEncrypted_DataFrom(string fileName)
         {
-            string payload = File.ReadAllText("csharp_encrypted");
+            string payload = File.ReadAllText("../../../../encrypted_files/" + fileName);
             encryptedPayload = Convert.FromBase64String(payload);
         }
 

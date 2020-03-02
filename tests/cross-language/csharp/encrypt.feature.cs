@@ -19,7 +19,7 @@ namespace csharp
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "3.1.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class EncryptDataUsingInMemoryMetastoreStaticKMSFeature : object, Xunit.IClassFixture<EncryptDataUsingInMemoryMetastoreStaticKMSFeature.FixtureData>, System.IDisposable
+    public partial class EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature : object, Xunit.IClassFixture<EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData>, System.IDisposable
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -31,7 +31,7 @@ namespace csharp
 #line 1 "encrypt.feature"
 #line hidden
         
-        public EncryptDataUsingInMemoryMetastoreStaticKMSFeature(EncryptDataUsingInMemoryMetastoreStaticKMSFeature.FixtureData fixtureData, csharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature(EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData fixtureData, csharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
             this.TestInitialize();
@@ -40,7 +40,7 @@ namespace csharp
         public static void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Encrypt Data using InMemory metastore static KMS", "    I want to encrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Encrypt Data using an RDBMS metastore and static KMS", "    I want to encrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -81,7 +81,7 @@ namespace csharp
         }
         
         [Xunit.SkippableTheoryAttribute(DisplayName="Encrypting Data")]
-        [Xunit.TraitAttribute("FeatureTitle", "Encrypt Data using InMemory metastore static KMS")]
+        [Xunit.TraitAttribute("FeatureTitle", "Encrypt Data using an RDBMS metastore and static KMS")]
         [Xunit.TraitAttribute("Description", "Encrypting Data")]
         [Xunit.InlineDataAttribute("mySuperSecretPayload", new string[0])]
         public virtual void EncryptingData(string data, string[] exampleTags)
@@ -131,12 +131,12 @@ namespace csharp
             
             public FixtureData()
             {
-                EncryptDataUsingInMemoryMetastoreStaticKMSFeature.FeatureSetup();
+                EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FeatureSetup();
             }
             
             void System.IDisposable.Dispose()
             {
-                EncryptDataUsingInMemoryMetastoreStaticKMSFeature.FeatureTearDown();
+                EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FeatureTearDown();
             }
         }
     }
