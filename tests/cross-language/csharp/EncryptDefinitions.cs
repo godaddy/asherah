@@ -34,7 +34,7 @@ namespace Csharp
             AdoMetastoreImpl metastore = AdoMetastoreImpl
                 .NewBuilder(
                     MySqlClientFactory.Instance,
-                    "server=localhost;uid=root;pwd=Password123;sslmode=none;Initial Catalog=test")
+                    "server=127.0.0.1;uid=root;pwd=Password123;sslmode=none;Initial Catalog=test")
                 .Build();
             CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
                 .NewBuilder()

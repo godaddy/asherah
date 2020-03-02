@@ -38,7 +38,7 @@ public class DecryptDefinitions {
     // Write code here that turns the phrase above into concrete actions
     CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
     HikariDataSource dataSource = new HikariDataSource();
-    dataSource.setJdbcUrl("jdbc:mysql://localhost/test?user=root&password=Password123");
+    dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/test?user=root&password=Password123");
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
     try (SessionFactory sessionFactory = SessionFactory
       .newBuilder("productId", "reference_app")
