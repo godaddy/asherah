@@ -418,9 +418,13 @@ jobs:
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: centos7
     steps:
       - checkout
+      - run:
+          name: Setup csharp environment
+          command: |
+            mkdir -p ~/.nuget/{NuGet,packages}
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -432,13 +436,13 @@ jobs:
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - run:
-          name: Setup environment
+          name: Setup test environment
           command: |
             rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
             yum update -y
+            yum install -y java-11-openjdk
             yum install -y maven
             yum install -y dotnet-sdk-3.1
-            mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Test
