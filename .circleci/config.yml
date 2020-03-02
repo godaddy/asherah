@@ -418,7 +418,7 @@ jobs:
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
       - image: mysql:5.7
         environment:
           MYSQL_USER: root
