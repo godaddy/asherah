@@ -431,7 +431,7 @@ jobs:
           command: |
             apt-get update
             apt-get -y upgrade
-            apt-get install -y mysql-server
+            apt-get install -y mariadb-server
             mysql -h 127.0.0.1 -u root -pPassword123 -e "CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -461,7 +461,7 @@ jobs:
           name: Setup java environment
           command: |
             cp -R /home/circleci/.m2/ ~/.m2/
-            apt-get install -y openjdk-8-jdk
+            apt-get install -y openjdk-11-jdk
             apt-get install -y maven
       - run:
           name: Test
