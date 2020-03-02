@@ -34,7 +34,9 @@ public class EncryptDefinitions {
 
     CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
     HikariDataSource dataSource = new HikariDataSource();
-    dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1/test?user=root&password=Password123");
+    dataSource.setJdbcUrl("jdbc:mysql://127.0.0.1/test");
+    dataSource.setUsername("root");
+    dataSource.setPassword("Password123");
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
     // Write code here that turns the phrase above into concrete actions
     try (SessionFactory sessionFactory = SessionFactory
