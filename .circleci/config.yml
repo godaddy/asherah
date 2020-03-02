@@ -424,7 +424,6 @@ jobs:
           MYSQL_USER: root
           MYSQL_DATABASE: test
           MYSQL_ROOT_PASSWORD: Password123
-          MYSQL_ROOT_HOST: %
     steps:
       - checkout
       - run:
@@ -450,7 +449,7 @@ jobs:
               PRIMARY KEY (id, created),
               INDEX (created)
             );"
-            mysql -h 127.0.0.1 -u root -pPassword123 -e " use test; desc encryption_key;"
+            mysql -h 127.0.0.1 -u root -pPassword123 -e "use test; desc encryption_key;"
       - run:
           name: Setup csharp environment
           command: |
