@@ -19,7 +19,7 @@
 
         <dependency>
             <groupId>com.godaddy.asherah</groupId>
-            <artifactId>appencryption</artifactId>
+            <artifactId>asherah</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
