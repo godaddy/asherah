@@ -472,7 +472,7 @@ jobs:
           name: Setup test environment
           command: |
             cp -R /home/circleci/.m2/ ~/.m2
-            apt-get install -y java-8-openjdk
+            apt-get install -y openjdk-8-jdk
             apt-get install -y maven
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
