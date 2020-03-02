@@ -418,7 +418,7 @@ jobs:
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
-      - image: cimg/base:2020.01
+      - image: ubuntu:18.04
       - image: mysql:5.7
         environment:
           MYSQL_USER: root
@@ -429,9 +429,9 @@ jobs:
       - run:
           name: Setup db
           command: |
-            sudo apt-get update
-            sudo apt-get -y upgrade
-            sudo apt-get install -y mariadb-server
+            apt-get update
+            apt-get -y upgrade
+            apt-get install -y mariadb-server ca-certificates
             mysql -h 127.0.0.1 -u root -pPassword123 -e "CREATE TABLE test.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -456,17 +456,18 @@ jobs:
       - run:
           name: Setup java environment
           command: |
-            sudo apt-get install -y openjdk-11-jdk
-            sudo apt-get install -y maven
+            cp -R /home/circleci/.m2/ ~/.m2/
+            apt-get install -y openjdk-11-jdk
+            apt-get install -y maven
       - run:
           name: Setup csharp environment
           command: |
-            sudo cp -R /root/.nuget ~/.nuget/
+            apt-get install -y wget
             wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-            sudo dpkg -i packages-microsoft-prod.deb
-            sudo apt-get install -y apt-transport-https
-            sudo apt-get update
-            sudo apt-get install -y dotnet-sdk-3.1
+            dpkg -i packages-microsoft-prod.deb
+            apt-get install -y apt-transport-https
+            apt-get update
+            apt-get install -y dotnet-sdk-3.1
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
