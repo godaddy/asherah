@@ -8,6 +8,9 @@ references:
     attach_workspace:
       at: *workspace_root
 
+orbs:
+  codecov: codecov/codecov@1.0.5
+
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -58,6 +61,16 @@ jobs:
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
+          name: Tests
+          command: |
+            cd languages/java/secure-memory
+            ./scripts/test.sh
+      - store_test_results:
+          path: languages/java/secure-memory/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: languages_java_secure_memory
+      - run:
           name: Install locally
           command: |
             cd languages/java/secure-memory
@@ -106,7 +119,16 @@ jobs:
             cd languages/java/app-encryption
             ./scripts/clean.sh
             ./scripts/build.sh
-            ls -ltr ~/.m2
+      - run:
+          name: Tests
+          command: |
+            cd languages/java/app-encryption
+            ./scripts/test.sh
+      - store_test_results:
+          path: languages/java/app-encryption/target/surefire-reports
+      - codecov/upload:
+          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: languages_java_app_encryption
       - run:
           name: Install locally
           command: |
@@ -208,18 +230,21 @@ jobs:
             cd languages/csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
-      # - run:
-      #     name: Tests
-      #     command: |
-      #       cd languages/csharp/Logging
-      #       ./scripts/test.sh
-      # - run:
-      #     name: Convert test results
-      #     command: |
-      #       cd languages/csharp/Logging
-      #       ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
-      # - store_test_results:
-      #     path: languages/csharp/Logging/Logging.Tests/TestResults
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/Logging
+            ./scripts/test.sh
+      - run:
+          name: Convert test results
+          command: |
+            cd languages/csharp/Logging
+            ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/Logging/Logging.Tests/TestResults
+      - codecov/upload:
+          file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
+          flags: languages_csharp_Logging
       - run:
           name: Install locally
           command: |
@@ -274,18 +299,21 @@ jobs:
             cd languages/csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
-      # - run:
-      #     name: Tests
-      #     command: |
-      #       cd languages/csharp/SecureMemory
-      #       ./scripts/test.sh
-      # - run:
-      #     name: Convert test results
-      #     command: |
-      #       cd languages/csharp/SecureMemory
-      #       ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
-      # - store_test_results:
-      #     path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/SecureMemory
+            ./scripts/test.sh
+      - run:
+          name: Convert test results
+          command: |
+            cd languages/csharp/SecureMemory
+            ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
+      - codecov/upload:
+          file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
+          flags: languages_csharp_SecureMemory
       - run:
           name: Install locally
           command: |
@@ -345,18 +373,21 @@ jobs:
             cd languages/csharp/AppEncryption
             ./scripts/clean.sh
             ./scripts/build.sh
-      # - run:
-      #     name: Tests
-      #     command: |
-      #       cd languages/csharp/AppEncryption
-      #       ./scripts/test.sh
-      # - run:
-      #     name: Convert test results
-      #     command: |
-      #       cd languages/csharp/AppEncryption
-      #       ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
-      # - store_test_results:
-      #     path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
+      - run:
+          name: Tests
+          command: |
+            cd languages/csharp/AppEncryption
+            ./scripts/test.sh
+      - run:
+          name: Convert test results
+          command: |
+            cd languages/csharp/AppEncryption
+            ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
+      - store_test_results:
+          path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
+      - codecov/upload:
+          file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
+          flags: languages_csharp_AppEncryption
       - run:
           name: Install locally
           command: |
@@ -405,7 +436,6 @@ jobs:
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
-            ls -ltr ~/.nuget
       - run:
           name: Build
           command: |
