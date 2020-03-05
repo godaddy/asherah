@@ -15,9 +15,9 @@ cp ../features/* .
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.EncryptingData
 cd ..
 
-cd go
+#cd go
 # run go encrypt tests here
-cd ..
+#cd ..
 
 # Run decrypt tests for all languages
 cd java
@@ -31,8 +31,8 @@ dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.Dec
 rm *.feature
 cd ..
 
-cd go
+#cd go
 # run go encrypt tests here
-cd ..
+#cd ..
 
 rm -rf encrypted_files
