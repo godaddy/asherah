@@ -40,7 +40,6 @@ workflows:
             - languages-java-app-encryption
             - languages-csharp-app-encryption
 
-
 jobs:
   languages-java-secure-memory:
     docker:
