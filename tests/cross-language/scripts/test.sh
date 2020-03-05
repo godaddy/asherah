@@ -14,7 +14,7 @@ cd ..
 echo "Encrypting payload using C#"
 cd csharp
 cp ../features/* .
-dotnet test --filter FullyQualifiedName=csharp.EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.EncryptingData
+dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.EncryptingData
 
 cd ..
 
@@ -31,5 +31,14 @@ cd ..
 
 echo "Decrypting data using C#"
 cd csharp
-dotnet test --filter FullyQualifiedName=csharp.DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.DecryptingData
+dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.DecryptingData
+rm encrypt.feature
+rm decrypt.feature
+
+cd .. 
+
+#cd go
+# run go encrypt tests here
+
+rm -rf encrypted_files
 

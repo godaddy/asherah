@@ -9,7 +9,9 @@ using MySql.Data.MySqlClient;
 using TechTalk.SpecFlow;
 using Xunit;
 
-namespace Csharp
+using static GoDaddy.Asherah.CrossLanguage.CSharp.Constants;
+
+namespace GoDaddy.Asherah.CrossLanguage.CSharp
 {
     [Binding]
     public class DecryptDefinitions
@@ -20,7 +22,8 @@ namespace Csharp
         [Given(@"I have encrypted_data from ""(.*)""")]
         public void GivenIHaveEncrypted_DataFrom(string fileName)
         {
-            string payload = File.ReadAllText("../../../../encrypted_files/" + fileName);
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
+            string payload = File.ReadAllText(filePath + "/" + fileName);
             encryptedPayload = Convert.FromBase64String(payload);
         }
 
@@ -28,19 +31,20 @@ namespace Csharp
         public void WhenIDecryptTheEncrypted_Data()
         {
             KeyManagementService keyManagementService =
-                new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
+                new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+
             AdoMetastoreImpl metastore = AdoMetastoreImpl
-                .NewBuilder(
-                    MySqlClientFactory.Instance,
-                    "server=127.0.0.1;uid=root;pwd=Password123;sslmode=none;Initial Catalog=test")
+                .NewBuilder(MySqlClientFactory.Instance, AdoConnectionString)
                 .Build();
+
             CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
                 .NewBuilder()
-                .WithKeyExpirationDays(30)
-                .WithRevokeCheckMinutes(60)
+                .WithKeyExpirationDays(KeyExpiryDays)
+                .WithRevokeCheckMinutes(RevokeCheckMinutes)
                 .Build();
+
             using (SessionFactory sessionFactory = SessionFactory
-                .NewBuilder("productId", "reference_app")
+                .NewBuilder(DefaultProductId, DefaultServiceId)
                 .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)
@@ -49,7 +53,7 @@ namespace Csharp
                 // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
                 using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes("shopper123"))
+                    sessionFactory.GetSessionBytes(DefaultPartitionId))
                 {
                     decryptedPayload = Encoding.UTF8.GetString(sessionBytes.Decrypt(encryptedPayload));
                 }

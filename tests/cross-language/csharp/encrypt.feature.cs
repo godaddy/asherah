@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------
 #region Designer generated code
 #pragma warning disable
-namespace csharp
+namespace GoDaddy.Asherah.CrossLanguage.CSharp
 {
     using TechTalk.SpecFlow;
     using System;
@@ -31,7 +31,7 @@ namespace csharp
 #line 1 "encrypt.feature"
 #line hidden
         
-        public EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature(EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData fixtureData, csharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature(EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.FixtureData fixtureData, GoDaddy_Asherah_CrossLanguage_CSharp_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
             this.TestInitialize();
@@ -40,7 +40,7 @@ namespace csharp
         public static void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Encrypt Data using an RDBMS metastore and static KMS", "    I want to encrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Encrypt Data using an RDBMS metastore and static KMS", "  I want to encrypt data", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -89,7 +89,7 @@ namespace csharp
             string[] tagsOfScenario = exampleTags;
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Encrypting Data", null, exampleTags);
 #line 4
-    this.ScenarioInitialize(scenarioInfo);
+  this.ScenarioInitialize(scenarioInfo);
 #line hidden
             bool isScenarioIgnored = default(bool);
             bool isFeatureIgnored = default(bool);
@@ -109,16 +109,16 @@ namespace csharp
             {
                 this.ScenarioStart();
 #line 5
-        testRunner.Given(string.Format("I have \"{0}\"", data), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+    testRunner.Given(string.Format("I have \"{0}\"", data), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
 #line 6
-        testRunner.When("I encrypt the data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+    testRunner.When("I encrypt the data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
 #line 7
-        testRunner.Then("I get should get encrypted_data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+    testRunner.Then("I get should get encrypted_data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
 #line 8
-        testRunner.And("encrypted_data should not equal data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+    testRunner.And("encrypted_data should not equal data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             }
             this.ScenarioCleanup();

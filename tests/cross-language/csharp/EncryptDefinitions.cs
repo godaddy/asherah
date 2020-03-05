@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Kms;
@@ -9,9 +8,10 @@ using GoDaddy.Asherah.Crypto;
 using MySql.Data.MySqlClient;
 using TechTalk.SpecFlow;
 using Xunit;
-using Xunit.Sdk;
 
-namespace Csharp
+using static GoDaddy.Asherah.CrossLanguage.CSharp.Constants;
+
+namespace GoDaddy.Asherah.CrossLanguage.CSharp
 {
     [Binding]
     public class EncryptDefinitions
@@ -30,19 +30,20 @@ namespace Csharp
         public void WhenIEncryptTheData()
         {
             KeyManagementService keyManagementService =
-                new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
+                new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+
             AdoMetastoreImpl metastore = AdoMetastoreImpl
-                .NewBuilder(
-                    MySqlClientFactory.Instance,
-                    "server=127.0.0.1;uid=root;pwd=Password123;sslmode=none;Initial Catalog=test")
+                .NewBuilder(MySqlClientFactory.Instance, AdoConnectionString)
                 .Build();
+
             CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
                 .NewBuilder()
-                .WithKeyExpirationDays(30)
-                .WithRevokeCheckMinutes(60)
+                .WithKeyExpirationDays(KeyExpiryDays)
+                .WithRevokeCheckMinutes(RevokeCheckMinutes)
                 .Build();
+
             using (SessionFactory sessionFactory = SessionFactory
-                .NewBuilder("productId", "reference_app")
+                .NewBuilder(DefaultProductId, DefaultServiceId)
                 .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)
@@ -51,7 +52,7 @@ namespace Csharp
                 // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
                 using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes("shopper123"))
+                    sessionFactory.GetSessionBytes(DefaultPartitionId))
                 {
                     encryptedBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(payloadString));
                     encryptedPayloadString = Convert.ToBase64String(encryptedBytes);
@@ -62,8 +63,8 @@ namespace Csharp
         [Then(@"I get should get encrypted_data")]
         public void ThenIGetShouldGetEncrypted_Data()
         {
-            var path = Directory.GetParent(Directory.GetCurrentDirectory());
-            File.WriteAllText("../../../../encrypted_files/csharp_encrypted", encryptedPayloadString);
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
+            File.WriteAllText(filePath + "/" + FileName, encryptedPayloadString);
         }
 
         [Then(@"encrypted_data should not equal data")]
