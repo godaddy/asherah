@@ -19,9 +19,7 @@ import java.util.Base64;
 import java.util.Scanner;
 
 import static com.godaddy.asherah.crosslanguage.Constants.*;
-import static com.godaddy.asherah.crosslanguage.Constants.DefaultServiceId;
-import static org.junit.Assert.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DecryptDefinitions {
   private static byte[] encryptedPayload;
@@ -46,8 +44,7 @@ public class DecryptDefinitions {
       .withRevokeCheckMinutes(RevokeCheckMinutes)
       .build();
 
-    KeyManagementService keyManagementService =
-      new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+    KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
     HikariDataSource dataSource = new HikariDataSource();
     dataSource.setJdbcUrl(JdbcConnectionString);
@@ -61,16 +58,12 @@ public class DecryptDefinitions {
       .withMetastore(metastore)
       .withCryptoPolicy(cryptoPolicy)
       .withKeyManagementService(keyManagementService)
-      .build())
-    {
+      .build()) {
 
       // Now create an actual session for a partition (which in our case is a dummy id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
-      try (Session<byte[], byte[]> sessionBytes = sessionFactory
-        .getSessionBytes(Constants.DefaultPartitionId))
-      {
-        decryptedPayload = new String(sessionBytes.decrypt(encryptedPayload),
-          StandardCharsets.UTF_8);
+      try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes(Constants.DefaultPartitionId)) {
+        decryptedPayload = new String(sessionBytes.decrypt(encryptedPayload), StandardCharsets.UTF_8);
       }
     }
   }
@@ -79,6 +72,7 @@ public class DecryptDefinitions {
   public void i_get_should_get_decrypted_data() {
     // No action required here since decrypted payload is calculated in the WHEN step
   }
+
   @Then("decrypted_data should be equal to {string}")
   public void decrypted_data_should_be_equal_to(String string) {
     assertEquals(string, decryptedPayload);
