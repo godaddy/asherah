@@ -7,7 +7,6 @@ mkdir -p encrypted_files
 echo "Encrypting payload using Java"
 cd java
 mvn -Dtest=RunEncryptTest test
-mv java_encrypted ../encrypted_files/
 
 cd ..
 
