@@ -4,40 +4,35 @@ set -e
 mkdir -p encrypted_files
 
 # Run encrypt tests for all languages
-echo "Encrypting payload using Java"
 cd java
+echo "Encrypting payload using Java"
 mvn -Dtest=RunEncryptTest test
-
 cd ..
 
-echo "Encrypting payload using C#"
 cd csharp
+echo "Encrypting payload using C#"
 cp ../features/* .
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.EncryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.EncryptingData
-
 cd ..
 
-#cd go
+cd go
 # run go encrypt tests here
+cd ..
 
 # Run decrypt tests for all languages
-
-echo "Decrypting data using Java"
 cd java
+echo "Decrypting data using Java"
 mvn -Dtest=RunDecryptTest test
-
 cd ..
 
-echo "Decrypting data using C#"
 cd csharp
+echo "Decrypting data using C#"
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.CrossLanguage.CSharp.DecryptDataUsingAnRDBMSMetastoreAndStaticKMSFeature.DecryptingData
-rm encrypt.feature
-rm decrypt.feature
+rm *.feature
+cd ..
 
-cd .. 
-
-#cd go
+cd go
 # run go encrypt tests here
+cd ..
 
 rm -rf encrypted_files
-
