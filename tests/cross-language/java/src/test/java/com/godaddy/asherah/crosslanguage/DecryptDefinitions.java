@@ -24,16 +24,17 @@ import static org.junit.Assert.assertEquals;
 
 
 public class DecryptDefinitions {
-  private static String decryptedPayloadString;
-  private static String temp;
+  private static byte[] encryptedPayload;
+  private static String decryptedPayload;
 
 
   @Given("I have encrypted_data from {string}")
   public void i_have_encrypted_data_from(String fileName) throws FileNotFoundException {
-    // Write code here that turns the phrase above into concrete actions
+    // Read the encrypted payload from the provided file
     String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
     Scanner sc = new Scanner(new File(path + fileName));
-    temp = sc.nextLine();
+    String payload = sc.nextLine();
+    encryptedPayload = Base64.getDecoder().decode(payload);
     sc.close();
   }
 
@@ -54,6 +55,7 @@ public class DecryptDefinitions {
     dataSource.setPassword(Password);
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
+    // Create a session for this test
     try (SessionFactory sessionFactory = SessionFactory
       .newBuilder(DefaultProductId, DefaultServiceId)
       .withMetastore(metastore)
@@ -62,13 +64,12 @@ public class DecryptDefinitions {
       .build())
     {
 
-      // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
+      // Now create an actual session for a partition (which in our case is a dummy id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
         .getSessionBytes(Constants.DefaultPartitionId))
       {
-        byte[] xx = Base64.getDecoder().decode(temp);
-        decryptedPayloadString = new String(sessionBytes.decrypt(Base64.getDecoder().decode(temp)),
+        decryptedPayload = new String(sessionBytes.decrypt(encryptedPayload),
           StandardCharsets.UTF_8);
       }
     }
@@ -76,12 +77,10 @@ public class DecryptDefinitions {
 
   @Then("I get should get decrypted_data")
   public void i_get_should_get_decrypted_data() {
-    // Write code here that turns the phrase above into concrete actions
-    return;
+    // No action required here since decrypted payload is calculated in the WHEN step
   }
   @Then("decrypted_data should be equal to {string}")
   public void decrypted_data_should_be_equal_to(String string) {
-    // Write code here that turns the phrase above into concrete actions
-    assertEquals(string, decryptedPayloadString);
+    assertEquals(string, decryptedPayload);
   }
 }

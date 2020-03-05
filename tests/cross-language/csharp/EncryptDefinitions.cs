@@ -42,6 +42,7 @@ namespace GoDaddy.Asherah.CrossLanguage.CSharp
                 .WithRevokeCheckMinutes(RevokeCheckMinutes)
                 .Build();
 
+            // Create a session for this test
             using (SessionFactory sessionFactory = SessionFactory
                 .NewBuilder(DefaultProductId, DefaultServiceId)
                 .WithMetastore(metastore)
@@ -63,6 +64,7 @@ namespace GoDaddy.Asherah.CrossLanguage.CSharp
         [Then(@"I get should get encrypted_data")]
         public void ThenIGetShouldGetEncrypted_Data()
         {
+            // Write the encrypted payload to a file so that we can decrypt later
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
             File.WriteAllText(filePath + "/" + FileName, encryptedPayloadString);
         }

@@ -24,7 +24,8 @@ import static com.godaddy.asherah.crosslanguage.Constants.*;
 
 public class EncryptDefinitions {
   private static String payloadString;
-  private static byte[] encryptedData;
+  private static String encryptedPayloadString;
+  private static byte[] encryptedBytes;
 
 
   @Given("I have {string}")
@@ -50,6 +51,7 @@ public class EncryptDefinitions {
     dataSource.setPassword(Password);
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
+    // Create a session for the test
     try (SessionFactory sessionFactory = SessionFactory
       .newBuilder(DefaultProductId, DefaultServiceId)
       .withMetastore(metastore)
@@ -58,26 +60,28 @@ public class EncryptDefinitions {
       .build())
     {
 
-      // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
+      // Now create an actual session for a partition (which in our case is a dummy id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
         .getSessionBytes(Constants.DefaultPartitionId))
       {
-        encryptedData = sessionBytes.encrypt(this.payloadString.getBytes(StandardCharsets.UTF_8));
+        encryptedBytes = sessionBytes.encrypt(this.payloadString.getBytes(StandardCharsets.UTF_8));
+        encryptedPayloadString = Base64.getEncoder().encodeToString(encryptedBytes);
       }
     }
   }
 
   @Then("I get should get encrypted_data")
   public void i_get_should_get_encrypted_data() throws IOException {
+    // Write the encrypted payload to a file so that we can decrypt later
     String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
     FileWriter myWriter = new FileWriter(path + FileName);
-    myWriter.write(Base64.getEncoder().encodeToString(encryptedData));
+    myWriter.write(encryptedPayloadString);
     myWriter.close();
   }
 
   @Then("encrypted_data should not equal data")
   public void encrypted_data_should_not_equal_data() {
-    assertNotEquals(payloadString, Base64.getEncoder().encodeToString(encryptedData));
+    assertNotEquals(payloadString, encryptedPayloadString);
   }
 }
