@@ -1,4 +1,4 @@
-package com.godaddy.asherah.crosslanguage;
+package com.godaddy.asherah.cltf;
 
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static com.godaddy.asherah.crosslanguage.Constants.*;
+import static com.godaddy.asherah.cltf.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EncryptDefinitions {
@@ -28,17 +28,17 @@ public class EncryptDefinitions {
 
 
   @Given("I have {string}")
-  public void i_have(String string) {
-    this.payloadString = string;
+  public void iHave(final String payload) {
+    this.payloadString = payload;
   }
 
   @When("I encrypt the data")
-  public void i_encrypt_the_data() {
+  public void iEncryptTheData() {
     CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
-      .newBuilder()
-      .withKeyExpirationDays(KeyExpiryDays)
-      .withRevokeCheckMinutes(RevokeCheckMinutes)
-      .build();
+        .newBuilder()
+        .withKeyExpirationDays(KeyExpiryDays)
+        .withRevokeCheckMinutes(RevokeCheckMinutes)
+        .build();
 
     KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
@@ -66,7 +66,7 @@ public class EncryptDefinitions {
   }
 
   @Then("I get should get encrypted_data")
-  public void i_get_should_get_encrypted_data() throws IOException {
+  public void iGetShouldGetEncryptedData() throws IOException {
     // Write the encrypted payload to a file so that we can decrypt later
     String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
     FileWriter myWriter = new FileWriter(path + FileName);
@@ -75,7 +75,7 @@ public class EncryptDefinitions {
   }
 
   @Then("encrypted_data should not equal data")
-  public void encrypted_data_should_not_equal_data() {
+  public void encryptedDataShouldNotEqualData() {
     assertNotEquals(payloadString, encryptedPayloadString);
   }
 }

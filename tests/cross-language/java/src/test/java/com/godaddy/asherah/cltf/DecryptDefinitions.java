@@ -1,4 +1,4 @@
-package com.godaddy.asherah.crosslanguage;
+package com.godaddy.asherah.cltf;
 
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Scanner;
 
-import static com.godaddy.asherah.crosslanguage.Constants.*;
+import static com.godaddy.asherah.cltf.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DecryptDefinitions {
@@ -27,7 +27,7 @@ public class DecryptDefinitions {
 
 
   @Given("I have encrypted_data from {string}")
-  public void i_have_encrypted_data_from(String fileName) throws FileNotFoundException {
+  public void iHaveEncryptedDataFrom(final String fileName) throws FileNotFoundException {
     // Read the encrypted payload from the provided file
     String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
     Scanner sc = new Scanner(new File(path + fileName));
@@ -37,12 +37,12 @@ public class DecryptDefinitions {
   }
 
   @When("I decrypt the encrypted_data")
-  public void i_decrypt_the_encrypted_data() {
+  public void iDecryptTheEncryptedData() {
     CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy
-      .newBuilder()
-      .withKeyExpirationDays(KeyExpiryDays)
-      .withRevokeCheckMinutes(RevokeCheckMinutes)
-      .build();
+        .newBuilder()
+        .withKeyExpirationDays(KeyExpiryDays)
+        .withRevokeCheckMinutes(RevokeCheckMinutes)
+        .build();
 
     KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
@@ -69,12 +69,12 @@ public class DecryptDefinitions {
   }
 
   @Then("I get should get decrypted_data")
-  public void i_get_should_get_decrypted_data() {
+  public void iGetShouldGetDecryptedData() {
     // No action required here since decrypted payload is calculated in the WHEN step
   }
 
   @Then("decrypted_data should be equal to {string}")
-  public void decrypted_data_should_be_equal_to(String string) {
-    assertEquals(string, decryptedPayload);
+  public void decryptedDataShouldBeEqualTo(final String payload) {
+    assertEquals(payload, decryptedPayload);
   }
 }

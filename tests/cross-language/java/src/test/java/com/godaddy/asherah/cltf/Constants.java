@@ -1,6 +1,9 @@
-package com.godaddy.asherah.crosslanguage;
+package com.godaddy.asherah.cltf;
 
-public class Constants {
+final class Constants {
+
+  private Constants() {
+  }
 
   public static final String KeyManagementStaticMasterKey = "mysupersecretstaticmasterkey!!!!";
 
