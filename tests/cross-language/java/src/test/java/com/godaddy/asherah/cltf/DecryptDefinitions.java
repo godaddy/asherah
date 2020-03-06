@@ -68,7 +68,7 @@ public class DecryptDefinitions {
     }
   }
 
-  @Then("I get should get decrypted_data")
+  @Then("I should get decrypted_data")
   public void iGetShouldGetDecryptedData() {
     // No action required here since decrypted payload is calculated in the WHEN step
   }

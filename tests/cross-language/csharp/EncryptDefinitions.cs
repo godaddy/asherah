@@ -59,7 +59,7 @@ namespace GoDaddy.Asherah.Cltf
             }
         }
 
-        [Then(@"I get should get encrypted_data")]
+        [Then(@"I should get encrypted_data")]
         public void IGetShouldGetEncrypted_Data()
         {
             // Write the encrypted payload to a file so that we can decrypt later
@@ -67,7 +67,7 @@ namespace GoDaddy.Asherah.Cltf
             File.WriteAllText(filePath + "/" + FileName, encryptedPayloadString);
         }
 
-        [Then(@"encrypted_data should not equal data")]
+        [Then(@"encrypted_data should not be equal to data")]
         public void Encrypted_DataShouldNotEqualData()
         {
             Assert.NotEqual(payloadString, encryptedPayloadString);

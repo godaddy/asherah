@@ -65,7 +65,7 @@ public class EncryptDefinitions {
     }
   }
 
-  @Then("I get should get encrypted_data")
+  @Then("I should get encrypted_data")
   public void iGetShouldGetEncryptedData() throws IOException {
     // Write the encrypted payload to a file so that we can decrypt later
     String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
@@ -74,7 +74,7 @@ public class EncryptDefinitions {
     myWriter.close();
   }
 
-  @Then("encrypted_data should not equal data")
+  @Then("encrypted_data should not be equal to data")
   public void encryptedDataShouldNotEqualData() {
     assertNotEquals(payloadString, encryptedPayloadString);
   }
