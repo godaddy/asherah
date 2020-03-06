@@ -4,7 +4,7 @@ Feature: Decrypt Data using RDBMS metastore and static KMS
   Scenario Outline: Decrypting Data
     Given I have encrypted_data from "<file_name>"
     When I decrypt the encrypted_data
-    Then I get should get decrypted_data
+    Then I should get decrypted_data
     And decrypted_data should be equal to "<data>"
     Examples:
       | data                 | file_name        |
