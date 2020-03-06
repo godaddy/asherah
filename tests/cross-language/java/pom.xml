@@ -4,9 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.godaddy.asherah</groupId>
-  <artifactId>java-cltf</artifactId>
+  <artifactId>cltf</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <name>Java-CLTF</name>
+  <name>CLTF</name>
   <description>Cross-language testing framework to ensure consistent encryption/decryption results.</description>
   <url>https://github.com/godaddy/asherah</url>
 
