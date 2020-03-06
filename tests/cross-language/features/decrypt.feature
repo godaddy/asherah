@@ -1,4 +1,4 @@
-Feature: Decrypt Data using an RDBMS metastore and static KMS
+Feature: Decrypt Data using RDBMS metastore and static KMS
   I want to decrypt data
 
   Scenario Outline: Decrypting Data
