@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "csharp", "csharp.csproj", "{3A34EE0E-13BC-4CB3-B7BF-485362CF26C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cltf", "cltf.csproj", "{3A34EE0E-13BC-4CB3-B7BF-485362CF26C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

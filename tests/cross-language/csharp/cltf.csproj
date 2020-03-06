@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-        <PackageId>GoDaddy.Asherah.CrossLanguage.CSharp</PackageId>
+        <PackageId>GoDaddy.Asherah.Cltf</PackageId>
         <!-- NOTE: Version controlled via Directory.Build.props  -->
         <!--<Version></Version>-->
         <Authors>GoDaddy</Authors>
-        <RootNamespace>GoDaddy.Asherah.CrossLanguage.CSharp</RootNamespace>
+        <RootNamespace>GoDaddy.Asherah.Cltf</RootNamespace>
         <CodeAnalysisRuleSet>StyleCopCustom.ruleset</CodeAnalysisRuleSet>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>

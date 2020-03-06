@@ -9,9 +9,9 @@ using MySql.Data.MySqlClient;
 using TechTalk.SpecFlow;
 using Xunit;
 
-using static GoDaddy.Asherah.CrossLanguage.CSharp.Constants;
+using static GoDaddy.Asherah.Cltf.Constants;
 
-namespace GoDaddy.Asherah.CrossLanguage.CSharp
+namespace GoDaddy.Asherah.Cltf
 {
     [Binding]
     public class EncryptDefinitions
@@ -72,7 +72,7 @@ namespace GoDaddy.Asherah.CrossLanguage.CSharp
         [Then(@"encrypted_data should not equal data")]
         public void ThenEncrypted_DataShouldNotEqualData()
         {
-            Assert.NotEqual(payloadString,  encryptedPayloadString);
+            Assert.NotEqual(payloadString, encryptedPayloadString);
         }
     }
 }

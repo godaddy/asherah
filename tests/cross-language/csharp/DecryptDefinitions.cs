@@ -9,9 +9,9 @@ using MySql.Data.MySqlClient;
 using TechTalk.SpecFlow;
 using Xunit;
 
-using static GoDaddy.Asherah.CrossLanguage.CSharp.Constants;
+using static GoDaddy.Asherah.Cltf.Constants;
 
-namespace GoDaddy.Asherah.CrossLanguage.CSharp
+namespace GoDaddy.Asherah.Cltf
 {
     [Binding]
     public class DecryptDefinitions
