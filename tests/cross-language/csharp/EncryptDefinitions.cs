@@ -21,16 +21,15 @@ namespace GoDaddy.Asherah.Cltf
         private byte[] encryptedBytes;
 
         [Given(@"I have ""(.*)""")]
-        public void GivenIHave(string payload)
+        public void IHave(string payload)
         {
             payloadString = payload;
         }
 
         [When(@"I encrypt the data")]
-        public void WhenIEncryptTheData()
+        public void IEncryptTheData()
         {
-            KeyManagementService keyManagementService =
-                new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
             AdoMetastoreImpl metastore = AdoMetastoreImpl
                 .NewBuilder(MySqlClientFactory.Instance, AdoConnectionString)
@@ -52,8 +51,7 @@ namespace GoDaddy.Asherah.Cltf
             {
                 // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
-                using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes(DefaultPartitionId))
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(DefaultPartitionId))
                 {
                     encryptedBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(payloadString));
                     encryptedPayloadString = Convert.ToBase64String(encryptedBytes);
@@ -62,7 +60,7 @@ namespace GoDaddy.Asherah.Cltf
         }
 
         [Then(@"I get should get encrypted_data")]
-        public void ThenIGetShouldGetEncrypted_Data()
+        public void IGetShouldGetEncrypted_Data()
         {
             // Write the encrypted payload to a file so that we can decrypt later
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
@@ -70,7 +68,7 @@ namespace GoDaddy.Asherah.Cltf
         }
 
         [Then(@"encrypted_data should not equal data")]
-        public void ThenEncrypted_DataShouldNotEqualData()
+        public void Encrypted_DataShouldNotEqualData()
         {
             Assert.NotEqual(payloadString, encryptedPayloadString);
         }

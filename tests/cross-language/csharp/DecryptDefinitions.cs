@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.Cltf
         private string decryptedPayload;
 
         [Given(@"I have encrypted_data from ""(.*)""")]
-        public void GivenIHaveEncrypted_DataFrom(string fileName)
+        public void IHaveEncrypted_DataFrom(string fileName)
         {
             // Read the encrypted payload from the provided file
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
@@ -30,10 +30,9 @@ namespace GoDaddy.Asherah.Cltf
         }
 
         [When(@"I decrypt the encrypted_data")]
-        public void WhenIDecryptTheEncrypted_Data()
+        public void IDecryptTheEncrypted_Data()
         {
-            KeyManagementService keyManagementService =
-                new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
             AdoMetastoreImpl metastore = AdoMetastoreImpl
                 .NewBuilder(MySqlClientFactory.Instance, AdoConnectionString)
@@ -55,8 +54,7 @@ namespace GoDaddy.Asherah.Cltf
             {
                 // Now create an actual session for a partition (which in our case is a dummy id). This session is used
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
-                using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes(DefaultPartitionId))
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(DefaultPartitionId))
                 {
                     decryptedPayload = Encoding.UTF8.GetString(sessionBytes.Decrypt(encryptedPayload));
                 }
@@ -64,13 +62,13 @@ namespace GoDaddy.Asherah.Cltf
         }
 
         [Then(@"I get should get decrypted_data")]
-        public void ThenIGetShouldGetDecrypted_Data()
+        public void IGetShouldGetDecrypted_Data()
         {
             // No action required here since decrypted payload is calculated in the WHEN step
         }
 
         [Then(@"decrypted_data should be equal to ""(.*)""")]
-        public void ThenDecrypted_DataShouldBeEqualTo(string originalPayload)
+        public void Decrypted_DataShouldBeEqualTo(string originalPayload)
         {
             Assert.Equal(originalPayload, decryptedPayload);
         }
