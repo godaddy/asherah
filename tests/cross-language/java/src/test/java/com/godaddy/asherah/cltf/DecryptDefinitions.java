@@ -29,8 +29,7 @@ public class DecryptDefinitions {
   @Given("I have encrypted_data from {string}")
   public void iHaveEncryptedDataFrom(final String fileName) throws FileNotFoundException {
     // Read the encrypted payload from the provided file
-    String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
-    Scanner sc = new Scanner(new File(path + fileName));
+    Scanner sc = new Scanner(new File(FileDirectory + fileName));
     String payload = sc.nextLine();
     encryptedPayload = Base64.getDecoder().decode(payload);
     sc.close();

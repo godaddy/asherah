@@ -268,3 +268,5 @@ __pycache__/
 *lcov.info
 **/coverage.*
 *.opencover.xml
+
+*.feature.cs

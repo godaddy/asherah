@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p encrypted_files
 
 # Run encrypt tests for all languages
 cd java
@@ -34,5 +33,3 @@ cd ..
 #cd go
 # run go encrypt tests here
 #cd ..
-
-rm -rf encrypted_files

@@ -62,13 +62,20 @@ namespace GoDaddy.Asherah.Cltf
         [Then(@"I should get encrypted_data")]
         public void IShouldGetEncrypted_Data()
         {
+            string tempFile = FileDirectory + FileName;
+
+            // Delete any existing encrypted payload file
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+
             // Write the encrypted payload to a file so that we can decrypt later
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
-            File.WriteAllText(filePath + "/" + FileName, encryptedPayloadString);
+            File.WriteAllText(FileDirectory + FileName, encryptedPayloadString);
         }
 
         [Then(@"encrypted_data should not be equal to data")]
-        public void Encrypted_DataShouldNotEqualData()
+        public void Encrypted_DataShouldNotBeEqualToData()
         {
             Assert.NotEqual(payloadString, encryptedPayloadString);
         }

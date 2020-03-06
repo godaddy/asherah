@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.Cltf
         public const string DefaultProductId = "product";
         public const string DefaultPartitionId = "partition";
 
-        public const string FileDirectory = "encrypted_files";
+        public const string FileDirectory = "/tmp/";
         public const string FileName = "csharp_encrypted";
 
         public const int KeyExpiryDays = 30;
@@ -27,8 +27,8 @@ namespace GoDaddy.Asherah.Cltf
             AdoDatabaseName = Environment.GetEnvironmentVariable("TEST_DB_NAME");
             AdoUsername = Environment.GetEnvironmentVariable("TEST_DB_USER");
             AdoPassword = Environment.GetEnvironmentVariable("TEST_DB_PASSWORD");
-            AdoConnectionString = "server=localhost;" +
-                                  "uid=" + AdoUsername +
+            AdoConnectionString = "server=localhost" +
+                                  ";uid=" + AdoUsername +
                                   ";pwd=" + AdoPassword +
                                   ";sslmode=none;" +
                                   "Initial Catalog=" + AdoDatabaseName;

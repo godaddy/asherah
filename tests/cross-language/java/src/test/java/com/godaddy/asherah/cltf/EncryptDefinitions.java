@@ -12,10 +12,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 
 import static com.godaddy.asherah.cltf.Constants.*;
@@ -65,15 +66,18 @@ public class EncryptDefinitions {
 
   @Then("I should get encrypted_data")
   public void iShouldGetEncryptedData() throws IOException {
+    String tempFile = FileDirectory + FileName;
+    // Delete any existing encrypted payload file
+    Files.deleteIfExists(Paths.get(tempFile));
+
     // Write the encrypted payload to a file so that we can decrypt later
-    String path = System.getProperty("user.dir") + File.separator + ".." + File.separator + FileDirectory + File.separator;
-    FileWriter myWriter = new FileWriter(path + FileName);
+    FileWriter myWriter = new FileWriter(tempFile);
     myWriter.write(encryptedPayloadString);
     myWriter.close();
   }
 
   @Then("encrypted_data should not be equal to data")
-  public void encryptedDataShouldNotEqualData() {
+  public void encryptedDataShouldNotBeEqualToData() {
     assertNotEquals(payloadString, encryptedPayloadString);
   }
 }

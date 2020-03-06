@@ -23,8 +23,7 @@ namespace GoDaddy.Asherah.Cltf
         public void IHaveEncrypted_DataFrom(string fileName)
         {
             // Read the encrypted payload from the provided file
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", FileDirectory);
-            string payload = File.ReadAllText(filePath + "/" + fileName);
+            string payload = File.ReadAllText(FileDirectory + fileName);
 
             encryptedPayload = Convert.FromBase64String(payload);
         }
