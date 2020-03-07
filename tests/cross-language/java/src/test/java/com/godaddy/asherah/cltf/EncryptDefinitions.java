@@ -25,12 +25,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EncryptDefinitions {
   private static String payloadString;
   private static String encryptedPayloadString;
-  private static byte[] encryptedBytes;
-
 
   @Given("I have {string}")
   public void iHave(final String payload) {
-    this.payloadString = payload;
+    payloadString = payload;
   }
 
   @When("I encrypt the data")
@@ -44,7 +42,7 @@ public class EncryptDefinitions {
     KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
     HikariDataSource dataSource = new HikariDataSource();
-    dataSource.setJdbcUrl(jdbcConnectionString);
+    dataSource.setJdbcUrl(JdbcConnectionString);
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
     // Create a session for the test
@@ -58,7 +56,7 @@ public class EncryptDefinitions {
       // Now create an actual session for a partition (which in our case is a dummy id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
       try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes(Constants.DefaultPartitionId)) {
-        encryptedBytes = sessionBytes.encrypt(this.payloadString.getBytes(StandardCharsets.UTF_8));
+        byte[] encryptedBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
         encryptedPayloadString = Base64.getEncoder().encodeToString(encryptedBytes);
       }
     }

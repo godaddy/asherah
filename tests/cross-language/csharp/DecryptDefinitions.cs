@@ -63,7 +63,7 @@ namespace GoDaddy.Asherah.Cltf
         [Then(@"I should get decrypted_data")]
         public void IShouldGetDecrypted_Data()
         {
-            // No action required here since decrypted payload is calculated in the WHEN step
+            Assert.NotNull(decryptedPayload);
         }
 
         [Then(@"decrypted_data should be equal to ""(.*)""")]

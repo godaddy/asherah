@@ -18,7 +18,6 @@ namespace GoDaddy.Asherah.Cltf
     {
         private string payloadString;
         private string encryptedPayloadString;
-        private byte[] encryptedBytes;
 
         [Given(@"I have ""(.*)""")]
         public void IHave(string payload)
@@ -53,7 +52,7 @@ namespace GoDaddy.Asherah.Cltf
                 // for a transaction and is disposed automatically after use due to the IDisposable implementation.
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(DefaultPartitionId))
                 {
-                    encryptedBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(payloadString));
+                    byte[] encryptedBytes = sessionBytes.Encrypt(Encoding.UTF8.GetBytes(payloadString));
                     encryptedPayloadString = Convert.ToBase64String(encryptedBytes);
                 }
             }

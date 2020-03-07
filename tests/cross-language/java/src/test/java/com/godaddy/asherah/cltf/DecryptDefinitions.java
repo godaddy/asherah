@@ -46,7 +46,7 @@ public class DecryptDefinitions {
     KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
 
     HikariDataSource dataSource = new HikariDataSource();
-    dataSource.setJdbcUrl(jdbcConnectionString);
+    dataSource.setJdbcUrl(JdbcConnectionString);
     JdbcMetastoreImpl metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
     // Create a session for this test
@@ -67,7 +67,7 @@ public class DecryptDefinitions {
 
   @Then("I should get decrypted_data")
   public void iShouldGetDecryptedData() {
-    // No action required here since decrypted payload is calculated in the WHEN step
+    assertNotNull(decryptedPayload);
   }
 
   @Then("decrypted_data should be equal to {string}")

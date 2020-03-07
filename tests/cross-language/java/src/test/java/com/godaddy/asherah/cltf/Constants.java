@@ -17,11 +17,11 @@ final class Constants {
   public static final int KeyExpiryDays = 30;
   public static final int RevokeCheckMinutes = 60;
 
-  private static String mysqlDatbaseName = System.getenv("TEST_DB_NAME");
-  private static String mysqlUsername = System.getenv("TEST_DB_USER");
-  private static String mysqlPassword = System.getenv("TEST_DB_PASSWORD");
-  protected static String jdbcConnectionString = "jdbc:mysql://localhost/" +
-      mysqlDatbaseName + "?" +
-      "user=" + mysqlUsername +
-      "&password=" + mysqlPassword;
+  private static final String MysqlDatbaseName = System.getenv("TEST_DB_NAME");
+  private static final String MysqlUsername = System.getenv("TEST_DB_USER");
+  private static final String MysqlPassword = System.getenv("TEST_DB_PASSWORD");
+  protected static final String JdbcConnectionString = "jdbc:mysql://localhost/" +
+      MysqlDatbaseName + "?" +
+      "user=" + MysqlUsername +
+      "&password=" + MysqlPassword;
 }
