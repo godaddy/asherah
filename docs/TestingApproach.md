@@ -1,12 +1,15 @@
 # Library of Testing
 
-Until we have a formal cross language testing format in place (see [future work](#future-work)), we describe the set of functional and regression tests that are currently used.
+Below we describe the set of functional, regression and cross-language tests that are currently used.
 
-## Current Tests
+* [Regression Tests](#regression-tests)
+* [Multi-threaded Tests](#multi-threaded-tests)
+* [Cross Language Testing Framework (CLTF)](#cross-language-testing-framework-cltf)
+* [Future Work](#future-work)
 
-### Regression Tests
+## Regression Tests
 
-#### Sanity checks
+### Sanity checks
 - Simple encrypt/decrypt operation.
 - Encrypt/decrypt operation multiple times in the same session.
 - Encrypt a payload and try to decrypt the same payload in a different session. Ensure that the results match.
@@ -15,7 +18,7 @@ Until we have a formal cross language testing format in place (see [future work]
 - Try to overwrite a payload with the same key, and verify that load still works with the same key and returns the 2nd payload.
 - Try to load an invalid key and verify that no result is returned.
 
-#### Parameterized Tests
+### Parameterized Tests
 System and Intermediate keys in the cache and metastore can each exist in 3 possible states:
 - ***RETIRED:*** A key is present, but it is expired or revoked.
 - ***VALID:*** A key is present and can be used for encrypt/decrypt operations.
@@ -54,7 +57,7 @@ For the decrypt path:
 | IK should be loaded  | `metastore.load(IK)`  |
 | SK should be loaded  | `metastore.load(SK)`  |
 
-### Multi-threaded Tests
+## Multi-threaded Tests
 - Run encrypt and decrypt operations with multiple threads.
 - Create a single session to encrypt and decrypt data for multiple partitions in parallel.
 - Create a single session and call store/load to store and load data for multiple partitions in parallel.
@@ -63,7 +66,13 @@ For the decrypt path:
 
 Ensure that all keys and data row records are created as expected.
 
+## Cross-language Testing Framework (CLTF)
+A cross-language testing framework has been implemented using [Gherkin/Cucumber](https://cucumber.io/docs/gherkin/). 
+The CLTF validates inter-language operability between all supported languages by running the following features.
+
+- Encrypt operation in all languages
+- Decrypt operation for the encrypted payload generated in all languages
+
 ## Future Work
-- Investigate using [Gherkin/Cucumber](https://cucumber.io/docs/gherkin/) for formal cross-language test specifications.
-- Expand the testing framework by adding automated inter-language operations. (e.g. Encrypting in one language and decrypting using other)
+- Expand CLTF by adding additional inter-language features.
 - Add test cases for queued key rotation when implemented.
