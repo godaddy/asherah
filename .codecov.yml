@@ -13,11 +13,11 @@ coverage:
       languages-csharp-SecureMemory:
         flags: languages_csharp_SecureMemory
         target: 90%
-      languages-java-app-encryption:
-        flags: languages_java_app_encryption
+      java-app-encryption:
+        flags: java_app_encryption
         target: 90%
-      languages-java-secure-memory:
-        flags: languages_java_secure_memory
+      java-secure-memory:
+        flags: java_secure_memory
         target: 90%
 # Note flags have to be "\w" charset (hence underscore instead of hyphen)
 flags:
@@ -30,12 +30,12 @@ flags:
   languages_csharp_SecureMemory:
     paths:
       - languages/csharp/SecureMemory
-  languages_java_app_encryption:
+  java_app_encryption:
     paths:
-      - languages/java/app-encryption
-  languages_java_secure_memory:
+      - java/app-encryption
+  java_secure_memory:
     paths:
-      - languages/java/secure-memory
+      - java/secure-memory
 ignore:
   # Ignore non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
   # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
