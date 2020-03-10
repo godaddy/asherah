@@ -147,8 +147,8 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 
 ## Supported Languages
 
-* [Java](languages/java/app-encryption)
-* [.NET](languages/csharp/AppEncryption)
+* [Java](java/app-encryption)
+* [.NET](csharp/AppEncryption)
 * Go (coming soon!)
 
 ### Feature Support
