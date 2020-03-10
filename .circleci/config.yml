@@ -15,16 +15,16 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - languages-java-secure-memory
-      - languages-java-app-encryption:
+      - java-secure-memory
+      - java-app-encryption:
           requires:
-            - languages-java-secure-memory
+            - java-secure-memory
       - samples-java-reference-app:
           requires:
-            - languages-java-app-encryption
+            - java-app-encryption
       - tests-java-test-app:
           requires:
-            - languages-java-app-encryption
+            - java-app-encryption
       - languages-csharp-logging
       - languages-csharp-secure-memory:
           requires:
@@ -37,11 +37,11 @@ workflows:
             - languages-csharp-app-encryption
       - cross-language:
           requires:
-            - languages-java-app-encryption
+            - java-app-encryption
             - languages-csharp-app-encryption
 
 jobs:
-  languages-java-secure-memory:
+  java-secure-memory:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
@@ -56,28 +56,28 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/test.sh
       - store_test_results:
-          path: languages/java/secure-memory/target/surefire-reports
+          path: java/secure-memory/target/surefire-reports
       - codecov/upload:
-          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
-          flags: languages_java_secure_memory
+          file: java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: java_secure_memory
       - run:
           name: Install locally
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
@@ -100,7 +100,7 @@ jobs:
           paths:
             - ~/.m2
           key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
-  languages-java-app-encryption:
+  java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
@@ -115,28 +115,28 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/test.sh
       - store_test_results:
-          path: languages/java/app-encryption/target/surefire-reports
+          path: java/app-encryption/target/surefire-reports
       - codecov/upload:
-          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
-          flags: languages_java_app_encryption
+          file: java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: java_app_encryption
       - run:
           name: Install locally
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
