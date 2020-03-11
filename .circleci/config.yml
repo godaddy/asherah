@@ -527,13 +527,13 @@ jobs:
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - restore_cache:
-          name: Restore csharp packages
+          name: Restore C# packages
           keys:
             - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
       - restore_cache:
-          name: Restore go packages
+          name: Restore GO packages
           keys:
             - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
             - go-mod-v4-{{ .Branch }}-

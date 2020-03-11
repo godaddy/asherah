@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
-	securememory "github.com/godaddy/asherah/go/securememory"
+	"github.com/godaddy/asherah/go/securememory"
 	"github.com/godaddy/asherah/go/securememory/internal/memcall"
 	"github.com/godaddy/asherah/go/securememory/internal/secrets"
 )
