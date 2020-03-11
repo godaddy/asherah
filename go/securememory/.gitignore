@@ -1,0 +1,14 @@
+.idea/
+bin/
+*.out
+junit_results.xml
+cobertura-coverage.xml
+report.json
+benchmark.xml
+.scannerwork/
+./example
+cmd/example/example
+cmd/example/log.log
+hack
+.DS_Store
+**/checkstyle-result.xml
