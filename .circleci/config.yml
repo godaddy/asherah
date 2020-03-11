@@ -15,33 +15,33 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - languages-java-secure-memory
-      - languages-java-app-encryption:
+      - java-secure-memory
+      - java-app-encryption:
           requires:
-            - languages-java-secure-memory
+            - java-secure-memory
       - samples-java-reference-app:
           requires:
-            - languages-java-app-encryption
+            - java-app-encryption
       - tests-java-test-app:
           requires:
-            - languages-java-app-encryption
-      - languages-csharp-logging
-      - languages-csharp-secure-memory:
+            - java-app-encryption
+      - csharp-logging
+      - csharp-secure-memory:
           requires:
-            - languages-csharp-logging
-      - languages-csharp-app-encryption:
+            - csharp-logging
+      - csharp-app-encryption:
           requires:
-            - languages-csharp-secure-memory
+            - csharp-secure-memory
       - samples-csharp-reference-app:
           requires:
-            - languages-csharp-app-encryption
+            - csharp-app-encryption
       - cross-language:
           requires:
-            - languages-java-app-encryption
-            - languages-csharp-app-encryption
+            - java-app-encryption
+            - csharp-app-encryption
 
 jobs:
-  languages-java-secure-memory:
+  java-secure-memory:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
@@ -56,28 +56,28 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/test.sh
       - store_test_results:
-          path: languages/java/secure-memory/target/surefire-reports
+          path: java/secure-memory/target/surefire-reports
       - codecov/upload:
-          file: languages/java/secure-memory/target/site/jacoco/jacoco.xml
-          flags: languages_java_secure_memory
+          file: java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: java_secure_memory
       - run:
           name: Install locally
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/java/secure-memory
+            cd java/secure-memory
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
@@ -100,7 +100,7 @@ jobs:
           paths:
             - ~/.m2
           key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
-  languages-java-app-encryption:
+  java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
@@ -115,28 +115,28 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/test.sh
       - store_test_results:
-          path: languages/java/app-encryption/target/surefire-reports
+          path: java/app-encryption/target/surefire-reports
       - codecov/upload:
-          file: languages/java/app-encryption/target/site/jacoco/jacoco.xml
-          flags: languages_java_app_encryption
+          file: java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: java_app_encryption
       - run:
           name: Install locally
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/java/app-encryption
+            cd java/app-encryption
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
@@ -203,7 +203,7 @@ jobs:
           paths:
             - ~/.m2
           key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
-  languages-csharp-logging:
+  csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
@@ -226,33 +226,33 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/csharp/Logging
+            cd csharp/Logging
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/csharp/Logging
+            cd csharp/Logging
             ./scripts/test.sh
       - run:
           name: Convert test results
           command: |
-            cd languages/csharp/Logging
+            cd csharp/Logging
             ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
-          path: languages/csharp/Logging/Logging.Tests/TestResults
+          path: csharp/Logging/Logging.Tests/TestResults
       - codecov/upload:
-          file: languages/csharp/Logging/Logging.Tests/coverage.opencover.xml
-          flags: languages_csharp_Logging
+          file: csharp/Logging/Logging.Tests/coverage.opencover.xml
+          flags: csharp_Logging
       - run:
           name: Install locally
           command: |
-            cd languages/csharp/Logging
+            cd csharp/Logging
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/csharp/Logging
+            cd csharp/Logging
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
@@ -272,7 +272,7 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-  languages-csharp-secure-memory:
+  csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
@@ -295,33 +295,33 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/csharp/SecureMemory
+            cd csharp/SecureMemory
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/csharp/SecureMemory
+            cd csharp/SecureMemory
             ./scripts/test.sh
       - run:
           name: Convert test results
           command: |
-            cd languages/csharp/SecureMemory
+            cd csharp/SecureMemory
             ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
-          path: languages/csharp/SecureMemory/SecureMemory.Tests/TestResults
+          path: csharp/SecureMemory/SecureMemory.Tests/TestResults
       - codecov/upload:
-          file: languages/csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
-          flags: languages_csharp_SecureMemory
+          file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
+          flags: csharp_SecureMemory
       - run:
           name: Install locally
           command: |
-            cd languages/csharp/SecureMemory
+            cd csharp/SecureMemory
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/csharp/SecureMemory
+            cd csharp/SecureMemory
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)
@@ -341,7 +341,7 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-  languages-csharp-app-encryption:
+  csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
       - image: circleci/dynamodb
@@ -369,33 +369,33 @@ jobs:
       - run:
           name: Build
           command: |
-            cd languages/csharp/AppEncryption
+            cd csharp/AppEncryption
             ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Tests
           command: |
-            cd languages/csharp/AppEncryption
+            cd csharp/AppEncryption
             ./scripts/test.sh
       - run:
           name: Convert test results
           command: |
-            cd languages/csharp/AppEncryption
+            cd csharp/AppEncryption
             ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
-          path: languages/csharp/AppEncryption/AppEncryption.Tests/TestResults
+          path: csharp/AppEncryption/AppEncryption.Tests/TestResults
       - codecov/upload:
-          file: languages/csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
-          flags: languages_csharp_AppEncryption
+          file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
+          flags: csharp_AppEncryption
       - run:
           name: Install locally
           command: |
-            cd languages/csharp/AppEncryption
+            cd csharp/AppEncryption
             ./scripts/install_local.sh
       - run:
           name: Deploy if needed
           command: |
-            cd languages/csharp/AppEncryption
+            cd csharp/AppEncryption
 
             # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
             TAG_NAME=$(git tag -l --points-at HEAD)

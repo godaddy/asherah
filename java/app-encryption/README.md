@@ -37,7 +37,7 @@ try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "
 }
 ```
 
-A more extensive example is the [Reference Application](../../../samples/java/reference-app), which will evolve along with the SDK.
+A more extensive example is the [Reference Application](../../samples/java/reference-app), which will evolve along with the SDK.
 
 ## How to Use Asherah
 
@@ -46,7 +46,7 @@ build the various options for each component.
 
 ### Define the Metastore
 
-Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
+Detailed information about the Metastore, including any provisioning steps, can be found [here](../../docs/Metastore.md).
 
 #### RDBMS Metastore
 
@@ -74,7 +74,7 @@ Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
 
 ### Define the Key Management Service
 
-Detailed information about the Key Management Service can be found [here](../../../docs/KeyManagementService.md).
+Detailed information about the Key Management Service can be found [here](../../docs/KeyManagementService.md).
 
 #### AWS KMS
 
@@ -96,8 +96,8 @@ KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("
 
 ### Define the Crypto Policy
 
-Detailed information about Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). The Crypto Policy's effect
-on key caching is explained [here](../../../docs/KeyCaching.md).
+Detailed information about Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect
+on key caching is explained [here](../../docs/KeyCaching.md).
 
 
 #### Basic Expiring Crypto Policy
@@ -267,9 +267,9 @@ The following are distro-specific notes that we know about:
   * If using the `adoptopenjdk/openjdk` base image, we need to add additional directories in the default library
   path using `-Djna.boot.library.path=/usr/lib/x86_64-linux-gnu/jni/`
 
-Our [test app repo's](../../../tests/java/test-app/) Dockerfiles can be used for reference:
-[Alpine](../../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../../tests/java/test-app/images/debian/Dockerfile)
-and [Ubuntu](../../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
+Our [test app repo's](../../tests/java/test-app/) Dockerfiles can be used for reference:
+[Alpine](../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../tests/java/test-app/images/debian/Dockerfile)
+and [Ubuntu](../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
 
 ## Development Notes
 

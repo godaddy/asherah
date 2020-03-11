@@ -39,7 +39,7 @@ using (SessionFactory sessionFactory = SessionFactory
 }
 ```
 
-A more extensive example is the [Reference Application](../../../samples/csharp/ReferenceApp/), which will evolve along 
+A more extensive example is the [Reference Application](../../samples/csharp/ReferenceApp/), which will evolve along 
 with the SDK.
 
 ## How to Use Asherah
@@ -49,7 +49,7 @@ build the various options for each component.
 
 ### Define the Metastore
 
-Detailed information about the Metastore, including any provisioning steps, can be found [here](../../../docs/Metastore.md).
+Detailed information about the Metastore, including any provisioning steps, can be found [here](../../docs/Metastore.md).
 
 #### RDBMS Metastore
 
@@ -81,7 +81,7 @@ IMetastore<JObject> metastore = new InMemoryPersistenceImpl<JObject>();
 ```
 
 ### Define the Key Management Service
-Detailed information about the Key Management Service can be found [here](../../../docs/KeyManagementService.md).
+Detailed information about the Key Management Service can be found [here](../../docs/KeyManagementService.md).
 
 #### AWS KMS
 
@@ -105,8 +105,8 @@ KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("
 ```
 
 ### Define the Crypto Policy
-Detailed information on Crypto Policy can be found [here](../../../docs/CryptoPolicy.md). The Crypto Policy's effect 
-on key caching is explained [here](../../../docs/KeyCaching.md).
+Detailed information on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect 
+on key caching is explained [here](../../docs/KeyCaching.md).
 
 #### Basic Expiring Crypto Policy
 
@@ -256,7 +256,7 @@ To do so, simply set the environment variable `COMPlus_EnableDiagnostics` to 0
 ENV COMPlus_EnableDiagnostics=0
 ```
 
-Our [sample application's](../../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for 
+Our [sample application's](../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for 
 reference.
 
 ## Development Notes
