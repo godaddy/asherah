@@ -35,6 +35,7 @@ workflows:
       - samples-csharp-reference-app:
           requires:
             - csharp-app-encryption
+      - go-securememory
       - cross-language:
           requires:
             - java-app-encryption
@@ -445,6 +446,55 @@ jobs:
           paths:
             - ~/.nuget
           key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+  go-securememory:
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+            - go-mod-v4-{{ .Branch }}-
+            - go-mod-v4-
+      - run:
+          name: Build
+          command: |
+            cd go/securememory
+            ./scripts/build.sh
+      - run:
+          name: Unit Tests
+          command: |
+            cd go/securememory
+            ./scripts/test.sh
+      - run:
+          name: Benchmark Tests
+          command: |
+            cd go/securememory
+            ./scripts/benchmark_test.sh
+      - run:
+          name: Convert Test Results
+          command: |
+            cd go/securememory
+            GO111MODULE=off go get github.com/axw/gocov/gocov
+            GO111MODULE=off go get github.com/AlekSi/gocov-xml
+            echo "Converting coverage.out to cobertura XML..."
+            gocov convert coverage.out | gocov-xml > cobertura-coverage.xml
+      - run:
+          name: Static Analysis
+          command: |
+            cd go/securememory
+            ./scripts/lint_test.sh
+      - store_test_results:
+          path: go/securememory
+      - codecov/upload:
+          file: go/securememory/cobertura-coverage.xml
+          flags: go_securememory
+      - save_cache:
+          paths:
+            - /go/pkg/mod
+          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
   cross-language:
     docker:
       - image: ubuntu:18.04
@@ -471,17 +521,23 @@ jobs:
       # when project files change, use increasingly general patterns to restore cache.
       # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
+          name: Restore JAVA packages
           keys:
-            # Restore packages for java
             - v1-maven-{{ .Branch }}-{{ .BuildNum }}
             - v1-maven-{{ .Branch }}-
             - v1-maven-
       - restore_cache:
+          name: Restore C# packages
           keys:
-            # Restore packages for csharp
             - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
             - v1-nuget-{{ .Branch }}-
             - v1-nuget-
+      - restore_cache:
+          name: Restore GO packages
+          keys:
+            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+            - go-mod-v4-{{ .Branch }}-
+            - go-mod-v4-
       - run:
           name: Setup java environment
           command: |
