@@ -1,4 +1,5 @@
 # Secure Memory Go Edition
+[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/securememory?status.svg)](https://godoc.org/github.com/godaddy/asherah/go/securememory)
 
 This package provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
@@ -20,6 +21,8 @@ The protected memory implementation of secure memory:
 * Uses mlock to lock the pages to prevent swapping
 * Uses mprotect to mark the pages no-access until needed
 * Uses setrlimit to disable core dumps entirely
+
+In addition, we have also provided an implementation of the io.Reader that can be used to read the secret bytes.
 
 ### Usage
 
@@ -51,13 +54,13 @@ func main() {
     }
 }
 ```
-
 ## Memguard Implementation
 The [memguard](https://github.com/awnumar/memguard/)-based implementation has identical guarantees as the protected
 memory implementation. It also makes use of guard pages and canary data to add further protections. Note the user of
-the guard pages will add an additional 2 pages of unmanaged memory being used per Secret (as of this writing).
+the guard pages will add an additional 2 pages of unmanaged memory being used per secret (as of this writing).
 
 In addition, we have included the no-access support that we have provided in our other language implementations.
+We have also provided an implementation of the io.Reader that can be used to read the secret bytes.
 
 The memguard based implementation:
 
@@ -78,7 +81,7 @@ import (
 )
 
 func main() {
-    factory := memguard.SecretFactory{}
+    factory := new(memguard.SecretFactory)
 
     secret, err := factory.New(getSecretFromStore())
     if err != nil {
@@ -95,6 +98,10 @@ func main() {
     }
 }
 ```
+
+## Documentation
+
+**securememory package:** See the [godocs](https://godoc.org/github.com/godaddy/asherah/go/securememory) for api documentation.
 
 ## TODO
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)
