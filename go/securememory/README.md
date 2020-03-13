@@ -25,7 +25,7 @@ In addition, we have also provided an implementation of the io.Reader that can b
 
 ### Usage
 
-``` go
+```go
 package main
 
 import (
@@ -69,7 +69,7 @@ The memguard based implementation:
 
 ### Usage
 
-``` go
+```go
 package main
 
 import (
