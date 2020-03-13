@@ -11,7 +11,7 @@ that is secure.
 	)
 
 	func main() {
-		var factory protectedmemory.SecretFactory
+		factory := new(protectedmemory.SecretFactory)
 
 		secret, err := factory.New(getSecretFromStore())
 		if err != nil {
