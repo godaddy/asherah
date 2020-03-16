@@ -36,10 +36,14 @@ workflows:
           requires:
             - csharp-app-encryption
       - go-securememory
+      - go-appencryption:
+          requires:
+            - go-securememory
       - cross-language:
           requires:
             - java-app-encryption
             - csharp-app-encryption
+            - go-appencryption
 
 jobs:
   java-secure-memory:
@@ -485,12 +489,66 @@ jobs:
           name: Static Analysis
           command: |
             cd go/securememory
-            ./scripts/lint_test.sh
+            ./scripts/lint.sh
       - store_test_results:
           path: go/securememory
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
+      - save_cache:
+          paths:
+            - /go/pkg/mod
+          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+  go-appencryption:
+    docker:
+      - image: circleci/golang
+      - image: circleci/dynamodb
+      - image: mysql:5.7
+        environment:
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: Password123
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+            - go-mod-v4-{{ .Branch }}-
+            - go-mod-v4-
+      - run:
+          name: Build
+          command: |
+            cd go/appencryption
+            ./scripts/build.sh
+      - run:
+          name: Unit Tests
+          command: |
+            cd go/appencryption
+            ./scripts/test.sh
+      - run:
+          name: Benchmark Tests
+          command: |
+            cd go/appencryption
+            ./scripts/benchmark_test.sh
+      - run:
+          name: Convert Test Results
+          command: |
+            cd go/appencryption
+            GO111MODULE=off go get github.com/axw/gocov/gocov
+            GO111MODULE=off go get github.com/AlekSi/gocov-xml
+            echo "Converting coverage.out to cobertura XML..."
+            gocov convert coverage.out | gocov-xml > cobertura-coverage.xml
+      - run:
+          name: Static Analysis
+          command: |
+            cd go/appencryption
+            ./scripts/lint.sh
+      - store_test_results:
+          path: go/appencryption
+      - codecov/upload:
+          file: go/appencryption/cobertura-coverage.xml
+          flags: go_appencryption
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -553,7 +611,7 @@ jobs:
             dpkg -i packages-microsoft-prod.deb
             apt-get install -y apt-transport-https
             apt-get update
-            apt-get install -y dotnet-sdk-3.1
+            apt-get install -y dotnet-sdk-2.1
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:
