@@ -38,7 +38,7 @@ if err != nil {
 defer sess.Close() 
 	
  // Now encrypt some data
- dataRow, err := sess.Encrypt([]byte("mysupersecretpayload"))
+dataRow, err := sess.Encrypt([]byte("mysupersecretpayload"))
 if err != nil {
 	panic(err)
 }
@@ -113,8 +113,7 @@ Detailed information about the Key Management Service can be found [here](../../
 
 ```go
 // Create a map of region and ARN pairs that will all be used when creating a System Key
-regionArnMap := map[string]string
-{
+regionArnMap := map[string]string {
     "us-west-2": "ARN FOR US-WEST-2",
     "us-east-2": "ARN FOR US-EAST-2",
     "eu-west-2": "ARN FOR EU-WEST-2",
@@ -144,12 +143,12 @@ cryptoPolicy := appencryption.NewCryptoPolicy()
 ```
 
 The default key expiration limit is 90 days and revoke check interval is 60 minutes. These can be changed using 
-functional options. The unit of `key expiration limit` is `days` while the unit of `revoke check interval` is `minutes`
+functional options.
 
 ```go
 cryptoPolicy := appencryption.NewCryptoPolicy(
-    appencryption.WithExpireAfterDuration(30),
-    appencryption.WithRevokeCheckInterval(30))
+    appencryption.WithExpireAfterDuration(24 * time.Hour),
+    appencryption.WithRevokeCheckInterval(30 * time.Minute))
 ```
 
 ### (Optional) Enable Metrics
@@ -255,3 +254,4 @@ aws_secret_access_key = barfoo
 ```
 
 Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+

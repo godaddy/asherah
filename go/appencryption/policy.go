@@ -7,7 +7,7 @@ import (
 // Default values for CryptoPolicy if not overridden.
 const (
 	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
-	DefaultRevokedCheckInterval = time.Minute * 90
+	DefaultRevokedCheckInterval = time.Minute * 60
 	DefaultCreateDatePrecision  = time.Minute
 )
 

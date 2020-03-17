@@ -1,4 +1,4 @@
-// Package asherah contains the implementation to securely persist
+// Package appencryption contains the implementation to securely persist
 // and encrypt data in the public cloud. Your main interaction with
 // the library will most likely be the SessionFactory which should be
 // created on application start up and stored for the lifetime of
