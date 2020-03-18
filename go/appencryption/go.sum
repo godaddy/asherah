@@ -26,11 +26,6 @@ github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
-github.com/godaddy/asherah v0.0.0-20200313205146-453ba3f2f099 h1:WXq7He1GZpqgLm9mBlUyLdRIc3qFLkaJjmXegeaDWHk=
-github.com/godaddy/asherah/go/securememory v0.0.0-20191218084125-c3605e29f0e6 h1:b/8ub/G93Cv9/Rg+LjdkMM7KET8+V1e8f9EXreCgIVE=
-github.com/godaddy/asherah/go/securememory v0.0.0-20191218084125-c3605e29f0e6/go.mod h1:8ugu9sI02WCIIMM7jQEK9FBwCJXqHyiXSshNiAqxo/U=
-github.com/godaddy/asherah/go/securememory v0.0.0-20200310215843-5a6492874ab6 h1:IY6uCJ5K20iZWo42sZp3MMbEZ2udui82TPWS1+pprAc=
-github.com/godaddy/asherah/go/securememory v0.0.0-20200310215843-5a6492874ab6/go.mod h1:mkCA6jwH5yMx1B5LjU6F7XO5aZk02OpiLluJo4GgD7Q=
 github.com/godaddy/asherah/go/securememory v0.0.0-20200313205146-453ba3f2f099 h1:fLDPhsMFLtHT3PcdRkhbiVlKfJ3/sBr6dZMUc7vWeEQ=
 github.com/godaddy/asherah/go/securememory v0.0.0-20200313205146-453ba3f2f099/go.mod h1:N0mgZcRmF/RFjLQBac/LW2EgkBw4BOKHkIT8rO1pBRU=
 github.com/gogo/protobuf v1.2.0 h1:xU6/SpYbvkNYiptHJYEDRseDLvYE7wSqhYYNy0QSUzI=
@@ -62,8 +57,6 @@ github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQ
 github.com/opencontainers/image-spec v1.0.1 h1:JMemWkRwHx4Zj+fVxWoMCFm/8sYGGrUVojFA6h/TRcI=
 github.com/opencontainers/image-spec v1.0.1/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
-github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
