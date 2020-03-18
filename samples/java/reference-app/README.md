@@ -82,4 +82,5 @@ To use the DynamoDB Metastore included with the App Encryption library, the foll
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
 TODO: Add link to Sceptre template example  
+
 TODO: Add multi-region info if/when we handle it  
