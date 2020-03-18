@@ -523,6 +523,7 @@ jobs:
           name: Build
           command: |
             cd go/appencryption
+            go get github.com/godaddy/asherah/go/securememory@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Unit Tests
@@ -572,6 +573,7 @@ jobs:
           name: Build
           command: |
             cd samples/go/referenceapp
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Static Analysis

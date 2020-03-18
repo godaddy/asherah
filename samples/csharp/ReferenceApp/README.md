@@ -1,4 +1,4 @@
-# ReferenceApp
+# Asherah C# ReferenceApp
 
 Sample application that can be used as a guide to using the C# Asherah SDK.
 

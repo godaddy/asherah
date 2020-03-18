@@ -1,4 +1,4 @@
-# go-referenceapp
+# Asherah Go referenceapp
 
 Sample application that can be used as a guide to using the GO AppEncryption SDK.
 
