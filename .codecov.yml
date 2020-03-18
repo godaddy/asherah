@@ -16,6 +16,9 @@ coverage:
       go-securememory:
         flags: go_securememory
         target: 90%
+      go-appencryption:
+        flags: go_appencryption
+        target: 90%
       java-app-encryption:
         flags: java_app_encryption
         target: 90%
@@ -36,6 +39,9 @@ flags:
   go_securememory:
     paths:
       - go/securememory
+  go_appencryption:
+    paths:
+      - go/appencryption
   java_app_encryption:
     paths:
       - java/app-encryption
