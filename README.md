@@ -149,15 +149,17 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 
 * [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
-* Go (coming soon!)
+* [Go](go/appencryption)
+* Service Layer (coming soon!)
 
 ### Feature Support
 
-| Feature            | Java | .NET |
-| ------------------ | ---- | ---- |
-| AWS KMS Support    | Yes  | Yes  |
-| RDBMS Metastore    | Yes  | Yes  |
-| DynamoDB Metastore | Yes  | Yes  |
+| Feature            | Java | .NET | Go  |
+| ------------------ | ---- | ---- | --- |
+| AWS KMS Support    | Yes  | Yes  | Yes |
+| RDBMS Metastore    | Yes  | Yes  | Yes |
+| DynamoDB Metastore | Yes  | Yes  | Yes |
+| SessionCache       | Yes  | Yes  | No  |
 
 
 ## Current Status
