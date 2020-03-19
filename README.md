@@ -154,12 +154,14 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 
 ### Feature Support
 
-| Feature            | Java | .NET | Go  |
-| ------------------ | ---- | ---- | --- |
-| AWS KMS Support    | Yes  | Yes  | Yes |
-| RDBMS Metastore    | Yes  | Yes  | Yes |
-| DynamoDB Metastore | Yes  | Yes  | Yes |
-| SessionCache       | Yes  | Yes  | No  |
+| Feature                    | Java | .NET | Go  |
+| -------------------------- | ---- | ---- | --- |
+| AWS KMS Support            | Yes  | Yes  | Yes |
+| RDBMS Metastore            | Yes  | Yes  | Yes |
+| DynamoDB Metastore         | Yes  | Yes  | Yes |
+| Session caching            | Yes  | Yes  | No  |
+| Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
+| Store/Load pattern.        | Yes  | Yes  | No  |
 
 
 ## Current Status
