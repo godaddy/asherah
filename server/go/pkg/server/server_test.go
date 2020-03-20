@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
 
+	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/metadata"
@@ -17,19 +19,28 @@ type mockHandler struct {
 	mock.Mock
 }
 
-func (m *mockHandler) Decrypt(r *pb.SessionRequest) *pb.SessionResponse {
-	ret := m.Called(r)
+func (m *mockHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
+	ret := m.Called(ctx, r)
 	return ret.Get(0).(*pb.SessionResponse)
 }
 
-func (m *mockHandler) Encrypt(r *pb.SessionRequest) *pb.SessionResponse {
-	ret := m.Called(r)
+func (m *mockHandler) Encrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
+	ret := m.Called(ctx, r)
 	return ret.Get(0).(*pb.SessionResponse)
 }
 
 func (m *mockHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
 	ret := m.Called(r)
 	return ret.Get(0).(*pb.SessionResponse)
+}
+
+func (m *mockHandler) Close() error {
+	if len(m.ExpectedCalls) == 0 {
+		return nil
+	}
+
+	ret := m.Called()
+	return ret.Error(0)
 }
 
 type mockSessionServer struct {
@@ -141,12 +152,16 @@ func Test_Streamer_StreamSendError(t *testing.T) {
 		Response: new(pb.SessionResponse_DecryptResponse),
 	}
 
+	ctx := context.Background()
+
 	stream := new(mockSessionServer)
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Send", resp).Return(errors.New("send error"))
+	stream.On("Context").Return(ctx)
 
 	m := new(mockHandler)
-	m.On("Decrypt", req).Return(resp)
+	m.On("Decrypt", ctx, req).Return(resp)
+	m.On("Close").Return(nil)
 
 	s := &streamer{handler: m}
 	err := s.Stream(stream)
@@ -163,13 +178,17 @@ func Test_Streamer_StreamDecrypt(t *testing.T) {
 		Response: new(pb.SessionResponse_DecryptResponse),
 	}
 
+	ctx := context.Background()
+
 	stream := new(mockSessionServer)
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", expected).Return(nil)
+	stream.On("Context").Return(ctx)
 
 	m := new(mockHandler)
-	m.On("Decrypt", req).Return(expected)
+	m.On("Decrypt", ctx, req).Return(expected)
+	m.On("Close").Return(nil)
 
 	s := &streamer{handler: m}
 	err := s.Stream(stream)
@@ -209,13 +228,17 @@ func Test_Streamer_StreamEncrypt(t *testing.T) {
 		Response: new(pb.SessionResponse_EncryptResponse),
 	}
 
+	ctx := context.Background()
+
 	stream := new(mockSessionServer)
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", expected).Return(nil)
+	stream.On("Context").Return(ctx)
 
 	m := new(mockHandler)
-	m.On("Encrypt", req).Return(expected)
+	m.On("Encrypt", ctx, req).Return(expected)
+	m.On("Close").Return(nil)
 
 	s := &streamer{handler: m}
 	err := s.Stream(stream)
@@ -304,6 +327,7 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 
 	handler := new(mockHandler)
 	handler.On("GetSession", req).Return(resp)
+	handler.On("Close").Return(nil)
 
 	m := new(mockHandlerFactory)
 	m.On("NewHandler").Return(handler)
@@ -322,6 +346,16 @@ func Test_NewAppEncryption(t *testing.T) {
 	assert.NotNil(t, ae)
 }
 
+type mockSessionFactory struct {
+	mock.Mock
+}
+
+func (m *mockSessionFactory) GetSession(id string) *appencryption.Session {
+	ret := m.Called(id)
+
+	return ret.Get(0).(*appencryption.Session)
+}
+
 func Test_DefaultHandler_GetSession(t *testing.T) {
 	id := "partitionId-1"
 	req := &pb.SessionRequest{
@@ -330,8 +364,194 @@ func Test_DefaultHandler_GetSession(t *testing.T) {
 		},
 	}
 
-	s := &defaultHandler{}
-	resp := s.GetSession(req)
+	m := new(mockSessionFactory)
+	session := new(appencryption.Session)
+	m.On("GetSession", id).Return(session)
+
+	h := &defaultHandler{
+		sessionFactory: m,
+	}
+	resp := h.GetSession(req)
 
 	assert.NotNil(t, resp)
+	assert.Nil(t, resp.Response)
+	assert.Equal(t, session, h.session)
+	m.AssertExpectations(t)
+}
+
+type mockSession struct {
+	mock.Mock
+}
+
+func (m *mockSession) Close() error {
+	ret := m.Called()
+	return ret.Error(0)
+}
+
+func (m *mockSession) EncryptContext(
+	ctx context.Context,
+	data []byte,
+) (*appencryption.DataRowRecord, error) {
+	ret := m.Called(ctx, data)
+
+	if err := ret.Error(1); err != nil {
+		return nil, err
+	}
+
+	return ret.Get(0).(*appencryption.DataRowRecord), nil
+}
+
+func (m *mockSession) DecryptContext(
+	ctx context.Context,
+	d appencryption.DataRowRecord,
+) ([]byte, error) {
+	ret := m.Called(ctx, d)
+
+	if err := ret.Error(1); err != nil {
+		return nil, err
+	}
+
+	return ret.Get(0).([]byte), nil
+}
+
+func Test_DefaultHandler_Close(t *testing.T) {
+	m := new(mockSession)
+	m.On("Close").Return(nil)
+
+	h := &defaultHandler{
+		session: m,
+	}
+	if assert.NoError(t, h.Close()) {
+		m.AssertExpectations(t)
+	}
+}
+
+func Test_DefaultHandler_Encrypt(t *testing.T) {
+	data := []byte(`somesupersecretdata`)
+	req := &pb.SessionRequest{
+		Request: &pb.SessionRequest_Encrypt{
+			Encrypt: &pb.Encrypt{
+				Data: data,
+			},
+		},
+	}
+
+	ctx := context.Background()
+	drr := newAEDRR()
+
+	m := new(mockSession)
+	m.On("EncryptContext", ctx, data).Return(drr, nil)
+
+	h := &defaultHandler{
+		session: m,
+	}
+
+	resp := h.Encrypt(ctx, req)
+
+	assert.Equal(t, toProtobufDRR(drr), resp.GetEncryptResponse().DataRowRecord)
+
+	m.AssertExpectations(t)
+}
+
+func newAEDRR() *appencryption.DataRowRecord {
+	drr := &appencryption.DataRowRecord{
+		Data: []byte("some encrypted data"),
+		Key: &appencryption.EnvelopeKeyRecord{
+			EncryptedKey: []byte("an encrypted key"),
+			Created:      time.Now().Add(-1 * time.Hour).Unix(),
+			ParentKeyMeta: &appencryption.KeyMeta{
+				ID:      "parent key id",
+				Created: time.Now().Unix(),
+			},
+		},
+	}
+	return drr
+}
+
+func Test_DefaultHandler_EncryptError(t *testing.T) {
+	data := []byte(`somesupersecretdata`)
+	req := &pb.SessionRequest{
+		Request: &pb.SessionRequest_Encrypt{
+			Encrypt: &pb.Encrypt{
+				Data: data,
+			},
+		},
+	}
+
+	ctx := context.Background()
+
+	m := new(mockSession)
+	m.On("EncryptContext", ctx, data).Return(nil, errors.New("encryption error"))
+
+	h := &defaultHandler{
+		session: m,
+	}
+
+	resp := h.Encrypt(ctx, req)
+
+	respErr := resp.GetErrorResponse()
+	if assert.NotNil(t, respErr) {
+		assert.Equal(t, "encryption error", respErr.GetMessage())
+	}
+
+	m.AssertExpectations(t)
+}
+
+func Test_DefaultHandler_Decrypt(t *testing.T) {
+	drrAE := newAEDRR()
+	drr := toProtobufDRR(drrAE)
+
+	req := &pb.SessionRequest{
+		Request: &pb.SessionRequest_Decrypt{
+			Decrypt: &pb.Decrypt{
+				DataRowRecord: drr,
+			},
+		},
+	}
+
+	ctx := context.Background()
+
+	decryptedData := []byte(`some decrypted data`)
+
+	m := new(mockSession)
+	m.On("DecryptContext", ctx, *drrAE).Return(decryptedData, nil)
+
+	h := &defaultHandler{
+		session: m,
+	}
+
+	resp := h.Decrypt(ctx, req)
+
+	assert.Equal(t, decryptedData, resp.GetDecryptResponse().GetData())
+	m.AssertExpectations(t)
+}
+
+func Test_DefaultHandler_DecryptError(t *testing.T) {
+	drrAE := newAEDRR()
+	drr := toProtobufDRR(drrAE)
+
+	req := &pb.SessionRequest{
+		Request: &pb.SessionRequest_Decrypt{
+			Decrypt: &pb.Decrypt{
+				DataRowRecord: drr,
+			},
+		},
+	}
+
+	ctx := context.Background()
+
+	m := new(mockSession)
+	m.On("DecryptContext", ctx, *drrAE).Return(nil, errors.New("decryption error"))
+
+	h := &defaultHandler{
+		session: m,
+	}
+
+	resp := h.Decrypt(ctx, req)
+
+	respErr := resp.GetErrorResponse()
+	if assert.NotNil(t, respErr) {
+		assert.Equal(t, "decryption error", respErr.GetMessage())
+	}
+	m.AssertExpectations(t)
 }
