@@ -587,6 +587,10 @@ jobs:
   cross-language:
     docker:
       - image: ubuntu:18.04
+        environment:
+          GOROOT: /usr/local/go
+          GOPATH: /go
+
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: testdb
@@ -648,9 +652,12 @@ jobs:
       - run:
           name: Setup go environment
           command: |
-            wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+            apt-get install -y build-essential
+            wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
             tar -C /usr/local/ -xzf go*.tar.gz
-            export PATH=$PATH:/usr/local/go/bin
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.8.1
+            GO111MODULE=on go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
       - run:
           name: Test
           command: |

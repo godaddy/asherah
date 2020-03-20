@@ -14,9 +14,11 @@ cp ../features/* .
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.EncryptDataUsingRDBMSMetastoreAndStaticKMSFeature.EncryptingData
 cd ..
 
-#cd go
-# run go encrypt tests here
-#cd ..
+cd go
+echo "Encrypting payload using Go"
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+godog ../features/encrypt.feature
+cd ..
 
 # Run decrypt tests for all languages
 cd java
@@ -30,6 +32,7 @@ dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.DecryptDataUsingRDB
 rm *.feature
 cd ..
 
-#cd go
-# run go encrypt tests here
-#cd ..
+cd go
+echo "Decrypting data using Go"
+godog ../features/decrypt.feature
+cd ..
