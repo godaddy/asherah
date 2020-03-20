@@ -3,7 +3,7 @@ package server
 import (
 	"io"
 
-	pb "github.com/godaddy/asherah/apps/server/go/api"
+	pb "github.com/godaddy/asherah/server/go/api"
 )
 
 var UnitializedSessionResponse = &pb.SessionResponse{

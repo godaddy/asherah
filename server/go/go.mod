@@ -1,4 +1,4 @@
-module github.com/godaddy/asherah/apps/server/go
+module github.com/godaddy/asherah/server/go
 
 go 1.13
 

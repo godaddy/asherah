@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/metadata"
 
-	pb "github.com/godaddy/asherah/apps/server/go/api"
+	pb "github.com/godaddy/asherah/server/go/api"
 )
 
 type mockHandler struct {

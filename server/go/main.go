@@ -4,7 +4,7 @@
 package main
 
 import (
-	_ "github.com/godaddy/asherah/apps/server/go/api"
+	_ "github.com/godaddy/asherah/server/go/api"
 )
 
 func main() {
