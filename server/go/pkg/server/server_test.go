@@ -118,7 +118,7 @@ func Test_AppEncryption_Session(t *testing.T) {
 }
 
 func Test_Streamer_NewHandler(t *testing.T) {
-	s := new(streamer)
+	s := &streamer{options: Options{KMS: "static", Metastore: "rdbms"}}
 	h := s.NewHandler()
 
 	assert.IsType(t, (*defaultHandler)(nil), h)
@@ -342,18 +342,23 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 }
 
 func Test_NewAppEncryption(t *testing.T) {
-	ae := NewAppEncryption()
-	assert.NotNil(t, ae)
+	var opts Options
+	ae := NewAppEncryption(opts)
+
+	assert.Equal(t, opts, ae.NewStreamer().options)
 }
 
 type mockSessionFactory struct {
 	mock.Mock
 }
 
-func (m *mockSessionFactory) GetSession(id string) *appencryption.Session {
+func (m *mockSessionFactory) GetSession(id string) (*appencryption.Session, error) {
 	ret := m.Called(id)
+	if err := ret.Error(1); err != nil {
+		return nil, err
+	}
 
-	return ret.Get(0).(*appencryption.Session)
+	return ret.Get(0).(*appencryption.Session), nil
 }
 
 func Test_DefaultHandler_GetSession(t *testing.T) {
@@ -366,7 +371,7 @@ func Test_DefaultHandler_GetSession(t *testing.T) {
 
 	m := new(mockSessionFactory)
 	session := new(appencryption.Session)
-	m.On("GetSession", id).Return(session)
+	m.On("GetSession", id).Return(session, nil)
 
 	h := &defaultHandler{
 		sessionFactory: m,

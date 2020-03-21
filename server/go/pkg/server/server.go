@@ -3,8 +3,13 @@ package server
 import (
 	"context"
 	"io"
+	"log"
 
 	"github.com/godaddy/asherah/go/appencryption"
+	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
+	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
+	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 
 	pb "github.com/godaddy/asherah/server/go/api"
 )
@@ -53,6 +58,7 @@ func (a *AppEncryption) Session(stream pb.AppEncryption_SessionServer) error {
 type streamer struct {
 	handlerFactory
 	handler requestHandler
+	options Options
 }
 
 type handlerFactory interface {
@@ -63,7 +69,54 @@ func (s *streamer) NewHandler() requestHandler {
 	if s.handlerFactory != nil {
 		return s.handlerFactory.NewHandler()
 	}
-	return &defaultHandler{}
+
+	sf := appencryption.NewSessionFactory(
+		&appencryption.Config{
+			Service: s.options.ServiceName,
+			Product: s.options.ProductId,
+			Policy: appencryption.NewCryptoPolicy(
+				appencryption.WithExpireAfterDuration(s.options.ExpireAfter),
+				appencryption.WithRevokeCheckInterval(s.options.CheckInterval),
+			),
+		},
+		NewMetastore(s.options),
+		NewKMS(s.options),
+		aead.NewAES256GCM(),
+		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
+		appencryption.WithMetrics(false),
+	)
+
+	return &defaultHandler{
+		sessionFactory: sf,
+	}
+}
+
+func NewMetastore(opts Options) appencryption.Metastore {
+	if opts.Metastore == "rdbms" {
+		// TODO: support other databases
+		db, err := newMysql(opts.ConnectionString)
+		if err != nil {
+			panic(err)
+		}
+
+		return persistence.NewSQLMetastore(db)
+	}
+
+	// TODO: add dynamodb default
+	panic("dynamodb not implemented")
+}
+
+func NewKMS(opts Options) appencryption.KeyManagementService {
+	if opts.KMS == "static" {
+		kms, err := kms.NewStatic("thisistotallynotsecretdonotuse!!", aead.NewAES256GCM())
+		if err != nil {
+			panic(err)
+		}
+		return kms
+	}
+
+	// TODO: add aws
+	panic("aws KMS not implemented")
 }
 
 func (d *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
@@ -114,7 +167,7 @@ func (d *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 }
 
 type sessionFactory interface {
-	GetSession(id string) *appencryption.Session
+	GetSession(id string) (*appencryption.Session, error)
 }
 
 type session interface {
@@ -129,6 +182,7 @@ type defaultHandler struct {
 }
 
 func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
+	log.Println("handling decrypt")
 	drr := fromProtobufDRR(r.GetDecrypt().GetDataRowRecord())
 	data, err := h.session.DecryptContext(ctx, *drr)
 	if err != nil {
@@ -159,6 +213,8 @@ func fromProtobufDRR(drr *pb.DataRowRecord) *appencryption.DataRowRecord {
 }
 
 func (h *defaultHandler) Encrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
+	log.Println("handling encrypt")
+
 	drr, err := h.session.EncryptContext(ctx, r.GetEncrypt().GetData())
 	if err != nil {
 		return newErrorResponse(err.Error())
@@ -188,18 +244,28 @@ func toProtobufDRR(drr *appencryption.DataRowRecord) *pb.DataRowRecord {
 }
 
 func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
-	h.session = h.sessionFactory.GetSession(r.GetGetSession().GetPartitionId())
+	partition := r.GetGetSession().GetPartitionId()
+
+	log.Println("handling get-session for", partition)
+
+	s, err := h.sessionFactory.GetSession(partition)
+	if err != nil {
+		return newErrorResponse(err.Error())
+	}
+
+	h.session = s
 	return new(pb.SessionResponse)
 }
 
 func (h *defaultHandler) Close() error {
+	log.Println("closing session")
 	return h.session.Close()
 }
 
-func NewAppEncryption() *AppEncryption {
+func NewAppEncryption(options Options) *AppEncryption {
 	return &AppEncryption{
 		streamerFactory: streamerFactoryFunc(func() *streamer {
-			return &streamer{}
+			return &streamer{options: options}
 		}),
 	}
 }
