@@ -50,7 +50,7 @@ if err != nil {
 }
 ```
 
-A more extensive example is the [Reference Application](cmd/example/README.md), which will evolve along 
+A more extensive example is the [Reference Application](../../samples/go/referenceapp/), which will evolve along 
 with the SDK.
 
 ## How to Use Asherah

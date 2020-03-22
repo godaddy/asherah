@@ -39,6 +39,9 @@ workflows:
       - go-appencryption:
           requires:
             - go-securememory
+      - go-referenceapp:
+          requires:
+            - go-appencryption
       - cross-language:
           requires:
             - java-app-encryption
@@ -520,6 +523,7 @@ jobs:
           name: Build
           command: |
             cd go/appencryption
+            go get github.com/godaddy/asherah/go/securememory@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Unit Tests
@@ -549,6 +553,33 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
+      - save_cache:
+          paths:
+            - /go/pkg/mod
+          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+  go-referenceapp:
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+            - go-mod-v4-{{ .Branch }}-
+            - go-mod-v4-
+      - run:
+          name: Build
+          command: |
+            cd samples/go/referenceapp
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+            ./scripts/build.sh
+      - run:
+          name: Static Analysis
+          command: |
+            cd samples/go/referenceapp
+            ./scripts/lint.sh
       - save_cache:
           paths:
             - /go/pkg/mod
