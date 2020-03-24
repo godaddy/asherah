@@ -633,7 +633,6 @@ jobs:
             tar -C /usr/local/ -xzf go*.tar.gz
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/cucumber/godog/cmd/godog@v0.8.1
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
       - run:
           name: Build
           command: |
@@ -643,6 +642,8 @@ jobs:
 
             # Build & Lint the Go project
             cd ../go
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/build.sh
             ./scripts/lint.sh
 
@@ -653,4 +654,6 @@ jobs:
           name: Test
           command: |
             cd tests/cross-language/
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
