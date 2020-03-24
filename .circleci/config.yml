@@ -8,9 +8,6 @@ references:
     attach_workspace:
       at: *workspace_root
 
-orbs:
-  codecov: codecov/codecov@1.0.5
-
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -74,9 +71,6 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: java/secure-memory/target/surefire-reports
-      - codecov/upload:
-          file: java/secure-memory/target/site/jacoco/jacoco.xml
-          flags: java_secure_memory
       - run:
           name: Install locally
           command: |
@@ -133,9 +127,6 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: java/app-encryption/target/surefire-reports
-      - codecov/upload:
-          file: java/app-encryption/target/site/jacoco/jacoco.xml
-          flags: java_app_encryption
       - run:
           name: Install locally
           command: |
@@ -249,9 +240,6 @@ jobs:
             ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/Logging/Logging.Tests/TestResults
-      - codecov/upload:
-          file: csharp/Logging/Logging.Tests/coverage.opencover.xml
-          flags: csharp_Logging
       - run:
           name: Install locally
           command: |
@@ -318,9 +306,6 @@ jobs:
             ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/SecureMemory/SecureMemory.Tests/TestResults
-      - codecov/upload:
-          file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
-          flags: csharp_SecureMemory
       - run:
           name: Install locally
           command: |
@@ -392,9 +377,6 @@ jobs:
             ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/AppEncryption/AppEncryption.Tests/TestResults
-      - codecov/upload:
-          file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
-          flags: csharp_AppEncryption
       - run:
           name: Install locally
           command: |
@@ -495,9 +477,6 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/securememory
-      - codecov/upload:
-          file: go/securememory/cobertura-coverage.xml
-          flags: go_securememory
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -550,9 +529,6 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/appencryption
-      - codecov/upload:
-          file: go/appencryption/cobertura-coverage.xml
-          flags: go_appencryption
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -590,7 +566,7 @@ jobs:
         environment:
           GOROOT: /usr/local/go
           GOPATH: /go
-
+          GO111MODULE: "on"
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: testdb
@@ -656,11 +632,20 @@ jobs:
             wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
             tar -C /usr/local/ -xzf go*.tar.gz
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.8.1
-            GO111MODULE=on go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+            go get github.com/cucumber/godog/cmd/godog@v0.8.1
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+      - run:
+          name: Build
+          command: |
+            cd tests/cross-language/java
+            ./scripts/build.sh
+            cd ../go
+            ./scripts/build.sh
+            ./scripts/lint.sh
+            cd ../csharp
+            ./scripts/build.sh
       - run:
           name: Test
           command: |
             cd tests/cross-language/
             ./scripts/test.sh
-
