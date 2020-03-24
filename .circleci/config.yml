@@ -8,42 +8,45 @@ references:
     attach_workspace:
       at: *workspace_root
 
+orbs:
+  codecov: codecov/codecov@1.0.5
+
 workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      # - java-secure-memory
-      # - java-app-encryption:
-      #     requires:
-      #       - java-secure-memory
-      # - samples-java-reference-app:
-      #     requires:
-      #       - java-app-encryption
-      # - tests-java-test-app:
-      #     requires:
-      #       - java-app-encryption
-      # - csharp-logging
-      # - csharp-secure-memory:
-      #     requires:
-      #       - csharp-logging
-      # - csharp-app-encryption:
-      #     requires:
-      #       - csharp-secure-memory
-      # - samples-csharp-reference-app:
-      #     requires:
-      #       - csharp-app-encryption
-      # - go-securememory
-      # - go-appencryption:
-      #     requires:
-      #       - go-securememory
-      # - go-referenceapp:
-      #     requires:
-      #       - go-appencryption
-      - cross-language
-          # requires:
-          #   - java-app-encryption
-          #   - csharp-app-encryption
-          #   - go-appencryption
+      - java-secure-memory
+      - java-app-encryption:
+          requires:
+            - java-secure-memory
+      - samples-java-reference-app:
+          requires:
+            - java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - java-app-encryption
+      - csharp-logging
+      - csharp-secure-memory:
+          requires:
+            - csharp-logging
+      - csharp-app-encryption:
+          requires:
+            - csharp-secure-memory
+      - samples-csharp-reference-app:
+          requires:
+            - csharp-app-encryption
+      - go-securememory
+      - go-appencryption:
+          requires:
+            - go-securememory
+      - go-referenceapp:
+          requires:
+            - go-appencryption
+      - cross-language:
+          requires:
+            - java-app-encryption
+            - csharp-app-encryption
+            - go-appencryption
 
 jobs:
   java-secure-memory:
@@ -71,6 +74,9 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: java/secure-memory/target/surefire-reports
+      - codecov/upload:
+          file: java/secure-memory/target/site/jacoco/jacoco.xml
+          flags: java_secure_memory
       - run:
           name: Install locally
           command: |
@@ -127,6 +133,9 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: java/app-encryption/target/surefire-reports
+      - codecov/upload:
+          file: java/app-encryption/target/site/jacoco/jacoco.xml
+          flags: java_app_encryption
       - run:
           name: Install locally
           command: |
@@ -240,6 +249,9 @@ jobs:
             ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/Logging/Logging.Tests/TestResults
+      - codecov/upload:
+          file: csharp/Logging/Logging.Tests/coverage.opencover.xml
+          flags: csharp_Logging
       - run:
           name: Install locally
           command: |
@@ -306,6 +318,9 @@ jobs:
             ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/SecureMemory/SecureMemory.Tests/TestResults
+      - codecov/upload:
+          file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
+          flags: csharp_SecureMemory
       - run:
           name: Install locally
           command: |
@@ -377,6 +392,9 @@ jobs:
             ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/AppEncryption/AppEncryption.Tests/TestResults
+      - codecov/upload:
+          file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
+          flags: csharp_AppEncryption
       - run:
           name: Install locally
           command: |
@@ -477,6 +495,9 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/securememory
+      - codecov/upload:
+          file: go/securememory/cobertura-coverage.xml
+          flags: go_securememory
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -529,6 +550,9 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/appencryption
+      - codecov/upload:
+          file: go/appencryption/cobertura-coverage.xml
+          flags: go_appencryption
       - save_cache:
           paths:
             - /go/pkg/mod
