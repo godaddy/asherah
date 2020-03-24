@@ -12,38 +12,38 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - java-secure-memory
-      - java-app-encryption:
-          requires:
-            - java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
-      - csharp-logging
-      - csharp-secure-memory:
-          requires:
-            - csharp-logging
-      - csharp-app-encryption:
-          requires:
-            - csharp-secure-memory
-      - samples-csharp-reference-app:
-          requires:
-            - csharp-app-encryption
-      - go-securememory
-      - go-appencryption:
-          requires:
-            - go-securememory
-      - go-referenceapp:
-          requires:
-            - go-appencryption
-      - cross-language:
-          requires:
-            - java-app-encryption
-            - csharp-app-encryption
-            - go-appencryption
+      # - java-secure-memory
+      # - java-app-encryption:
+      #     requires:
+      #       - java-secure-memory
+      # - samples-java-reference-app:
+      #     requires:
+      #       - java-app-encryption
+      # - tests-java-test-app:
+      #     requires:
+      #       - java-app-encryption
+      # - csharp-logging
+      # - csharp-secure-memory:
+      #     requires:
+      #       - csharp-logging
+      # - csharp-app-encryption:
+      #     requires:
+      #       - csharp-secure-memory
+      # - samples-csharp-reference-app:
+      #     requires:
+      #       - csharp-app-encryption
+      # - go-securememory
+      # - go-appencryption:
+      #     requires:
+      #       - go-securememory
+      # - go-referenceapp:
+      #     requires:
+      #       - go-appencryption
+      - cross-language
+          # requires:
+          #   - java-app-encryption
+          #   - csharp-app-encryption
+          #   - go-appencryption
 
 jobs:
   java-secure-memory:
