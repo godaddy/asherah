@@ -649,6 +649,7 @@ jobs:
 
             #Build the C# project
             cd ../csharp
+            ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Test
