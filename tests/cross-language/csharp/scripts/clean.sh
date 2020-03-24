@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-dotnet build --no-restore
+dotnet clean
+dotnet restore

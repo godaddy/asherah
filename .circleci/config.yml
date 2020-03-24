@@ -12,38 +12,38 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - java-secure-memory
-      - java-app-encryption:
-          requires:
-            - java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
-      - csharp-logging
-      - csharp-secure-memory:
-          requires:
-            - csharp-logging
-      - csharp-app-encryption:
-          requires:
-            - csharp-secure-memory
-      - samples-csharp-reference-app:
-          requires:
-            - csharp-app-encryption
-      - go-securememory
-      - go-appencryption:
-          requires:
-            - go-securememory
-      - go-referenceapp:
-          requires:
-            - go-appencryption
-      - cross-language:
-          requires:
-            - java-app-encryption
-            - csharp-app-encryption
-            - go-appencryption
+      # - java-secure-memory
+      # - java-app-encryption:
+      #     requires:
+      #       - java-secure-memory
+      # - samples-java-reference-app:
+      #     requires:
+      #       - java-app-encryption
+      # - tests-java-test-app:
+      #     requires:
+      #       - java-app-encryption
+      # - csharp-logging
+      # - csharp-secure-memory:
+      #     requires:
+      #       - csharp-logging
+      # - csharp-app-encryption:
+      #     requires:
+      #       - csharp-secure-memory
+      # - samples-csharp-reference-app:
+      #     requires:
+      #       - csharp-app-encryption
+      # - go-securememory
+      # - go-appencryption:
+      #     requires:
+      #       - go-securememory
+      # - go-referenceapp:
+      #     requires:
+      #       - go-appencryption
+      - cross-language
+          # requires:
+          #   - java-app-encryption
+          #   - csharp-app-encryption
+          #   - go-appencryption
 
 jobs:
   java-secure-memory:
@@ -617,7 +617,7 @@ jobs:
       - run:
           name: Setup csharp environment
           command: |
-            apt-get install -y wget
+            apt-get install -y wget curl
             wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
             dpkg -i packages-microsoft-prod.deb
             apt-get install -y apt-transport-https
@@ -633,19 +633,28 @@ jobs:
             tar -C /usr/local/ -xzf go*.tar.gz
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/cucumber/godog/cmd/godog@v0.8.1
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
       - run:
           name: Build
           command: |
+            # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
+
+            # Build & Lint the Go project
             cd ../go
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/build.sh
             ./scripts/lint.sh
+
+            #Build the C# project
             cd ../csharp
+            ./scripts/clean.sh
             ./scripts/build.sh
       - run:
           name: Test
           command: |
             cd tests/cross-language/
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
