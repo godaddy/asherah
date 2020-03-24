@@ -3,7 +3,7 @@
 ## Running the server
 This example assumes mysql is running on localhost and a preexisting asherah database
 
-```
+```console
 $ go build -o server main.go
 $ ./server -s /tmp/appencryption.sock \
     --service=example \
@@ -26,5 +26,5 @@ export ASHERAH_METASTORE_MODE=rdbms
 export ASHERAH_CONNECTION_STRING='root:my-secret-pw@tcp(0.0.0.0:3306)/asherah'
 export ASHERAH_KMS_MODE=static
 
-$ go run main -s /tmp/appencryption.sock
+go run main -s /tmp/appencryption.sock
 ```
