@@ -18,10 +18,10 @@ var (
 	encryptedPayload string
 )
 
-func ihaveencryptedDatafrom(filename string) error {
-	data, err := ioutil.ReadFile(fmt.Sprintf("%s%s", FileDirectory, filename))
+func iHaveEncryptedDataFrom(filename string) error {
+	data, err := ioutil.ReadFile(fmt.Sprintf("%s%s", fileDirectory, filename))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	encryptedPayload = string(data)
@@ -29,23 +29,28 @@ func ihaveencryptedDatafrom(filename string) error {
 	return nil
 }
 
-func idecrypttheencryptedData() error {
+func iDecryptTheEncryptedData() error {
 	crypto := aead.NewAES256GCM()
-	manager, _ := kms.NewStatic(KeyManagementStaticMasterKey, crypto)
+
+	manager, err := kms.NewStatic(keyManagementStaticMasterKey, crypto)
+	if err != nil {
+		return err
+	}
+
 	metastore := persistence.NewSQLMetastore(connection)
 	policy := appencryption.NewCryptoPolicy()
 	config := &appencryption.Config{
-		Service: DefaultServiceID,
-		Product: DefaultProductID,
+		Service: defaultServiceID,
+		Product: defaultProductID,
 		Policy:  policy,
 	}
 
 	factory := appencryption.NewSessionFactory(config, metastore, manager, crypto)
 	defer factory.Close()
 
-	sess, err := factory.GetSession(DefaultPartitionID)
+	sess, err := factory.GetSession(defaultPartitionID)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer sess.Close()
 
@@ -53,18 +58,18 @@ func idecrypttheencryptedData() error {
 
 	dataRowBytes, err := base64.StdEncoding.DecodeString(encryptedPayload)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err2 := json.Unmarshal(dataRowBytes, &dataRow)
 	if err2 != nil {
-		panic(err2)
+		return err2
 	}
 
 	data, err := sess.Decrypt(dataRow)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	decryptedPayload = string(data)
@@ -72,17 +77,18 @@ func idecrypttheencryptedData() error {
 	return nil
 }
 
-func ishouldgetdecryptedData() error {
+func iShouldGetDecryptedData() error {
 	if decryptedPayload == "" {
-		return errors.New("Decryption failure")
+		return errors.New("decryption failure")
 	}
 
 	return nil
 }
 
-func decryptedDatashouldbeequalto(payload string) error {
+func decryptedDataShouldBeEqualTo(payload string) error {
 	if decryptedPayload != payload {
-		return errors.New("Payloads do not match")
+		return errors.New("payloads do not match")
 	}
+
 	return nil
 }

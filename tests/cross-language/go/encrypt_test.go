@@ -30,37 +30,46 @@ func iHave(payload string) error {
 
 func iEncryptTheData() error {
 	crypto := aead.NewAES256GCM()
-	manager, _ := kms.NewStatic(KeyManagementStaticMasterKey, crypto)
+
+	manager, err := kms.NewStatic(keyManagementStaticMasterKey, crypto)
+	if err != nil {
+		return err
+	}
+
 	metastore := persistence.NewSQLMetastore(connection)
 	policy := appencryption.NewCryptoPolicy()
 	config := &appencryption.Config{
-		Service: DefaultServiceID,
-		Product: DefaultProductID,
+		Service: defaultServiceID,
+		Product: defaultProductID,
 		Policy:  policy,
 	}
 
 	factory := appencryption.NewSessionFactory(config, metastore, manager, crypto)
 	defer factory.Close()
 
-	sess, err := factory.GetSession(DefaultPartitionID)
+	sess, err := factory.GetSession(defaultPartitionID)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer sess.Close()
 
-	dataRow, e := sess.Encrypt([]byte(payloadString))
-	if e != nil {
-		panic(e)
+	dataRow, err := sess.Encrypt([]byte(payloadString))
+	if err != nil {
+		return err
 	}
 
-	encryptedData, _ := json.Marshal(dataRow)
+	encryptedData, err := json.Marshal(dataRow)
+	if err != nil {
+		return err
+	}
+
 	encryptedPayloadString = base64.StdEncoding.EncodeToString(encryptedData)
 
 	return nil
 }
 
-func ishouldgetencryptedData() error {
-	var filePath = fmt.Sprintf("%s%s", FileDirectory, FileName)
+func iShouldGetEncryptedData() error {
+	var filePath = fmt.Sprintf("%s%s", fileDirectory, fileName)
 
 	if _, err := os.Stat(filePath); err == nil {
 		os.Remove(filePath)
@@ -68,7 +77,7 @@ func ishouldgetencryptedData() error {
 
 	f, err := os.Create(filePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer f.Close()
 
@@ -77,15 +86,14 @@ func ishouldgetencryptedData() error {
 	return nil
 }
 
-func encryptedDatashouldnotbeequaltodata() error {
+func encryptedDataShouldNotBeEqualToData() error {
 	if payloadString == encryptedPayloadString {
-		return errors.New("Encryption failure")
+		return errors.New("encryption failure")
 	}
 
 	return nil
 }
 
-// nolint: deadcode
 func FeatureContext(s *godog.Suite) {
 	s.BeforeSuite(func() {
 		connectSQL()
@@ -93,19 +101,28 @@ func FeatureContext(s *godog.Suite) {
 	// Encrypt feature steps
 	s.Step(`^I have "([^"]*)"$`, iHave)
 	s.Step(`^I encrypt the data$`, iEncryptTheData)
-	s.Step(`^I should get encrypted_data$`, ishouldgetencryptedData)
-	s.Step(`^encrypted_data should not be equal to data$`, encryptedDatashouldnotbeequaltodata)
+	s.Step(`^I should get encrypted_data$`, iShouldGetEncryptedData)
+	s.Step(`^encrypted_data should not be equal to data$`, encryptedDataShouldNotBeEqualToData)
 
 	// Decrypt feature steps
-	s.Step(`^I have encrypted_data from "([^"]*)"$`, ihaveencryptedDatafrom)
-	s.Step(`^I decrypt the encrypted_data$`, idecrypttheencryptedData)
-	s.Step(`^I should get decrypted_data$`, ishouldgetdecryptedData)
-	s.Step(`^decrypted_data should be equal to "([^"]*)"$`, decryptedDatashouldbeequalto)
+	s.Step(`^I have encrypted_data from "([^"]*)"$`, iHaveEncryptedDataFrom)
+	s.Step(`^I decrypt the encrypted_data$`, iDecryptTheEncryptedData)
+	s.Step(`^I should get decrypted_data$`, iShouldGetDecryptedData)
+	s.Step(`^decrypted_data should be equal to "([^"]*)"$`, decryptedDataShouldBeEqualTo)
+}
+
+// connectionString returns the RDBMS connection string
+func connectionString() string {
+	return fmt.Sprintf(
+		"%s:%s@tcp(localhost:3306)/%s",
+		os.Getenv("TEST_DB_USER"),
+		os.Getenv("TEST_DB_PASSWORD"),
+		os.Getenv("TEST_DB_NAME"))
 }
 
 // connectSQL connects to the mysql instance with the provided connection string.
 func connectSQL() error {
-	dsn, err := mysql.ParseDSN(ConnectionString)
+	dsn, err := mysql.ParseDSN(connectionString())
 	if err != nil {
 		return err
 	}
