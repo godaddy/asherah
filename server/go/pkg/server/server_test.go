@@ -118,10 +118,21 @@ func Test_AppEncryption_Session(t *testing.T) {
 }
 
 func Test_Streamer_NewHandler(t *testing.T) {
-	s := &streamer{options: Options{KMS: "static", Metastore: "rdbms"}}
-	h := s.NewHandler()
+	optCombos := []Options{
+		Options{KMS: "static", Metastore: "rdbms"},
+		Options{KMS: "aws", Metastore: "rdbms"},
+		Options{KMS: "aws", Metastore: "dynamodb"},
+	}
+	for _, opts := range optCombos {
+		opts := opts
+		name := opts.KMS + ":" + opts.Metastore
+		t.Run(name, func(tt *testing.T) {
+			s := &streamer{options: opts}
+			h := s.NewHandler()
 
-	assert.IsType(t, (*defaultHandler)(nil), h)
+			assert.IsType(tt, (*defaultHandler)(nil), h)
+		})
+	}
 }
 
 func Test_Streamer_StreamEOF(t *testing.T) {

@@ -4,6 +4,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -26,11 +28,18 @@ func main() {
 	var opts Options
 	parser := flags.NewParser(&opts, flags.Default)
 
-	_, err := parser.Parse()
-	if err != nil {
+	if _, err := parser.Parse(); err != nil {
 		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
 			return
 		}
+
+		parser.WriteHelp(os.Stdout)
+		return
+	}
+
+	if err := validateOptions(opts); err != nil {
+		fmt.Println("Missing or invalid options:", err.Error())
+		fmt.Println()
 
 		parser.WriteHelp(os.Stdout)
 		return
@@ -59,4 +68,21 @@ func main() {
 	log.Println("starting server")
 	grpcServer.Serve(l)
 	log.Println("exiting")
+}
+
+func validateOptions(opts Options) error {
+	if opts.Asherah.Metastore == "rdbms" && len(opts.Asherah.ConnectionString) == 0 {
+		return errors.New("--conn is required when --metastore=rdbms")
+	}
+
+	if opts.Asherah.KMS == "aws" {
+		if len(opts.Asherah.PreferredRegion) == 0 {
+			return errors.New("--preferred-region is required when --kms=aws")
+		}
+		if len(opts.Asherah.PreferredRegion) == 0 {
+			return errors.New("--region-map is required when --kms=aws")
+		}
+	}
+
+	return nil
 }

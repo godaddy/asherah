@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
@@ -70,6 +71,8 @@ func (s *streamer) NewHandler() requestHandler {
 		return s.handlerFactory.NewHandler()
 	}
 
+	crypto := aead.NewAES256GCM()
+
 	sf := appencryption.NewSessionFactory(
 		&appencryption.Config{
 			Service: s.options.ServiceName,
@@ -80,8 +83,8 @@ func (s *streamer) NewHandler() requestHandler {
 			),
 		},
 		NewMetastore(s.options),
-		NewKMS(s.options),
-		aead.NewAES256GCM(),
+		NewKMS(s.options, crypto),
+		crypto,
 		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
 		appencryption.WithMetrics(false),
 	)
@@ -102,11 +105,13 @@ func NewMetastore(opts Options) appencryption.Metastore {
 		return persistence.NewSQLMetastore(db)
 	}
 
-	// TODO: add dynamodb default
-	panic("dynamodb not implemented")
+	sess := awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
+		SharedConfigState: awssession.SharedConfigEnable,
+	}))
+	return persistence.NewDynamoDBMetastore(sess)
 }
 
-func NewKMS(opts Options) appencryption.KeyManagementService {
+func NewKMS(opts Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
 	if opts.KMS == "static" {
 		kms, err := kms.NewStatic("thisistotallynotsecretdonotuse!!", aead.NewAES256GCM())
 		if err != nil {
@@ -115,8 +120,11 @@ func NewKMS(opts Options) appencryption.KeyManagementService {
 		return kms
 	}
 
-	// TODO: add aws
-	panic("aws KMS not implemented")
+	kms, err := kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
+	if err != nil {
+		panic(err)
+	}
+	return kms
 }
 
 func (d *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
