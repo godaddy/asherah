@@ -40,6 +40,7 @@ func (m *mockHandler) Close() error {
 	}
 
 	ret := m.Called()
+
 	return ret.Error(0)
 }
 
@@ -118,11 +119,12 @@ func Test_AppEncryption_Session(t *testing.T) {
 }
 
 func Test_Streamer_NewHandler(t *testing.T) {
-	optCombos := []Options{
-		Options{KMS: "static", Metastore: "rdbms"},
-		Options{KMS: "aws", Metastore: "rdbms"},
-		Options{KMS: "aws", Metastore: "dynamodb"},
+	optCombos := []*Options{
+		{KMS: "aws", Metastore: "rdbms"},
+		{KMS: "aws", Metastore: "dynamodb"},
+		{KMS: "static", Metastore: "rdbms"},
 	}
+
 	for _, opts := range optCombos {
 		opts := opts
 		name := opts.KMS + ":" + opts.Metastore
@@ -353,7 +355,7 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 }
 
 func Test_NewAppEncryption(t *testing.T) {
-	var opts Options
+	opts := new(Options)
 	ae := NewAppEncryption(opts)
 
 	assert.Equal(t, opts, ae.NewStreamer().options)
@@ -481,6 +483,7 @@ func newAEDRR() *appencryption.DataRowRecord {
 			},
 		},
 	}
+
 	return drr
 }
 
@@ -569,5 +572,6 @@ func Test_DefaultHandler_DecryptError(t *testing.T) {
 	if assert.NotNil(t, respErr) {
 		assert.Equal(t, "decryption error", respErr.GetMessage())
 	}
+
 	m.AssertExpectations(t)
 }

@@ -29,7 +29,8 @@ func Test_RegionMap(t *testing.T) {
 		{name: "region only", value: "region-1", isErr: true},
 	}
 
-	for _, test := range tests {
+	for i := range tests {
+		test := tests[i]
 		t.Run(test.name, func(tt *testing.T) {
 			regions := make(RegionMap)
 			err := regions.UnmarshalFlag(test.value)

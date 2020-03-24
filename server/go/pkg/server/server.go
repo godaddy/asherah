@@ -59,7 +59,7 @@ func (a *AppEncryption) Session(stream pb.AppEncryption_SessionServer) error {
 type streamer struct {
 	handlerFactory
 	handler requestHandler
-	options Options
+	options *Options
 }
 
 type handlerFactory interface {
@@ -76,7 +76,7 @@ func (s *streamer) NewHandler() requestHandler {
 	sf := appencryption.NewSessionFactory(
 		&appencryption.Config{
 			Service: s.options.ServiceName,
-			Product: s.options.ProductId,
+			Product: s.options.ProductID,
 			Policy: appencryption.NewCryptoPolicy(
 				appencryption.WithExpireAfterDuration(s.options.ExpireAfter),
 				appencryption.WithRevokeCheckInterval(s.options.CheckInterval),
@@ -94,7 +94,7 @@ func (s *streamer) NewHandler() requestHandler {
 	}
 }
 
-func NewMetastore(opts Options) appencryption.Metastore {
+func NewMetastore(opts *Options) appencryption.Metastore {
 	if opts.Metastore == "rdbms" {
 		// TODO: support other databases
 		db, err := newMysql(opts.ConnectionString)
@@ -108,15 +108,17 @@ func NewMetastore(opts Options) appencryption.Metastore {
 	sess := awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
 		SharedConfigState: awssession.SharedConfigEnable,
 	}))
+
 	return persistence.NewDynamoDBMetastore(sess)
 }
 
-func NewKMS(opts Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
+func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
 	if opts.KMS == "static" {
 		kms, err := kms.NewStatic("thisistotallynotsecretdonotuse!!", aead.NewAES256GCM())
 		if err != nil {
 			panic(err)
 		}
+
 		return kms
 	}
 
@@ -124,13 +126,14 @@ func NewKMS(opts Options, crypto appencryption.AEAD) appencryption.KeyManagement
 	if err != nil {
 		panic(err)
 	}
+
 	return kms
 }
 
-func (d *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
+func (s *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 	defer func() {
-		if d.handler != nil {
-			d.handler.Close()
+		if s.handler != nil {
+			s.handler.Close()
 		}
 	}()
 
@@ -139,39 +142,44 @@ func (d *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 		if err == io.EOF {
 			return nil
 		}
+
 		if err != nil {
 			return err
 		}
 
-		var resp *pb.SessionResponse
-
-		switch in.Request.(type) {
-		case *pb.SessionRequest_Decrypt:
-			if d.handler == nil {
-				resp = UnitializedSessionResponse
-				break
-			}
-			resp = d.handler.Decrypt(stream.Context(), in)
-		case *pb.SessionRequest_Encrypt:
-			if d.handler == nil {
-				resp = UnitializedSessionResponse
-				break
-			}
-			resp = d.handler.Encrypt(stream.Context(), in)
-		case *pb.SessionRequest_GetSession:
-			if d.handler != nil {
-				resp = SessionAlreadyInitializedResponse
-				break
-			}
-
-			d.handler = d.NewHandler()
-			resp = d.handler.GetSession(in)
-		}
-
+		resp := s.handleRequest(stream.Context(), in)
 		if err := stream.Send(resp); err != nil {
 			return err
 		}
 	}
+}
+
+func (s *streamer) handleRequest(ctx context.Context, in *pb.SessionRequest) *pb.SessionResponse {
+	switch in.Request.(type) {
+	case *pb.SessionRequest_Decrypt:
+		if s.handler == nil {
+			return UnitializedSessionResponse
+		}
+
+		return s.handler.Decrypt(ctx, in)
+	case *pb.SessionRequest_Encrypt:
+		if s.handler == nil {
+			return UnitializedSessionResponse
+		}
+
+		return s.handler.Encrypt(ctx, in)
+	case *pb.SessionRequest_GetSession:
+		if s.handler != nil {
+			return SessionAlreadyInitializedResponse
+		}
+
+		s.handler = s.NewHandler()
+
+		return s.handler.GetSession(in)
+	}
+
+	// TODO: handle default
+	return nil
 }
 
 type sessionFactory interface {
@@ -191,7 +199,9 @@ type defaultHandler struct {
 
 func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
 	log.Println("handling decrypt")
+
 	drr := fromProtobufDRR(r.GetDecrypt().GetDataRowRecord())
+
 	data, err := h.session.DecryptContext(ctx, *drr)
 	if err != nil {
 		return newErrorResponse(err.Error())
@@ -262,6 +272,7 @@ func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
 	}
 
 	h.session = s
+
 	return new(pb.SessionResponse)
 }
 
@@ -270,7 +281,7 @@ func (h *defaultHandler) Close() error {
 	return h.session.Close()
 }
 
-func NewAppEncryption(options Options) *AppEncryption {
+func NewAppEncryption(options *Options) *AppEncryption {
 	return &AppEncryption{
 		streamerFactory: streamerFactoryFunc(func() *streamer {
 			return &streamer{options: options}

@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-// nolint:staticcheck multiple choice tags are supported
+//nolint:lll,staticcheck
 type Options struct {
 	ServiceName      string        `long:"service" required:"yes" description:"The name of this service" env:"ASHERAH_SERVICE_NAME"`
-	ProductId        string        `long:"product" required:"yes" description:"The name of the product that owns this service" env:"ASHERAH_PRODUCT_NAME"`
+	ProductID        string        `long:"product" required:"yes" description:"The name of the product that owns this service" env:"ASHERAH_PRODUCT_NAME"`
 	ExpireAfter      time.Duration `long:"expire-after" description:"The amount of time a key is considered valid" env:"ASHERAH_EXPIRE_AFTER"`
 	CheckInterval    time.Duration `long:"check-interval" description:"The amount of time before cached keys are considered stale" env:"ASHERAH_CHECK_INTERVAL"`
 	Metastore        string        `long:"metastore" choice:"rdbms" choice:"dynamodb" required:"yes" description:"Determines the type of metastore to use for persisting keys" env:"ASHERAH_METASTORE_MODE"`
@@ -28,6 +28,7 @@ func (r RegionMap) UnmarshalFlag(value string) error {
 		if len(parts) != 2 || len(parts[1]) == 0 {
 			return errors.New("argument must be in the form of REGION1=ARN1[,REGION2=ARN2]")
 		}
+
 		region, arn := parts[0], parts[1]
 		r[region] = arn
 	}

@@ -20,13 +20,13 @@ import (
 )
 
 type Options struct {
-	SocketFile flags.Filename `short:"s" long:"socket-file" default:"/tmp/appencryption.sock" description:"The unix domain socket the server will listen on"`
-	Asherah    server.Options `group:"Asherah Options"`
+	SocketFile flags.Filename  `short:"s" long:"socket-file" default:"/tmp/appencryption.sock" description:"The unix domain socket the server will listen on"`
+	Asherah    *server.Options `group:"Asherah Options"`
 }
 
 func main() {
-	var opts Options
-	parser := flags.NewParser(&opts, flags.Default)
+	opts := new(Options)
+	parser := flags.NewParser(opts, flags.Default)
 
 	if _, err := parser.Parse(); err != nil {
 		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
@@ -34,6 +34,7 @@ func main() {
 		}
 
 		parser.WriteHelp(os.Stdout)
+
 		return
 	}
 
@@ -42,6 +43,7 @@ func main() {
 		fmt.Println()
 
 		parser.WriteHelp(os.Stdout)
+
 		return
 	}
 
@@ -66,11 +68,15 @@ func main() {
 	}()
 
 	log.Println("starting server")
-	grpcServer.Serve(l)
+
+	if err := grpcServer.Serve(l); err != nil {
+		panic(err)
+	}
+
 	log.Println("exiting")
 }
 
-func validateOptions(opts Options) error {
+func validateOptions(opts *Options) error {
 	if opts.Asherah.Metastore == "rdbms" && len(opts.Asherah.ConnectionString) == 0 {
 		return errors.New("--conn is required when --metastore=rdbms")
 	}
@@ -79,6 +85,7 @@ func validateOptions(opts Options) error {
 		if len(opts.Asherah.PreferredRegion) == 0 {
 			return errors.New("--preferred-region is required when --kms=aws")
 		}
+
 		if len(opts.Asherah.PreferredRegion) == 0 {
 			return errors.New("--region-map is required when --kms=aws")
 		}
