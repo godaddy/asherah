@@ -637,11 +637,16 @@ jobs:
       - run:
           name: Build
           command: |
+            # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
+
+            # Build & Lint the Go project
             cd ../go
             ./scripts/build.sh
             ./scripts/lint.sh
+
+            #Build the C# project
             cd ../csharp
             ./scripts/build.sh
       - run:
