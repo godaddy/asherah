@@ -664,17 +664,17 @@ jobs:
             cd tests/cross-language/java
             ./scripts/build.sh
 
+            #Build the C# project
+            cd ../csharp
+            ./scripts/clean.sh
+            ./scripts/build.sh
+
             # Build & Lint the Go project
             cd ../go
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/build.sh
             ./scripts/lint.sh
-
-            #Build the C# project
-            cd ../csharp
-            ./scripts/clean.sh
-            ./scripts/build.sh
       - run:
           name: Test
           command: |
