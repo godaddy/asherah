@@ -61,13 +61,12 @@ func iDecryptTheEncryptedData() error {
 		return err
 	}
 
-	err2 := json.Unmarshal(dataRowBytes, &dataRow)
-	if err2 != nil {
-		return err2
+	err = json.Unmarshal(dataRowBytes, &dataRow)
+	if err != nil {
+		return err
 	}
 
 	data, err := sess.Decrypt(dataRow)
-
 	if err != nil {
 		return err
 	}

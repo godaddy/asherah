@@ -25,9 +25,6 @@ run:
   # the dependency descriptions in go.mod.
   modules-download-mode: readonly
 
-  skip-dirs:
-    - cmd/example
-
 # output configuration options
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
