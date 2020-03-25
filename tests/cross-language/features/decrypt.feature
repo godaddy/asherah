@@ -10,3 +10,4 @@ Feature: Decrypt Data using RDBMS metastore and static KMS
       | data                 | file_name        |
       | mySuperSecretPayload | java_encrypted   |
       | mySuperSecretPayload | csharp_encrypted |
+      | mySuperSecretPayload | go_encrypted     |
