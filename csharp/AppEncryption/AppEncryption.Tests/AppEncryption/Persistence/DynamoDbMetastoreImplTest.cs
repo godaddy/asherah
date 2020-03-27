@@ -25,11 +25,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 "ParentKeyMeta", new Dictionary<string, object>
                 {
                     { "KeyId", "_SK_api_ecomm" },
-                    { "Created", 1541461380 }
+                    { "Created", 1541461380 },
                 }
             },
             { "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr" },
-            { "Created", 1541461380 }
+            { "Created", 1541461380 },
         };
 
         private readonly Table table;
@@ -40,25 +40,25 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
             };
             amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
-             CreateTableRequest request = new CreateTableRequest
+            CreateTableRequest request = new CreateTableRequest
+            {
+                TableName = TableName,
+                AttributeDefinitions = new List<AttributeDefinition>
                 {
-                    TableName = TableName,
-                    AttributeDefinitions = new List<AttributeDefinition>
-                    {
-                        new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
-                        new AttributeDefinition(SortKey, ScalarAttributeType.N)
-                    },
-                    KeySchema = new List<KeySchemaElement>
-                    {
-                        new KeySchemaElement(PartitionKey, KeyType.HASH),
-                        new KeySchemaElement(SortKey, KeyType.RANGE)
-                    },
-                    ProvisionedThroughput = new ProvisionedThroughput(1L, 1L)
-                };
+                    new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
+                    new AttributeDefinition(SortKey, ScalarAttributeType.N),
+                },
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement(PartitionKey, KeyType.HASH),
+                    new KeySchemaElement(SortKey, KeyType.RANGE),
+                },
+                ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
+            };
 
             CreateTableResponse createTableResponse = amazonDynamoDbClient.CreateTableAsync(request).Result;
             table = Table.LoadTable(amazonDynamoDbClient, TableName);
@@ -68,7 +68,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             {
                 [PartitionKey] = TestKey,
                 [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString())
+                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
             };
 
             Document result = table.PutItemAsync(document).Result;
@@ -138,8 +138,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = createdPlusOneHour.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
-                    { "mytime", createdPlusOneHour }
-                }.ToString())
+                    { "mytime", createdPlusOneHour },
+                }.ToString()),
             };
             Document resultPlusOneHour = table.PutItemAsync(documentPlusOneHour).Result;
 
@@ -149,8 +149,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = createdPlusOneDay.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
-                    { "mytime", createdPlusOneDay }
-                }.ToString())
+                    { "mytime", createdPlusOneDay },
+                }.ToString()),
             };
             Document resultPlusOneDay = table.PutItemAsync(documentPlusOneDay).Result;
 
@@ -160,8 +160,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = createdMinusOneHour.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
-                    { "mytime", createdMinusOneHour }
-                }.ToString())
+                    { "mytime", createdMinusOneHour },
+                }.ToString()),
             };
             Document resultMinusOneHour = table.PutItemAsync(documentMinusOneHour).Result;
 
@@ -171,8 +171,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = createdMinusOneDay.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
-                    { "mytime", createdMinusOneDay }
-                }.ToString())
+                    { "mytime", createdMinusOneDay },
+                }.ToString()),
             };
             Document resultMinusOneDay = table.PutItemAsync(documentMinusOneDay).Result;
 

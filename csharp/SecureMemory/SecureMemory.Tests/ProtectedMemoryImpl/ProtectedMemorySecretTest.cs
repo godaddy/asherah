@@ -191,7 +191,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Parallel.ForEach(Enumerable.Range(0, numTasks), i =>
             {
                 ThreadPool.QueueUserWorkItem(
-                    delegate
+                    state =>
                     {
                         secret.WithSecretBytes(decryptedBytes =>
                         {

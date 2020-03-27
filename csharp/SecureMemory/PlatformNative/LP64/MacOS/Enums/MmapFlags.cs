@@ -34,6 +34,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
         MAP_JIT = 0x0800,
         MAP_FILE = 0x0000,
         MAP_ANON = 0x1000,
-        MAP_ANONYMOUS = 0x1000 // MAP_ANON
+        MAP_ANONYMOUS = 0x1000, // MAP_ANON
     }
 }

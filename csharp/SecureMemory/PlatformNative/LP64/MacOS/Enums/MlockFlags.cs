@@ -10,6 +10,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
     public enum MlockFlags : int
     {
         MCL_CURRENT = 0x0001,
-        MCL_FUTURE = 0x0002
+        MCL_FUTURE = 0x0002,
     }
 }

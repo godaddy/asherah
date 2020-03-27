@@ -46,7 +46,7 @@ namespace GoDaddy.Asherah.Crypto.Envelope
                 {
                     CipherText = Encrypt(plainText, dataEncryptionKey),
                     EncryptedKey = EncryptKey(dataEncryptionKey, keyEncryptionKey),
-                    UserState = userState
+                    UserState = userState,
                 };
 
                 return result;

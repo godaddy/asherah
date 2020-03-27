@@ -13,7 +13,6 @@ using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
 
@@ -31,13 +30,13 @@ namespace GoDaddy.Asherah.ReferenceApp
         {
             MEMORY,
             ADO,
-            DYNAMODB
+            DYNAMODB,
         }
 
         public enum Kms
         {
             STATIC,
-            AWS
+            AWS,
         }
 
         public static void Main(string[] args)
@@ -46,9 +45,11 @@ namespace GoDaddy.Asherah.ReferenceApp
             ILoggerFactory loggerFactory = new LoggerFactory();
 
             // TODO Not sure if there's a better way to handle LoggerProvider?
-#pragma warning disable 618
-            loggerFactory.AddProvider(new ConsoleLoggerProvider((category, level) => level >= LogLevel.Information, true));
-#pragma warning restore 618
+            loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            {
+                builder.AddFilter((category, level) => level >= LogLevel.Information)
+                    .AddConsole();
+            });
             LogManager.SetLoggerFactory(loggerFactory);
             logger = LogManager.CreateLogger<ReferenceApp>();
 

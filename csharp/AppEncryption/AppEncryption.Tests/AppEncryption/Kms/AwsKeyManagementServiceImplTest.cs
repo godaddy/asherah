@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         private readonly Dictionary<string, string> regionToArnDictionary = new Dictionary<string, string>
         {
             { UsEast1, ArnUsEast1 },
-            { UsWest1, ArnUsWest1 }
+            { UsWest1, ArnUsWest1 },
         };
 
         private readonly string preferredRegion = UsWest1;
@@ -94,10 +94,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                     {
                         { RegionKey, UsWest1 },
                         { ArnKey, ArnUsWest1 },
-                        { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
-                    }
+                        { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
+                    },
                 }
-            }
+                },
             });
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -133,16 +133,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                         {
                             { RegionKey, "some_region" },  // should appear before valid us-east region
                             { ArnKey, "some_arn" },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
+                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
                         },
                         new Dictionary<string, object>
                         {
                             { RegionKey, UsEast1 },
                             { ArnKey, ArnUsEast1 },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
-                        }
+                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
+                        },
                     }
-                }
+                },
             });
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -177,10 +177,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                         {
                             { RegionKey, UsWest1 },
                             { ArnKey, ArnUsWest1 },
-                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) }
-                        }
+                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
+                        },
                     }
-                }
+                },
             });
 
             awsKeyManagementServiceImplSpy
@@ -312,7 +312,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             byte[] encryptedKey = { 0, 1 };
             EncryptResponse encryptResponse = new EncryptResponse
             {
-                CiphertextBlob = new MemoryStream(encryptedKey)
+                CiphertextBlob = new MemoryStream(encryptedKey),
             };
             byte[] dataKeyPlainText = { 2, 3 };
             amazonKeyManagementServiceClientMock
@@ -356,7 +356,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             {
                 { RegionKey, UsEast1 },
                 { ArnKey, ArnUsEast1 },
-                { EncryptedKek, Convert.ToBase64String(encryptKeyCipherText) }
+                { EncryptedKek, Convert.ToBase64String(encryptKeyCipherText) },
             });
 
             JObject kmsKeyEnvelope = JObject.FromObject(new Dictionary<string, object>
@@ -371,16 +371,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                         {
                             { RegionKey, UsWest1 },
                             { ArnKey, ArnUsWest1 },
-                            { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) }
+                            { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) },
                         },
-                        encryptKeyAndBuildResultJson
+                        encryptKeyAndBuildResultJson,
                     }
-                }
+                },
             });
             GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
             {
                 KeyPlaintext = dataKeyPlainText,
-                KeyCiphertext = dataKeyCipherText
+                KeyCiphertext = dataKeyCipherText,
             };
 
             Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
@@ -417,7 +417,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 
             GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
             {
-                KeyPlaintext = dataKeyPlainText
+                KeyPlaintext = dataKeyPlainText,
             };
             Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
             string someKey = "some_key";

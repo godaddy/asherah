@@ -4,6 +4,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
     {
         Retired,
         Valid,
-        Empty
+        Empty,
     }
 }
