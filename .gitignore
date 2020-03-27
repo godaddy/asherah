@@ -36,4 +36,9 @@ Temporary Items
 
 out/
 
-__pycache__
+__pycache__/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
