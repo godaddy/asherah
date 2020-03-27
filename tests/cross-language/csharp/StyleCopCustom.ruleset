@@ -11,14 +11,14 @@
     <!-- SA1200:UsingDirectivesMustBePlacedCorrectly - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1200.md -->
     <Rule Id="SA1200" Action="None" />
 
-    <!-- TODO : Check if this can be removed this when upgrading to .NET 3.1 -->
+    <!-- TODO : Check if this can be removed when upgrading to .NET 3.1 -->
     <!-- SA1309:FieldNamesMustNotBeginWithUnderscore - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1309.md -->
     <Rule Id="SA1309" Action="None" />
 
     <!-- SA1633:FileMustHaveHeader - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1633.md -->
     <Rule Id="SA1633" Action="None"  />
 
-    <!-- TODO : Check if this can be removed this when upgrading to .NET 3.1 -->
+    <!-- TODO : Check if this can be removed when upgrading to .NET 3.1 -->
     <!-- SA1649:FileNameMustMatchTypeName - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1649.md -->
     <Rule Id="SA1649" Action="None" />
 
