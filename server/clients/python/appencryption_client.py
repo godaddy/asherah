@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Ashera Server gRPC - Python client
 
 A simple Python application that demonstrates integrating with Asherah Server
@@ -7,12 +9,17 @@ via a generated gRPC client.
 import argparse
 import logging
 import queue
+import random
+import signal
+import string
 import sys
+from types import FrameType, TracebackType
+from typing import Any, Iterator, Optional, Type
 
 import grpc
-
 import appencryption_pb2
 import appencryption_pb2_grpc
+from appencryption_types import SessionRequest, SessionResponse
 
 
 class SessionReceiveError(Exception):
@@ -25,8 +32,10 @@ class SessionClient:
     SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
     endpoint.
     """
+    requests: 'queue.Queue[SessionRequest]' = queue.Queue()
+    session: Any
 
-    def __init__(self, socket: str, partition: str):
+    def __init__(self, socket: str, partition: str) -> None:
         self.requests = queue.Queue()
 
         self.channel = grpc.insecure_channel(f'unix://{socket}')
@@ -35,18 +44,22 @@ class SessionClient:
 
         self.session = None
 
-    def __enter__(self):
+    def __enter__(self) -> 'SessionClient':
         self._enter()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_value: Optional[BaseException],
+            traceback: Optional[TracebackType]
+    ) -> None:
         self._close()
-        return False
 
-    def _close(self):
+    def _close(self) -> None:
         self.channel.close()
 
-    def _enter(self):
+    def _enter(self) -> None:
         req = appencryption_pb2.SessionRequest()
         req.get_session.partition_id = self.partition
 
@@ -54,8 +67,8 @@ class SessionClient:
 
     def _send_receive(
             self,
-            req: appencryption_pb2.SessionRequest
-    ) -> appencryption_pb2.SessionResponse:
+            req: SessionRequest,
+    ) -> SessionResponse:
         self.requests.put(req)
 
         if self.session is None:
@@ -67,11 +80,11 @@ class SessionClient:
 
         return resp
 
-    def _next_request(self):
+    def _next_request(self) -> Iterator[SessionRequest]:
         while True:
             yield self.requests.get()
 
-    def encrypt(self, data: bytes) -> appencryption_pb2.DataRowRecord:
+    def encrypt(self, data: bytes) -> Any:
         """Encrypt data using the current session and its partition.
 
         Args:
@@ -87,7 +100,7 @@ class SessionClient:
 
         return resp.encrypt_response.data_row_record
 
-    def decrypt(self, drr: appencryption_pb2.DataRowRecord) -> bytes:
+    def decrypt(self, drr: Any) -> bytes:
         """Decrypt the data using the current session and its partition.
 
         Args:
@@ -101,6 +114,47 @@ class SessionClient:
         resp = self._send_receive(req)
 
         return resp.decrypt_response.data
+
+
+class InterruptHandler:
+    """A simple signal handler."""
+
+    def __init__(self) -> None:
+        self.interrupted = False
+
+    # pylint: disable=unused-argument
+    def _interrupt(self, sig: int, frame: FrameType):
+        self.interrupted = True
+
+    def start(self) -> None:
+        """Start handling signals."""
+        signal.signal(signal.SIGINT, self._interrupt)
+
+
+def run_once(client: SessionClient) -> None:
+    """Executes run_client_test once."""
+
+    run_client_test(client)
+
+
+def run_continusously(client: SessionClient) -> None:
+    """Executes run_client_test until the process is interrupted."""
+
+    handler = InterruptHandler()
+    handler.start()
+
+    while True:
+        run_client_test(client)
+
+        if handler.interrupted:
+            break
+
+
+def random_string(length: int = 12) -> str:
+    """Generate a random string of fixed length."""
+
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
 
 
 def run_client_test(client: SessionClient):
@@ -132,6 +186,10 @@ def _main():
         '--socket',
         default='/tmp/appencryption.sock',
         help='The unix domain socket the server is listening on')
+    parser.add_argument(
+        '--continuous',
+        action='store_true',
+        help='When present the client will run a continuous test.')
     args = parser.parse_args()
 
     logging.info('starting test')
@@ -139,8 +197,11 @@ def _main():
     partition = 'partitionid-1'
 
     logging.info('starting session for %s', partition)
-    with SessionClient(socket=args.socket, partition=partition) as client:
-        run_client_test(client)
+    with SessionClient(args.socket, partition) as client:
+        if args.continuous:
+            run_once(client)
+        else:
+            run_continusously(client)
 
 
 if __name__ == '__main__':
