@@ -33,7 +33,7 @@ class SessionClient:
     endpoint.
     """
     requests: 'queue.Queue[SessionRequest]' = queue.Queue()
-    session: Any
+    session: Optional[Iterator]
 
     def __init__(self, socket: str, partition: str) -> None:
         self.requests = queue.Queue()
@@ -162,7 +162,7 @@ def run_client_test(client: SessionClient):
     the decrypted data to the original.
     """
 
-    secret = b'my "secret" data'
+    secret = f'my "secret" data - {random_string()}'.encode()
 
     logging.info('encrypting: %s', secret)
     drr = client.encrypt(secret)
