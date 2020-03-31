@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.Crypto
         public enum KeyRotationStrategy
         {
             Inline,
-            Queued
+            Queued,
         }
 
         public abstract bool IsKeyExpired(DateTimeOffset keyCreationDate);

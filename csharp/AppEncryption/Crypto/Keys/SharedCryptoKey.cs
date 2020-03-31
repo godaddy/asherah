@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
 namespace GoDaddy.Asherah.Crypto.Keys
 {
     public class SharedCryptoKey : CryptoKey

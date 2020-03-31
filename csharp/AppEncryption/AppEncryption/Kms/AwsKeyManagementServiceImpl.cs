@@ -221,7 +221,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     EncryptRequest encryptRequest = new EncryptRequest
                     {
                         KeyId = arn,
-                        Plaintext = new MemoryStream(dataKeyPlainText)
+                        Plaintext = new MemoryStream(dataKeyPlainText),
                     };
                     Task<EncryptResponse> encryptAsync = kmsClient.EncryptAsync(encryptRequest);
 
@@ -254,7 +254,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 {
                     TimerOptions generateDataKeyTimerOptions = new TimerOptions
                     {
-                        Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.generatedatakey." + regionToArnAndClient.Key
+                        Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.generatedatakey." + regionToArnAndClient.Key,
                     };
                     using (MetricsUtil.MetricsInstance.Measure.Timer.Time(generateDataKeyTimerOptions))
                     {

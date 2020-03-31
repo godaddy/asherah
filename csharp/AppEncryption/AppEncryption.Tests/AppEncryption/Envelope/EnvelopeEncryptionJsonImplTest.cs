@@ -79,7 +79,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             JObject dataRowRecord = JObject.FromObject(new Dictionary<string, object>
             {
                 { "Key", dataRowKey.ToJson() },
-                { "Data", Convert.ToBase64String(encryptedData) }
+                { "Data", Convert.ToBase64String(encryptedData) },
             });
 
             envelopeEncryptionJsonImplSpy.Setup(x => x.WithIntermediateKeyForRead(intermediateKeyMeta, It.IsAny<Func<CryptoKey, byte[]>>()))
@@ -105,7 +105,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             JObject dataRowRecord = JObject.FromObject(new Dictionary<string, object>
             {
                 { "Key", dataRowKey.ToJson() },
-                { "Data", Convert.ToBase64String(encryptedData) }
+                { "Data", Convert.ToBase64String(encryptedData) },
             });
 
             Assert.Throws<MetadataMissingException>(() =>
@@ -130,7 +130,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             {
                 CipherText = encryptedPayload,
                 EncryptedKey = encryptedKey,
-                UserState = intermediateKeyMeta
+                UserState = intermediateKeyMeta,
             };
             aeadEnvelopeCryptoMock
                 .Setup(x => x.EnvelopeEncrypt(decryptedPayload, intermediateCryptoKeyMock.Object, intermediateKeyMeta))
@@ -140,7 +140,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             JObject expectedDataRowRecord = JObject.FromObject(new Dictionary<string, object>
             {
                 { "Key", expectedDataRowKey.ToJson() },
-                { "Data", Convert.ToBase64String(encryptedPayload) }
+                { "Data", Convert.ToBase64String(encryptedPayload) },
             });
 
             JObject actualDataRowRecord = envelopeEncryptionJsonImplSpy.Object.EncryptPayload(decryptedPayload);
@@ -698,9 +698,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         {
             EnvelopeKeyRecord keyRecord = new EnvelopeKeyRecord(
                ikDateTime.AddSeconds(-1),
-                new KeyMeta("id", skDateTime.AddSeconds(-1)),
-                new byte[] { 0, 1, 2, 3 },
-                false);
+               new KeyMeta("id", skDateTime.AddSeconds(-1)),
+               new byte[] { 0, 1, 2, 3 },
+               false);
 
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
@@ -785,9 +785,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         {
             EnvelopeKeyRecord keyRecord = new EnvelopeKeyRecord(
                ikDateTime.AddSeconds(-1),
-                new KeyMeta("id", skDateTime.AddSeconds(-1)),
-                new byte[] { 0, 1, 2, 3 },
-                false);
+               new KeyMeta("id", skDateTime.AddSeconds(-1)),
+               new byte[] { 0, 1, 2, 3 },
+               false);
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
             envelopeEncryptionJsonImplSpy

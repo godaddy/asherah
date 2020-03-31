@@ -7,6 +7,7 @@ using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
+
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
     internal class ProtectedMemorySecret : Secret

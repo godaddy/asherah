@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
     internal interface IProtectedMemoryAllocator

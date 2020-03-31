@@ -25,7 +25,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
             return new rlimit
             {
                 rlim_cur = 0,
-                rlim_max = 0
+                rlim_max = 0,
             };
         }
     }
