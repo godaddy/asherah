@@ -89,14 +89,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 { EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
                     KmsKeksKey, new List<Dictionary<string, object>>
-                {
-                    new Dictionary<string, object>
                     {
-                        { RegionKey, UsWest1 },
-                        { ArnKey, ArnUsWest1 },
-                        { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
-                    },
-                }
+                        new Dictionary<string, object>
+                        {
+                            { RegionKey, UsWest1 },
+                            { ArnKey, ArnUsWest1 },
+                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
+                        },
+                    }
                 },
             });
 

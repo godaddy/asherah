@@ -4,6 +4,7 @@
 
     <!-- SA0001:XmlCommentAnalysisDisabled - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA0001.md -->
     <Rule Id="SA0001" Action="None" />
+      
     <!-- SA1101:PrefixLocalCallsWithThis - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1101.md -->
     <Rule Id="SA1101" Action="None" />
 
