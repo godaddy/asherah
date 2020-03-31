@@ -149,6 +149,7 @@ func (s *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 
 		resp := s.handleRequest(stream.Context(), in)
 		if err := stream.Send(resp); err != nil {
+			log.Println("unexpected error on send:", err.Error())
 			return err
 		}
 	}
