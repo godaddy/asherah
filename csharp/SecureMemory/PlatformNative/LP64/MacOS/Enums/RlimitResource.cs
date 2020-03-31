@@ -23,6 +23,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
         RLIMIT_RSS = 5, // source compatibility alias
         RLIMIT_MEMLOCK = 6, // locked-in-memory address space
         RLIMIT_NPROC = 7, // number of processes
-        RLIMIT_NOFILE = 8 // number of open files
+        RLIMIT_NOFILE = 8, // number of open files
     }
 }

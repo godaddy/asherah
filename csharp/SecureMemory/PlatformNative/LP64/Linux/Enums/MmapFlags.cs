@@ -51,6 +51,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
         MAP_POPULATE = 0x08000,
         MAP_NONBLOCK = 0x10000,
         MAP_STACK = 0x20000,
-        MAP_HUGETLB = 0x40000
+        MAP_HUGETLB = 0x40000,
     }
 }

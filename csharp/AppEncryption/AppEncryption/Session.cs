@@ -4,6 +4,7 @@ using GoDaddy.Asherah.AppEncryption.Persistence;
 using LanguageExt;
 
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
 namespace GoDaddy.Asherah.AppEncryption
 {
     /// <summary>

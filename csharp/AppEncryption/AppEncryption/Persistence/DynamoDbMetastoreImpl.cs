@@ -54,7 +54,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     GetItemOperationConfig config = new GetItemOperationConfig
                     {
                         AttributesToGet = new List<string> { AttributeKeyRecord },
-                        ConsistentRead = true // Always use strong consistency
+                        ConsistentRead = true, // Always use strong consistency
                     };
                     Document result = table.GetItemAsync(keyId, created.ToUnixTimeSeconds(), config).Result;
                     if (result != null)
@@ -88,7 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                         BackwardSearch = true, // sorts descending
                         Filter = filter,
                         AttributesToGet = new List<string> { AttributeKeyRecord },
-                        Select = SelectValues.SpecificAttributes
+                        Select = SelectValues.SpecificAttributes,
                     };
                     Search search = table.Query(config);
                     List<Document> result = search.GetNextSetAsync().Result;
@@ -123,7 +123,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
                         // TODO Optimize JObject to Document conversion. Just need lambda that calls Document.Add and recurses
                         // for Dictionary and List types
-                        [AttributeKeyRecord] = Document.FromJson(value.ToString())
+                        [AttributeKeyRecord] = Document.FromJson(value.ToString()),
                     };
 
                     // Note conditional expression using attribute_not_exists has special semantics. Can be used on partition OR sort key
@@ -133,7 +133,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                         { ExpressionStatement = "attribute_not_exists(" + PartitionKey + ")" };
                     PutItemOperationConfig config = new PutItemOperationConfig
                     {
-                        ConditionalExpression = expr
+                        ConditionalExpression = expr,
                     };
 
                     // This a blocking call using Result because we need to wait for the call to complete before proceeding

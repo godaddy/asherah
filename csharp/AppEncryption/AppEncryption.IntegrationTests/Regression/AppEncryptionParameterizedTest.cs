@@ -246,7 +246,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 return new object[]
                 {
                     envelopeEncryptionByteImpl, metastoreMock, cacheIK, metaIK, cacheSK, metaSK,
-                    partition
+                    partition,
                 };
             }
         }
