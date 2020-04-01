@@ -1,0 +1,38 @@
+version: '3'
+services:
+  myapp:
+    build: ./clients/python
+    command: ["--socket", "/tmp/appencryption.sock", "--continuous"]
+    depends_on:
+      - "sidecar"
+    volumes:
+      - tmp:/tmp
+  sidecar:
+    build: ../go
+    environment:
+      ASHERAH_SERVICE_NAME: myapp
+      ASHERAH_PRODUCT_NAME: asherah-examples
+      ASHERAH_EXPIRE_AFTER: 60m
+      ASHERAH_CHECK_INTERVAL: 10m
+      ASHERAH_KMS_MODE: static
+      ASHERAH_METASTORE_MODE: rdbms
+      ASHERAH_CONNECTION_STRING: dbuser:my-secret-pw@tcp(db:3306)/asherah
+    command: ["--socket-file", "/tmp/appencryption.sock"]
+    depends_on:
+      - "db"
+    volumes:
+      - tmp:/tmp
+  db:
+    image: "mysql:5.7"
+    ports:
+      - "33060:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-root-pw
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: my-secret-pw
+      MYSQL_DATABASE: asherah
+    volumes:
+      - ./metastore.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  tmp:

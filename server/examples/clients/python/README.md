@@ -29,5 +29,5 @@ Successfully installed grpcio-1.27.2 grpcio-tools-1.27.2 protobuf-3.11.3 six-1.1
 
 Generate the client
 ```console
-$ python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/appencryption.proto
+$ python -m grpc_tools.protoc -I../../../protos --python_out=. --grpc_python_out=. ../../../protos/appencryption.proto
 ```

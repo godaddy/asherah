@@ -13,6 +13,7 @@ import random
 import signal
 import string
 import sys
+import time
 from types import FrameType, TracebackType
 from typing import Any, Iterator, Optional, Type
 
@@ -124,11 +125,15 @@ class InterruptHandler:
 
     # pylint: disable=unused-argument
     def _interrupt(self, sig: int, frame: FrameType):
+        logging.info('received signal %s', signal.Signals(sig).name)
         self.interrupted = True
 
     def start(self) -> None:
         """Start handling signals."""
         signal.signal(signal.SIGINT, self._interrupt)
+        signal.signal(signal.SIGQUIT, self._interrupt)
+        signal.signal(signal.SIGTERM, self._interrupt)
+
 
 
 def run_once(client: SessionClient) -> None:
@@ -148,6 +153,8 @@ def run_continusously(client: SessionClient) -> None:
 
         if handler.interrupted:
             break
+
+        time.sleep(0.5)
 
 
 def random_string(length: int = 12) -> str:
@@ -199,9 +206,9 @@ def _main():
     logging.info('starting session for %s', partition)
     with SessionClient(args.socket, partition) as client:
         if args.continuous:
-            run_once(client)
-        else:
             run_continusously(client)
+        else:
+            run_once(client)
 
 
 if __name__ == '__main__':
