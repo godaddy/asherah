@@ -17,6 +17,8 @@
         <maven.compiler.target>1.7</maven.compiler.target>
         <junit.jupiter.version>5.1.1</junit.jupiter.version>
         <junit.platform.version>1.1.1</junit.platform.version>
+        <appencryption.version>1.0.0-SNAPSHOT</appencryption.version>
+        <hikaricp.version>2.6.1</hikaricp.version>
     </properties>
 
     <dependencies>
@@ -36,6 +38,25 @@
             <version>1.28.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.godaddy.asherah</groupId>
+            <artifactId>appencryption</artifactId>
+            <version>${appencryption.version}</version>
+        </dependency>
+
+        <!-- 3rd party dependencies -->
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>3.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikaricp.version}</version>
+        </dependency>
+
+        <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-surefire-provider</artifactId>
@@ -74,6 +95,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>
