@@ -13,6 +13,7 @@ import random
 import signal
 import string
 import sys
+import time
 from types import FrameType, TracebackType
 from typing import Any, Iterator, Optional, Type
 
@@ -149,6 +150,8 @@ def run_continusously(client: SessionClient) -> None:
         if handler.interrupted:
             break
 
+        time.sleep(0.5)
+
 
 def random_string(length: int = 12) -> str:
     """Generate a random string of fixed length."""
@@ -199,9 +202,9 @@ def _main():
     logging.info('starting session for %s', partition)
     with SessionClient(args.socket, partition) as client:
         if args.continuous:
-            run_once(client)
-        else:
             run_continusously(client)
+        else:
+            run_once(client)
 
 
 if __name__ == '__main__':
