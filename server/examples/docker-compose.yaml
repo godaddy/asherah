@@ -1,7 +1,7 @@
 version: '3'
 services:
   myapp:
-    build: ../clients/python
+    build: ./clients/python
     command: ["--socket", "/tmp/appencryption.sock", "--continuous"]
     depends_on:
       - "sidecar"
