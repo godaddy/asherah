@@ -83,6 +83,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
                 <configuration>
+                    <protoSourceRoot>../protos/</protoSourceRoot>
                     <protocArtifact>com.google.protobuf:protoc:3.11.0:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.28.0:exe:${os.detected.classifier}</pluginArtifact>

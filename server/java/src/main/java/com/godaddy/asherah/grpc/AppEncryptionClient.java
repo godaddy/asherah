@@ -1,10 +1,6 @@
-package com.godaddy.asherah.grpc.server;
+package com.godaddy.asherah.grpc;
 
 import com.google.protobuf.ByteString;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +8,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
+
+import static com.godaddy.asherah.grpc.AppencryptionProtos.*;
 
 public class AppEncryptionClient {
 
@@ -27,9 +29,9 @@ public class AppEncryptionClient {
     CountDownLatch finishedLatch = new CountDownLatch(1);
 
     // Finally, make the call using the stub
-    StreamObserver<Appencryption.SessionRequest> observerRef = serviceStub.session(new StreamObserver<Appencryption.SessionResponse>() {
+    StreamObserver<SessionRequest> observerRef = serviceStub.session(new StreamObserver<SessionResponse>() {
       @Override
-      public void onNext(Appencryption.SessionResponse sessionResponse) {
+      public void onNext(SessionResponse sessionResponse) {
         System.out.println("onNext from client");
         System.out.println("got response from server");
 
@@ -53,14 +55,14 @@ public class AppEncryptionClient {
 
 //    sessionRequestObserverRef.set(observerRef);
     // Get a session from the server
-    Appencryption.GetSession getSession = Appencryption.GetSession.newBuilder().setPartitionId("partition-1").build();
-    observerRef.onNext(Appencryption.SessionRequest.newBuilder().setGetSession(getSession).build());
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    observerRef.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
 
     // Try to encrypt a payload
     String originalPayloadString = "mysupersecretpayload";
     ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
-    Appencryption.Encrypt dataToBeEncrypted = Appencryption.Encrypt.newBuilder().setData(bytes).build();
-    observerRef.onNext(Appencryption.SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
+    Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
+    observerRef.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
 
     // Try to decrypt it back
 

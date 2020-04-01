@@ -4,6 +4,9 @@ package asherah.apps.server;
 
 option go_package = "api;api";
 
+option java_package = "com.godaddy.asherah.grpc";
+option java_outer_classname = "AppencryptionProtos";
+
 service AppEncryption {
   // Performs session operations for a single partition.
   //

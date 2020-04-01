@@ -1,16 +1,17 @@
-package com.godaddy.asherah.grpc.server;
+package com.godaddy.asherah.grpc;
 
 import com.google.common.util.concurrent.MoreExecutors;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
-import picocli.CommandLine;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import picocli.CommandLine;
 
 public class AppEncryptionServer implements Callable<Void> {
   private static Executor executor;
