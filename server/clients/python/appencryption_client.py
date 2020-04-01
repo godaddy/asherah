@@ -125,11 +125,15 @@ class InterruptHandler:
 
     # pylint: disable=unused-argument
     def _interrupt(self, sig: int, frame: FrameType):
+        logging.info('received signal %s', signal.Signals(sig).name)
         self.interrupted = True
 
     def start(self) -> None:
         """Start handling signals."""
         signal.signal(signal.SIGINT, self._interrupt)
+        signal.signal(signal.SIGQUIT, self._interrupt)
+        signal.signal(signal.SIGTERM, self._interrupt)
+
 
 
 def run_once(client: SessionClient) -> None:
