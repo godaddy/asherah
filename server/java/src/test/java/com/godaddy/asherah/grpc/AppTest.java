@@ -1,4 +1,4 @@
-package com.godaddy.asherah;
+package com.godaddy.asherah.grpc;
 
 import org.junit.jupiter.api.Test;
 

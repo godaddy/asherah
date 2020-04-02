@@ -1,5 +1,6 @@
-package com.godaddy.asherah.grpc;
+package com.godaddy.asherah.grpcclient;
 
+import com.godaddy.asherah.grpc.AppEncryptionGrpc;
 import com.google.protobuf.ByteString;
 
 import java.io.IOException;
@@ -20,15 +21,16 @@ import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 public class AppEncryptionClient {
 
   private final AppEncryptionStub appEncryptionStub;
+  private final List<DataRowRecord> dataRowRecordList;
 
   public AppEncryptionClient(Channel channel) {
     // It is up to the client to determine whether to block the call or just use async call like the one below
     appEncryptionStub = AppEncryptionGrpc.newStub(channel);
+    dataRowRecordList = new ArrayList<>();
   }
 
   public CountDownLatch session() {
     final CountDownLatch finishLatch = new CountDownLatch(1);
-    List<DataRowRecord> dataRowRecordList = new ArrayList<>();
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(new StreamObserver<SessionResponse>() {
       @Override
       public void onNext(SessionResponse sessionResponse) {
