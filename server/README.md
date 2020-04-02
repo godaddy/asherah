@@ -1,6 +1,15 @@
 # Asherah Server
 Asherah Server is intended to be used by those who wish to utilize application-layer encryption but are unable to take advantage of the SDK directly, e.g., Asherah lacks an implementation in their preferred programming language.
 
+Table of Contents
+=================
+
+  * [Overview](#overview)
+  * [Examples](#examples)
+    * [Docker Compose](#docker-compose)
+    * [Kubernetes](#kubernetes-kind)
+  * [Server Development](#server-development)
+
 ## Overview
 Asherah Server is as a light-weight service layer built atop the Asherah SDK with encrypt/decrypt functionality exposed via a [gRPC](https://grpc.io) service. It uses a Unix domain socket for local inter-process communication and is designed to be deployed along side your application.
 
