@@ -95,7 +95,8 @@ func (s *streamer) NewHandler() requestHandler {
 }
 
 func NewMetastore(opts *Options) appencryption.Metastore {
-	if opts.Metastore == "rdbms" {
+	switch opts.Metastore {
+	case "rdbms":
 		// TODO: support other databases
 		db, err := newMysql(opts.ConnectionString)
 		if err != nil {
@@ -103,13 +104,15 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 		}
 
 		return persistence.NewSQLMetastore(db)
+	case "dynamodb":
+		sess := awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
+			SharedConfigState: awssession.SharedConfigEnable,
+		}))
+
+		return persistence.NewDynamoDBMetastore(sess)
+	default:
+		return persistence.NewMemoryMetastore()
 	}
-
-	sess := awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
-		SharedConfigState: awssession.SharedConfigEnable,
-	}))
-
-	return persistence.NewDynamoDBMetastore(sess)
 }
 
 func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
