@@ -40,6 +40,10 @@ public class AppEncryptionClient {
         if (sessionResponse.hasEncryptResponse()) {
           dataRowRecordList.add(sessionResponse.getEncryptResponse().getDataRowRecord());
         }
+
+        if (sessionResponse.hasDecryptResponse()) {
+          // do something with a decrypt response
+        }
       }
 
       @Override
@@ -73,10 +77,10 @@ public class AppEncryptionClient {
       e.printStackTrace();
     }
 
-    System.out.println("SIZE = " + dataRowRecordList.size());
-    DataRowRecord dataRowRecord = dataRowRecordList.get(0);
-    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
-    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
+//    System.out.println("SIZE = " + dataRowRecordList.size());
+//    DataRowRecord dataRowRecord = dataRowRecordList.get(0);
+//    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
+//    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
 
     // Mark the end of requests
     requestObserver.onCompleted();
