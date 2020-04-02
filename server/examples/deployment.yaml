@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      product: asherah-examples
+  template:
+    metadata:
+      labels:
+        product: asherah-examples
+    spec:
+      containers:
+      - name: sidecar
+        image: asherah-server
+        imagePullPolicy: Never        
+        args: ["--socket-file", "/tmp/appencryption.sock"]
+        env:
+        - name: ASHERAH_SERVICE_NAME
+          value: myapp
+        - name: ASHERAH_PRODUCT_NAME
+          value: asherah-examples
+        - name: ASHERAH_EXPIRE_AFTER
+          value: 60m
+        - name: ASHERAH_CHECK_INTERVAL
+          value: 10m
+        - name: ASHERAH_KMS_MODE
+          value: static
+        - name: ASHERAH_METASTORE_MODE
+          value: memory
+        volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      - name: myapp
+        image: example-client
+        imagePullPolicy: Never
+        args: ["--socket", "/tmp/appencryption.sock", "--continuous"]
+        volumeMounts:
+        - name: tmpdir
+          mountPath: /tmp
+      volumes:
+        - name: tmpdir
+          emptyDir: {}          

@@ -32,10 +32,84 @@ sidecar_1  | 2020/04/02 19:06:37 handling get-session for partitionid-1
 
 At this point the example client begins sending encrypt and decrypt messages to the server sidecar in a loop and you will see stream of log messages from both the client (myapp_1) and sidecar (sidecar_1). Enter `CTRL+c` to shutdown the application.
 
-> Note: Docker Compose will need to build the images for both containers the first time `docker-compose up` is run on your machine. This process typically takes between 5 to 10 minutes, but build times can vary considerably from one machine to another.
+**NOTE**: Docker Compose will need to build the images for both containers the first time `docker-compose up` is run on your machine. This process typically takes between 5 to 10 minutes, but build times can vary considerably from one machine to another.
 
 ### Kubernetes (kind)
-Coming soon...
+In this example we'll launch the the same multi-container application we used above but this time we'll use [kind](https://kind.sigs.k8s.io/) to spin up a local Kubernetes cluster and `kubectl` to launch the deployment.
+
+#### Prerequisites
+Ensure both `kind` and `kubectl` are installed locally.
+
+* [Installing kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+* [Installing kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+
+#### Build and run the example
+From the [examples](./examples) directory run `docker build` to build the example Python client image:
+
+```console
+[user@machine examples]$ docker build -t example-client clients/python
+Sending build context to Docker daemon  3.375MB
+Step 1/15 : FROM python:3.7-alpine as base
+... snipped
+Step 14/15 : ENTRYPOINT ["python", "appencryption_client.py"]
+ ---> Running in a0958391c52e
+Removing intermediate container a0958391c52e
+ ---> 838466cf27e6
+Step 15/15 : CMD ["--help"]
+ ---> Running in e94395d01e20
+Removing intermediate container e94395d01e20
+ ---> c0a177a10252
+Successfully built c0a177a10252
+Successfully tagged example-client:latest
+```
+
+we'll also need the server image:
+
+```console
+[user@machine examples]$ docker build -t asherah-server ../go
+Sending build context to Docker daemon  87.04kB
+Step 1/19 : ARG GOVERSION=1.13
+... snipped
+Step 18/19 : ENTRYPOINT ["/asherah-server"]
+ ---> Using cache
+ ---> 2fdfbe426e0e
+Step 19/19 : CMD ["--help"]
+ ---> Using cache
+ ---> a3bc3c0483a8
+Successfully built a3bc3c0483a8
+Successfully tagged asherah-server:latest
+```
+
+Now that we have both of the images we can run `kind` to create our local Kubernetes cluster and then load the new images into the cluster:
+
+```console
+[user@machine examples]$ kind create cluster
+...
+[user@machine examples]$ kind load docker-image example-client
+...
+[user@machine examples]$ kind load docker-image asherah-server
+...
+```
+
+And now we're ready to use `kubectl` launch the application defined in [deployment.yaml](./examples/deployment.yaml):
+
+```console
+[user@machine examples]$ kubectl --context kind-kind apply -f deployment.yaml
+deployment.apps/myapp created
+```
+
+We can view our pod and the application logs to verify everything is in working order:
+
+```console
+[user@machine examples]$ kubectl --context kind-kind get po
+NAME                     READY   STATUS    RESTARTS   AGE
+myapp-77bd786698-ls42l   2/2     Running   0          70s
+[user@machine examples]$ kubectl --context kind-kind logs -c myapp myapp-77bd786698-ls42l | head -n2
+INFO:root:starting test
+INFO:root:starting session for partitionid-1
+```
+
+And when finished, `kind delete cluster` can be used to delete the cluster.
 
 ## Server Development
 
