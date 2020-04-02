@@ -2,7 +2,6 @@ package com.godaddy.asherah.grpc;
 
 import java.nio.charset.StandardCharsets;
 
-import com.godaddy.asherah.App;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.kms.AwsKeyManagementServiceImpl;
@@ -17,6 +16,7 @@ import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.google.protobuf.ByteString;
 import com.zaxxer.hikari.HikariDataSource;
 
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 import io.grpc.stub.StreamObserver;
 import picocli.CommandLine;
 
-import static com.godaddy.asherah.grpc.AppencryptionProtos.*;
+import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 
 public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
-  private static final Logger logger = LoggerFactory.getLogger(App.class);
+  private static final Logger logger = LoggerFactory.getLogger(AppEncryptionImpl.class);
 
   SessionFactory sessionFactory;
   Session<byte[], byte[]> sessionBytes;
@@ -70,7 +70,10 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           // handle here for encrypt
           String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
           byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
+          String s = Base64.encodeBase64String(dataRowRecordBytes);
+          System.out.println("\n\n\ns = " + s);
           String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
+          System.out.println("\n\ndrr = " + drr);
 
           JSONObject drrJson = new JSONObject(drr);
           byte[] drrDataBytes = drrJson.get("Data").toString().getBytes(StandardCharsets.UTF_8);
@@ -104,10 +107,12 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
         }
 
         if (sessionRequest.hasDecrypt()) {
-          // handle here for decrypt
-        }
 
-        responseObserver.onNext(SessionResponse.getDefaultInstance());
+          // handle here for decrypt
+          DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
+          System.out.println("\n\nDECRYPT\n\n");
+          System.out.println(dataRowRecord);
+        }
       }
 
       @Override
