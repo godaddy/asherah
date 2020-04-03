@@ -15,6 +15,7 @@ import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -77,9 +78,9 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
           byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
           String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
-          System.out.println("drr = " + drr);
+//          System.out.println("drr = " + drr);
 
-          DataRowRecord dataRowRecordValue = tranformJsonToDataRowRecord(new JSONObject(drr));
+          DataRowRecord dataRowRecordValue = tranformJsonToDataRowRecord(new JsonParser().parse(drr).getAsJsonObject());
 
           EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
           responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
@@ -90,18 +91,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           // handle here for decrypt
           DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
 
-          JsonObject parentKeyMetaJson = new JsonObject();
-          parentKeyMetaJson.addProperty("KeyId", dataRowRecord.getKey().getParentKeyMeta().getKeyId());
-          parentKeyMetaJson.addProperty("Created", dataRowRecord.getKey().getParentKeyMeta().getCreated());
-
-          JsonObject keyJson = new JsonObject();
-          keyJson.add("ParentKeyMeta", parentKeyMetaJson);
-          keyJson.addProperty("Key", dataRowRecord.getKey().getKey().toStringUtf8());
-          keyJson.addProperty("Created", dataRowRecord.getKey().getCreated());
-
-          JsonObject drrJson = new JsonObject();
-          drrJson.addProperty("Data", dataRowRecord.getData().toStringUtf8());
-          drrJson.add("Key", keyJson);
+          JsonObject drrJson = transformDataRowRecordToJson(dataRowRecord);
 
           byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
           byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
@@ -127,29 +117,45 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
     return streamObserver;
   }
 
-  private DataRowRecord tranformJsonToDataRowRecord(JSONObject drrJson) {
+  private JsonObject transformDataRowRecordToJson(DataRowRecord dataRowRecord) {
 
-    byte[] drrDataBytes = drrJson.get("Data").toString().getBytes(StandardCharsets.UTF_8);
+    JsonObject parentKeyMetaJson = new JsonObject();
+    parentKeyMetaJson.addProperty("KeyId", dataRowRecord.getKey().getParentKeyMeta().getKeyId());
+    parentKeyMetaJson.addProperty("Created", dataRowRecord.getKey().getParentKeyMeta().getCreated());
 
-    JSONObject envelopeKeyRecordJson = (JSONObject) drrJson.get("Key");
-    long ekrCreatedValue = Long.parseLong(String.valueOf(envelopeKeyRecordJson.get("Created")));
-    byte[] ekrKey = envelopeKeyRecordJson.get("Key").toString().getBytes(StandardCharsets.UTF_8);
+    JsonObject keyJson = new JsonObject();
+    keyJson.add("ParentKeyMeta", parentKeyMetaJson);
+    keyJson.addProperty("Key", dataRowRecord.getKey().getKey().toStringUtf8());
+    keyJson.addProperty("Created", dataRowRecord.getKey().getCreated());
 
-    JSONObject parentKeyMetaJson = (JSONObject) envelopeKeyRecordJson.get("ParentKeyMeta");
-    String parentKeyMetaKeyId = (String) parentKeyMetaJson.get("KeyId");
-    long parentKeyMetaCreated = Long.parseLong(String.valueOf(parentKeyMetaJson.get("Created")));
+    JsonObject drrJson = new JsonObject();
+    drrJson.addProperty("Data", dataRowRecord.getData().toStringUtf8());
+    drrJson.add("Key", keyJson);
 
+    return drrJson;
+  }
+
+  private DataRowRecord tranformJsonToDataRowRecord(JsonObject drrJson) {
+
+    JsonObject envelopeKeyRecordJson = (JsonObject) drrJson.get("Key");
+    JsonObject parentKeyMetaJson = (JsonObject) envelopeKeyRecordJson.get("ParentKeyMeta");
+
+    String parentKeyMetaKeyId = parentKeyMetaJson.get("KeyId").getAsString();
+    long parentKeyMetaCreated = parentKeyMetaJson.get("Created").getAsLong();
     KeyMeta keyMetaValue = KeyMeta.newBuilder()
       .setCreated(parentKeyMetaCreated)
       .setKeyId(parentKeyMetaKeyId)
       .build();
 
+    byte[] ekrKey = envelopeKeyRecordJson.get("Key").getAsString().getBytes(StandardCharsets.UTF_8);
+    long ekrCreatedValue = envelopeKeyRecordJson.get("Created").getAsLong();
     EnvelopeKeyRecord envelopeKeyRecordValue = EnvelopeKeyRecord.newBuilder()
       .setCreated(ekrCreatedValue)
       .setKey(ByteString.copyFrom(ekrKey))
       .setParentKeyMeta(keyMetaValue)
       .build();
 
+    byte[] drrDataBytes = drrJson.get("Data").getAsString().getBytes(StandardCharsets.UTF_8);
     DataRowRecord dataRowRecordValue = DataRowRecord.newBuilder()
       .setData(ByteString.copyFrom(drrDataBytes))
       .setKey(envelopeKeyRecordValue)
