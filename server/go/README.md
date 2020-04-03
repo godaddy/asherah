@@ -1,7 +1,7 @@
 # Asherah Server - Go
 
 ## Running the server
-This example assumes mysql is running on localhost and a preexisting asherah database
+This assumes mysql is running on localhost and a preexisting asherah database
 
 ```console
 $ go build -o server main.go

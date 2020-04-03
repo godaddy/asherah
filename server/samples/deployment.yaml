@@ -5,11 +5,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      product: asherah-examples
+      product: asherah-sample
   template:
     metadata:
       labels:
-        product: asherah-examples
+        product: asherah-sample
     spec:
       containers:
       - name: sidecar
@@ -20,7 +20,7 @@ spec:
         - name: ASHERAH_SERVICE_NAME
           value: myapp
         - name: ASHERAH_PRODUCT_NAME
-          value: asherah-examples
+          value: asherah-sample
         - name: ASHERAH_EXPIRE_AFTER
           value: 60m
         - name: ASHERAH_CHECK_INTERVAL
@@ -33,7 +33,7 @@ spec:
         - name: tmpdir
           mountPath: /tmp
       - name: myapp
-        image: example-client
+        image: sample-client
         imagePullPolicy: Never
         args: ["--socket", "/tmp/appencryption.sock", "--continuous"]
         volumeMounts:
@@ -41,4 +41,4 @@ spec:
           mountPath: /tmp
       volumes:
         - name: tmpdir
-          emptyDir: {}          
+          emptyDir: {}
