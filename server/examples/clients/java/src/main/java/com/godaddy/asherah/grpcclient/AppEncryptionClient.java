@@ -22,11 +22,13 @@ public class AppEncryptionClient {
 
   private final AppEncryptionStub appEncryptionStub;
   private final List<DataRowRecord> dataRowRecordList;
+  private final List<String> decryptedPayloadString;
 
   public AppEncryptionClient(Channel channel) {
     // It is up to the client to determine whether to block the call or just use async call like the one below
     appEncryptionStub = AppEncryptionGrpc.newStub(channel);
     dataRowRecordList = new ArrayList<>();
+    decryptedPayloadString = new ArrayList<>();
   }
 
   public CountDownLatch session() {
@@ -43,6 +45,8 @@ public class AppEncryptionClient {
 
         if (sessionResponse.hasDecryptResponse()) {
           // do something with a decrypt response
+          String decryptedString = new String(sessionResponse.getDecryptResponse().getData().toByteArray(), StandardCharsets.UTF_8);
+          decryptedPayloadString.add(decryptedString);
         }
       }
 
@@ -77,10 +81,20 @@ public class AppEncryptionClient {
       e.printStackTrace();
     }
 
-//    System.out.println("SIZE = " + dataRowRecordList.size());
-//    DataRowRecord dataRowRecord = dataRowRecordList.get(0);
-//    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
-//    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
+    System.out.println("SIZE = " + dataRowRecordList.size());
+    DataRowRecord dataRowRecord = dataRowRecordList.get(0);
+    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
+    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
+
+    try {
+      // Wait for response from the server
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    System.out.println("Decrypted payload = " + decryptedPayloadString.get(0));
+    System.out.println("matches = " + originalPayloadString.equals(decryptedPayloadString.get(0)));
 
     // Mark the end of requests
     requestObserver.onCompleted();

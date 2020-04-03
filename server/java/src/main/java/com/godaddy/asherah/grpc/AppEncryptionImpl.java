@@ -1,6 +1,7 @@
 package com.godaddy.asherah.grpc;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
@@ -13,10 +14,10 @@ import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
+import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import com.zaxxer.hikari.HikariDataSource;
 
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,42 +66,20 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           responseObserver.onNext(SessionResponse.getDefaultInstance());
         }
 
+        if (sessionBytes == null) {
+          onError(new Exception("Please initialize a session first"));
+          return;
+        }
+
         if (sessionRequest.hasEncrypt()) {
 
           // handle here for encrypt
           String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
           byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
-          String s = Base64.encodeBase64String(dataRowRecordBytes);
-          System.out.println("\n\n\ns = " + s);
           String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
-          System.out.println("\n\ndrr = " + drr);
+          System.out.println("drr = " + drr);
 
-          JSONObject drrJson = new JSONObject(drr);
-          byte[] drrDataBytes = drrJson.get("Data").toString().getBytes(StandardCharsets.UTF_8);
-
-          JSONObject envelopeKeyRecordJson = (JSONObject) drrJson.get("Key");
-          long ekrCreatedValue = Long.parseLong(String.valueOf(envelopeKeyRecordJson.get("Created")));
-          byte[] ekrKey = envelopeKeyRecordJson.get("Key").toString().getBytes(StandardCharsets.UTF_8);
-
-          JSONObject parentKeyMetaJson = (JSONObject) envelopeKeyRecordJson.get("ParentKeyMeta");
-          String parentKeyMetaKeyId = (String) parentKeyMetaJson.get("KeyId");
-          long parentKeyMetaCreated = Long.parseLong(String.valueOf(parentKeyMetaJson.get("Created")));
-
-          KeyMeta keyMetaValue = KeyMeta.newBuilder()
-            .setCreated(parentKeyMetaCreated)
-            .setKeyId(parentKeyMetaKeyId)
-            .build();
-
-          EnvelopeKeyRecord envelopeKeyRecordValue = EnvelopeKeyRecord.newBuilder()
-            .setCreated(ekrCreatedValue)
-            .setKey(ByteString.copyFrom(ekrKey))
-            .setParentKeyMeta(keyMetaValue)
-            .build();
-
-          DataRowRecord dataRowRecordValue = DataRowRecord.newBuilder()
-            .setData(ByteString.copyFrom(drrDataBytes))
-            .setKey(envelopeKeyRecordValue)
-            .build();
+          DataRowRecord dataRowRecordValue = tranformJsonToDataRowRecord(new JSONObject(drr));
 
           EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
           responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
@@ -110,8 +89,24 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
           // handle here for decrypt
           DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
-          System.out.println("\n\nDECRYPT\n\n");
-          System.out.println(dataRowRecord);
+
+          JsonObject parentKeyMetaJson = new JsonObject();
+          parentKeyMetaJson.addProperty("KeyId", dataRowRecord.getKey().getParentKeyMeta().getKeyId());
+          parentKeyMetaJson.addProperty("Created", dataRowRecord.getKey().getParentKeyMeta().getCreated());
+
+          JsonObject keyJson = new JsonObject();
+          keyJson.add("ParentKeyMeta", parentKeyMetaJson);
+          keyJson.addProperty("Key", dataRowRecord.getKey().getKey().toStringUtf8());
+          keyJson.addProperty("Created", dataRowRecord.getKey().getCreated());
+
+          JsonObject drrJson = new JsonObject();
+          drrJson.addProperty("Data", dataRowRecord.getData().toStringUtf8());
+          drrJson.add("Key", keyJson);
+
+          byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
+          byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+          DecryptResponse decryptResponse = DecryptResponse.newBuilder().setData(ByteString.copyFrom(decryptedBytes)).build();
+          responseObserver.onNext(SessionResponse.newBuilder().setDecryptResponse(decryptResponse).build());
         }
       }
 
@@ -123,11 +118,44 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
       @Override
       public void onCompleted() {
+        sessionBytes.close();
+        sessionFactory.close();
         System.out.println("on completed");
       }
     };
 
     return streamObserver;
+  }
+
+  private DataRowRecord tranformJsonToDataRowRecord(JSONObject drrJson) {
+
+    byte[] drrDataBytes = drrJson.get("Data").toString().getBytes(StandardCharsets.UTF_8);
+
+    JSONObject envelopeKeyRecordJson = (JSONObject) drrJson.get("Key");
+    long ekrCreatedValue = Long.parseLong(String.valueOf(envelopeKeyRecordJson.get("Created")));
+    byte[] ekrKey = envelopeKeyRecordJson.get("Key").toString().getBytes(StandardCharsets.UTF_8);
+
+    JSONObject parentKeyMetaJson = (JSONObject) envelopeKeyRecordJson.get("ParentKeyMeta");
+    String parentKeyMetaKeyId = (String) parentKeyMetaJson.get("KeyId");
+    long parentKeyMetaCreated = Long.parseLong(String.valueOf(parentKeyMetaJson.get("Created")));
+
+    KeyMeta keyMetaValue = KeyMeta.newBuilder()
+      .setCreated(parentKeyMetaCreated)
+      .setKeyId(parentKeyMetaKeyId)
+      .build();
+
+    EnvelopeKeyRecord envelopeKeyRecordValue = EnvelopeKeyRecord.newBuilder()
+      .setCreated(ekrCreatedValue)
+      .setKey(ByteString.copyFrom(ekrKey))
+      .setParentKeyMeta(keyMetaValue)
+      .build();
+
+    DataRowRecord dataRowRecordValue = DataRowRecord.newBuilder()
+      .setData(ByteString.copyFrom(drrDataBytes))
+      .setKey(envelopeKeyRecordValue)
+      .build();
+
+    return dataRowRecordValue;
   }
 
   private CryptoPolicy setupCryptoPolicy(int keyExpirationDays, int revokeCheckMinutes) {
