@@ -1,5 +1,6 @@
 ARG GOVERSION=1.13
-FROM golang:${GOVERSION} AS builder
+ARG ALPINEVERSION=3.11
+FROM golang:${GOVERSION}-alpine${ALPINEVERSION} AS builder
 
 WORKDIR /go/src/server/
 COPY go.mod go.mod
@@ -17,7 +18,7 @@ ENV GOARCH=amd64
 
 RUN go build -a -o /bin/asherah-server main.go
 
-FROM alpine:3.11
+FROM alpine:${ALPINEVERSION}
 WORKDIR /
 COPY --from=builder /bin/asherah-server .
 ENTRYPOINT ["/asherah-server"]
