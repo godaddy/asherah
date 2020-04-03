@@ -216,6 +216,7 @@ func Test_Streamer_StreamDecrypt_BeforeGetSession(t *testing.T) {
 	}
 
 	stream := new(mockSessionServer)
+	stream.On("Context").Return(context.Background())
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
@@ -266,6 +267,7 @@ func Test_Streamer_StreamEncrypt_BeforeGetSession(t *testing.T) {
 	}
 
 	stream := new(mockSessionServer)
+	stream.On("Context").Return(context.Background())
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
@@ -289,6 +291,7 @@ func Test_Streamer_StreamGetSession_SessionAlreadyInitializedError(t *testing.T)
 	}
 
 	stream := new(mockSessionServer)
+	stream.On("Context").Return(context.Background())
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
@@ -334,6 +337,7 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 	resp := new(pb.SessionResponse)
 
 	stream := new(mockSessionServer)
+	stream.On("Context").Return(context.Background())
 	stream.On("Recv").Return(req, nil).Once()
 	stream.On("Recv").Return(nil, io.EOF)
 	stream.On("Send", resp).Return(nil)
