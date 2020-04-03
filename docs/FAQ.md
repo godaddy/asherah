@@ -20,18 +20,6 @@ to compromise both the application server and the database server. Using properl
 we make it difficult for an exploited application to exfiltrate more than one account's information since the session
 would generally have the key scoped to that account cached and logically accessible.
 
-
-#### Why not build a sidecar rather than N libraries for N supported languages?
-
-A sidecar would in best case run on localhost / 127.0.0.1. Thus, unless the localhost connections were encrypted, one
-could simply wireshark (packet capture) the localhost / loopback interface, and observe all of the sensitive information
-as it is accessed. If we introduce encryption at that layer, that would prevent the application traffic from being
-packet captured but it wouldn't help with the fact that anyone on localhost could potentially connect to the port and
-issue their own commands to fetch encrypted fields. Then we would have to solve for authentication of clients as well as
-authentication of servers. Each time we introduce a TCP connection, we have to deal with encryption, client validation,
-server validation and the associated certificates that make those things possible.
-
-
 #### Why not build a majority of the code in C and reuse it?
 
 This is a viable solution and it was considered, however we determined that if it were possible to make platform native
