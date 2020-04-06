@@ -398,6 +398,7 @@ func Test_DefaultHandler_GetSession(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Nil(t, resp.Response)
 	assert.Equal(t, session, h.session)
+	assert.Equal(t, id, h.partition)
 	m.AssertExpectations(t)
 }
 

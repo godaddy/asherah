@@ -199,10 +199,11 @@ type session interface {
 type defaultHandler struct {
 	sessionFactory sessionFactory
 	session        session
+	partition      string
 }
 
 func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
-	log.Println("handling decrypt")
+	log.Println("handling decrypt for", h.partition)
 
 	drr := fromProtobufDRR(r.GetDecrypt().GetDataRowRecord())
 
@@ -235,7 +236,7 @@ func fromProtobufDRR(drr *pb.DataRowRecord) *appencryption.DataRowRecord {
 }
 
 func (h *defaultHandler) Encrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
-	log.Println("handling encrypt")
+	log.Println("handling encrypt for", h.partition)
 
 	drr, err := h.session.EncryptContext(ctx, r.GetEncrypt().GetData())
 	if err != nil {
@@ -266,11 +267,11 @@ func toProtobufDRR(drr *appencryption.DataRowRecord) *pb.DataRowRecord {
 }
 
 func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
-	partition := r.GetGetSession().GetPartitionId()
+	h.partition = r.GetGetSession().GetPartitionId()
 
-	log.Println("handling get-session for", partition)
+	log.Println("handling get-session for", h.partition)
 
-	s, err := h.sessionFactory.GetSession(partition)
+	s, err := h.sessionFactory.GetSession(h.partition)
 	if err != nil {
 		return newErrorResponse(err.Error())
 	}
@@ -281,7 +282,7 @@ func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
 }
 
 func (h *defaultHandler) Close() error {
-	log.Println("closing session")
+	log.Println("closing session for", h.partition)
 	return h.session.Close()
 }
 
