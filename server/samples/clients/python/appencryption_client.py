@@ -7,13 +7,13 @@ via a generated gRPC client.
 """
 
 import argparse
+import asyncio
 import logging
 import queue
 import random
 import signal
 import string
 import sys
-import time
 from types import FrameType, TracebackType
 from typing import Any, Iterator, Optional, Type
 
@@ -135,18 +135,14 @@ class InterruptHandler:
         signal.signal(signal.SIGTERM, self._interrupt)
 
 
-
-def run_once(client: SessionClient) -> None:
+async def run_once(client: SessionClient) -> None:
     """Executes run_client_test once."""
 
     run_client_test(client)
 
 
-def run_continusously(client: SessionClient) -> None:
+async def run_continusously(client: SessionClient, handler: InterruptHandler) -> None:
     """Executes run_client_test until the process is interrupted."""
-
-    handler = InterruptHandler()
-    handler.start()
 
     while True:
         run_client_test(client)
@@ -154,7 +150,8 @@ def run_continusously(client: SessionClient) -> None:
         if handler.interrupted:
             break
 
-        time.sleep(0.5)
+        # now sleep for random duration between .5 to 1 second
+        await asyncio.sleep(random.randrange(5, 11)/10)
 
 
 def random_string(length: int = 12) -> str:
@@ -186,31 +183,49 @@ def run_client_test(client: SessionClient):
     logging.info('test completed successfully')
 
 
-def _main():
+async def _run_client(
+        socket_file: string,
+        partition_id: int,
+        continuous: bool,
+        handler: InterruptHandler
+) -> None:
+    partition = f'partitionid-{partition_id}'
+
+    logging.info('starting session for %s', partition)
+    with SessionClient(socket_file, partition) as client:
+        if continuous:
+            await run_continusously(client, handler)
+        else:
+            await run_once(client)
+
+
+async def _main():
     parser = argparse.ArgumentParser(
         description='Connect to a local Asherah Server and execute a series of operations.')
     parser.add_argument(
         '--socket',
         default='/tmp/appencryption.sock',
-        help='The unix domain socket the server is listening on')
+        help='The unix domain socket the server is listening on.')
+    parser.add_argument(
+        '--num-clients',
+        default=1,
+        type=int,
+        help='The total number of clients to run concurrently.')
     parser.add_argument(
         '--continuous',
         action='store_true',
         help='When present the client will run a continuous test.')
     args = parser.parse_args()
 
+    handler = InterruptHandler()
+    handler.start()
+
     logging.info('starting test')
-
-    partition = 'partitionid-1'
-
-    logging.info('starting session for %s', partition)
-    with SessionClient(args.socket, partition) as client:
-        if args.continuous:
-            run_continusously(client)
-        else:
-            run_once(client)
+    tasks = {asyncio.create_task(_run_client(args.socket, i, args.continuous, handler))
+             for i in range(1, args.num_clients+1)}
+    await asyncio.wait(tasks)
 
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-    _main()
+    asyncio.run(_main())
