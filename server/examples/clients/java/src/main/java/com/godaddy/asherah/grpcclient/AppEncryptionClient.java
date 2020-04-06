@@ -65,7 +65,7 @@ public class AppEncryptionClient {
     });
 
     // Get a session from the server
-    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-2").build();
     requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
 
     // Try to encrypt a payload
