@@ -3,7 +3,6 @@ package com.godaddy.asherah.grpc;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;

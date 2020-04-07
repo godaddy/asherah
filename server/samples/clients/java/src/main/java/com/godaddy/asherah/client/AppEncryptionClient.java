@@ -9,10 +9,7 @@ import com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt;
 import com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt;
 import com.google.protobuf.ByteString;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -33,14 +30,13 @@ import static com.godaddy.asherah.grpc.AppEncryptionGrpc.AppEncryptionStub;
 public class AppEncryptionClient {
 
   private final AppEncryptionStub appEncryptionStub;
-  private final List<DataRowRecord> dataRowRecordList;
-  private final List<String> decryptedPayloadString;
+
+  private DataRowRecord dataRowRecord;
+  private String decryptedPayloadString;
 
   public AppEncryptionClient(final Channel channel) {
     // It is up to the client to determine whether to block the call or just use async call like the one below
     appEncryptionStub = AppEncryptionGrpc.newStub(channel);
-    dataRowRecordList = new ArrayList<>();
-    decryptedPayloadString = new ArrayList<>();
   }
 
   public CountDownLatch session() {
@@ -48,18 +44,19 @@ public class AppEncryptionClient {
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(new StreamObserver<SessionResponse>() {
       @Override
       public void onNext(final SessionResponse sessionResponse) {
-        System.out.println("onNext in client");
-        System.out.println("got response from server = " + sessionResponse);
+
+        // for debug purposes
+        // System.out.println("got response from server = " + sessionResponse);
 
         if (sessionResponse.hasEncryptResponse()) {
-          dataRowRecordList.add(sessionResponse.getEncryptResponse().getDataRowRecord());
+          // do something with encrypt response
+          dataRowRecord = sessionResponse.getEncryptResponse().getDataRowRecord();
         }
 
         if (sessionResponse.hasDecryptResponse()) {
           // do something with a decrypt response
-          String decryptedString =
+          decryptedPayloadString =
               new String(sessionResponse.getDecryptResponse().getData().toByteArray(), StandardCharsets.UTF_8);
-          decryptedPayloadString.add(decryptedString);
         }
       }
 
@@ -78,11 +75,12 @@ public class AppEncryptionClient {
     });
 
     // Get a session from the server
-    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-2").build();
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
     requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
 
     // Try to encrypt a payload
     String originalPayloadString = "mysupersecretpayload";
+    System.out.println("Encrypting payload = " + originalPayloadString);
     ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
     Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
     requestObserver.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
@@ -95,8 +93,7 @@ public class AppEncryptionClient {
       e.printStackTrace();
     }
 
-    System.out.println("SIZE = " + dataRowRecordList.size());
-    DataRowRecord dataRowRecord = dataRowRecordList.get(0);
+    // Try to decrypt back the payload
     Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
     requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
 
@@ -108,8 +105,9 @@ public class AppEncryptionClient {
       e.printStackTrace();
     }
 
-    System.out.println("Decrypted payload = " + decryptedPayloadString.get(0));
-    System.out.println("matches = " + originalPayloadString.equals(decryptedPayloadString.get(0)));
+    // Verify that the two payload match
+    System.out.println("Decrypted payload = " + decryptedPayloadString);
+    System.out.println("matches = " + originalPayloadString.equals(decryptedPayloadString));
 
     // Mark the end of requests
     requestObserver.onCompleted();
@@ -118,13 +116,12 @@ public class AppEncryptionClient {
     return finishLatch;
   }
 
-  public static void main(final String[] args) throws IOException, InterruptedException {
+  public static void main(final String[] args) throws InterruptedException {
 
-    // final int portNumber = 50000;
     final long awaitTime = 5;
 
-    NettyChannelBuilder builder = NettyChannelBuilder
-        .forAddress(new DomainSocketAddress("/tmp/appencryption.sock"));
+    NettyChannelBuilder builder =
+        NettyChannelBuilder.forAddress(new DomainSocketAddress("/tmp/appencryption.sock"));
     EventLoopGroup group;
     if (SystemUtils.IS_OS_MAC) {
       group = new KQueueEventLoopGroup();
