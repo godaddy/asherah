@@ -17,23 +17,34 @@
         <maven.compiler.target>1.7</maven.compiler.target>
         <junit.jupiter.version>5.1.1</junit.jupiter.version>
         <junit.platform.version>1.1.1</junit.platform.version>
+        <commons.lang3.version>3.10</commons.lang3.version>
+        <io.netty.version>4.1.48.Final</io.netty.version>
+        <io.grpc.version>1.28.0</io.grpc.version>
+        <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.28.0</version>
+            <artifactId>grpc-netty</artifactId>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>1.28.0</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>1.28.0</version>
+            <version>${io.grpc.version}</version>
+        </dependency>
+
+        <!-- 3rd party dependencies -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>${io.netty.version}</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -43,6 +54,11 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.jupiter.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner -->
@@ -96,6 +112,28 @@
                     <source>8</source>
                     <target>8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                            <consoleOutput>true</consoleOutput>
+                            <configLocation>${checkstyle.config}</configLocation>
+                            <includeResources>false</includeResources>
+                            <includeTestResources>false</includeTestResources>
+                            <failOnViolation>true</failOnViolation>
+                        </configuration>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

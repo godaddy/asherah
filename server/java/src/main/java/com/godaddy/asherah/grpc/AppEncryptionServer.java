@@ -3,14 +3,20 @@ package com.godaddy.asherah.grpc;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueServerDomainSocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
+import org.apache.commons.lang3.SystemUtils;
 import picocli.CommandLine;
 
 public class AppEncryptionServer implements Callable<Void> {
@@ -39,11 +45,14 @@ public class AppEncryptionServer implements Callable<Void> {
     description = "Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.")
   static Map<String, String> regionMap;
 
-  // Options to configure the session factory
+  // Options to configure the server
   @CommandLine.Option(names = "--productId", description = "Specify the product id", required = true)
   static String productId;
   @CommandLine.Option(names = "--serviceId", description = "Specify the service id", required = true)
   static String serviceId;
+  @CommandLine.Option(names = "--uds", description = "Unix domain socket file",
+    defaultValue = "/tmp/appencryption.sock", required = true)
+  static String uds;
 
   // Options to set up crypto policy
   @CommandLine.Option(names = "--key-expiration-days", defaultValue = "90",
@@ -69,14 +78,34 @@ public class AppEncryptionServer implements Callable<Void> {
     CommandLine.call(new AppEncryptionServer(), args);
   }
 
+  private NettyServerBuilder bindUDS(String uds) {
+
+    // Create a new server to listen on a socket
+    NettyServerBuilder builder = NettyServerBuilder.forAddress(new DomainSocketAddress(uds));
+    EventLoopGroup group;
+
+    if (SystemUtils.IS_OS_MAC) {
+      group = new KQueueEventLoopGroup();
+      builder.channelType(KQueueServerDomainSocketChannel.class);
+    } else if (SystemUtils.IS_OS_LINUX) {
+      group = new EpollEventLoopGroup();
+      builder.channelType(EpollServerDomainSocketChannel.class);
+    } else {
+      throw new IllegalStateException("binding to unix:// addresses is only supported on Linux and macOS");
+    }
+    builder.workerEventLoopGroup(group).bossEventLoopGroup(group);
+
+    return builder;
+  }
+
   @Override
   public Void call() throws InterruptedException, IOException {
 
-    // Create a new server to listen on any port
-    ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 50000));
+    NettyServerBuilder nettyServerBuilder = bindUDS("/tmp/appencryption.sock");
     executor = MoreExecutors.directExecutor();
-    builder.executor(executor);
-    Server server = builder.addService(new AppEncryptionImpl()).build();
+    nettyServerBuilder.executor(executor);
+
+    Server server = nettyServerBuilder.addService(new AppEncryptionImpl()).build();
 
     // Start the server
     server.start();

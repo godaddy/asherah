@@ -18,7 +18,7 @@ class AppEncryptionImplTest {
   long parentKeyMetaCreatedTime, ekrCreatedTime;
   String drrBytes, ekrBytes, parentKeyMetaKeyId;
 
-  public AppEncryptionImplTest() {
+  AppEncryptionImplTest() {
     this.appEncryption = new AppEncryptionImpl();
     parentKeyMetaCreatedTime = Instant.now().getEpochSecond();
     ekrCreatedTime = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();

@@ -1,6 +1,12 @@
-package com.godaddy.asherah.grpcclient;
+package com.godaddy.asherah.client;
 
 import com.godaddy.asherah.grpc.AppEncryptionGrpc;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt;
+import com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt;
 import com.google.protobuf.ByteString;
 
 import java.io.IOException;
@@ -12,11 +18,17 @@ import java.util.concurrent.TimeUnit;
 
 import io.grpc.Channel;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.unix.DomainSocketAddress;
+import org.apache.commons.lang3.SystemUtils;
 
 import static com.godaddy.asherah.grpc.AppEncryptionGrpc.AppEncryptionStub;
-import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 
 public class AppEncryptionClient {
 
@@ -24,7 +36,7 @@ public class AppEncryptionClient {
   private final List<DataRowRecord> dataRowRecordList;
   private final List<String> decryptedPayloadString;
 
-  public AppEncryptionClient(Channel channel) {
+  public AppEncryptionClient(final Channel channel) {
     // It is up to the client to determine whether to block the call or just use async call like the one below
     appEncryptionStub = AppEncryptionGrpc.newStub(channel);
     dataRowRecordList = new ArrayList<>();
@@ -35,7 +47,7 @@ public class AppEncryptionClient {
     final CountDownLatch finishLatch = new CountDownLatch(1);
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(new StreamObserver<SessionResponse>() {
       @Override
-      public void onNext(SessionResponse sessionResponse) {
+      public void onNext(final SessionResponse sessionResponse) {
         System.out.println("onNext in client");
         System.out.println("got response from server = " + sessionResponse);
 
@@ -45,13 +57,14 @@ public class AppEncryptionClient {
 
         if (sessionResponse.hasDecryptResponse()) {
           // do something with a decrypt response
-          String decryptedString = new String(sessionResponse.getDecryptResponse().getData().toByteArray(), StandardCharsets.UTF_8);
+          String decryptedString =
+              new String(sessionResponse.getDecryptResponse().getData().toByteArray(), StandardCharsets.UTF_8);
           decryptedPayloadString.add(decryptedString);
         }
       }
 
       @Override
-      public void onError(Throwable throwable) {
+      public void onError(final Throwable throwable) {
         System.out.println("Session failed");
         throwable.printStackTrace();
         finishLatch.countDown();
@@ -76,8 +89,9 @@ public class AppEncryptionClient {
 
     try {
       // Wait for response from the server
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+    }
+    catch (InterruptedException e) {
       e.printStackTrace();
     }
 
@@ -88,8 +102,9 @@ public class AppEncryptionClient {
 
     try {
       // Wait for response from the server
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+    }
+    catch (InterruptedException e) {
       e.printStackTrace();
     }
 
@@ -104,9 +119,27 @@ public class AppEncryptionClient {
   }
 
   public static void main(final String[] args) throws IOException, InterruptedException {
+
+    // final int portNumber = 50000;
+    final long awaitTime = 5;
+
+    NettyChannelBuilder builder = NettyChannelBuilder
+        .forAddress(new DomainSocketAddress("/tmp/appencryption.sock"));
+    EventLoopGroup group;
+    if (SystemUtils.IS_OS_MAC) {
+      group = new KQueueEventLoopGroup();
+      builder.channelType(KQueueDomainSocketChannel.class);
+    }
+    else {
+      // For linux client
+      group = new EpollEventLoopGroup();
+      builder.channelType(EpollDomainSocketChannel.class);
+    }
+    builder.eventLoopGroup(group);
+
     // Channel is the abstraction to connect to a service endpoint
     // Let's use plaintext communication because we don't have certs
-    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50000).usePlaintext().build();
+    ManagedChannel channel = builder.usePlaintext().build();
 
     try {
       AppEncryptionClient appEncryptionClient = new AppEncryptionClient(channel);
@@ -117,9 +150,10 @@ public class AppEncryptionClient {
       if (!finishLatch.await(1, TimeUnit.MINUTES)) {
         System.out.println("Can't finish within 1 minutes");
       }
-    } finally {
+    }
+    finally {
       // A Channel should be shutdown before stopping the process.
-      channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+      channel.shutdown().awaitTermination(awaitTime, TimeUnit.SECONDS);
     }
   }
 

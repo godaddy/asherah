@@ -1,4 +1,4 @@
-package com.godaddy.asherah.grpcclient;
+package com.godaddy.asherah.client;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
