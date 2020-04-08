@@ -25,8 +25,8 @@ Full code for the client implementations used in the following samples, as well 
 configurations, can be found in the [samples](./samples) directory.
 
 ### Docker Compose
-In this section we'll use Docker Compose to launch a multi-container application comprised of a simple Python client and
-an Asherah Server sidecar.
+Use Docker Compose to launch a multi-container application comprised of a simple Python client and an Asherah Server
+sidecar.
 
 #### Prerequisites
 Ensure Docker Compose is installed on your local system. For installation instructions, see
@@ -57,8 +57,8 @@ your machine. This process typically takes between 5 to 10 minutes, but build ti
 machine to another.
 
 ### Kubernetes (kind)
-In this section we'll launch the the same multi-container application we used above but this time we'll use
-[kind](https://kind.sigs.k8s.io/) to spin up a local Kubernetes cluster and `kubectl` to launch the deployment.
+Launch the the same multi-container application we used above but this time we'll use [kind](https://kind.sigs.k8s.io/)
+to spin up a local Kubernetes cluster and `kubectl` to launch the deployment.
 
 #### Prerequisites
 Ensure both `kind` and `kubectl` are installed locally.
@@ -138,9 +138,22 @@ And when finished, `kind delete cluster` can be used to delete the cluster.
 ## Server Development
 
 ### Code generation
-First you'll need to ensure the protobuf compiler is installed...
+First you'll need to ensure the protobuf compiler and relevent gRPC packages have been installed for
+language you're working with. See language sections below for more.
 
-Then regenerate the gRPC server interfaces for go by running:
-```bash
-$ protoc --go_out=plugins=grpc:./go protos/appencryption.proto
+### Go
+Use the following to regenerate the gRPC service code for the Go server implementation.
+
+#### Prerequisites
+Ensure you have a working Go installation and gRPC is installed.
+
+* [Installing Go](https://golang.org/doc/install)
+* [gRPC Quick Starts - Go](https://grpc.io/docs/quickstart/go/)
+
+Navigate to the `server` directory and run the following:
+```console
+[user@machine server]$ protoc --go_out=plugins=grpc:./go protos/appencryption.proto
 ```
+
+### Java
+Coming soon.
