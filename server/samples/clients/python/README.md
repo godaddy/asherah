@@ -5,7 +5,7 @@ A simple client application that demonstrates integrating with Asherah Server vi
 Ensure the Asherah Server is running locally and listening on `unix:///tmp/appencryption.sock` and run:
 
 ```console
-$ python appencryption_client.py
+[user@machine python]$ python appencryption_client.py
 INFO:root:starting test
 INFO:root:starting session for partitionid-1
 INFO:root:encrypting: b'my "secret" data'
@@ -19,15 +19,19 @@ INFO:root:test completed successfully
 Create a python virtual environment and install the client tools
 
 ```console
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ pip install --upgrade pip
-$ pip install grpcio-tools
+[user@machine python]$ python3 -m venv .venv
+[user@machine python]$ source .venv/bin/activate
+[user@machine python]$ pip install --upgrade pip
+[user@machine python]$ pip install grpcio-tools
 <snip>
 Successfully installed grpcio-1.27.2 grpcio-tools-1.27.2 protobuf-3.11.3 six-1.14.0
 ```
 
 Generate the client
 ```console
-$ python -m grpc_tools.protoc -I../../../protos --python_out=. --grpc_python_out=. ../../../protos/appencryption.proto
+[user@machine python]$ python -m grpc_tools.protoc \
+    -I../../../protos \
+    --python_out=. \
+    --grpc_python_out=. \
+    ../../../protos/appencryption.proto
 ```
