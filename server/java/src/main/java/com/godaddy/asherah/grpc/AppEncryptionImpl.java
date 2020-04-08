@@ -54,8 +54,8 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
       @Override
       public void onNext(SessionRequest sessionRequest) {
-        System.out.println("onNext from server");
-        System.out.println("sessionRequest = " + sessionRequest);
+        // For debug purposes
+        // System.out.println("sessionRequest = " + sessionRequest);
 
         if (sessionRequest.hasGetSession()) {
           // Handle response for get session
@@ -72,6 +72,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
         if (sessionBytes == null) {
           responseObserver.onError(new Exception("Please initialize a session first"));
+          return;
         }
 
         if (sessionRequest.hasEncrypt()) {

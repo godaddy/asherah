@@ -4,8 +4,8 @@
 This example uses static kms and an in-memory metastore
 
 ```console
-mvn clean install
-java -jar <jar-path> --productId=product, --serviceId=service
+[user@machine java]$ mvn clean install
+[user@machine java]$ java -jar <jar-path> --productId=product, --serviceId=service, --uds="/tmp/appencryption.sock"
 ```
 
 The available options are
@@ -34,5 +34,5 @@ The available options are
 --session-cache-max-size=<sessionCacheMaxSize>
                           Define the number of maximum sessions to cache.
 --session-caching         Enable/disable the session caching
+--uds                     File path for unix domain socket
 ```
-

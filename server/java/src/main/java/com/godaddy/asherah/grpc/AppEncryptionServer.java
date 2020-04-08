@@ -51,7 +51,7 @@ public class AppEncryptionServer implements Callable<Void> {
   static String serviceId;
   @CommandLine.Option(names = "--uds", description = "Unix domain socket file",
     defaultValue = "/tmp/appencryption.sock", required = true)
-  static String uds;
+  static String udsFilePath;
 
   // Options to set up crypto policy
   @CommandLine.Option(names = "--key-expiration-days", defaultValue = "90",
@@ -77,12 +77,33 @@ public class AppEncryptionServer implements Callable<Void> {
     CommandLine.call(new AppEncryptionServer(), args);
   }
 
+  @Override
+  public Void call() throws InterruptedException, IOException {
+
+    NettyServerBuilder nettyServerBuilder = bindUDS(udsFilePath);
+    executor = MoreExecutors.directExecutor();
+    nettyServerBuilder.executor(executor);
+
+    Server server = nettyServerBuilder.addService(new AppEncryptionImpl()).build();
+
+    // Start the server
+    server.start();
+    System.out.println("Server has started");
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      server.shutdown();
+    }));
+
+    // Don't exit the main thread. Wait until server is terminated.
+    server.awaitTermination();
+    return null;
+  }
+
   private NettyServerBuilder bindUDS(String uds) {
 
     // Create a new server to listen on a socket
-    NettyServerBuilder builder = NettyServerBuilder.forAddress(new DomainSocketAddress(uds));
     EventLoopGroup group;
-
+    NettyServerBuilder builder = NettyServerBuilder.forAddress(new DomainSocketAddress(uds));
     if (SystemUtils.IS_OS_MAC) {
       group = new KQueueEventLoopGroup();
       builder.channelType(KQueueServerDomainSocketChannel.class);
@@ -95,29 +116,5 @@ public class AppEncryptionServer implements Callable<Void> {
     builder.workerEventLoopGroup(group).bossEventLoopGroup(group);
 
     return builder;
-  }
-
-  @Override
-  public Void call() throws InterruptedException, IOException {
-
-    NettyServerBuilder nettyServerBuilder = bindUDS("/tmp/appencryption.sock");
-    executor = MoreExecutors.directExecutor();
-    nettyServerBuilder.executor(executor);
-
-    Server server = nettyServerBuilder.addService(new AppEncryptionImpl()).build();
-
-    // Start the server
-    server.start();
-
-    System.out.println("Server has started");
-
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      server.shutdown();
-    }));
-
-    // Don't exit the main thread. Wait until server is terminated.
-    server.awaitTermination();
-
-    return null;
   }
 }
