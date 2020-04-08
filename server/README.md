@@ -1,5 +1,6 @@
 # Asherah Server
-Asherah Server is intended to be used by those who wish to utilize application-layer encryption but are unable to take advantage of the SDK directly, e.g., Asherah lacks an implementation in their preferred programming language.
+Asherah Server is intended to be used by those who wish to utilize application-layer encryption but are unable to take
+advantage of the SDK directly, e.g., Asherah lacks an implementation in their preferred programming language.
 
 Table of Contents
 =================
@@ -11,21 +12,29 @@ Table of Contents
   * [Server Development](#server-development)
 
 ## Overview
-Asherah Server is as a light-weight service layer built atop the Asherah SDK with encrypt/decrypt functionality exposed via a [gRPC](https://grpc.io) service. It uses a Unix domain socket for local inter-process communication and is designed to be deployed along side your application.
+Asherah Server is as a light-weight service layer built atop the Asherah SDK with encrypt/decrypt functionality exposed
+via a [gRPC](https://grpc.io) service. It uses a Unix domain socket for local inter-process communication and is
+designed to be deployed along side your application.
 
-To integrate with the service you will need to generate client interfaces from the [.proto](./protos/appencryption.proto) service definition. Detailed instructions for generating client code in a number of languages can be found in the [gRPC Quick Starts](https://grpc.io/docs/quickstart/).
+To integrate with the service you will need to generate client interfaces from the
+[.proto](./protos/appencryption.proto) service definition. Detailed instructions for generating client code in a number
+of languages can be found in the [gRPC Quick Starts](https://grpc.io/docs/quickstart/).
 
 ## Samples
-Full code for the client implementations used in the following samples, as well as the multi-container application configurations, can be found in the [samples](./samples) directory.
+Full code for the client implementations used in the following samples, as well as the multi-container application
+configurations, can be found in the [samples](./samples) directory.
 
 ### Docker Compose
-In this section we'll use Docker Compose to launch a multi-container application comprised of a simple Python client and an Asherah Server sidecar.
+In this section we'll use Docker Compose to launch a multi-container application comprised of a simple Python client and
+an Asherah Server sidecar.
 
 #### Prerequisites
-Ensure Docker Compose is installed on your local system. For installation instructions, see [Install Docker Compose](https://docs.docker.com/compose/install/).
+Ensure Docker Compose is installed on your local system. For installation instructions, see
+[Install Docker Compose](https://docs.docker.com/compose/install/).
 
 #### Build and run the sample application
-From the [samples](./samples) directory run `docker-compose up` which will launch the application defined in [docker-compose.yaml](./samples/docker-compose.yaml).
+From the [samples](./samples) directory run `docker-compose up` which will launch the application defined in
+[docker-compose.yaml](./samples/docker-compose.yaml).
 
 ```console
 [user@machine samples]$ docker-compose up
@@ -39,12 +48,17 @@ myapp_1    | INFO:root:starting session for partitionid-1
 sidecar_1  | 2020/04/02 19:06:37 handling get-session for partitionid-1
 ```
 
-At this point the sample client begins sending encrypt and decrypt messages to the server sidecar in a loop and you will see stream of log messages from both the client (myapp_1) and server (sidecar_1). Enter `CTRL+c` to shutdown the application.
+At this point the sample client begins sending encrypt and decrypt messages to the server sidecar in a loop and you will
+see stream of log messages from both the client (myapp_1) and server (sidecar_1). Enter `CTRL+c` to shutdown the
+application.
 
-**NOTE**: Docker Compose will need to build the images for both containers the first time `docker-compose up` is run on your machine. This process typically takes between 5 to 10 minutes, but build times can vary considerably from one machine to another.
+**NOTE**: Docker Compose will need to build the images for both containers the first time `docker-compose up` is run on
+your machine. This process typically takes between 5 to 10 minutes, but build times can vary considerably from one
+machine to another.
 
 ### Kubernetes (kind)
-In this section we'll launch the the same multi-container application we used above but this time we'll use [kind](https://kind.sigs.k8s.io/) to spin up a local Kubernetes cluster and `kubectl` to launch the deployment.
+In this section we'll launch the the same multi-container application we used above but this time we'll use
+[kind](https://kind.sigs.k8s.io/) to spin up a local Kubernetes cluster and `kubectl` to launch the deployment.
 
 #### Prerequisites
 Ensure both `kind` and `kubectl` are installed locally.
@@ -89,7 +103,8 @@ Successfully built a3bc3c0483a8
 Successfully tagged asherah-server:latest
 ```
 
-Now that we have both of the images we can run `kind` to create our local Kubernetes cluster and then load the new images into the cluster:
+Now that we have both of the images we can run `kind` to create our local Kubernetes cluster and then load the new
+images into the cluster:
 
 ```console
 [user@machine samples]$ kind create cluster
