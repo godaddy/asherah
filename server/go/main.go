@@ -53,9 +53,9 @@ func main() {
 	}
 	defer l.Close()
 
-	server := server.NewAppEncryption(opts.Asherah)
+	service := server.NewAppEncryption(opts.Asherah)
 	grpcServer := grpc.NewServer()
-	pb.RegisterAppEncryptionServer(grpcServer, server)
+	pb.RegisterAppEncryptionServer(grpcServer, service)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

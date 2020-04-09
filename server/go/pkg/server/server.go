@@ -117,20 +117,20 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 
 func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
 	if opts.KMS == "static" {
-		kms, err := kms.NewStatic("thisistotallynotsecretdonotuse!!", aead.NewAES256GCM())
+		m, err := kms.NewStatic("thisistotallynotsecretdonotuse!!", aead.NewAES256GCM())
 		if err != nil {
 			panic(err)
 		}
 
-		return kms
+		return m
 	}
 
-	kms, err := kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
+	m, err := kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
 	if err != nil {
 		panic(err)
 	}
 
-	return kms
+	return m
 }
 
 func (s *streamer) Stream(stream pb.AppEncryption_SessionServer) error {

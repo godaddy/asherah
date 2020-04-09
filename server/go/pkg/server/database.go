@@ -19,7 +19,5 @@ func newMysql(connStr string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(90)
-
 	return db, nil
 }
