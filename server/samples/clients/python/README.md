@@ -35,3 +35,20 @@ Generate the client
     --grpc_python_out=. \
     ../../../protos/appencryption.proto
 ```
+
+## Configuring the client
+The sample client can be configured using command-line arguments. Supported options are as follows:
+
+```
+usage: appencryption_client.py [-h] [--socket SOCKET]
+                               [--num-clients NUM_CLIENTS] [--continuous]
+
+Connect to a local Asherah Server and execute a series of operations.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --socket SOCKET       The unix domain socket the server is listening on.
+  --num-clients NUM_CLIENTS
+                        The total number of clients to run concurrently.
+  --continuous          When present the client will run a continuous test.
+```
