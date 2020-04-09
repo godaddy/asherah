@@ -6,6 +6,9 @@ This example uses static kms and an in-memory metastore
 ```console
 [user@machine java]$ mvn clean install
 [user@machine java]$ java -jar <jar-path> --productId=product, --serviceId=service, --uds="/tmp/appencryption.sock"
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - using in-memory metastore...
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - using static KMS...
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - Server has started
 ```
 
 The available options are

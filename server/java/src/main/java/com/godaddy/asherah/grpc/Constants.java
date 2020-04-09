@@ -1,14 +1,17 @@
 package com.godaddy.asherah.grpc;
 
-public class Constants {
+final class Constants {
 
-  protected static final String DRR_DATA = "Data";
-  protected static final String DRR_KEY = "Key";
+  private Constants() {
+  }
 
-  protected static final String EKR_PARENTKEYMETA = "ParentKeyMeta";
-  protected static final String EKR_KEY = "Key";
-  protected static final String EKR_CREATED = "Created";
+  static final String DRR_DATA = "Data";
+  static final String DRR_KEY = "Key";
 
-  protected static final String PARENTKEYMETA_KEYID = "KeyId";
-  protected static final String PARENTKEYMETA_CREATED = "Created";
+  static final String EKR_PARENTKEYMETA = "ParentKeyMeta";
+  static final String EKR_KEY = "Key";
+  static final String EKR_CREATED = "Created";
+
+  static final String PARENTKEYMETA_KEYID = "KeyId";
+  static final String PARENTKEYMETA_CREATED = "Created";
 }

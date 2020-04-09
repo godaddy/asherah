@@ -14,9 +14,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AppEncryptionImplTest {
 
-  AppEncryptionImpl appEncryption;
-  long parentKeyMetaCreatedTime, ekrCreatedTime;
-  String drrBytes, ekrBytes, parentKeyMetaKeyId;
+  final AppEncryptionImpl appEncryption;
+  final long parentKeyMetaCreatedTime, ekrCreatedTime;
+  final String drrBytes, ekrBytes, parentKeyMetaKeyId;
 
   AppEncryptionImplTest() {
     this.appEncryption = new AppEncryptionImpl();
