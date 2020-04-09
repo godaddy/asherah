@@ -1,7 +1,8 @@
 # Asherah Server - Go
 
 ## Running the server
-This assumes mysql is running on localhost and a preexisting asherah database
+The following makes use of the `rdbms` metastore implementation and assumes mysql is running on localhost and a
+preexisting asherah database. See [metastore documentation](/docs/Metastore.md) for more.
 
 ```console
 [user@machine go]$ go build -o server main.go
