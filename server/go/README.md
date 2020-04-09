@@ -27,7 +27,7 @@ export ASHERAH_METASTORE_MODE=rdbms
 export ASHERAH_CONNECTION_STRING='root:my-secret-pw@tcp(0.0.0.0:3306)/asherah'
 export ASHERAH_KMS_MODE=static
 
-go run main -s /tmp/appencryption.sock
+go run main.go -s /tmp/appencryption.sock
 ```
 
 ## Configuring the server
