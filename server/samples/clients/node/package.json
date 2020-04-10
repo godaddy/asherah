@@ -7,9 +7,12 @@
     "@grpc/grpc-js": "^0.7.6",
     "@grpc/proto-loader": "^0.5.4",
     "async": "^3.2.0",
+    "winston": "^3.2.1",
     "yargs": "^15.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

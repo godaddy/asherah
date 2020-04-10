@@ -1,10 +1,19 @@
+/*
+Asherah Server gRPC - NodeJS client
+
+A simple NodeJS application that demonstrates integrating with Asherah Server
+via a dynamically generated gRPC client.
+*/
+
 'use strict';
 
+const async = require('async');
+const yargs = require('yargs');
+let call;
+
+// Dynamically generate the protobuf code
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const yargs = require('yargs');
-const async = require('async');
-
 const appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/appencryption.proto', {
     keepCase: true,
     defaults: true,
@@ -12,9 +21,23 @@ const appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/ap
 });
 const appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
 
-let call;
+// Setup logger
+const winston = require('winston');
+const consoleTransport = new winston.transports.Console();
+const myWinstonOptions = {
+    transports: [consoleTransport],
+    format: winston.format.combine(
+        winston.format.colorize({ all: true }),
+        winston.format.simple()
+    )
+};
+const logger = new winston.createLogger(myWinstonOptions);
 
-
+/**
+ * Generate a random string of fixed length
+ * @param length
+ * @returns {string}
+ */
 function randomString(length = 12) {
     let result = '';
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -25,6 +48,10 @@ function randomString(length = 12) {
     return result;
 }
 
+/**
+ * Create a new session for communicating with the gRPC server
+ * @param socket
+ */
 function getSession(socket, callback) {
     let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`, grpc.credentials.createInsecure());
     call = client.session();
@@ -32,28 +59,39 @@ function getSession(socket, callback) {
     return callback(null);
 }
 
+/**
+ * Encrypt data using the current session and its partition.
+ * Executes a callback to pass the encrypted value (when received) to  decrypt for further processing
+ * @param callback
+ */
 function encrypt(callback) {
     let payload = randomString();
-    console.log(`encrypting payload ${payload}`);
+    logger.info(`encrypting payload ${payload}`);
     call.write({encrypt: {data: Buffer.from(payload)}});
     call.on('data', function (sessionResponse) {
         if (sessionResponse.response === 'encrypt_response') {
-            console.log(`received DRR`);
+            logger.info(`received DRR`);
             let drr = sessionResponse.encrypt_response.data_row_record;
             return callback(null, payload, drr);
         }
     });
 }
 
+/**
+ * Decrypt the data using the current session and its partition
+ * @param payload
+ * @param drr
+ * @param callback
+ */
 function decrypt(payload, drr, callback) {
     call.write({decrypt: {data_row_record: drr}});
 
     call.on('data', function (sessionResponse) {
         if (sessionResponse.response === 'decrypt_response') {
-            console.log(`decrypting DRR`);
+            logger.info(`decrypting DRR`);
             let bytes = sessionResponse.decrypt_response.data;
             let decryptedPayload = Buffer.from(bytes).toString('utf-8');
-            console.log(`received decrypted data: ${decryptedPayload}`);
+            logger.info(`received decrypted data: ${decryptedPayload}`);
             if (decryptedPayload != payload) {
                 return callback(null, new Error('oh no... something went terribly wrong!'))
             }
@@ -63,21 +101,31 @@ function decrypt(payload, drr, callback) {
 
 }
 
+/**
+ * Executes the client
+ * @param runOnce
+ */
 function run(socket) {
     async.waterfall([
         async.apply(getSession, socket),
         encrypt,
         decrypt,
     ], function (err, res) {
-        console.log(`${res}\n`);
-        call.end();
+        logger.info(`${res}\n`);
+            call.end();
     });
 }
 
+/**
+ * Executes run once
+ */
 function run_once(socket) {
     run(socket);
 }
 
+/**
+ * Executes run until the process is interrupted.
+ */
 function run_continuously(socket) {
     async.whilst(
         function test(cb) {
@@ -98,7 +146,7 @@ function run_continuously(socket) {
  * Run the client
  */
 function main() {
-    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --count [num]')
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean]')
         .options({
             's': {
                 alias: 'socket',
@@ -116,7 +164,8 @@ function main() {
             }
         })
         .argv;
-    console.log('starting test');
+
+    logger.info('starting test');
 
     if (!argv.c) {
         run_once(argv.s);
