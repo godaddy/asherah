@@ -1,0 +1,131 @@
+'use strict';
+
+const grpc = require('@grpc/grpc-js');
+const protoLoader = require('@grpc/proto-loader');
+const yargs = require('yargs');
+const async = require('async');
+
+const appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/appencryption.proto', {
+    keepCase: true,
+    defaults: true,
+    oneofs: true
+});
+const appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
+
+let call;
+
+
+function randomString(length = 12) {
+    let result = '';
+    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
+function getSession(socket, callback) {
+    let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`, grpc.credentials.createInsecure());
+    call = client.session();
+    call.write({get_session: {partition_id: 'partition-1'}});
+    return callback(null);
+}
+
+function encrypt(callback) {
+    let payload = randomString();
+    console.log(`encrypting payload ${payload}`);
+    call.write({encrypt: {data: Buffer.from(payload)}});
+    call.on('data', function (sessionResponse) {
+        if (sessionResponse.response === 'encrypt_response') {
+            console.log(`received DRR`);
+            let drr = sessionResponse.encrypt_response.data_row_record;
+            return callback(null, payload, drr);
+        }
+    });
+}
+
+function decrypt(payload, drr, callback) {
+    call.write({decrypt: {data_row_record: drr}});
+
+    call.on('data', function (sessionResponse) {
+        if (sessionResponse.response === 'decrypt_response') {
+            console.log(`decrypting DRR`);
+            let bytes = sessionResponse.decrypt_response.data;
+            let decryptedPayload = Buffer.from(bytes).toString('utf-8');
+            console.log(`received decrypted data: ${decryptedPayload}`);
+            if (decryptedPayload != payload) {
+                return callback(null, new Error('oh no... something went terribly wrong!'))
+            }
+            return callback(null, 'test completed successfully');
+        }
+    });
+
+}
+
+function run(socket) {
+    async.waterfall([
+        async.apply(getSession, socket),
+        encrypt,
+        decrypt,
+    ], function (err, res) {
+        console.log(`${res}\n`);
+        call.end();
+    });
+}
+
+function run_once(socket) {
+    run(socket);
+}
+
+function run_continuously(socket) {
+    async.whilst(
+        function test(cb) {
+            cb(null, true);
+        },
+        function iter(callback) {
+            run(socket);
+            setTimeout(function () {
+                callback(null);
+            }, 1000);
+        },
+        function () {
+        }
+    );
+}
+
+/**
+ * Run the client
+ */
+function main() {
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --count [num]')
+        .options({
+            's': {
+                alias: 'socket',
+                describe: 'The unix domain socket the server is listening on.',
+                type: 'string',
+                demand: false,
+                default: '/tmp/appencryption.sock'
+            },
+            'c': {
+                alias: 'continuous',
+                describe: 'When present the client will run a continuous test.',
+                type: 'boolean',
+                demand: false,
+                default: false,
+            }
+        })
+        .argv;
+    console.log('starting test');
+
+    if (!argv.c) {
+        run_once(argv.s);
+    } else {
+        run_continuously(argv.s);
+    }
+
+}
+
+if (require.main === module) {
+    main();
+}
