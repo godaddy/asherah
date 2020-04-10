@@ -9,7 +9,6 @@ via a dynamically generated gRPC client.
 
 const async = require('async');
 const yargs = require('yargs');
-let call;
 
 // Dynamically generate the protobuf code
 const grpc = require('@grpc/grpc-js');
@@ -27,11 +26,80 @@ const consoleTransport = new winston.transports.Console();
 const myWinstonOptions = {
     transports: [consoleTransport],
     format: winston.format.combine(
-        winston.format.colorize({ all: true }),
+        winston.format.colorize({all: true}),
         winston.format.simple()
     )
 };
 const logger = new winston.createLogger(myWinstonOptions);
+
+/**
+ * SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
+ endpoint.
+ */
+class SessionClient {
+    constructor(socket, partition) {
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`, grpc.credentials.createInsecure());
+
+        this.call = client.session();
+        this.call.on('error', function(err) {
+            logger.error(err);
+        });
+
+        this.partition = partition
+    }
+
+    /**
+     * Create a new session for communicating with the gRPC server
+     * @param socket
+     */
+    getSession(sessionClient, callback) {
+        sessionClient.call.write({get_session: {partition_id: sessionClient.partition}});
+        return callback(null, sessionClient);
+    }
+
+    /**
+     * Encrypt data using the current session and its partition.
+     * Executes a callback to pass the encrypted value (when received) to  decrypt for further processing
+     * @param callback
+     */
+    encrypt(sessionClient, callback) {
+        let payload = randomString();
+        logger.info(`encrypting payload ${payload}`);
+        sessionClient.call.write({encrypt: {data: Buffer.from(payload)}});
+        sessionClient.call.on('data', function (sessionResponse) {
+            if (sessionResponse.response === 'encrypt_response') {
+                let drr = sessionResponse.encrypt_response.data_row_record;
+                logger.info(`received DRR `);
+
+                return callback(null, sessionClient, payload, drr);
+            }
+        });
+    }
+
+    /**
+     * Decrypt the data using the current session and its partition
+     * @param payload
+     * @param drr
+     * @param callback
+     */
+    decrypt(sessionClient, payload, drr, callback) {
+        sessionClient.call.write({decrypt: {data_row_record: drr}});
+        sessionClient.call.on('data', function (sessionResponse) {
+            logger.info(sessionResponse.response)
+            if (sessionResponse.response === 'decrypt_response') {
+                logger.info(`decrypting DRR`);
+                let bytes = sessionResponse.decrypt_response.data;
+                let decryptedPayload = Buffer.from(bytes).toString('utf-8');
+                logger.info(`received decrypted data: ${decryptedPayload}`);
+                if (decryptedPayload != payload) {
+                    return callback(null, new Error('oh no... something went terribly wrong!'))
+                }
+                return callback(null, 'test completed successfully');
+            }
+        });
+
+    }
+}
 
 /**
  * Generate a random string of fixed length
@@ -49,90 +117,45 @@ function randomString(length = 12) {
 }
 
 /**
- * Create a new session for communicating with the gRPC server
- * @param socket
- */
-function getSession(socket, callback) {
-    let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`, grpc.credentials.createInsecure());
-    call = client.session();
-    call.write({get_session: {partition_id: 'partition-1'}});
-    return callback(null);
-}
-
-/**
- * Encrypt data using the current session and its partition.
- * Executes a callback to pass the encrypted value (when received) to  decrypt for further processing
- * @param callback
- */
-function encrypt(callback) {
-    let payload = randomString();
-    logger.info(`encrypting payload ${payload}`);
-    call.write({encrypt: {data: Buffer.from(payload)}});
-    call.on('data', function (sessionResponse) {
-        if (sessionResponse.response === 'encrypt_response') {
-            logger.info(`received DRR`);
-            let drr = sessionResponse.encrypt_response.data_row_record;
-            return callback(null, payload, drr);
-        }
-    });
-}
-
-/**
- * Decrypt the data using the current session and its partition
- * @param payload
- * @param drr
- * @param callback
- */
-function decrypt(payload, drr, callback) {
-    call.write({decrypt: {data_row_record: drr}});
-
-    call.on('data', function (sessionResponse) {
-        if (sessionResponse.response === 'decrypt_response') {
-            logger.info(`decrypting DRR`);
-            let bytes = sessionResponse.decrypt_response.data;
-            let decryptedPayload = Buffer.from(bytes).toString('utf-8');
-            logger.info(`received decrypted data: ${decryptedPayload}`);
-            if (decryptedPayload != payload) {
-                return callback(null, new Error('oh no... something went terribly wrong!'))
-            }
-            return callback(null, 'test completed successfully');
-        }
-    });
-
-}
-
-/**
- * Executes the client
+ * Runs the client
+ * @param sessionClient
  * @param runOnce
  */
-function run(socket) {
+function run_client(sessionClient, runOnce = true) {
     async.waterfall([
-        async.apply(getSession, socket),
-        encrypt,
-        decrypt,
+        async.apply(sessionClient.getSession, sessionClient),
+        sessionClient.encrypt,
+        sessionClient.decrypt,
     ], function (err, res) {
         logger.info(`${res}\n`);
-            call.end();
+        sessionClient.call.end();
     });
 }
 
 /**
- * Executes run once
+ * Executes run_client once
  */
 function run_once(socket) {
-    run(socket);
+    let partition = 'partitionid-1';
+    let sessionClient = new SessionClient(socket, partition);
+    run_client(sessionClient);
 }
 
+
 /**
- * Executes run until the process is interrupted.
+ * Executes run_client until the process is interrupted.
  */
 function run_continuously(socket) {
+    let sessionClient, count = 0;
     async.whilst(
         function test(cb) {
+            count++;
+            let partition = `partitionid-${count}`;
+            sessionClient = new SessionClient(socket, partition);
             cb(null, true);
         },
         function iter(callback) {
-            run(socket);
+            run_client(sessionClient, false);
             setTimeout(function () {
                 callback(null);
             }, 1000);
@@ -146,7 +169,7 @@ function run_continuously(socket) {
  * Run the client
  */
 function main() {
-    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean]')
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --count [num]')
         .options({
             's': {
                 alias: 'socket',
@@ -164,13 +187,12 @@ function main() {
             }
         })
         .argv;
-
     logger.info('starting test');
 
-    if (!argv.c) {
-        run_once(argv.s);
-    } else {
+    if (argv.c) {
         run_continuously(argv.s);
+    } else {
+        run_once(argv.s);
     }
 
 }
