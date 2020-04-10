@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package asherah.apps.server;
+
+option go_package = "api;api";
+
+option java_package = "com.godaddy.asherah.grpc";
+option java_outer_classname = "AppEncryptionProtos";
+
+service AppEncryption {
+  // Performs session operations for a single partition.
+  //
+  // Each session must begin with a GetSession message with all subsequent
+  // Encrypt and Decrypt operations scoped its partition.
+  rpc Session (stream SessionRequest) returns (stream SessionResponse);
+}
+
+// SessionRequest represents an operation on an individual session
+message SessionRequest {
+  oneof request {
+    Encrypt encrypt = 1;
+    Decrypt decrypt = 2;
+    GetSession get_session = 3;
+  }
+}
+
+message Encrypt {
+  bytes data = 1;
+}
+
+message Decrypt {
+  DataRowRecord data_row_record = 1;
+}
+
+// DataRowRecord represents an envelope containing data encypted by a DRK, the
+// encrypted DRK itself, and meta data of the key used to encrypt the DRK.
+message DataRowRecord {
+  EnvelopeKeyRecord key = 1;
+  bytes data = 2;
+}
+
+message EnvelopeKeyRecord {
+  int64 created = 1;
+  bytes key = 2;
+  KeyMeta parent_key_meta = 3;
+}
+
+message KeyMeta {
+  int64 created = 1;
+  string key_id = 2;
+}
+
+message GetSession {
+  string partition_id = 1;
+}
+
+message ErrorResponse {
+  string message = 1;
+}
+
+message EncryptResponse {
+  DataRowRecord data_row_record = 1;
+}
+
+message DecryptResponse {
+  bytes data = 1;
+}
+
+message SessionResponse {
+  oneof response {
+    EncryptResponse encrypt_response = 1;
+    DecryptResponse decrypt_response = 2;
+    ErrorResponse error_response = 3;
+  }
+}
