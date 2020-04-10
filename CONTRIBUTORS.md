@@ -4,6 +4,8 @@ These people contributed to Asherah's design, implementation, testing, and open 
 
   * Adam Knapp
   * Arpita V Belagur
+  * Bo Thompson ([@aka-bo](https://github.com/aka-bo))
+  * Connor Snitker ([@csnitker](https://github.com/csnitker))
   * David Weidner
   * Demetrius Comes
   * Edward Abrams

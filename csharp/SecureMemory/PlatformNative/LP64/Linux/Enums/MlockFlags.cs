@@ -12,6 +12,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
     {
         MCL_CURRENT = 1,
         MCL_FUTURE = 2,
-        MCL_ONFAULT = 4
+        MCL_ONFAULT = 4,
     }
 }

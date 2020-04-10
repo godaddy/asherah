@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.SecureMemory;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
+
 namespace GoDaddy.Asherah.Crypto.Keys
 {
     public class SecretCryptoKey : CryptoKey

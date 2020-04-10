@@ -6,6 +6,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
     /*

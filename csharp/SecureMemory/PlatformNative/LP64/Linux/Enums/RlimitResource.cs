@@ -71,6 +71,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
         RLIMIT_NICE = 13,
         RLIMIT_RTPRIO = 14,
         RLIMIT_RTTIME = 15,
-        RLIMIT_NLIMITS = 16
+        RLIMIT_NLIMITS = 16,
     }
 }

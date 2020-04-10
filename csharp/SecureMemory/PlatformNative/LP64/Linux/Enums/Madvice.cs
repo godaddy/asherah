@@ -46,6 +46,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
         MADV_NOHUGEPAGE = 15,
         MADV_DONTDUMP = 16,
         MADV_DODUMP = 17,
-        MADV_HWPOISON = 100
+        MADV_HWPOISON = 100,
     }
 }

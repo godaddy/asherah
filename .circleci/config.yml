@@ -587,6 +587,10 @@ jobs:
   cross-language:
     docker:
       - image: ubuntu:18.04
+        environment:
+          GOROOT: /usr/local/go
+          GOPATH: /go
+          GO111MODULE: "on"
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: testdb
@@ -637,7 +641,7 @@ jobs:
       - run:
           name: Setup csharp environment
           command: |
-            apt-get install -y wget
+            apt-get install -y wget curl
             wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
             dpkg -i packages-microsoft-prod.deb
             apt-get install -y apt-transport-https
@@ -648,12 +652,33 @@ jobs:
       - run:
           name: Setup go environment
           command: |
-            wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+            apt-get install -y build-essential
+            wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
             tar -C /usr/local/ -xzf go*.tar.gz
-            export PATH=$PATH:/usr/local/go/bin
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/cucumber/godog/cmd/godog@v0.8.1
+      - run:
+          name: Build
+          command: |
+            # Build the Java project
+            cd tests/cross-language/java
+            ./scripts/build.sh
+
+            #Build the C# project
+            cd ../csharp
+            ./scripts/clean.sh
+            ./scripts/build.sh
+
+            # Build & Lint the Go project
+            cd ../go
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+            ./scripts/build.sh
+            ./scripts/lint.sh
       - run:
           name: Test
           command: |
             cd tests/cross-language/
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
-
