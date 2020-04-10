@@ -223,7 +223,7 @@ func Test_Streamer_StreamDecrypt_BeforeGetSession(t *testing.T) {
 		resp := args.Get(0).(*pb.SessionResponse)
 		errResp := resp.GetErrorResponse()
 		if assert.NotNil(t, errResp) {
-			assert.Equal(t, UnitializedSessionResponse, resp)
+			assert.Equal(t, UninitializedSessionResponse, resp)
 		}
 	})
 
@@ -274,7 +274,7 @@ func Test_Streamer_StreamEncrypt_BeforeGetSession(t *testing.T) {
 		resp := args.Get(0).(*pb.SessionResponse)
 		errResp := resp.GetErrorResponse()
 		if assert.NotNil(t, errResp) {
-			assert.Equal(t, UnitializedSessionResponse, resp)
+			assert.Equal(t, UninitializedSessionResponse, resp)
 		}
 	})
 

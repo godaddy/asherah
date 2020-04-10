@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Ashera Server gRPC - Python client
+"""Asherah Server gRPC - Python client
 
 A simple Python application that demonstrates integrating with Asherah Server
 via a generated gRPC client.
@@ -141,7 +141,7 @@ async def run_once(client: SessionClient) -> None:
     run_client_test(client)
 
 
-async def run_continusously(client: SessionClient, handler: InterruptHandler) -> None:
+async def run_continuously(client: SessionClient, handler: InterruptHandler) -> None:
     """Executes run_client_test until the process is interrupted."""
 
     while True:
@@ -194,7 +194,7 @@ async def _run_client(
     logging.info('starting session for %s', partition)
     with SessionClient(socket_file, partition) as client:
         if continuous:
-            await run_continusously(client, handler)
+            await run_continuously(client, handler)
         else:
             await run_once(client)
 

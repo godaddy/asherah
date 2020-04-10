@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	UnitializedSessionResponse        = newErrorResponse("session not yet initialized")
+	UninitializedSessionResponse      = newErrorResponse("session not yet initialized")
 	SessionAlreadyInitializedResponse = newErrorResponse("session has already been initialized")
 )
 
@@ -162,13 +162,13 @@ func (s *streamer) handleRequest(ctx context.Context, in *pb.SessionRequest) *pb
 	switch in.Request.(type) {
 	case *pb.SessionRequest_Decrypt:
 		if s.handler == nil {
-			return UnitializedSessionResponse
+			return UninitializedSessionResponse
 		}
 
 		return s.handler.Decrypt(ctx, in)
 	case *pb.SessionRequest_Encrypt:
 		if s.handler == nil {
-			return UnitializedSessionResponse
+			return UninitializedSessionResponse
 		}
 
 		return s.handler.Encrypt(ctx, in)
