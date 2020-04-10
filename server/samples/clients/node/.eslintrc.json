@@ -1,0 +1,10 @@
+{
+    "rules": {
+        "strict": 0,
+        "no-shadow": 1,
+        "max-len": [2, { "code": 120}]
+        },
+    "parserOptions": {
+        "ecmaVersion": 2017
+    }
+}

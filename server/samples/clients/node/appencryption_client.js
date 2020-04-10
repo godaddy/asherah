@@ -38,10 +38,11 @@ const logger = new winston.createLogger(myWinstonOptions);
  */
 class SessionClient {
     constructor(socket, partition) {
-        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`, grpc.credentials.createInsecure());
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`,
+            grpc.credentials.createInsecure());
 
         this.call = client.session();
-        this.call.on('error', function(err) {
+        this.call.on('error', function (err) {
             logger.error(err);
         });
 
