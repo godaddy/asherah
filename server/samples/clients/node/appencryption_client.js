@@ -181,7 +181,7 @@ function run_continuously(socket) {
  * Run the client
  */
 function main() {
-    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --count [num]')
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean]')
         .options({
             's': {
                 alias: 'socket',
