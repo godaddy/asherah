@@ -2,8 +2,9 @@
     "rules": {
         "strict": 0,
         "no-shadow": 1,
-        "max-len": [2, { "code": 120}]
-        },
+        "max-len": [2, { "code": 120 }],
+        "comma-dangle": [2, { "objects": "always" }]
+    },
     "parserOptions": {
         "ecmaVersion": 2017
     }

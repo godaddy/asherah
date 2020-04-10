@@ -13,11 +13,13 @@ const yargs = require('yargs');
 // Dynamically generate the protobuf code
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/appencryption.proto', {
-    keepCase: true,
-    defaults: true,
-    oneofs: true
-});
+const appEncryptionDef = protoLoader.loadSync(
+    __dirname + '../../../../protos/appencryption.proto',
+    {
+        keepCase: true,
+        defaults: true,
+        oneofs: true,
+    });
 const appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
 
 // Setup logger
@@ -25,10 +27,11 @@ const winston = require('winston');
 const consoleTransport = new winston.transports.Console();
 const myWinstonOptions = {
     transports: [consoleTransport],
-    format: winston.format.combine(
-        winston.format.colorize({all: true}),
-        winston.format.simple()
-    )
+    format:
+        winston.format.combine(
+            winston.format.colorize({all: true,}),
+            winston.format.simple()
+        ),
 };
 const logger = new winston.createLogger(myWinstonOptions);
 
@@ -38,8 +41,10 @@ const logger = new winston.createLogger(myWinstonOptions);
  */
 class SessionClient {
     constructor(socket, partition) {
-        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socket}`,
-            grpc.credentials.createInsecure());
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(
+            `unix://${socket}`,
+            grpc.credentials.createInsecure()
+        );
 
         this.call = client.session();
         this.call.on('error', function (err) {
@@ -54,7 +59,8 @@ class SessionClient {
      * @param socket
      */
     getSession(sessionClient, callback) {
-        sessionClient.call.write({get_session: {partition_id: sessionClient.partition}});
+        sessionClient.call.write({get_session: {partition_id: sessionClient.partition,},});
+
         return callback(null, sessionClient);
     }
 
@@ -66,7 +72,8 @@ class SessionClient {
     encrypt(sessionClient, callback) {
         let payload = randomString();
         logger.info(`encrypting payload ${payload}`);
-        sessionClient.call.write({encrypt: {data: Buffer.from(payload)}});
+        sessionClient.call.write({encrypt: {data: Buffer.from(payload),},});
+
         sessionClient.call.on('data', function (sessionResponse) {
             if (sessionResponse.response === 'encrypt_response') {
                 let drr = sessionResponse.encrypt_response.data_row_record;
@@ -84,21 +91,23 @@ class SessionClient {
      * @param callback
      */
     decrypt(sessionClient, payload, drr, callback) {
-        sessionClient.call.write({decrypt: {data_row_record: drr}});
+        sessionClient.call.write({decrypt: {data_row_record: drr,},});
+
         sessionClient.call.on('data', function (sessionResponse) {
-            logger.info(sessionResponse.response)
+            logger.info(sessionResponse.response);
             if (sessionResponse.response === 'decrypt_response') {
                 logger.info(`decrypting DRR`);
                 let bytes = sessionResponse.decrypt_response.data;
                 let decryptedPayload = Buffer.from(bytes).toString('utf-8');
                 logger.info(`received decrypted data: ${decryptedPayload}`);
-                if (decryptedPayload != payload) {
+
+                if (decryptedPayload !== payload) {
                     return callback(null, new Error('oh no... something went terribly wrong!'))
                 }
+
                 return callback(null, 'test completed successfully');
             }
         });
-
     }
 }
 
@@ -114,6 +123,7 @@ function randomString(length = 12) {
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
+
     return result;
 }
 
@@ -126,7 +136,7 @@ function run_client(sessionClient, runOnce = true) {
     async.waterfall([
         async.apply(sessionClient.getSession, sessionClient),
         sessionClient.encrypt,
-        sessionClient.decrypt,
+        sessionClient.decrypt
     ], function (err, res) {
         logger.info(`${res}\n`);
         sessionClient.call.end();
@@ -142,26 +152,27 @@ function run_once(socket) {
     run_client(sessionClient);
 }
 
-
 /**
  * Executes run_client until the process is interrupted.
  */
 function run_continuously(socket) {
-    let sessionClient, count = 0;
+    let sessionClient;
+    let count = 0;
     async.whilst(
-        function test(cb) {
+        function test(callback) {
             count++;
             let partition = `partitionid-${count}`;
             sessionClient = new SessionClient(socket, partition);
-            cb(null, true);
+            callback(null, true);
         },
-        function iter(callback) {
+        function run(callback) {
             run_client(sessionClient, false);
             setTimeout(function () {
                 callback(null);
             }, 1000);
         },
         function () {
+            // Do nothing since this is an  infinite loop
         }
     );
 }
@@ -177,7 +188,7 @@ function main() {
                 describe: 'The unix domain socket the server is listening on.',
                 type: 'string',
                 demand: false,
-                default: '/tmp/appencryption.sock'
+                default: '/tmp/appencryption.sock',
             },
             'c': {
                 alias: 'continuous',
@@ -185,7 +196,7 @@ function main() {
                 type: 'boolean',
                 demand: false,
                 default: false,
-            }
+            },
         })
         .argv;
     logger.info('starting test');
@@ -195,7 +206,6 @@ function main() {
     } else {
         run_once(argv.s);
     }
-
 }
 
 if (require.main === module) {
