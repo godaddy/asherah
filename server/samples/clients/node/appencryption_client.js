@@ -35,6 +35,8 @@ const myWinstonOptions = {
 };
 const logger = new winston.createLogger(myWinstonOptions);
 
+let requests = []
+
 /**
  * SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
  endpoint.
@@ -165,7 +167,7 @@ function run_continuously(socket) {
             sessionClient = new SessionClient(socket, partition);
             callback(null, true);
         },
-        function run(callback) {
+        function iterate(callback) {
             run_client(sessionClient, false);
             setTimeout(function () {
                 callback(null);
@@ -175,6 +177,14 @@ function run_continuously(socket) {
             // Do nothing since this is an  infinite loop
         }
     );
+}
+
+function run(continuous, socket) {
+    if (continuous) {
+        run_continuously(socket);
+    } else {
+        run_once(socket);
+    }
 }
 
 /**
@@ -197,15 +207,24 @@ function main() {
                 demand: false,
                 default: false,
             },
+            'n': {
+                alias: 'num-clients',
+                describe: 'The total number of clients to run asynchronously',
+                type: 'num',
+                demand: false,
+                default: 1,
+            },
         })
         .argv;
     logger.info('starting test');
 
-    if (argv.c) {
-        run_continuously(argv.s);
-    } else {
-        run_once(argv.s);
+    for(let i = 0; i < argv.n; i++){
+        let promise = new Promise(() => run(argv.c, argv.s));
+        requests.push(promise);
     }
+
+
+    Promise.all(requests).then(function (){console.log("DONE")});
 }
 
 if (require.main === module) {

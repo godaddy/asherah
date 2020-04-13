@@ -1,7 +1,7 @@
 {
     "rules": {
         "strict": 0,
-        "no-shadow": 1,
+        "no-shadow": 2,
         "max-len": [2, { "code": 120 }],
         "comma-dangle": [2, { "objects": "always" }]
     },

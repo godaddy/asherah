@@ -41,10 +41,12 @@ The sample client can be configured using command-line arguments. Supported opti
 Usage: appencryption_client.js --socket [string] --continuous [boolean]
 
 Options:
-  --help            Show help                                          [boolean]
-  --version         Show version number                                [boolean]
-  -s, --socket      The unix domain socket the server is listening on.
+  --help             Show help                                         [boolean]
+  --version          Show version number                               [boolean]
+  -s, --socket       The unix domain socket the server is listening on.
                                    [string] [default: "/tmp/appencryption.sock"]
-  -c, --continuous  When present the client will run a continuous test.
+  -c, --continuous   When present the client will run a continuous test.
                                                       [boolean] [default: false]
+  -n, --num-clients  The total number of clients to run asynchronously
+                                                                    [default: 1]
 ```
