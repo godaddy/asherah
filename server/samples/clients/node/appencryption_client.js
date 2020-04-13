@@ -35,7 +35,7 @@ const myWinstonOptions = {
 };
 const logger = new winston.createLogger(myWinstonOptions);
 
-let requests = []
+let requests = [];
 
 /**
  * SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
@@ -51,6 +51,7 @@ class SessionClient {
         this.call = client.session();
         this.call.on('error', function (err) {
             logger.error(err);
+            process.exit(2);
         });
 
         this.partition = partition
@@ -61,9 +62,8 @@ class SessionClient {
      * @param socket
      */
     getSession(sessionClient, callback) {
-        sessionClient.call.write({get_session: {partition_id: sessionClient.partition,},});
-
-        return callback(null, sessionClient);
+        logger.info('initializing session');
+        this.call.write({get_session: {partition_id: this.partition,},});
     }
 
     /**
@@ -79,7 +79,7 @@ class SessionClient {
         sessionClient.call.on('data', function (sessionResponse) {
             if (sessionResponse.response === 'encrypt_response') {
                 let drr = sessionResponse.encrypt_response.data_row_record;
-                logger.info(`received DRR `);
+                logger.info(`received DRR`);
 
                 return callback(null, sessionClient, payload, drr);
             }
@@ -96,7 +96,6 @@ class SessionClient {
         sessionClient.call.write({decrypt: {data_row_record: drr,},});
 
         sessionClient.call.on('data', function (sessionResponse) {
-            logger.info(sessionResponse.response);
             if (sessionResponse.response === 'decrypt_response') {
                 logger.info(`decrypting DRR`);
                 let bytes = sessionResponse.decrypt_response.data;
@@ -136,38 +135,36 @@ function randomString(length = 12) {
  */
 function run_client(sessionClient, runOnce = true) {
     async.waterfall([
-        async.apply(sessionClient.getSession, sessionClient),
-        sessionClient.encrypt,
+        async.apply(sessionClient.encrypt, sessionClient),
         sessionClient.decrypt
     ], function (err, res) {
         logger.info(`${res}\n`);
+        // if (runOnce) {
         sessionClient.call.end();
+        // }
     });
 }
 
 /**
  * Executes run_client once
  */
-function run_once(socket) {
-    let partition = 'partitionid-1';
-    let sessionClient = new SessionClient(socket, partition);
+function run_once(sessionClient) {
+
     run_client(sessionClient);
 }
 
 /**
  * Executes run_client until the process is interrupted.
  */
-function run_continuously(socket) {
-    let sessionClient;
+function run_continuously(socket, partition) {
     let count = 0;
     async.whilst(
         function test(callback) {
-            count++;
-            let partition = `partitionid-${count}`;
-            sessionClient = new SessionClient(socket, partition);
             callback(null, true);
         },
         function iterate(callback) {
+            let sessionClient = new SessionClient(socket, partition);
+            sessionClient.getSession();
             run_client(sessionClient, false);
             setTimeout(function () {
                 callback(null);
@@ -179,11 +176,14 @@ function run_continuously(socket) {
     );
 }
 
-function run(continuous, socket) {
+function run(continuous, socket, partitionId) {
+    let partition = `partitionid-${partitionId}`;
     if (continuous) {
-        run_continuously(socket);
+        run_continuously(socket, partition);
     } else {
-        run_once(socket);
+        let sessionClient = new SessionClient(socket, partition);
+        sessionClient.getSession();
+        run_once(sessionClient);
     }
 }
 
@@ -191,7 +191,7 @@ function run(continuous, socket) {
  * Run the client
  */
 function main() {
-    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean]')
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --num-clients [num')
         .options({
             's': {
                 alias: 'socket',
@@ -218,13 +218,15 @@ function main() {
         .argv;
     logger.info('starting test');
 
-    for(let i = 0; i < argv.n; i++){
-        let promise = new Promise(() => run(argv.c, argv.s));
+    for (let i = 1; i <= argv.n; i++) {
+        let promise = new Promise(() => run(argv.c, argv.s, i));
         requests.push(promise);
     }
 
 
-    Promise.all(requests).then(function (){console.log("DONE")});
+    Promise.all(requests).then(function () {
+        console.log("DONE")
+    });
 }
 
 if (require.main === module) {

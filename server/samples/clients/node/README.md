@@ -38,7 +38,7 @@ Generate the client
 The sample client can be configured using command-line arguments. Supported options are as follows:
 
 ```
-Usage: appencryption_client.js --socket [string] --continuous [boolean]
+Usage: appencryption_client.js --socket [string] --continuous [boolean] --num-clients [num]
 
 Options:
   --help             Show help                                         [boolean]
@@ -49,4 +49,5 @@ Options:
                                                       [boolean] [default: false]
   -n, --num-clients  The total number of clients to run asynchronously
                                                                     [default: 1]
+
 ```
