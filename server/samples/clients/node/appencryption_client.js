@@ -7,20 +7,9 @@ via a dynamically generated gRPC client.
 
 'use strict';
 
-const async = require('async');
 const yargs = require('yargs');
-
-// Dynamically generate the protobuf code
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const appEncryptionDef = protoLoader.loadSync(
-    __dirname + '../../../../protos/appencryption.proto',
-    {
-        keepCase: true,
-        defaults: true,
-        oneofs: true,
-    });
-const appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
 
 // Setup logger
 const winston = require('winston');
@@ -42,28 +31,70 @@ let requests = [];
  endpoint.
  */
 class SessionClient {
-    constructor(socket, partition) {
-        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(
-            `unix://${socket}`,
-            grpc.credentials.createInsecure()
-        );
+    #call;
+    #getSessionResolve;
+    #encryptResolve;
+    #decryptResolve;
 
-        this.call = client.session();
-        this.call.on('error', function (err) {
-            logger.error(err);
-            process.exit(2);
+    constructor(callback) {
+        let appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/appencryption.proto', {
+            keepCase: true,
+            defaults: true,
+            oneofs: true
         });
 
-        this.partition = partition
+        let appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption('unix:///tmp/appencryption.sock', grpc.credentials.createInsecure());
+
+        let call = client.Session();
+        call.on('end', function () {
+            logger.info('end');
+            callback();
+        });
+        call.on('error', function (err) {
+            logger.error(err);
+        });
+        call.on('status', function (status) {
+            logger.info(status);
+        });
+
+        let self = this;
+        call.on('data', function (sessionResponse) {
+            switch (sessionResponse.response) {
+                case 'encrypt_response':
+                    let drr = sessionResponse.encrypt_response.data_row_record;
+                    logger.info('received DRR');
+                    self.#encryptResolve(drr);
+                    break;
+                case 'decrypt_response':
+                    let bytes = sessionResponse.decrypt_response.data;
+                    let decryptedPayload = Buffer.from(bytes).toString('utf-8');
+                    logger.info(`received decrypted data: ${decryptedPayload}`);
+                    self.#decryptResolve(decryptedPayload);
+                    break;
+                case 'error_response':
+                    logger.info('error received: ' + sessionResponse.error_response.message);
+                    break;
+                default:
+                    self.#getSessionResolve();
+            }
+        });
+
+        this.#call = call;
     }
+
 
     /**
      * Create a new session for communicating with the gRPC server
      * @param socket
      */
-    getSession(sessionClient, callback) {
-        logger.info('initializing session');
-        this.call.write({get_session: {partition_id: this.partition,},});
+    getSession(partition) {
+        let self = this;
+        return new Promise(function (resolve, err) {
+            self.#getSessionResolve = resolve;
+
+            self.#call.write({get_session: {partition_id: partition}});
+        });
     }
 
     /**
@@ -71,18 +102,11 @@ class SessionClient {
      * Executes a callback to pass the encrypted value (when received) to  decrypt for further processing
      * @param callback
      */
-    encrypt(sessionClient, callback) {
-        let payload = randomString();
-        logger.info(`encrypting payload ${payload}`);
-        sessionClient.call.write({encrypt: {data: Buffer.from(payload),},});
-
-        sessionClient.call.on('data', function (sessionResponse) {
-            if (sessionResponse.response === 'encrypt_response') {
-                let drr = sessionResponse.encrypt_response.data_row_record;
-                logger.info(`received DRR`);
-
-                return callback(null, sessionClient, payload, drr);
-            }
+    encrypt(payload) {
+        let self = this;
+        return new Promise(function (resolve, err) {
+            self.#encryptResolve = resolve;
+            self.#call.write({encrypt: {data: Buffer.from(payload)}});
         });
     }
 
@@ -92,23 +116,16 @@ class SessionClient {
      * @param drr
      * @param callback
      */
-    decrypt(sessionClient, payload, drr, callback) {
-        sessionClient.call.write({decrypt: {data_row_record: drr,},});
-
-        sessionClient.call.on('data', function (sessionResponse) {
-            if (sessionResponse.response === 'decrypt_response') {
-                logger.info(`decrypting DRR`);
-                let bytes = sessionResponse.decrypt_response.data;
-                let decryptedPayload = Buffer.from(bytes).toString('utf-8');
-                logger.info(`received decrypted data: ${decryptedPayload}`);
-
-                if (decryptedPayload !== payload) {
-                    return callback(null, new Error('oh no... something went terribly wrong!'))
-                }
-
-                return callback(null, 'test completed successfully');
-            }
+    decrypt(drr) {
+        let self = this;
+        return new Promise(function (resolve, err) {
+            self.#decryptResolve = resolve;
+            self.#call.write({decrypt: {data_row_record: drr}});
         });
+    }
+
+    close() {
+        this.#call.end()
     }
 }
 
@@ -133,57 +150,50 @@ function randomString(length = 12) {
  * @param sessionClient
  * @param runOnce
  */
-function run_client(sessionClient, runOnce = true) {
-    async.waterfall([
-        async.apply(sessionClient.encrypt, sessionClient),
-        sessionClient.decrypt
-    ], function (err, res) {
-        logger.info(`${res}\n`);
-        // if (runOnce) {
-        sessionClient.call.end();
-        // }
-    });
+async function run_client(client) {
+    let payload = randomString();
+
+    logger.info(`encrypting payload ${payload}`);
+    let drr = await client.encrypt(payload);
+
+    logger.info(`calling decrypt`);
+    let decryptedPayload = await client.decrypt(drr);
+
+    if (decryptedPayload != payload) {
+        logger.info('oh no... something went terribly wrong!');
+    } else {
+        logger.info(`test completed successfully\n`);
+    }
 }
 
 /**
  * Executes run_client once
  */
-function run_once(sessionClient) {
+async function run_once(client) {
 
-    run_client(sessionClient);
+    await run_client(client);
+    client.close();
 }
 
 /**
  * Executes run_client until the process is interrupted.
  */
-function run_continuously(socket, partition) {
-    let count = 0;
-    async.whilst(
-        function test(callback) {
-            callback(null, true);
-        },
-        function iterate(callback) {
-            let sessionClient = new SessionClient(socket, partition);
-            sessionClient.getSession();
-            run_client(sessionClient, false);
-            setTimeout(function () {
-                callback(null);
-            }, 1000);
-        },
-        function () {
-            // Do nothing since this is an  infinite loop
-        }
-    );
+async function run_continuously(client) {
+    while (true) {
+        await run_client(client);
+    }
 }
 
-function run(continuous, socket, partitionId) {
-    let partition = `partitionid-${partitionId}`;
+async function run(continuous, id, callback) {
+    const client = new SessionClient(callback);
+
+    logger.info('awaiting session');
+    await client.getSession(`partition-${id}`);
+
     if (continuous) {
-        run_continuously(socket, partition);
+        await run_continuously(client);
     } else {
-        let sessionClient = new SessionClient(socket, partition);
-        sessionClient.getSession();
-        run_once(sessionClient);
+        await run_once(client);
     }
 }
 
@@ -219,14 +229,11 @@ function main() {
     logger.info('starting test');
 
     for (let i = 1; i <= argv.n; i++) {
-        let promise = new Promise(() => run(argv.c, argv.s, i));
+        let promise = new Promise(() => run(argv.c, i));
         requests.push(promise);
     }
 
-
-    Promise.all(requests).then(function () {
-        console.log("DONE")
-    });
+    Promise.all(requests);
 }
 
 if (require.main === module) {
