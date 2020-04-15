@@ -38,7 +38,8 @@ Generate the client
 The sample client can be configured using command-line arguments. Supported options are as follows:
 
 ```
-Usage: appencryption_client.js --socket [string] --continuous [boolean] --num-clients [num]
+Usage: appencryption_client.js --socket [string] --continuous [boolean]
+--num-clients [num] --proto-path [string]
 
 Options:
   --help             Show help                                         [boolean]
@@ -49,5 +50,11 @@ Options:
                                                       [boolean] [default: false]
   -n, --num-clients  The total number of clients to run asynchronously
                                                                     [default: 1]
-
+  -p, --proto-path   The path to the proto file for the service
+                    [string] [default: "../../../../protos/appencryption.proto"]
 ```
+
+##Development Notes
+To build the docker image locally, the `build` command needs to be executed from the [server](../../../../server)
+directory. Since the node client generates the proto code dynamically, we need to modify the build context to pass the
+[proto file](../../../protos/appencryption.proto) during the build phase.q

@@ -10,6 +10,7 @@ via a dynamically generated gRPC client.
 const yargs = require('yargs');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const sleep = require('sleep');
 
 // Setup logger
 const winston = require('winston');
@@ -25,6 +26,7 @@ const myWinstonOptions = {
 const logger = new winston.createLogger(myWinstonOptions);
 
 let requests = [];
+let protoPath = "";
 
 /**
  * SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
@@ -37,18 +39,20 @@ class SessionClient {
     #decryptResolve;
 
     constructor(callback) {
-        let appEncryptionDef = protoLoader.loadSync(__dirname + '../../../../protos/appencryption.proto', {
+        let appEncryptionDef = protoLoader.loadSync(__dirname + protoPath, {
             keepCase: true,
             defaults: true,
-            oneofs: true
+            oneofs: true,
         });
 
         let appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
-        let client = new appEncryptionProto.asherah.apps.server.AppEncryption('unix:///tmp/appencryption.sock', grpc.credentials.createInsecure());
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption('unix:///tmp/appencryption.sock',
+            grpc.credentials.createInsecure());
+
+        let self = this;
 
         let call = client.Session();
         call.on('end', function () {
-            logger.info('end');
             callback();
         });
         call.on('error', function (err) {
@@ -57,8 +61,6 @@ class SessionClient {
         call.on('status', function (status) {
             logger.info(status);
         });
-
-        let self = this;
         call.on('data', function (sessionResponse) {
             switch (sessionResponse.response) {
                 case 'encrypt_response':
@@ -83,38 +85,37 @@ class SessionClient {
         this.#call = call;
     }
 
-
     /**
      * Create a new session for communicating with the gRPC server
-     * @param socket
+     * @param partition
+     * @returns {Promise<>}
      */
     getSession(partition) {
         let self = this;
-        return new Promise(function (resolve, err) {
+        return new Promise((resolve, err) => {
             self.#getSessionResolve = resolve;
 
-            self.#call.write({get_session: {partition_id: partition}});
+            self.#call.write({get_session: {partition_id: partition,},});
         });
     }
 
     /**
      * Encrypt data using the current session and its partition.
-     * Executes a callback to pass the encrypted value (when received) to  decrypt for further processing
-     * @param callback
+     * @param payload
+     * @returns {Promise<>}
      */
     encrypt(payload) {
         let self = this;
-        return new Promise(function (resolve, err) {
+        return new Promise((resolve, err) => {
             self.#encryptResolve = resolve;
-            self.#call.write({encrypt: {data: Buffer.from(payload)}});
+            self.#call.write({encrypt: {data: Buffer.from(payload),},});
         });
     }
 
     /**
      * Decrypt the data using the current session and its partition
-     * @param payload
      * @param drr
-     * @param callback
+     * @returns {Promise<>}
      */
     decrypt(drr) {
         let self = this;
@@ -124,6 +125,9 @@ class SessionClient {
         });
     }
 
+    /**
+     * Close the stream
+     */
     close() {
         this.#call.end()
     }
@@ -147,8 +151,8 @@ function randomString(length = 12) {
 
 /**
  * Runs the client
- * @param sessionClient
- * @param runOnce
+ * @param client
+ * @returns {Promise<void>}
  */
 async function run_client(client) {
     let payload = randomString();
@@ -168,6 +172,8 @@ async function run_client(client) {
 
 /**
  * Executes run_client once
+ * @param client
+ * @returns {Promise<void>}
  */
 async function run_once(client) {
 
@@ -177,17 +183,34 @@ async function run_once(client) {
 
 /**
  * Executes run_client until the process is interrupted.
+ * @param client
+ * @returns {Promise<void>}
  */
+
 async function run_continuously(client) {
     while (true) {
+        process.on('SIGINT', () => {
+            logger.info('received SIGINT. terminating client');
+            process.exit(0);
+        });
         await run_client(client);
+
+        //  Sleep for 1 second before sending the  next  request
+        sleep.sleep(1);
+
     }
 }
 
+/**
+ * Gets a session and calls run_once or run_continuously based on the value of the continuous parameter
+ * @param continuous
+ * @param id
+ * @param callback
+ * @returns {Promise<void>}
+ */
 async function run(continuous, id, callback) {
     const client = new SessionClient(callback);
 
-    logger.info('awaiting session');
     await client.getSession(`partition-${id}`);
 
     if (continuous) {
@@ -197,11 +220,9 @@ async function run(continuous, id, callback) {
     }
 }
 
-/**
- * Run the client
- */
 function main() {
-    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] --num-clients [num')
+    let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] ' +
+        '--num-clients [num] --proto-path [string]')
         .options({
             's': {
                 alias: 'socket',
@@ -224,12 +245,24 @@ function main() {
                 demand: false,
                 default: 1,
             },
+            'p': {
+                alias: 'proto-path',
+                describe: 'The path to the proto file for the service',
+                type: 'string',
+                demand: false,
+                default: '../../../../protos/appencryption.proto',
+            },
         })
         .argv;
+
+    protoPath = argv.p;
     logger.info('starting test');
 
     for (let i = 1; i <= argv.n; i++) {
-        let promise = new Promise(() => run(argv.c, i));
+        let promise = new Promise(() => run(argv.c, i, () => {
+                logger.info("client terminated");
+            })
+        );
         requests.push(promise);
     }
 

@@ -1,0 +1,24 @@
+version: '3'
+services:
+  pythonapp:
+    build: ./clients/python
+    command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--num-clients", "5"]
+    depends_on:
+      - "sidecar"
+    volumes:
+      - tmp:/tmp
+  sidecar:
+    build: ../go
+    environment:
+      ASHERAH_SERVICE_NAME: myapp
+      ASHERAH_PRODUCT_NAME: asherah-examples
+      ASHERAH_EXPIRE_AFTER: 60m
+      ASHERAH_CHECK_INTERVAL: 10m
+      ASHERAH_KMS_MODE: static
+      ASHERAH_METASTORE_MODE: memory
+    command: ["--socket-file", "/tmp/appencryption.sock"]
+    volumes:
+      - tmp:/tmp
+
+volumes:
+  tmp:

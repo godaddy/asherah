@@ -1,8 +1,10 @@
 version: '3'
 services:
-  myapp:
-    build: ./clients/python
-    command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--num-clients", "5"]
+  nodeapp:
+    build:
+      context: ../
+      dockerfile: samples/clients/node/Dockerfile
+    command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--proto-path", "/protos/appencryption.proto", "--num-clients", "5"]
     depends_on:
       - "sidecar"
     volumes:
