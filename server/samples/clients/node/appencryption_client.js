@@ -11,6 +11,7 @@ const yargs = require('yargs');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const sleep = require('sleep');
+const path = require('path');
 
 // Setup logger
 const winston = require('winston');
@@ -216,7 +217,7 @@ async function run(continuous, id, appEncryptionProto, callback) {
 }
 
 function loadProtoDef(protoPath) {
-    let appEncryptionDef = protoLoader.loadSync(__dirname + protoPath, {
+    let appEncryptionDef = protoLoader.loadSync(protoPath, {
         keepCase: true,
         defaults: true,
         oneofs: true,
@@ -258,7 +259,7 @@ function main() {
                 describe: 'The path to the proto file for the service',
                 type: 'string',
                 demand: false,
-                default: '../../../../protos/appencryption.proto',
+                default: path.resolve(__dirname + '../../../../protos/appencryption.proto'),
             },
         })
         .argv;
@@ -266,7 +267,7 @@ function main() {
     socketFile = argv.s;
     logger.info('starting test');
 
-    let appEncryptionProto = loadProtoDef(argv.p);
+    let appEncryptionProto = loadProtoDef(path.resolve(argv.p));
 
     for (let i = 1; i <= argv.n; i++) {
         let promise = new Promise(() => run(argv.c, i, appEncryptionProto, () => {

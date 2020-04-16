@@ -4,7 +4,7 @@ services:
     build:
       context: ../
       dockerfile: samples/clients/node/Dockerfile
-    command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--proto-path", "/protos/appencryption.proto", "--num-clients", "2"]
+    command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--proto-path", "protos/appencryption.proto", "--num-clients", "2"]
     depends_on:
       - "sidecar"
     volumes:

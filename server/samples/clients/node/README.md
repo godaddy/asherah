@@ -12,7 +12,6 @@ info: received DRR
 info: decrypting DRR
 info: received decrypted data: BN3bOy1zCKQs
 info: test completed successfully
-
 ```
 
 ## Statically generating the client
@@ -21,10 +20,9 @@ Install the client tools
 ```console
 [user@machine node]$ npm install -g grpc grpc-tools
 <snip>
-[grpc] Success: "/usr/local/lib/node_modules/grpc/src/node/extension_binary/node-v79-darwin-x64-unknown/grpc_node.node" is installed via remote
+[grpc] Success: "/path/to/node/modules/grpc_node.node" is installed via remote
 + grpc-tools@1.8.1
 + grpc@1.24.2
-
 ```
 
 Generate the client
@@ -33,6 +31,9 @@ Generate the client
  -I../../../protos  --grpc_out=.  --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` \
 ../../../protos/appencryption.proto
 ```
+
+**NOTE** The sample application does not support using static codegen. More information about using static codegen can be
+found [here](https://github.com/grpc/grpc/tree/v1.28.1/examples/node/static_codegen/route_guide)
 
 ## Configuring the client
 The sample client can be configured using command-line arguments. Supported options are as follows:

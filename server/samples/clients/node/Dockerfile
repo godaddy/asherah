@@ -16,6 +16,8 @@ COPY samples/clients/node/*.js /app
 COPY /protos/appencryption.proto /app/protos/appencryption.proto
 
 WORKDIR /app
+RUN ls protos
+
 
 ENTRYPOINT ["node", "appencryption_client.js"]
 CMD ["--help"]
