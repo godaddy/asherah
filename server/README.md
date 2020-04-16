@@ -144,10 +144,17 @@ Launch the sample application as a Fargate task on Amazon ECS.
 [AWS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html).
 
 #### Prerequisites
-Ensure you have access to an AWS account and both Amazon ECS CLI and AWS CLI are installed.
+Ensure you have access to an AWS account and both Amazon ECS CLI and AWS CLI (version 2) are installed.
 
 * [Installing Amazon ECS CLI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
-* [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html)
+* [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+
+In addition, the steps that follow also assume the `ecsTaskExecutionRole` already exists within your AWS account. If you
+know this task execution role already exists, you're ready to [get started](#create-an-ecr-repository-and-push-images).
+Otherwise, see the
+[this section](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html#ECS_CLI_tutorial_fargate_iam_role)
+of the ECS tutorial for more information.
+
 
 #### Create an ECR repository and push images
 Create a repository for each image
@@ -186,15 +193,21 @@ Export `env` variables containing the new names of the new repositories
 [user@machine samples]$ export ASHERAH_SAMPLE_SERVER_IMAGE="${REPO_ROOT}/asherah-samples/server-go"
 ```
 
+Ensure your docker client is currently authenticated to your Amazon ECR registry
+```console
+[user@machine samples]$ aws ecr get-login-password --region us-west-2 |
+    docker login --username AWS --password-stdin $REPO_ROOT
+Login Succeeded
+```
+> :exclamation: If you encounter an error running the above command, ensure
+[version 2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) of the AWS CLI is installed.
+
 Build and push the images to ECR
 ```console
 [user@machine samples]$ docker build -t $ASHERAH_SAMPLE_CLIENT_IMAGE clients/python
 ...
 [user@machine samples]$ docker build -t $ASHERAH_SAMPLE_SERVER_IMAGE ../go
 ...
-[user@machine samples]$ aws ecr get-login-password --region us-west-2 |
-    docker login --username AWS --password-stdin $REPO_ROOT
-Login Succeeded
 [user@machine samples]$ docker push $ASHERAH_SAMPLE_CLIENT_IMAGE
 ...
 [user@machine samples]$ docker push $ASHERAH_SAMPLE_SERVER_IMAGE
