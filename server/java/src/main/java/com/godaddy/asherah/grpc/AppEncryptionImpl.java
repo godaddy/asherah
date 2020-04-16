@@ -1,7 +1,5 @@
 package com.godaddy.asherah.grpc;
 
-import java.nio.charset.StandardCharsets;
-
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.google.gson.JsonObject;
@@ -9,6 +7,8 @@ import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.charset.StandardCharsets;
 
 import io.grpc.stub.StreamObserver;
 
@@ -26,13 +26,12 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
   private final SessionFactory sessionFactory;
 
-  public AppEncryptionImpl() {
-    sessionFactory = AppEncryptionServer.getSessionFactory();
+  public AppEncryptionImpl(final SessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
   }
 
   @Override
   public StreamObserver<SessionRequest> session(final StreamObserver<SessionResponse> responseObserver) {
-
     logger.info("Connecting stream observer");
 
     StreamObserver<SessionRequest> streamObserver = new StreamObserver<SessionRequest>() {
@@ -42,8 +41,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
       @Override
       public void onNext(final SessionRequest sessionRequest) {
-        // For debug purposes
-        // System.out.println("sessionRequest = " + sessionRequest);
+        logger.debug("sessionRequest={}", sessionRequest);
 
         if (sessionRequest.hasGetSession()) {
           // Handle response for get session
@@ -51,53 +49,58 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           logger.info("Attempting to create session for partitionId={}", partitionId);
           sessionBytes = sessionFactory.getSessionBytes(partitionId);
           responseObserver.onNext(SessionResponse.getDefaultInstance());
+          return;
         }
 
         if (sessionBytes == null) {
           ErrorResponse errorResponse =
               AppEncryptionProtos.ErrorResponse.newBuilder().setMessage("Please initialize a session first").build();
           responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
-          return;
         }
+        else {
+          if (sessionRequest.hasEncrypt()) {
+            // handle response for encrypt
+            logger.info("Handling encrypt for partitionId={}", partitionId);
+            String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
+            byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
+            String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
 
-        if (sessionRequest.hasEncrypt()) {
-          // handle response for encrypt
-          logger.info("Handling encrypt for partitionId={}", partitionId);
-          String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
-          byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
-          String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
+            DataRowRecord dataRowRecordValue = transformJsonToDrr(new JsonParser().parse(drr).getAsJsonObject());
 
-          DataRowRecord dataRowRecordValue = transformJsonToDrr(new JsonParser().parse(drr).getAsJsonObject());
+            EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
+            responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
+          }
 
-          EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
-          responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
-        }
+          if (sessionRequest.hasDecrypt()) {
+            // handle response for decrypt
+            logger.info("Handling decrypt for partitionId={}", partitionId);
+            DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
 
-        if (sessionRequest.hasDecrypt()) {
-          // handle response for decrypt
-          logger.info("Handling decrypt for partitionId={}", partitionId);
-          DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
+            JsonObject drrJson = transformDrrToJson(dataRowRecord);
 
-          JsonObject drrJson = transformDrrToJson(dataRowRecord);
-
-          byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
-          byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
-          DecryptResponse decryptResponse =
-              DecryptResponse.newBuilder().setData(ByteString.copyFrom(decryptedBytes)).build();
-          responseObserver.onNext(SessionResponse.newBuilder().setDecryptResponse(decryptResponse).build());
+            byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
+            byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+            DecryptResponse decryptResponse =
+                DecryptResponse.newBuilder().setData(ByteString.copyFrom(decryptedBytes)).build();
+            responseObserver.onNext(SessionResponse.newBuilder().setDecryptResponse(decryptResponse).build());
+          }
         }
       }
 
       @Override
       public void onError(final Throwable throwable) {
         logger.error("server session failed for partitionId={}", partitionId, throwable);
+        responseObserver.onError(throwable);
         throwable.printStackTrace();
       }
 
       @Override
       public void onCompleted() {
         logger.info("session completed for partitionId={}", partitionId);
-        sessionBytes.close();
+        responseObserver.onCompleted();
+        if (sessionBytes != null) {
+          sessionBytes.close();
+        }
       }
     };
 

@@ -14,4 +14,14 @@ final class Constants {
 
   static final String PARENTKEYMETA_KEYID = "KeyId";
   static final String PARENTKEYMETA_CREATED = "Created";
+
+  static final String METASTORE_INMEMORY = "MEMORY";
+  static final String METASTORE_JDBC = "JDBC";
+  static final String METASTORE_DYNAMODB = "DYNAMODB";
+
+  static final String KMS_STATIC = "STATIC";
+  static final String KMS_AWS = "AWS";
+
+  static final String DEFAULT_UDS_PATH = "/tmp/appencryption.sock";
+  static final int DEFAULT_SERVER_TIMEOUT = 30;
 }

@@ -1,25 +1,38 @@
 package com.godaddy.asherah.grpc;
 
+import com.godaddy.asherah.appencryption.SessionFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
-import org.junit.jupiter.api.Test;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.StreamObserver;
+import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.grpc.ManagedChannel;
+
+import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
+import static com.godaddy.asherah.grpc.AppEncryptionGrpc.*;
 import static com.godaddy.asherah.grpc.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class AppEncryptionImplTest {
 
-  final AppEncryptionImpl appEncryption;
+  SessionFactory sessionFactory;
   final long parentKeyMetaCreatedTime, ekrCreatedTime;
   final String drrBytes, ekrBytes, parentKeyMetaKeyId;
 
-  AppEncryptionImplTest() {
-    this.appEncryption = new AppEncryptionImpl();
+  private AppEncryptionServer appEncryptionServer;
+  private ManagedChannel inProcessChannel;
+
+  public AppEncryptionImplTest() {
     parentKeyMetaCreatedTime = Instant.now().getEpochSecond();
     ekrCreatedTime = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();
     parentKeyMetaKeyId = "someId";
@@ -27,8 +40,32 @@ class AppEncryptionImplTest {
     ekrBytes = "ekrBytes";
   }
 
+  @BeforeEach
+  void setupTest() throws IOException {
+    sessionFactory = SessionFactory
+      .newBuilder("product", "service")
+      .withInMemoryMetastore()
+      .withNeverExpiredCryptoPolicy()
+      .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
+      .build();
+
+    String serverName = InProcessServerBuilder.generateName();
+    appEncryptionServer = new AppEncryptionServer(sessionFactory, "/tmp/testserver.sock",
+        InProcessServerBuilder.forName(serverName).directExecutor());
+    appEncryptionServer.start();
+    inProcessChannel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
+  }
+
+  @AfterEach
+  void tearDown() throws InterruptedException {
+    sessionFactory.close();
+    inProcessChannel.shutdown();
+    appEncryptionServer.stop();
+  }
+
   @Test
   void testTransformJsonToDrr() {
+    AppEncryptionImpl appEncryption = new AppEncryptionImpl(sessionFactory);
 
     String actualJson =
       "{\"" + DRR_DATA + "\":\"" + drrBytes +
@@ -50,6 +87,7 @@ class AppEncryptionImplTest {
 
   @Test
   void testTransformDrrToJson() {
+    AppEncryptionImpl appEncryption = new AppEncryptionImpl(sessionFactory);
 
     String expectedJson =
       "{\"" + DRR_DATA + "\":\"" + drrBytes +
@@ -73,5 +111,100 @@ class AppEncryptionImplTest {
 
     JsonObject drrJson = appEncryption.transformDrrToJson(dataRowRecord);
     assertEquals(expectedJson, drrJson.toString());
+  }
+
+  @Test
+  void testEncryptDecryptRoundTrip() {
+
+    int timesOnNext = 0;
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
+    verify(responseObserver, never()).onNext(any(SessionResponse.class));
+
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+
+    // Setup mocking for encrypt response
+    AtomicReference<DataRowRecord> dataRowRecord = new AtomicReference<>();
+    doAnswer(x -> {
+      SessionResponse response = x.getArgument(0);
+      dataRowRecord.set(response.getEncryptResponse().getDataRowRecord());
+      return null;
+    }).when(responseObserver).onNext(any(SessionResponse.class));
+
+    // Try to encrypt a payload
+    String originalPayloadString = "mysupersecretpayload";
+    ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+    Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
+    requestObserver.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+
+    // Setup mock for decrypt response
+    AtomicReference<String> decryptedPayload = new AtomicReference<>();
+    doAnswer(x -> {
+      SessionResponse response = x.getArgument(0);
+      ByteString decryptedData = response.getDecryptResponse().getData();
+      decryptedPayload.set(new String(decryptedData.toByteArray(), StandardCharsets.UTF_8));
+      return null;
+    }).when(responseObserver).onNext(any(SessionResponse.class));
+
+    // Try to decrypt back the payload
+    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord.get()).build();
+    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+
+    // Verify that both the payloads match
+    assertEquals(originalPayloadString, decryptedPayload.get());
+
+    requestObserver.onCompleted();
+    verify(responseObserver, never()).onError(any(Throwable.class));
+    verify(responseObserver, timeout(100)).onCompleted();
+  }
+
+  @Test
+  void testOperationsWithoutGetSessionShouldFail() {
+    int timesOnNext = 0;
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
+    verify(responseObserver, never()).onNext(any(SessionResponse.class));
+
+    // Verify that we get an error response from the server
+    doAnswer(x -> {
+      SessionResponse response = x.getArgument(0);
+      assertTrue(response.hasErrorResponse());
+      return null;
+    }).when(responseObserver).onNext(any(SessionResponse.class));
+
+    // Try to encrypt a payload
+    String originalPayloadString = "mysupersecretpayload";
+    ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
+    Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
+    requestObserver.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+
+    requestObserver.onCompleted();
+    verify(responseObserver, never()).onError(any(Throwable.class));
+    verify(responseObserver, timeout(100)).onCompleted();
+  }
+
+  @Test
+  void testServerSessionError() {
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    try {
+      inProcessChannel.shutdownNow();
+    } catch (Exception ignored)
+    {
+    }
+    verify(responseObserver).onError(any(Throwable.class));
   }
 }
