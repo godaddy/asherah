@@ -5,7 +5,7 @@ A simple client application that demonstrates integrating with Asherah Server vi
 Ensure the Asherah Server is running locally and listening on `unix:///tmp/appencryption.sock` and run:
 
 ```console
-[user@machine node]$ node appencryption_client.py
+[user@machine node]$ node appencryption_client.js
 info: starting test
 info: encrypting payload BN3bOy1zCKQs
 info: received DRR
@@ -29,7 +29,7 @@ Install the client tools
 
 Generate the client
 ```console
-[user@machine python]$  grpc_tools_node_protoc --js_out=import_style=commonjs,binary:../node/ \
+[user@machine node]$  grpc_tools_node_protoc --js_out=import_style=commonjs,binary:../node/ \
  -I../../../protos  --grpc_out=.  --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` \
 ../../../protos/appencryption.proto
 ```
@@ -54,7 +54,7 @@ Options:
                     [string] [default: "../../../../protos/appencryption.proto"]
 ```
 
-##Development Notes
-To build the docker image locally, the `build` command needs to be executed from the [server](../../../../server)
-directory. Since the node client generates the proto code dynamically, we need to modify the build context to pass the
-[proto file](../../../protos/appencryption.proto) during the build phase.q
+## Development Notes
+To build the docker image locally, the `docker build -f samples/clients/node/Dockerfile .` command needs to be executed
+from the [server](/server) directory. Since the node client generates the proto code dynamically, we need to modify the
+build context to pass the [proto file](../../../protos/appencryption.proto) during the build phase.

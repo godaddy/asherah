@@ -7,7 +7,6 @@
         "comma-dangle": [2, { "objects": "always" }]
     },
     "parserOptions": {
-
         "ecmaVersion": 2017
     }
 }

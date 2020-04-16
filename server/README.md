@@ -33,24 +33,31 @@ Ensure Docker Compose is installed on your local system. For installation instru
 [Install Docker Compose](https://docs.docker.com/compose/install/).
 
 #### Build and run the sample application
-From the [samples](./samples) directory run `docker-compose up` which will launch the application defined in
-[docker-compose.yaml](./samples/docker-compose.yaml).
+
+##### Python
+From the [samples](./samples) directory run `docker-compose -f docker-compose-python.yaml up` which will launch the
+application defined in [docker-compose-python.yaml](./samples/docker-compose-python.yaml).
 
 ```console
-[user@machine samples]$ docker-compose up
+[user@machine samples]$ docker-compose -f docker-compose-python.yaml up
 Creating network "samples_default" with the default driver
 Creating samples_sidecar_1 ... done
-Creating samples_myapp_1   ... done
-Attaching to samples_sidecar_1, samples_myapp_1
-sidecar_1  | 2020/04/02 19:06:36 starting server
-myapp_1    | INFO:root:starting test
-myapp_1    | INFO:root:starting session for partitionid-1
-sidecar_1  | 2020/04/02 19:06:37 handling get-session for partitionid-1
+Creating samples_pythonapp_1   ... done
+Attaching to samples_sidecar_1, samples_pythonapp_1
+sidecar_1      | 2020/04/02 19:06:36 starting server
+pythonapp_1    | INFO:root:starting test
+pythonapp_1    | INFO:root:starting session for partitionid-1
+sidecar_1      | 2020/04/02 19:06:37 handling get-session for partitionid-1
 ```
 
 At this point the sample client begins sending encrypt and decrypt messages to the server sidecar in a loop and you will
-see stream of log messages from both the client (myapp_1) and server (sidecar_1). Enter `CTRL+c` to shutdown the
+see stream of log messages from both the client (pythonapp_1) and server (sidecar_1). Enter `CTRL+c` to shutdown the
 application.
+
+##### Node
+Similarly, to launch the node sample application, run `docker-compose -f docker-compose-node.yaml up` from the
+[samples](./samples) directory. This will launch the application defined in
+[docker-compose-node.yaml](./samples/docker-compose-node.yaml).
 
 **NOTE**: Docker Compose will need to build the images for both containers the first time `docker-compose up` is run on
 your machine. This process typically takes between 5 to 10 minutes, but build times can vary considerably from one

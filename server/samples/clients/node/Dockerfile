@@ -1,14 +1,21 @@
-FROM node:13-alpine as base
+FROM node:13 as base
 
-RUN mkdir /app
-WORKDIR /app
+FROM base as builder
+
+RUN mkdir /install
+WORKDIR /install
 
 COPY samples/clients/node/package.json package.json
-COPY samples/clients/node/*.js .
-COPY /protos/appencryption.proto protos/appencryption.proto
 
 RUN npm install
-RUN ls
+
+FROM base
+
+COPY --from=builder /install/node_modules /app/node_modules
+COPY samples/clients/node/*.js /app
+COPY /protos/appencryption.proto /app/protos/appencryption.proto
+
+WORKDIR /app
 
 ENTRYPOINT ["node", "appencryption_client.js"]
 CMD ["--help"]

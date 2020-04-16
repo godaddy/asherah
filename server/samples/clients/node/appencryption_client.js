@@ -1,7 +1,7 @@
 /*
-Asherah Server gRPC - NodeJS client
+Asherah Server gRPC - Node client
 
-A simple NodeJS application that demonstrates integrating with Asherah Server
+A simple Node application that demonstrates integrating with Asherah Server
 via a dynamically generated gRPC client.
 */
 
@@ -25,8 +25,7 @@ const myWinstonOptions = {
 };
 const logger = new winston.createLogger(myWinstonOptions);
 
-let requests = [];
-let protoPath = "";
+let socketFile = "";
 
 /**
  * SessionClient provides a synchronous client interface for the bidirectionally-streaming Session
@@ -38,15 +37,8 @@ class SessionClient {
     #encryptResolve;
     #decryptResolve;
 
-    constructor(callback) {
-        let appEncryptionDef = protoLoader.loadSync(__dirname + protoPath, {
-            keepCase: true,
-            defaults: true,
-            oneofs: true,
-        });
-
-        let appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
-        let client = new appEncryptionProto.asherah.apps.server.AppEncryption('unix:///tmp/appencryption.sock',
+    constructor(appEncryptionProto, callback) {
+        let client = new appEncryptionProto.asherah.apps.server.AppEncryption(`unix://${socketFile}`,
             grpc.credentials.createInsecure());
 
         let self = this;
@@ -121,7 +113,7 @@ class SessionClient {
         let self = this;
         return new Promise(function (resolve, err) {
             self.#decryptResolve = resolve;
-            self.#call.write({decrypt: {data_row_record: drr}});
+            self.#call.write({decrypt: {data_row_record: drr,},});
         });
     }
 
@@ -176,8 +168,8 @@ async function run_client(client) {
  * @returns {Promise<void>}
  */
 async function run_once(client) {
-
     await run_client(client);
+
     client.close();
 }
 
@@ -193,11 +185,14 @@ async function run_continuously(client) {
             logger.info('received SIGINT. terminating client');
             process.exit(0);
         });
+        process.on('SIGTERM', () => {
+            logger.info('received SIGTERM. terminating client');
+            process.exit(0);
+        });
         await run_client(client);
 
-        //  Sleep for 1 second before sending the  next  request
+        //  Sleep for 1 second before sending the next request
         sleep.sleep(1);
-
     }
 }
 
@@ -208,8 +203,8 @@ async function run_continuously(client) {
  * @param callback
  * @returns {Promise<void>}
  */
-async function run(continuous, id, callback) {
-    const client = new SessionClient(callback);
+async function run(continuous, id, appEncryptionProto, callback) {
+    const client = new SessionClient(appEncryptionProto, callback);
 
     await client.getSession(`partition-${id}`);
 
@@ -220,7 +215,20 @@ async function run(continuous, id, callback) {
     }
 }
 
+function loadProtoDef(protoPath) {
+    let appEncryptionDef = protoLoader.loadSync(__dirname + protoPath, {
+        keepCase: true,
+        defaults: true,
+        oneofs: true,
+    });
+
+    let appEncryptionProto = grpc.loadPackageDefinition(appEncryptionDef);
+
+    return appEncryptionProto;
+}
+
 function main() {
+    let requests = [];
     let argv = yargs.usage('Usage: $0 --socket [string] --continuous [boolean] ' +
         '--num-clients [num] --proto-path [string]')
         .options({
@@ -255,11 +263,13 @@ function main() {
         })
         .argv;
 
-    protoPath = argv.p;
+    socketFile = argv.s;
     logger.info('starting test');
 
+    let appEncryptionProto = loadProtoDef(argv.p);
+
     for (let i = 1; i <= argv.n; i++) {
-        let promise = new Promise(() => run(argv.c, i, () => {
+        let promise = new Promise(() => run(argv.c, i, appEncryptionProto, () => {
                 logger.info("client terminated");
             })
         );

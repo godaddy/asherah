@@ -1,7 +1,7 @@
 {
   "name": "node-gRPC-client",
   "version": "1.0.0",
-  "description": "A simple NodeJS application that demonstrates integrating with Asherah Server",
+  "description": "A simple Node application that demonstrates integrating with Asherah Server",
   "main": "appencryption_client.js",
   "dependencies": {
     "@grpc/grpc-js": "^0.7.6",
