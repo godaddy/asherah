@@ -32,15 +32,14 @@ Generate the client
 ../../../protos/appencryption.proto
 ```
 
-**NOTE** The sample application does not support using static codegen. More information about using static codegen can be
-found [here](https://github.com/grpc/grpc/tree/v1.28.1/examples/node/static_codegen/route_guide)
+**NOTE**: The sample application does not support static codegen. More information about using static codegen can be
+found [here].(https://github.com/grpc/grpc/tree/v1.28.1/examples/node/static_codegen/route_guide)
 
 ## Configuring the client
 The sample client can be configured using command-line arguments. Supported options are as follows:
 
 ```
-Usage: appencryption_client.js --socket [string] --continuous [boolean]
---num-clients [num] --proto-path [string]
+Usage: appencryption_client.js --socket [string] --continuous [boolean] --num-clients [num] --proto-path [string]
 
 Options:
   --help             Show help                                         [boolean]
