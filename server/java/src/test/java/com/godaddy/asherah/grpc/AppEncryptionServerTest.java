@@ -10,6 +10,8 @@ import java.io.IOException;
 
 import static com.godaddy.asherah.grpc.Constants.DEFAULT_UDS_PATH;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 class AppEncryptionServerTest {
 
@@ -56,9 +58,9 @@ class AppEncryptionServerTest {
   }
 
   @Test
-  void testBlockTillShutDown() throws InterruptedException {
+  void testBlockTillShutDown() throws InterruptedException, IOException {
     new Thread(() -> {
-      server = new AppEncryptionServer(sessionFactory);
+      server = spy(new AppEncryptionServer(sessionFactory));
       try {
         server.start();
         server.blockUntilShutdown();
@@ -69,5 +71,8 @@ class AppEncryptionServerTest {
 
     // Manually sleep for a while to start the server in a separate thread and wait for the main thread to finish
     Thread.sleep(2000);
+
+    verify(server).start();
+    verify(server).blockUntilShutdown();
   }
 }

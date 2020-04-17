@@ -26,8 +26,8 @@ Arguments can also be supplied using environment variables
 ```console
 export ASHERAH_PRODUCT_NAME=product
 export ASHERAH_SERVICE_NAME=service
-export ASHERAH_EXPIRE_AFTER=60
-export ASHERAH_CHECK_INTERVAL=90
+export ASHERAH_EXPIRE_AFTER=90
+export ASHERAH_CHECK_INTERVAL=60
 export ASHERAH_METASTORE_MODE=memory
 export ASHERAH_CONNECTION_STRING='jdbc:mysql://localhost/test?user=root&password=password'
 export ASHERAH_KMS_MODE=static
