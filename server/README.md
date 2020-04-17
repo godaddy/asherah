@@ -151,7 +151,7 @@ Ensure you have access to an AWS account and both Amazon ECS CLI and AWS CLI (ve
 
 In addition, the steps that follow also assume the `ecsTaskExecutionRole` already exists within your AWS account. If you
 know this task execution role already exists, you're ready to [get started](#create-an-ecr-repository-and-push-images).
-Otherwise, see the
+Otherwise, see
 [this section](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html#ECS_CLI_tutorial_fargate_iam_role)
 of the ECS tutorial for more information.
 
