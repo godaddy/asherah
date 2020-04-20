@@ -1,0 +1,20 @@
+{
+  "extends": "godaddy",
+  "parser": "babel-eslint",
+  "rules": {
+    "strict": "off",
+    "new-cap": "off",
+    "no-sync": "off",
+    "no-process-exit": "off",
+    "no-shadow": "error",
+    "max-len": ["error", { "code": 120 }],
+    "comma-dangle": ["error", { "objects": "always" }],
+    "camelcase": "error",
+    "no-trailing-spaces": "error",
+    "no-unused-vars": "error",
+    "no-mixed-spaces-and-tabs": "error"
+  },
+  "parserOptions": {
+  "ecmaVersion": 2017
+  }
+}
