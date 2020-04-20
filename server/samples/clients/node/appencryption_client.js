@@ -185,16 +185,16 @@ async function runOnce(client) {
  * @returns {Promise<void>} - Client response wrapped in a promise
  */
 async function runContinuously(client) {
+  process.on('SIGINT', () => {
+    logger.info('received SIGINT. terminating client');
+    process.exit(0);
+  });
+  process.on('SIGTERM', () => {
+    logger.info('received SIGTERM. terminating client');
+    process.exit(0);
+  });
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    process.on('SIGINT', () => {
-      logger.info('received SIGINT. terminating client');
-      process.exit(0);
-    });
-    process.on('SIGTERM', () => {
-      logger.info('received SIGTERM. terminating client');
-      process.exit(0);
-    });
     await runClient(client);
 
     //  Sleep for 1 second before sending the next request
