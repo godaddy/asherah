@@ -9,6 +9,7 @@ Table of Contents
   * [Samples](#samples)
     * [Docker Compose](#docker-compose)
     * [Kubernetes](#kubernetes-kind)
+    * [Amazon ECS](#amazon-ecs)
   * [Server Development](#server-development)
 
 ## Overview
@@ -141,6 +142,179 @@ INFO:root:starting session for partitionid-1
 ```
 
 And when finished, `kind delete cluster` can be used to delete the cluster.
+
+### Amazon ECS
+Launch the sample application as a Fargate task on Amazon ECS.
+
+> **NOTE**: This example is based on the excellent ECS tutorial found
+[here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html) in the
+[AWS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html).
+
+#### Prerequisites
+Ensure you have access to an AWS account and both Amazon ECS CLI and AWS CLI (version 2) are installed.
+
+* [Installing Amazon ECS CLI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
+* [Installing AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+
+In addition, the steps that follow also assume the `ecsTaskExecutionRole` already exists within your AWS account. If you
+know this task execution role already exists, you're ready to [get started](#create-an-ecr-repository-and-push-images).
+Otherwise, see
+[this section](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html#ECS_CLI_tutorial_fargate_iam_role)
+of the ECS tutorial for more information.
+
+
+#### Create an ECR repository and push images
+Create a repository for each image
+
+```console
+[user@machine samples]$ aws ecr create-repository \
+    --repository-name asherah-samples/client-python --region us-west-2
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-west-2:123456789012:repository/asherah-samples/client-python",
+        "registryId": "123456789012",
+        "repositoryName": "asherah-samples/client-python",
+        "repositoryUri": "123456789012.dkr.ecr.us-west-2.amazonaws.com/asherah-samples/client-python",
+        "createdAt": 1586467301.0,
+        "imageTagMutability": "MUTABLE"
+    }
+}
+[user@machine samples]$ aws ecr create-repository \
+    --repository-name asherah-samples/server-go --region us-west-2
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-west-2:123456789012:repository/asherah-samples/server-go",
+        "registryId": "123456789012",
+        "repositoryName": "asherah-samples/server-go",
+        "repositoryUri": "123456789012.dkr.ecr.us-west-2.amazonaws.com/asherah-samples/server-go",
+        "createdAt": 1586467577.0,
+        "imageTagMutability": "MUTABLE"
+    }
+}
+```
+
+Export `env` variables containing the new names of the new repositories
+```console
+[user@machine samples]$ REPO_ROOT=123456789012.dkr.ecr.us-west-2.amazonaws.com
+[user@machine samples]$ export ASHERAH_SAMPLE_CLIENT_IMAGE="${REPO_ROOT}/asherah-samples/client-python"
+[user@machine samples]$ export ASHERAH_SAMPLE_SERVER_IMAGE="${REPO_ROOT}/asherah-samples/server-go"
+```
+
+Ensure your docker client is currently authenticated to your Amazon ECR registry
+```console
+[user@machine samples]$ aws ecr get-login-password --region us-west-2 |
+    docker login --username AWS --password-stdin $REPO_ROOT
+Login Succeeded
+```
+> :exclamation: If you encounter an error running the above command, ensure
+[version 2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) of the AWS CLI is installed.
+
+Build and push the images to ECR
+```console
+[user@machine samples]$ docker build -t $ASHERAH_SAMPLE_CLIENT_IMAGE clients/python
+...
+[user@machine samples]$ docker build -t $ASHERAH_SAMPLE_SERVER_IMAGE ../go
+...
+[user@machine samples]$ docker push $ASHERAH_SAMPLE_CLIENT_IMAGE
+...
+[user@machine samples]$ docker push $ASHERAH_SAMPLE_SERVER_IMAGE
+...
+```
+
+#### Create a cluster
+Create a new cluster using `ecs-cli up`
+
+```console
+[user@machine samples]$ ecs-cli up --cluster-config ecsdemo --ecs-profile my_account
+INFO[0001] Created cluster                               cluster=ecsdemo region=us-west-2
+INFO[0003] Waiting for your cluster resources to be created...
+INFO[0004] Cloudformation stack status                   stackStatus=CREATE_IN_PROGRESS
+INFO[0065] Cloudformation stack status                   stackStatus=CREATE_IN_PROGRESS
+VPC created: vpc-0123456789abcdef0
+Subnet created: subnet-0123456789abcdef0
+Subnet created: subnet-0123456789abcdef1
+Cluster creation succeeded.
+```
+
+Modify the provided `ecs-params.yaml` file by replacing the placeholder subnet and security group IDs.
+
+**NOTE**: The subnet IDs were provided by the previous step and the security group ID for your cluster's VPC can be
+retrieved with the following
+
+```console
+[user@machine samples]$ aws ec2 describe-security-groups \
+    --filters Name=vpc-id,Values=vpc-0123456789abcdef0 \
+    --region us-west-2 | jq -r '.SecurityGroups[0].GroupId'
+sg-0123456789abcdef0
+```
+
+Your modified `ecs-params.yaml` file should now look something this:
+
+```yaml
+version: 1
+task_definition:
+  task_execution_role: ecsTaskExecutionRole
+  ecs_network_mode: awsvpc
+  task_size:
+    mem_limit: 0.5GB
+    cpu_limit: 256
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets:
+        - "subnet-0123456789abcdef0"
+        - "subnet-0123456789abcdef1"
+      security_groups:
+        - "sg-0123456789abcdef0"
+      assign_public_ip: ENABLED
+```
+
+#### Deploy the task
+Now you're ready to deploy the service. Use `ecs-cli compose service up` to deploy the task to your cluster.
+```console
+[user@machine samples]$ ecs-cli compose \
+  --file docker-compose-ecs.yaml \
+  --ecs-params ecs-params.yaml \
+  --project-name asherah-sample-app \
+  service up --create-log-groups --cluster-config ecsdemo --ecs-profile my_account
+...
+```
+
+Once the task has been launched `ecs-cli compose service ps` can be used to view the running containers
+```console
+[user@machine samples]$ ecs-cli compose \
+    --file docker-compose-ecs.yaml \
+    --ecs-params ecs-params.yaml \
+    --project-name asherah-sample-app \
+    service ps --cluster-config ecsdemo --ecs-profile my_account
+Name                                          State    Ports  TaskDefinition        Health
+1ee1565c-82e8-4c1a-899d-f104ee009b37/sidecar  RUNNING         asherah-sample-app:1  UNKNOWN
+1ee1565c-82e8-4c1a-899d-f104ee009b37/myapp    RUNNING         asherah-sample-app:1  UNKNOWN
+```
+
+And `ecs-cli logs` can be used to view the container logs
+```console
+[user@machine samples]$ ecs-cli logs \
+    --task-id 1ee1565c-82e8-4c1a-899d-f104ee009b37 \
+    --container-name myapp \
+    --cluster-config ecsdemo \
+    --ecs-profile my_account
+INFO:root:received DRR
+INFO:root:decrypting DRR
+...
+```
+
+#### Cleaning up
+That's it! When you're ready to wrap things up, be sure to clean up the resources by deleting the service and cluster
+```console
+[user@machine samples]$ ecs-cli compose \
+    --file docker-compose-ecs.yaml \
+    --ecs-params ecs-params.yaml \
+    --project-name asherah-sample-app \
+    service down --cluster-config ecsdemo --ecs-profile my_account
+...
+[user@machine samples]$ ecs-cli down --force --cluster-config ecsdemo --ecs-profile my_account
+```
 
 ## Server Development
 
