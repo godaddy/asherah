@@ -1,6 +1,6 @@
 version: '3'
 services:
-  myapp:
+  pythonapp:
     build: ./clients/python
     command: ["--socket", "/tmp/appencryption.sock", "--continuous", "--num-clients", "5"]
     depends_on:
