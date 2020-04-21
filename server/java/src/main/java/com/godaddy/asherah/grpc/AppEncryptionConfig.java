@@ -29,10 +29,6 @@ class AppEncryptionConfig {
   KeyManagementService setupKeyManagementService(final String kmsType, final String preferredRegion,
       final Map<String, String> regionMap) {
     switch (kmsType.toUpperCase()) {
-      case Constants.KMS_STATIC:
-        logger.info("using static KMS...");
-        return new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
-
       case Constants.KMS_AWS:
         if (preferredRegion == null || regionMap == null) {
           logger.error("aws kms requires both region map and preferred region...");
@@ -45,6 +41,10 @@ class AppEncryptionConfig {
         return AwsKeyManagementServiceImpl
           .newBuilder(regionMap, preferredRegion).build();
 
+      case Constants.KMS_STATIC:
+        logger.info("using static KMS...");
+        return new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
+
       default:
         logger.error("unable to evaluate kms config");
         CommandLine.usage(command, System.out);
@@ -56,10 +56,6 @@ class AppEncryptionConfig {
 
   Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl) {
     switch (metastoreType.toUpperCase()) {
-      case Constants.METASTORE_INMEMORY:
-        logger.info("using in-memory metastore...");
-        return new InMemoryMetastoreImpl<>();
-
       case Constants.METASTORE_JDBC:
         if (jdbcUrl != null) {
           logger.info("using JDBC-based metastore...");
@@ -78,6 +74,10 @@ class AppEncryptionConfig {
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
         return DynamoDbMetastoreImpl.newBuilder().build();
+
+      case Constants.METASTORE_INMEMORY:
+        logger.info("using in-memory metastore...");
+        return new InMemoryMetastoreImpl<>();
 
       default:
         logger.error("unable to evaluate metastore config");

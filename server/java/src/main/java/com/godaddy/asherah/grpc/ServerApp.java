@@ -48,10 +48,10 @@ class ServerApp implements Callable<Void> {
   private static Map<String, String> regionMap;
 
   // Options to configure the server
-  @CommandLine.Option(names = "--product-id", defaultValue = "{env:ASHERAH_SERVICE_NAME}",
+  @CommandLine.Option(names = "--product-id", defaultValue = "${env:ASHERAH_PRODUCT_NAME}",
       description = "Specify the product id", required = true)
   private static String productId;
-  @CommandLine.Option(names = "--service-id", defaultValue = "${env:ASHERAH_PRODUCT_NAME}",
+  @CommandLine.Option(names = "--service-id", defaultValue = "${env:ASHERAH_SERVICE_NAME}",
       description = "Specify the service id", required = true)
   private static String serviceId;
   @CommandLine.Option(names = "--uds", description = "Unix domain socket file",

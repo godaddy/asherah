@@ -337,4 +337,9 @@ Navigate to the `server` directory and run the following:
 ```
 
 ### Java
-Coming soon.
+Ensure that you have a working JAVA installation and protocol compiler ([protoc](https://github.com/protocolbuffers/protobuf/blob/master/README.md))
+
+Navigate to the `server` directory and run the following:
+```console
+protoc --java_out=${OUTPUT_DIR} path/to/your/proto/file
+```

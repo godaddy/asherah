@@ -7,13 +7,13 @@ a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md
 ```console
 [user@machine java]$ mvn clean install
 [user@machine java]$ java -jar <jar-path> --uds='/tmp/appencryption.sock' \
-    --product-id=product, \
-    --service-id=service, \
+    --product-id=product \
+    --service-id=service \
     --metastore-type=JDBC \
-    --jdbc-url='jdbc:mysql://localhost/test?user=root&password=password', \
-    --kms-type=static, \
-    --key-expiration-days=90, \
-    --revoke-check-minutes=60
+    --jdbc-url='jdbc:mysql://localhost/test?user=root&password=password' \
+    --kms-type=static \
+    --key-expiration-days 90 \
+    --revoke-check-minutes 60
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using static KMS...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using JDBC-based metastore...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - key expiration days set to = 90 days
@@ -34,6 +34,32 @@ export ASHERAH_KMS_MODE=static
 
 [user@machine java]$ mvn clean install
 [user@machine java]$ java -jar <jar-path> --uds='/tmp/appencryption.sock'
+```
+
+### Using the provided docker image
+> **NOTE**: This docker image would not work with the [ecs server example](../README.md#amazon-ecs).
+```console
+[user@machine java]$ mvn clean install
+[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file> -f Dockerfile .
+Sending build context to Docker daemon  47.37MB
+Step 1/11 : FROM openjdk:8-jre-alpine
+ ---> f7a292bbb70c
+... snipped
+Step 10/11 : USER aeljava
+ ---> Running in 83998149b2f7
+Removing intermediate container 83998149b2f7
+ ---> 01d9203abe43
+Step 11/11 : ENTRYPOINT ["java", "-Djna.nounpack=true", "-jar", "app.jar"]
+ ---> Running in 9651fa614533
+Removing intermediate container 9651fa614533
+ ---> e9cb70abb481
+Successfully built e9cb70abb481
+[user@machine java]$ docker run -it e9cb70abb481 
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using static KMS...
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using in-memory metastore...
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - key expiration days set to = 90 days
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - revoke check minutes set to = 60 minutes
+[main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - server has started listening on /tmp/appencryption.sock
 ```
 
 ## Configuring the server
