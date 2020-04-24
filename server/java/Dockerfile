@@ -5,6 +5,8 @@ RUN apk update && \
     apk upgrade && \
     apk add java-jna-native
 
+# TODO Add a multi-stage build once we have a public artifact released.
+
 # artifact setup
 ARG JAR_FILE
 
@@ -12,8 +14,6 @@ ENV APP_DIR=/usr/app
 
 RUN mkdir -p ${APP_DIR}
 ADD ${JAR_FILE} ${APP_DIR}/app.jar
-
-EXPOSE 8080
 
 # user setup
 RUN addgroup -S aeljava && \

@@ -32,7 +32,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
   @Override
   public StreamObserver<SessionRequest> session(final StreamObserver<SessionResponse> responseObserver) {
-    logger.info("Connecting stream observer");
+    logger.info("connecting stream observer");
 
     StreamObserver<SessionRequest> streamObserver = new StreamObserver<SessionRequest>() {
 
@@ -46,21 +46,21 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
         if (sessionRequest.hasGetSession()) {
           // Handle response for get session
           partitionId = sessionRequest.getGetSession().getPartitionId();
-          logger.info("Attempting to create session for partitionId={}", partitionId);
+          logger.info("attempting to create session for partitionId={}", partitionId);
           sessionBytes = sessionFactory.getSessionBytes(partitionId);
           responseObserver.onNext(SessionResponse.getDefaultInstance());
           return;
         }
 
-        if (sessionBytes == null) {
-          ErrorResponse errorResponse =
-              AppEncryptionProtos.ErrorResponse.newBuilder().setMessage("Please initialize a session first").build();
-          responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
-        }
-        else {
-          if (sessionRequest.hasEncrypt()) {
+        if (sessionRequest.hasEncrypt()) {
+          if (sessionBytes == null) {
+            ErrorResponse errorResponse = AppEncryptionProtos
+                .ErrorResponse.newBuilder().setMessage("a session must be initialized before encrypt").build();
+            responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
+          }
+          else {
             // handle response for encrypt
-            logger.info("Handling encrypt for partitionId={}", partitionId);
+            logger.info("handling encrypt for partitionId={}", partitionId);
             String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
             byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
             String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
@@ -70,10 +70,17 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
             EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
             responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
           }
+        }
 
-          if (sessionRequest.hasDecrypt()) {
+        if (sessionRequest.hasDecrypt()) {
+          if (sessionBytes == null) {
+            ErrorResponse errorResponse = AppEncryptionProtos
+                .ErrorResponse.newBuilder().setMessage("a session must be initialized before decrypt").build();
+            responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
+          }
+          else {
             // handle response for decrypt
-            logger.info("Handling decrypt for partitionId={}", partitionId);
+            logger.info("handling decrypt for partitionId={}", partitionId);
             DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
 
             JsonObject drrJson = transformDrrToJson(dataRowRecord);

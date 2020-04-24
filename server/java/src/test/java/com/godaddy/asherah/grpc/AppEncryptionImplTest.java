@@ -10,12 +10,16 @@ import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.grpc.ManagedChannel;
+import picocli.CommandLine;
 
 import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 import static com.godaddy.asherah.grpc.AppEncryptionGrpc.*;
@@ -51,7 +55,7 @@ class AppEncryptionImplTest {
 
     String serverName = InProcessServerBuilder.generateName();
     appEncryptionServer = new AppEncryptionServer(sessionFactory, "/tmp/testserver.sock",
-        InProcessServerBuilder.forName(serverName).directExecutor());
+      InProcessServerBuilder.forName(serverName).directExecutor());
     appEncryptionServer.start();
     inProcessChannel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
   }
@@ -69,11 +73,11 @@ class AppEncryptionImplTest {
 
     String actualJson =
       "{\"" + DRR_DATA + "\":\"" + drrBytes +
-      "\",\"" + DRR_KEY + "\":{\"" + EKR_PARENTKEYMETA + "\":{\"" +
-      "" + PARENTKEYMETA_KEYID + "\":\"" + parentKeyMetaKeyId + "\",\"" +
-      "" + PARENTKEYMETA_CREATED + "\":" + parentKeyMetaCreatedTime + "}," +
-      "\"" + EKR_KEY + "\":\"" + ekrBytes + "\"," +
-      "\"" + EKR_CREATED + "\":" + ekrCreatedTime + "}}";
+        "\",\"" + DRR_KEY + "\":{\"" + EKR_PARENTKEYMETA + "\":{\"" +
+        "" + PARENTKEYMETA_KEYID + "\":\"" + parentKeyMetaKeyId + "\",\"" +
+        "" + PARENTKEYMETA_CREATED + "\":" + parentKeyMetaCreatedTime + "}," +
+        "\"" + EKR_KEY + "\":\"" + ekrBytes + "\"," +
+        "\"" + EKR_CREATED + "\":" + ekrCreatedTime + "}}";
 
     JsonObject drrJson = new JsonParser().parse(actualJson).getAsJsonObject();
     AppEncryptionProtos.DataRowRecord dataRowRecord = appEncryption.transformJsonToDrr(drrJson);
@@ -165,7 +169,7 @@ class AppEncryptionImplTest {
   }
 
   @Test
-  void testOperationsWithoutGetSessionShouldFail() {
+  void testEncryptWithoutGetSessionShouldFail() {
     int timesOnNext = 0;
     StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
     AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
@@ -193,6 +197,32 @@ class AppEncryptionImplTest {
   }
 
   @Test
+  void testDecryptWithoutGetSessionShouldFail() {
+    int timesOnNext = 0;
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
+    verify(responseObserver, never()).onNext(any(SessionResponse.class));
+
+    // Verify that we get an error response from the server
+    doAnswer(x -> {
+      SessionResponse response = x.getArgument(0);
+      assertTrue(response.hasErrorResponse());
+      return null;
+    }).when(responseObserver).onNext(any(SessionResponse.class));
+
+    // Try to decrypt something
+    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(DataRowRecord.getDefaultInstance()).build();
+    requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+
+    requestObserver.onCompleted();
+    verify(responseObserver, never()).onError(any(Throwable.class));
+    verify(responseObserver, timeout(100)).onCompleted();
+  }
+
+  @Test
   void testServerSessionError() {
     StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
     AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
@@ -202,8 +232,7 @@ class AppEncryptionImplTest {
     requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
     try {
       inProcessChannel.shutdownNow();
-    } catch (Exception ignored)
-    {
+    } catch (Exception ignored) {
     }
     verify(responseObserver).onError(any(Throwable.class));
   }

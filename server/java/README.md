@@ -21,9 +21,11 @@ a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - server has started listening on /tmp/appencryption.sock
 ```
 
+java -jar <jar-path> --product-id=product --service-id=service --metastore-type=memory --kms-type=static --key-expiration-days 90 --revoke-check-minutes 60
+
 Arguments can also be supplied using environment variables
 
-```console
+```bash
 export ASHERAH_PRODUCT_NAME=product
 export ASHERAH_SERVICE_NAME=service
 export ASHERAH_EXPIRE_AFTER=90
@@ -32,12 +34,15 @@ export ASHERAH_METASTORE_MODE=memory
 export ASHERAH_CONNECTION_STRING='jdbc:mysql://localhost/test?user=root&password=password'
 export ASHERAH_KMS_MODE=static
 
-[user@machine java]$ mvn clean install
-[user@machine java]$ java -jar <jar-path> --uds='/tmp/appencryption.sock'
+mvn clean install
+java -jar <jar-path> --uds='/tmp/appencryption.sock'
 ```
 
 ### Using the provided docker image
-> **NOTE**: This docker image would not work with the [ecs server example](../README.md#amazon-ecs).
+> **NOTE**: This docker image would not work as is with the [Amazon ECS example](../README.md#amazon-ecs).
+> This is because the configuration options supported by the Java server slightly differ from those expected by the 
+> alternative [Go server](../go).
+
 ```console
 [user@machine java]$ mvn clean install
 [user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file> -f Dockerfile .
@@ -78,14 +83,14 @@ follows:
 --preferred-region=<preferredRegion>
                           Preferred region to use for KMS if using AWS KMS.
                           Required for AWS KMS.
---productId=<productId>
+--product-id=<productId>
                           Specify the product id
 --region-arn-tuples=<String=String>[,<String=String>...]
                           Comma separated list of <region>=<kms_arn> tuples.
                           Required for AWS KMS.
 --revoke-check-minutes=<revokeCheckMinutes>
                           Sets the cache's TTL in minutes to revoke the keys in the cache
---serviceId=<serviceId>   Specify the service id
+--service-id=<serviceId>   Specify the service id
 --session-cache-expire-minutes=<sessionCacheExpireMinutes>
                           Evict the session from cache after some minutes.
 --session-cache-max-size=<sessionCacheMaxSize>

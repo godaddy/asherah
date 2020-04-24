@@ -39,7 +39,8 @@ class AppEncryptionConfig {
         logger.info("using AWS KMS...");
         // build the ARN regions including preferred region
         return AwsKeyManagementServiceImpl
-          .newBuilder(regionMap, preferredRegion).build();
+            .newBuilder(regionMap, preferredRegion)
+            .build();
 
       case Constants.KMS_STATIC:
         logger.info("using static KMS...");
@@ -57,19 +58,19 @@ class AppEncryptionConfig {
   Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
-        if (jdbcUrl != null) {
-          logger.info("using JDBC-based metastore...");
-
-          // Setup JDBC persistence from command line argument using Hikari connection pooling
-          HikariDataSource dataSource = new HikariDataSource();
-          dataSource.setJdbcUrl(jdbcUrl);
-          return JdbcMetastoreImpl.newBuilder(dataSource).build();
-        }
-        else {
+        if (jdbcUrl == null) {
           logger.error("jdbc url is required for jdbc metastore...");
           CommandLine.usage(command, System.out);
           System.exit(-1);
         }
+
+        logger.info("using JDBC-based metastore...");
+        // Setup JDBC persistence from command line argument using Hikari connection pooling
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(jdbcUrl);
+        return JdbcMetastoreImpl
+            .newBuilder(dataSource)
+            .build();
 
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
