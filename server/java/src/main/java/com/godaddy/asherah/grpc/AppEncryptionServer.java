@@ -2,7 +2,6 @@ package com.godaddy.asherah.grpc;
 
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.grpc.ServerBuilder;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -26,12 +26,12 @@ class AppEncryptionServer {
   private final Server server;
   private final String udsFilePath;
 
-  /** Create an AppEncryptionServer server listening on default uds path using a {@code sessionFactory}. */
+  // Create an AppEncryptionServer server listening on default uds path using a sessionFactory.
   AppEncryptionServer(final SessionFactory sessionFactory) {
     this(sessionFactory, Constants.DEFAULT_UDS_PATH);
   }
 
-  /** Create an AppEncryptionServer server listening on uds path using a {@code sessionFactory}. */
+  // Create an AppEncryptionServer server listening on uds path using a sessionFactory.
   AppEncryptionServer(final SessionFactory sessionFactory, final String udsFilePath) {
     this.udsFilePath = udsFilePath;
     NettyServerBuilder nettyServerBuilder = getNettyServerBuilder(udsFilePath);
@@ -41,17 +41,14 @@ class AppEncryptionServer {
     server = nettyServerBuilder.addService(new AppEncryptionImpl(sessionFactory)).build();
   }
 
-  /**
-   * Create an AppEncryptionServer server with {@code serverBuilder} listening on {@code udsFilePath}
-   * using a {@code sessionFactory}.
-   */
+  // Create an AppEncryptionServer server with serverBuilder listening on udsFilePath using a sessionFactory.
   AppEncryptionServer(final SessionFactory sessionFactory, final String udsFilePath,
       final ServerBuilder<?> serverBuilder) {
     this.udsFilePath = udsFilePath;
     server = serverBuilder.addService(new AppEncryptionImpl(sessionFactory)).build();
   }
 
-  /** Start serving requests. */
+  // Start serving requests
   public void start() throws IOException {
     server.start();
     logger.info("server has started listening on {}", udsFilePath);
@@ -68,24 +65,22 @@ class AppEncryptionServer {
     }));
   }
 
-  /**
-   * Stop serving requests and shutdown resources.
-   * Wait for {@code Constants.DEFAULT_SERVER_TIMEOUT} seconds for all pre-existing streams to complete
-   */
+  // Stop serving requests and shutdown resources.
+  // Wait for some seconds for all pre-existing streams to complete
   public void stop() throws InterruptedException {
     if (server != null) {
       server.shutdown().awaitTermination(Constants.DEFAULT_SERVER_TIMEOUT, TimeUnit.SECONDS);
     }
   }
 
-  /** Await termination on the main thread since the grpc library uses daemon threads. */
+  // Await termination on the main thread since the grpc library uses daemon threads.
   public void blockUntilShutdown() throws InterruptedException {
     if (server != null) {
       server.awaitTermination();
     }
   }
 
-  /** Bind server to {@code uds} based on the operating system. */
+  // Bind server to a uds path based on the operating system.
   private NettyServerBuilder getNettyServerBuilder(final String uds) {
     EventLoopGroup group;
     NettyServerBuilder builder = NettyServerBuilder.forAddress(new DomainSocketAddress(uds));

@@ -78,14 +78,19 @@ class ServerApp implements Callable<Void> {
   @Override
   public Void call() throws Exception {
 
-    AppEncryptionConfig appEncryptionUtil = new AppEncryptionConfig(this);
+    AppEncryptionConfig appEncryptionConfig = new AppEncryptionConfig();
 
     KeyManagementService keyManagementService =
-        appEncryptionUtil.setupKeyManagementService(kmsType, preferredRegion, regionMap);
-    Metastore<JSONObject> metastore = appEncryptionUtil.setupMetastore(metastoreType, jdbcUrl);
-    CryptoPolicy cryptoPolicy =
-        appEncryptionUtil.setupCryptoPolicy(keyExpirationDays, revokeCheckMinutes, sessionCacheMaxSize,
-        sessionCacheExpireMinutes, sessionCacheEnabled);
+        appEncryptionConfig.setupKeyManagementService(kmsType, preferredRegion, regionMap);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType, jdbcUrl);
+
+    if (keyManagementService == null || metastore == null) {
+      CommandLine.usage(this, System.out);
+      System.exit(-1);
+    }
+
+    CryptoPolicy cryptoPolicy = appEncryptionConfig.setupCryptoPolicy(keyExpirationDays, revokeCheckMinutes,
+        sessionCacheMaxSize, sessionCacheExpireMinutes, sessionCacheEnabled);
 
     try (SessionFactory sessionFactory = SessionFactory
         .newBuilder(productId, serviceId)

@@ -45,6 +45,10 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
         if (sessionRequest.hasGetSession()) {
           // Handle response for get session
+          if (sessionBytes != null) {
+            sendErrorResponse("session is already initialized", responseObserver);
+            return;
+          }
           partitionId = sessionRequest.getGetSession().getPartitionId();
           logger.info("attempting to create session for partitionId={}", partitionId);
           sessionBytes = sessionFactory.getSessionBytes(partitionId);
@@ -54,43 +58,37 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
         if (sessionRequest.hasEncrypt()) {
           if (sessionBytes == null) {
-            ErrorResponse errorResponse = AppEncryptionProtos
-                .ErrorResponse.newBuilder().setMessage("a session must be initialized before encrypt").build();
-            responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
+            sendErrorResponse("a session must be initialized before encrypt", responseObserver);
+            return;
           }
-          else {
-            // handle response for encrypt
-            logger.info("handling encrypt for partitionId={}", partitionId);
-            String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
-            byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
-            String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
+          // handle response for encrypt
+          logger.info("handling encrypt for partitionId={}", partitionId);
+          String payloadString = sessionRequest.getEncrypt().getData().toStringUtf8();
+          byte[] dataRowRecordBytes = sessionBytes.encrypt(payloadString.getBytes(StandardCharsets.UTF_8));
+          String drr = new String(dataRowRecordBytes, StandardCharsets.UTF_8);
 
-            DataRowRecord dataRowRecordValue = transformJsonToDrr(new JsonParser().parse(drr).getAsJsonObject());
+          DataRowRecord dataRowRecordValue = transformJsonToDrr(new JsonParser().parse(drr).getAsJsonObject());
 
-            EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
-            responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
-          }
+          EncryptResponse encryptResponse = EncryptResponse.newBuilder().setDataRowRecord(dataRowRecordValue).build();
+          responseObserver.onNext(SessionResponse.newBuilder().setEncryptResponse(encryptResponse).build());
         }
 
         if (sessionRequest.hasDecrypt()) {
           if (sessionBytes == null) {
-            ErrorResponse errorResponse = AppEncryptionProtos
-                .ErrorResponse.newBuilder().setMessage("a session must be initialized before decrypt").build();
-            responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
+            sendErrorResponse("a session must be initialized before decrypt", responseObserver);
+            return;
           }
-          else {
-            // handle response for decrypt
-            logger.info("handling decrypt for partitionId={}", partitionId);
-            DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
+          // handle response for decrypt
+          logger.info("handling decrypt for partitionId={}", partitionId);
+          DataRowRecord dataRowRecord = sessionRequest.getDecrypt().getDataRowRecord();
 
-            JsonObject drrJson = transformDrrToJson(dataRowRecord);
+          JsonObject drrJson = transformDrrToJson(dataRowRecord);
 
-            byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
-            byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
-            DecryptResponse decryptResponse =
-                DecryptResponse.newBuilder().setData(ByteString.copyFrom(decryptedBytes)).build();
-            responseObserver.onNext(SessionResponse.newBuilder().setDecryptResponse(decryptResponse).build());
-          }
+          byte[] dataRowRecordBytes = drrJson.toString().getBytes(StandardCharsets.UTF_8);
+          byte[] decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+          DecryptResponse decryptResponse =
+              DecryptResponse.newBuilder().setData(ByteString.copyFrom(decryptedBytes)).build();
+          responseObserver.onNext(SessionResponse.newBuilder().setDecryptResponse(decryptResponse).build());
         }
       }
 
@@ -112,6 +110,12 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
     };
 
     return streamObserver;
+  }
+
+  private void sendErrorResponse(final String errorMessage, final StreamObserver<SessionResponse> responseObserver) {
+    ErrorResponse errorResponse = AppEncryptionProtos
+        .ErrorResponse.newBuilder().setMessage(errorMessage).build();
+    responseObserver.onNext(SessionResponse.newBuilder().setErrorResponse(errorResponse).build());
   }
 
   JsonObject transformDrrToJson(final DataRowRecord dataRowRecord) {

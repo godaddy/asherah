@@ -16,7 +16,6 @@ import static org.mockito.Mockito.verify;
 class AppEncryptionServerTest {
 
   SessionFactory sessionFactory;
-
   AppEncryptionServer server;
 
   @BeforeEach
@@ -50,7 +49,7 @@ class AppEncryptionServerTest {
   }
 
   @Test
-  void testConsructorWithSessionFactoryAndServerBuilder() throws IOException {
+  void testConstructorWithSessionFactoryAndServerBuilder() throws IOException {
     InProcessServerBuilder inProcessServerBuilder = InProcessServerBuilder.forName("test-server").directExecutor();
     server = new AppEncryptionServer(sessionFactory, DEFAULT_UDS_PATH, inProcessServerBuilder);
     assertNotNull(server);

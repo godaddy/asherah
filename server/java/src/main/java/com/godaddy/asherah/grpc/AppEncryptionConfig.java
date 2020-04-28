@@ -16,15 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import picocli.CommandLine;
-
 class AppEncryptionConfig {
   private static final Logger logger = LoggerFactory.getLogger(AppEncryptionConfig.class);
-  private final Object command;
-
-  AppEncryptionConfig(final Object command) {
-    this.command = command;
-  }
 
   KeyManagementService setupKeyManagementService(final String kmsType, final String preferredRegion,
       final Map<String, String> regionMap) {
@@ -32,8 +25,7 @@ class AppEncryptionConfig {
       case Constants.KMS_AWS:
         if (preferredRegion == null || regionMap == null) {
           logger.error("aws kms requires both region map and preferred region...");
-          CommandLine.usage(command, System.out);
-          System.exit(-1);
+          break;
         }
 
         logger.info("using AWS KMS...");
@@ -48,8 +40,6 @@ class AppEncryptionConfig {
 
       default:
         logger.error("unable to evaluate kms config");
-        CommandLine.usage(command, System.out);
-        System.exit(-1);
     }
 
     return null;
@@ -60,8 +50,7 @@ class AppEncryptionConfig {
       case Constants.METASTORE_JDBC:
         if (jdbcUrl == null) {
           logger.error("jdbc url is required for jdbc metastore...");
-          CommandLine.usage(command, System.out);
-          System.exit(-1);
+          break;
         }
 
         logger.info("using JDBC-based metastore...");
@@ -82,8 +71,6 @@ class AppEncryptionConfig {
 
       default:
         logger.error("unable to evaluate metastore config");
-        CommandLine.usage(command, System.out);
-        System.exit(-1);
     }
 
     return null;

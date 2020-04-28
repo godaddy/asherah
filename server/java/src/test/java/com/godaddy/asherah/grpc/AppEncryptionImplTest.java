@@ -4,22 +4,16 @@ import com.godaddy.asherah.appencryption.SessionFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.inprocess.*;
+import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import io.grpc.ManagedChannel;
-import picocli.CommandLine;
 
 import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 import static com.godaddy.asherah.grpc.AppEncryptionGrpc.*;
@@ -119,7 +113,6 @@ class AppEncryptionImplTest {
 
   @Test
   void testEncryptDecryptRoundTrip() {
-
     int timesOnNext = 0;
     StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
     AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
@@ -129,39 +122,29 @@ class AppEncryptionImplTest {
 
     GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
     requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
-    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
-
-    // Setup mocking for encrypt response
-    AtomicReference<DataRowRecord> dataRowRecord = new AtomicReference<>();
-    doAnswer(x -> {
-      SessionResponse response = x.getArgument(0);
-      dataRowRecord.set(response.getEncryptResponse().getDataRowRecord());
-      return null;
-    }).when(responseObserver).onNext(any(SessionResponse.class));
+    ArgumentCaptor<SessionResponse> sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
 
     // Try to encrypt a payload
     String originalPayloadString = "mysupersecretpayload";
     ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
     Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
     requestObserver.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
-    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
-
-    // Setup mock for decrypt response
-    AtomicReference<String> decryptedPayload = new AtomicReference<>();
-    doAnswer(x -> {
-      SessionResponse response = x.getArgument(0);
-      ByteString decryptedData = response.getDecryptResponse().getData();
-      decryptedPayload.set(new String(decryptedData.toByteArray(), StandardCharsets.UTF_8));
-      return null;
-    }).when(responseObserver).onNext(any(SessionResponse.class));
+    sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+    assertTrue(sessionResponseArgumentCaptor.getValue().hasEncryptResponse());
+    DataRowRecord dataRowRecord = sessionResponseArgumentCaptor.getValue().getEncryptResponse().getDataRowRecord();
 
     // Try to decrypt back the payload
-    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord.get()).build();
+    Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(dataRowRecord).build();
     requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
-    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
+    sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+    assertTrue(sessionResponseArgumentCaptor.getValue().hasDecryptResponse());
+    String decryptedPayload = new String(sessionResponseArgumentCaptor.getValue().getDecryptResponse().getData().toByteArray(), StandardCharsets.UTF_8);
 
     // Verify that both the payloads match
-    assertEquals(originalPayloadString, decryptedPayload.get());
+    assertEquals(originalPayloadString, decryptedPayload);
 
     requestObserver.onCompleted();
     verify(responseObserver, never()).onError(any(Throwable.class));
@@ -177,21 +160,18 @@ class AppEncryptionImplTest {
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
     verify(responseObserver, never()).onNext(any(SessionResponse.class));
 
-    // Verify that we get an error response from the server
-    doAnswer(x -> {
-      SessionResponse response = x.getArgument(0);
-      assertTrue(response.hasErrorResponse());
-      return null;
-    }).when(responseObserver).onNext(any(SessionResponse.class));
-
     // Try to encrypt a payload
     String originalPayloadString = "mysupersecretpayload";
     ByteString bytes = ByteString.copyFrom(originalPayloadString.getBytes(StandardCharsets.UTF_8));
     Encrypt dataToBeEncrypted = Encrypt.newBuilder().setData(bytes).build();
     requestObserver.onNext(SessionRequest.newBuilder().setEncrypt(dataToBeEncrypted).build());
-    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
-
+    ArgumentCaptor<SessionResponse> sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+    assertTrue(sessionResponseArgumentCaptor.getValue().hasErrorResponse());
+    String message = sessionResponseArgumentCaptor.getValue().getErrorResponse().getMessage();
     requestObserver.onCompleted();
+
+    assertEquals("a session must be initialized before encrypt", message);
     verify(responseObserver, never()).onError(any(Throwable.class));
     verify(responseObserver, timeout(100)).onCompleted();
   }
@@ -205,19 +185,43 @@ class AppEncryptionImplTest {
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
     verify(responseObserver, never()).onNext(any(SessionResponse.class));
 
-    // Verify that we get an error response from the server
-    doAnswer(x -> {
-      SessionResponse response = x.getArgument(0);
-      assertTrue(response.hasErrorResponse());
-      return null;
-    }).when(responseObserver).onNext(any(SessionResponse.class));
-
     // Try to decrypt something
     Decrypt dataToBeDecrypted = Decrypt.newBuilder().setDataRowRecord(DataRowRecord.getDefaultInstance()).build();
     requestObserver.onNext(SessionRequest.newBuilder().setDecrypt(dataToBeDecrypted).build());
-    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(any(SessionResponse.class));
-
+    ArgumentCaptor<SessionResponse> sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+    assertTrue(sessionResponseArgumentCaptor.getValue().hasErrorResponse());
+    String message = sessionResponseArgumentCaptor.getValue().getErrorResponse().getMessage();
     requestObserver.onCompleted();
+
+    assertEquals("a session must be initialized before decrypt", message);
+    verify(responseObserver, never()).onError(any(Throwable.class));
+    verify(responseObserver, timeout(100)).onCompleted();
+  }
+
+  @Test
+  void testGetSessionTwiceOnSamePartitionIdShouldGiveErrorResponse() {
+    int timesOnNext = 0;
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
+    verify(responseObserver, never()).onNext(any(SessionResponse.class));
+
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    ArgumentCaptor<SessionResponse> sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+
+    // Try to call getSession again
+    requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+    assertTrue(sessionResponseArgumentCaptor.getValue().hasErrorResponse());
+    String message = sessionResponseArgumentCaptor.getValue().getErrorResponse().getMessage();
+    requestObserver.onCompleted();
+
+    assertEquals("session is already initialized", message);
     verify(responseObserver, never()).onError(any(Throwable.class));
     verify(responseObserver, timeout(100)).onCompleted();
   }

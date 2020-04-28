@@ -1,8 +1,10 @@
 # Asherah Server - Java
 
 ## Running the server
-The following makes use of the `JDBC-based` metastore implementation and assumes mysql is running on localhost and 
+The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and 
 a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md) for more.
+
+> Development note: Requires JAVA 1.8 
 
 ```console
 [user@machine java]$ mvn clean install
@@ -21,8 +23,6 @@ a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - server has started listening on /tmp/appencryption.sock
 ```
 
-java -jar <jar-path> --product-id=product --service-id=service --metastore-type=memory --kms-type=static --key-expiration-days 90 --revoke-check-minutes 60
-
 Arguments can also be supplied using environment variables
 
 ```bash
@@ -30,7 +30,7 @@ export ASHERAH_PRODUCT_NAME=product
 export ASHERAH_SERVICE_NAME=service
 export ASHERAH_EXPIRE_AFTER=90
 export ASHERAH_CHECK_INTERVAL=60
-export ASHERAH_METASTORE_MODE=memory
+export ASHERAH_METASTORE_MODE=jdbc
 export ASHERAH_CONNECTION_STRING='jdbc:mysql://localhost/test?user=root&password=password'
 export ASHERAH_KMS_MODE=static
 
@@ -45,7 +45,7 @@ java -jar <jar-path> --uds='/tmp/appencryption.sock'
 
 ```console
 [user@machine java]$ mvn clean install
-[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file> -f Dockerfile .
+[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> -f Dockerfile .
 Sending build context to Docker daemon  47.37MB
 Step 1/11 : FROM openjdk:8-jre-alpine
  ---> f7a292bbb70c
