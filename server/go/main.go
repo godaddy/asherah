@@ -20,8 +20,9 @@ import (
 )
 
 type Options struct {
-	SocketFile flags.Filename  `short:"s" long:"socket-file" default:"/tmp/appencryption.sock" description:"The unix domain socket the server will listen on"`
-	Asherah    *server.Options `group:"Asherah Options"`
+	SocketFile       flags.Filename  `short:"s" long:"socket-file" default:"/tmp/appencryption.sock" description:"The unix domain socket the server will listen on"`
+	SocketAllowGroup bool            `short:"g" long:"allow-group" description:"Allow group read and write to the unix domain socket"`
+	Asherah          *server.Options `group:"Asherah Options"`
 }
 
 func main() {
@@ -52,6 +53,12 @@ func main() {
 		panic(err)
 	}
 	defer l.Close()
+
+	if opts.SocketAllowGroup {
+		if err := os.Chmod(string(opts.SocketFile), 0770); err != nil {
+			panic(err)
+		}
+	}
 
 	service := server.NewAppEncryption(opts.Asherah)
 	grpcServer := grpc.NewServer()
