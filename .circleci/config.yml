@@ -1,15 +1,39 @@
 version: 2.1
 
-# Aliases for convenience/templating
-references:
-  workspace_root: &workspace_root
-    /tmp/workspace
-  attach_workspace: &attach_workspace
-    attach_workspace:
-      at: *workspace_root
-
 orbs:
   codecov: codecov/codecov@1.0.5
+
+commands:
+  deploy-project:
+    description: "Deploy the specified project"
+    parameters:
+      project:
+        type: string
+      version:
+        type: string
+      version_suffix:
+        type: string
+    steps:
+      - run:
+          name: Deploy
+          command: |
+            cd <<parameters.project>>
+
+            RELEASE_VERSION=`echo ${CIRCLE_BRANCH} | cut -f2 -d'-'`
+            BASE_VERSION=$(<<parameters.version>>)
+            VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+            # We want to trigger deployments only on the release branch, for modules with no version suffix
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "<<parameters.version_suffix>>" ]]; then
+              ./scripts/release_prod.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
+  add-git-key:
+    description: "Add GitHub Key"
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
 
 workflows:
   version: 2
@@ -54,6 +78,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -82,28 +107,10 @@ jobs:
           command: |
             cd java/secure-memory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/secure-memory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - deploy-project:
+          project: java/secure-memory
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
+          version_suffix: SNAPSHOT
       - save_cache:
           paths:
             - ~/.m2
@@ -113,6 +120,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -141,28 +149,10 @@ jobs:
           command: |
             cd java/app-encryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/app-encryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - deploy-project:
+          project: java/app-encryption
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
+          version_suffix: SNAPSHOT
       - save_cache:
           paths:
             - ~/.m2
@@ -216,6 +206,7 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -257,25 +248,10 @@ jobs:
           command: |
             cd csharp/Logging
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/Logging
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - deploy-project:
+          project: csharp/Logging
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
+          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -285,6 +261,7 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -326,25 +303,10 @@ jobs:
           command: |
             cd csharp/SecureMemory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/SecureMemory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - deploy-project:
+          project: csharp/SecureMemory
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
+          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -359,6 +321,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -400,25 +363,10 @@ jobs:
           command: |
             cd csharp/AppEncryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/AppEncryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - deploy-project:
+          project: csharp/AppEncryption
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
+          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -458,6 +406,7 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -498,6 +447,10 @@ jobs:
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
+      - deploy-project:
+          project: go/securememory
+          version: cat .versionfile
+          version_suffix: alpha
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -512,6 +465,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
+      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -553,6 +507,10 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
+      - deploy-project:
+          project: go/appencryption
+          version: cat .versionfile
+          version_suffix: alpha
       - save_cache:
           paths:
             - /go/pkg/mod
