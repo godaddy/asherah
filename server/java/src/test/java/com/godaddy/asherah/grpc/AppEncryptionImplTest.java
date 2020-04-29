@@ -234,10 +234,39 @@ class AppEncryptionImplTest {
     StreamObserver<SessionRequest> requestObserver = appEncryptionStub.session(responseObserver);
     GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
     requestObserver.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+
+    // Close the channel midway to stimulate server error
     try {
       inProcessChannel.shutdownNow();
     } catch (Exception ignored) {
     }
     verify(responseObserver).onError(any(Throwable.class));
+  }
+
+  @Test
+  void testMultipleClients() {
+    int timesOnNext = 0;
+    StreamObserver<SessionResponse> responseObserver = mock(StreamObserver.class);
+    AppEncryptionStub appEncryptionStub = AppEncryptionGrpc.newStub(inProcessChannel);
+
+    // Connect 2 clients to the same server
+    StreamObserver<SessionRequest> client1 = appEncryptionStub.session(responseObserver);
+    StreamObserver<SessionRequest> client2 = appEncryptionStub.session(responseObserver);
+    verify(responseObserver, never()).onNext(any(SessionResponse.class));
+
+    GetSession getSession = GetSession.newBuilder().setPartitionId("partition-1").build();
+    client1.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    ArgumentCaptor<SessionResponse> sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+
+    getSession = GetSession.newBuilder().setPartitionId("partition-2").build();
+    client2.onNext(SessionRequest.newBuilder().setGetSession(getSession).build());
+    sessionResponseArgumentCaptor = ArgumentCaptor.forClass(SessionResponse.class);
+    verify(responseObserver, timeout(100).times(++timesOnNext)).onNext(sessionResponseArgumentCaptor.capture());
+
+    client1.onCompleted();
+    client2.onCompleted();
+    verify(responseObserver, never()).onError(any(Throwable.class));
+    verify(responseObserver, timeout(100).times(2)).onCompleted();
   }
 }
