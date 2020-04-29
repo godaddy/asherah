@@ -157,7 +157,6 @@
               <consoleOutput>true</consoleOutput>
               <configLocation>${checkstyle.config}</configLocation>
               <includeResources>false</includeResources>
-              <includeTestResources>false</includeTestResources>
               <failOnViolation>true</failOnViolation>
             </configuration>
             <goals>
