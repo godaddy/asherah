@@ -645,3 +645,4 @@ jobs:
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
+
