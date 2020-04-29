@@ -362,7 +362,7 @@ jobs:
           name: Integration Tests
           command: |
             cd csharp/AppEncryption
-            ./scripts/integration_tests.sh
+            ./scripts/integration_test.sh
       - run:
           name: Install locally
           command: |
