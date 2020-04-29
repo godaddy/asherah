@@ -86,7 +86,7 @@ func validateOptions(opts *Options) error {
 			return errors.New("--preferred-region is required when --kms=aws")
 		}
 
-		if len(opts.Asherah.PreferredRegion) == 0 {
+		if len(opts.Asherah.RegionMap) == 0 {
 			return errors.New("--region-map is required when --kms=aws")
 		}
 	}
