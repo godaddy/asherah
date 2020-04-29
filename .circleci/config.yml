@@ -359,6 +359,11 @@ jobs:
           file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: csharp_AppEncryption
       - run:
+          name: Integration Tests
+          command: |
+            cd csharp/AppEncryption
+            ./scripts/integration_tests.sh
+      - run:
           name: Install locally
           command: |
             cd csharp/AppEncryption
