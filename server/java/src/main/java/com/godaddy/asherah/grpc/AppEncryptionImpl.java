@@ -53,7 +53,6 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           logger.info("attempting to create session for partitionId={}", partitionId);
           sessionBytes = sessionFactory.getSessionBytes(partitionId);
           responseObserver.onNext(SessionResponse.getDefaultInstance());
-          return;
         }
 
         if (sessionRequest.hasEncrypt()) {

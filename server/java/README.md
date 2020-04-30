@@ -45,7 +45,7 @@ java -jar <jar-path> --uds='/tmp/appencryption.sock'
 
 ```console
 [user@machine java]$ mvn clean install
-[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> -f Dockerfile .
+[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> .
 Sending build context to Docker daemon  47.37MB
 Step 1/11 : FROM openjdk:8-jre-alpine
  ---> f7a292bbb70c
