@@ -8,9 +8,10 @@ TAG=`echo go/${ARTIFACT_NAME}/v${BASE_VERSION}`
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG}  ]]; then
     # Create tag
-    echo "Creating a new release tag"
+    echo "Releasing ${ARTIFACT_NAME} artifact"
     git tag -f ${TAG} ${CIRCLE_SHA1}
     git push origin ${TAG}
+    echo "Created tag ${TAG}"
 else
-    echo "Module is already tagged"
+    echo "${ARTIFACT_NAME} v${BASE_VERSION} exists"
 fi

@@ -6,6 +6,7 @@
     <!--<Version></Version>-->
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <Description>Logging SDK for Asherah</Description>
     <RootNamespace>GoDaddy.Asherah.Logging</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

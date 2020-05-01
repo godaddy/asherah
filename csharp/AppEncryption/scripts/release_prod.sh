@@ -8,12 +8,13 @@ TAG=`echo csharp/${ARTIFACT_NAME}/v${BASE_VERSION}`
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
     dotnet pack -c Release --no-build
-    echo "Release prod artifact"
+    echo "Releasing ${ARTIFACT_NAME} artifact"
     find . -name *${BASE_VERSION}.nupkg  | xargs -L1 -I '{}' dotnet nuget push {} -k ${NUGET_KEY} -s ${NUGET_SOURCE}
 
     # Create tag
     git tag -f ${TAG} ${CIRCLE_SHA1}
     git push origin ${TAG}
+    echo "Created tag ${TAG}"
 else
-    echo "Module is already deployed and tagged"
+    echo "${ARTIFACT_NAME} v${BASE_VERSION} exists"
 fi
