@@ -11,14 +11,14 @@ RUN apk update && \
 ARG JAR_FILE
 
 ENV APP_DIR=/usr/app
-
 RUN mkdir -p ${APP_DIR}
-ADD ${JAR_FILE} ${APP_DIR}/app.jar
 
 # user setup
 RUN addgroup -S aeljava && \
     adduser -S -G aeljava -H -D -s /bin/false -g "Docker image user" aeljava && \
     chown -R aeljava:aeljava ${APP_DIR}
+
+ADD ${JAR_FILE} ${APP_DIR}/app.jar
 
 WORKDIR ${APP_DIR}
 

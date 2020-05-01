@@ -340,12 +340,19 @@ Navigate to the `server` directory and run the following:
 Use the following to regenerate the gRPC service code for the Java server implementation.
 
 #### Prerequisites
-Ensure that you have a working JAVA installation and protocol compiler.
+Ensure that you have a working JAVA installation, protobuf and protocol compiler.
 
-* [Installing JAVA](https://adoptopenjdk.net/installation.html)
-* [protoc compiler](https://github.com/protocolbuffers/protobuf/blob/master/README.md)
+* [Installing Java](https://adoptopenjdk.net/installation.html)
+* [protbuf](https://github.com/protocolbuffers/protobuf/blob/master/README.md)
+* [protoc compiler](https://github.com/grpc/grpc-java/tree/master/compiler)
 
 Navigate to the `server` directory and run the following:
 ```console
-[user@machine server]$ protoc --java_out=${OUTPUT_DIR} path/to/your/proto/file
+[user@machine server]$ mkdir -p java/target/generated-sources/protobuf/grpc-java
+[user@machine server]$ mkdir -p java/target/generated-sources/protobuf/java
+[user@machine server]$ protoc --java_out=java/target/generated-sources/protobuf/java protos/appencryption.proto
+[user@machine server]$ protoc \
+    --plugin=protoc-gen-grpc-java=<dowloaded_proto_plugin> \ 
+    --grpc-java_out=java/target/generated-sources/protobuf/grpc-java \
+    --proto_path=protos appencryption.proto 
 ```
