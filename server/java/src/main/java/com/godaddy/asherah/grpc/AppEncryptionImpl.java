@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import io.grpc.stub.ServerCallStreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +97,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
       public void onError(final Throwable throwable) {
         // Client may send a half close request
         // https://github.com/grpc/grpc-java/issues/6560
-        if (((StatusRuntimeException)throwable).getStatus().getCode() == Status.Code.CANCELLED){
+        if (((StatusRuntimeException) throwable).getStatus().getCode() == Status.Code.CANCELLED) {
           logger.info("session completed for partitionId={}", partitionId);
           if (sessionBytes != null) {
             sessionBytes.close();
