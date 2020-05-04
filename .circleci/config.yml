@@ -4,8 +4,8 @@ orbs:
   codecov: codecov/codecov@1.0.5
 
 commands:
-  deploy-project:
-    description: "Deploy the specified project"
+  maybe-deploy:
+    description: "If required, deploy the specified project"
     parameters:
       project:
         type: string
@@ -14,6 +14,9 @@ commands:
       version_suffix:
         type: string
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
       - run:
           name: Deploy
           command: |
@@ -28,13 +31,6 @@ commands:
             else
               echo "Not releasable build, skipping deployment step"
             fi
-  add-git-key:
-    description: "Add GitHub Key"
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
-
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -78,7 +74,6 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -107,7 +102,7 @@ jobs:
           command: |
             cd java/secure-memory
             ./scripts/install_local.sh
-      - deploy-project:
+      - maybe-deploy:
           project: java/secure-memory
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
           version_suffix: SNAPSHOT
@@ -120,7 +115,6 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -149,7 +143,7 @@ jobs:
           command: |
             cd java/app-encryption
             ./scripts/install_local.sh
-      - deploy-project:
+      - maybe-deploy:
           project: java/app-encryption
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
           version_suffix: SNAPSHOT
@@ -206,7 +200,6 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -248,7 +241,7 @@ jobs:
           command: |
             cd csharp/Logging
             ./scripts/install_local.sh
-      - deploy-project:
+      - maybe-deploy:
           project: csharp/Logging
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
           version_suffix: alpha
@@ -261,7 +254,6 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -303,7 +295,7 @@ jobs:
           command: |
             cd csharp/SecureMemory
             ./scripts/install_local.sh
-      - deploy-project:
+      - maybe-deploy:
           project: csharp/SecureMemory
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
           version_suffix: alpha
@@ -321,7 +313,6 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -368,7 +359,7 @@ jobs:
           command: |
             cd csharp/AppEncryption
             ./scripts/install_local.sh
-      - deploy-project:
+      - maybe-deploy:
           project: csharp/AppEncryption
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
           version_suffix: alpha
@@ -411,7 +402,6 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -452,7 +442,7 @@ jobs:
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
-      - deploy-project:
+      - maybe-deploy:
           project: go/securememory
           version: cat .versionfile
           version_suffix: alpha
@@ -470,7 +460,6 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
       - checkout
-      - add-git-key
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
@@ -512,7 +501,7 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
-      - deploy-project:
+      - maybe-deploy:
           project: go/appencryption
           version: cat .versionfile
           version_suffix: alpha
