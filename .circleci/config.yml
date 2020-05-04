@@ -14,9 +14,9 @@ commands:
       version_suffix:
         type: string
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
+#      - add_ssh_keys:
+#          fingerprints:
+#            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
       - run:
           name: Deploy
           command: |
@@ -27,6 +27,12 @@ commands:
             VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
             # We want to trigger deployments only on the release branch, for modules with no version suffix
             if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "<<parameters.version_suffix>>" ]]; then
+              mkdir -p ~/.ssh
+              echo "Adding github.com as known host..."
+              echo $GITHUB_FINGERPRINT >> ~/.ssh/known_hosts
+              echo "Setting private SSH key for pushing new version to repo..."
+              echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa
+              chmod 400 ~/.ssh/id_rsa # prevents "UNPROTECTED PRIVATE KEY FILE" error
               ./scripts/release_prod.sh
             else
               echo "Not releasable build, skipping deployment step"
