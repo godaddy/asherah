@@ -17,17 +17,18 @@ commands:
           command: |
             cd <<parameters.project>>
 
-            RELEASE_VERSION=`echo ${CIRCLE_BRANCH} | cut -f2 -d'-'`
             BASE_VERSION=$(<<parameters.version>>)
             VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+
             # We want to trigger deployments only on the release branch, for modules with no version suffix
             if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
               mkdir -p ~/.ssh
               echo "Adding github.com as known host."
-              echo $GITHUB_FINGERPRINT >> ~/.ssh/known_hosts
+              echo $GITHUB_PUBLIC_KEY >> ~/.ssh/known_hosts
               echo "Setting private SSH key."
-              echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa
-              chmod 400 ~/.ssh/id_rsa # prevents "UNPROTECTED PRIVATE KEY FILE" error
+              echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa_git
+              chmod 400 ~/.ssh/id_rsa_git # prevents "UNPROTECTED PRIVATE KEY FILE" error
+
               ./scripts/release_prod.sh
             else
               echo "Not releasable build, skipping deployment step"

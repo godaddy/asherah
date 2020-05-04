@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0-alpha</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -186,7 +186,7 @@
     <dependency>
       <groupId>com.godaddy.asherah</groupId>
       <artifactId>securememory</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>0.1.0-alpha</version>
     </dependency>
 
     <dependency>
@@ -323,6 +323,17 @@
       </activation>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.8</version>
+            <extensions>true</extensions>
+            <configuration>
+                <serverId>ossrh</serverId>
+                <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
