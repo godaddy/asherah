@@ -16,5 +16,5 @@ if [[ "$RESULT" != ${TAG} ]]; then
     git push origin ${TAG}
     echo "Created tag ${TAG}"
 else
-    echo "${ARTIFACT_NAME} v${BASE_VERSION} exists"
+    echo "${TAG} exists for ${ARTIFACT_NAME} v${BASE_VERSION}"
 fi

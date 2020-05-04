@@ -11,12 +11,7 @@ commands:
         type: string
       version:
         type: string
-      version_suffix:
-        type: string
     steps:
-#      - add_ssh_keys:
-#          fingerprints:
-#            - "7b:1d:d2:91:2b:e5:bc:3f:b6:cd:a2:6f:dc:e4:46:e5"
       - run:
           name: Deploy
           command: |
@@ -26,11 +21,11 @@ commands:
             BASE_VERSION=$(<<parameters.version>>)
             VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
             # We want to trigger deployments only on the release branch, for modules with no version suffix
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "<<parameters.version_suffix>>" ]]; then
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
               mkdir -p ~/.ssh
-              echo "Adding github.com as known host..."
+              echo "Adding github.com as known host."
               echo $GITHUB_FINGERPRINT >> ~/.ssh/known_hosts
-              echo "Setting private SSH key for pushing new version to repo..."
+              echo "Setting private SSH key."
               echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa
               chmod 400 ~/.ssh/id_rsa # prevents "UNPROTECTED PRIVATE KEY FILE" error
               ./scripts/release_prod.sh
@@ -111,7 +106,6 @@ jobs:
       - maybe-deploy:
           project: java/secure-memory
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
-          version_suffix: SNAPSHOT
       - save_cache:
           paths:
             - ~/.m2
@@ -152,7 +146,6 @@ jobs:
       - maybe-deploy:
           project: java/app-encryption
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
-          version_suffix: SNAPSHOT
       - save_cache:
           paths:
             - ~/.m2
@@ -250,7 +243,6 @@ jobs:
       - maybe-deploy:
           project: csharp/Logging
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
-          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -304,7 +296,6 @@ jobs:
       - maybe-deploy:
           project: csharp/SecureMemory
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
-          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -368,7 +359,6 @@ jobs:
       - maybe-deploy:
           project: csharp/AppEncryption
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
-          version_suffix: alpha
       - save_cache:
           paths:
             - ~/.nuget
@@ -451,7 +441,6 @@ jobs:
       - maybe-deploy:
           project: go/securememory
           version: cat .versionfile
-          version_suffix: alpha
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -510,7 +499,6 @@ jobs:
       - maybe-deploy:
           project: go/appencryption
           version: cat .versionfile
-          version_suffix: alpha
       - save_cache:
           paths:
             - /go/pkg/mod
