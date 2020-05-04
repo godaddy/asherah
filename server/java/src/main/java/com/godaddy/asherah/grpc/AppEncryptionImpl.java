@@ -5,6 +5,8 @@ import com.godaddy.asherah.appencryption.SessionFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +55,6 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
           logger.info("attempting to create session for partitionId={}", partitionId);
           sessionBytes = sessionFactory.getSessionBytes(partitionId);
           responseObserver.onNext(SessionResponse.getDefaultInstance());
-          return;
         }
 
         if (sessionRequest.hasEncrypt()) {
@@ -94,7 +95,17 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
       @Override
       public void onError(final Throwable throwable) {
-        logger.error("server session failed for partitionId={}", partitionId, throwable);
+        // Client may send a half close request
+        // https://github.com/grpc/grpc-java/issues/6560
+        if (((StatusRuntimeException) throwable).getStatus().getCode() == Status.Code.CANCELLED) {
+          logger.info("session completed for partitionId={}", partitionId);
+          if (sessionBytes != null) {
+            sessionBytes.close();
+          }
+          logger.debug("client terminated", throwable);
+          return;
+        }
+        logger.error("server session error for partitionId={}", partitionId);
         responseObserver.onError(throwable);
         throwable.printStackTrace();
       }

@@ -4,8 +4,23 @@
 The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and 
 a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md) for more.
 
-> Development note: Requires JAVA 1.8 
+#### Development notes: 
+* Make sure you have JAVA 1.8
+* Create an aws credentials file
+```console
+[user@machine java]$ cat ~/.aws/credentials
+[default]
+aws_access_key_id = secret
+aws_secret_access_key = access
+```
+* Create a aws config file
+```console
+[user@machine java]$ cat ~/.aws/config
+[default]
+region = us-west-2
+```
 
+Running the server:
 ```console
 [user@machine java]$ mvn clean install
 [user@machine java]$ java -jar <jar-path> --uds='/tmp/appencryption.sock' \
@@ -45,7 +60,7 @@ java -jar <jar-path> --uds='/tmp/appencryption.sock'
 
 ```console
 [user@machine java]$ mvn clean install
-[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> -f Dockerfile .
+[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> .
 Sending build context to Docker daemon  47.37MB
 Step 1/11 : FROM openjdk:8-jre-alpine
  ---> f7a292bbb70c
