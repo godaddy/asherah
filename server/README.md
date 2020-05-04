@@ -337,4 +337,15 @@ Navigate to the `server` directory and run the following:
 ```
 
 ### Java
-Coming soon.
+Use the following to regenerate the gRPC service code for the Java server implementation.
+
+#### Prerequisites
+Ensure that you have a working JAVA installation and protocol compiler.
+
+* [Installing JAVA](https://adoptopenjdk.net/installation.html)
+* [protoc compiler](https://github.com/protocolbuffers/protobuf/blob/master/README.md)
+
+Navigate to the `server` directory and run the following:
+```console
+[user@machine server]$ protoc --java_out=${OUTPUT_DIR} path/to/your/proto/file
+```
