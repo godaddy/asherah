@@ -1,16 +1,38 @@
 version: 2.1
 
-# Aliases for convenience/templating
-references:
-  workspace_root: &workspace_root
-    /tmp/workspace
-  attach_workspace: &attach_workspace
-    attach_workspace:
-      at: *workspace_root
-
 orbs:
   codecov: codecov/codecov@1.0.5
 
+commands:
+  maybe-deploy:
+    description: "If required, deploy the specified project"
+    parameters:
+      project:
+        type: string
+      version:
+        type: string
+    steps:
+      - run:
+          name: Deploy
+          command: |
+            cd <<parameters.project>>
+
+            BASE_VERSION=$(<<parameters.version>>)
+            VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+
+            # We want to trigger deployments only on the release branch, for modules with no version suffix
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+              mkdir -p ~/.ssh
+              echo "Adding github.com as known host."
+              echo $GITHUB_PUBLIC_KEY >> ~/.ssh/known_hosts
+              echo "Setting private SSH key."
+              echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa_git
+              chmod 400 ~/.ssh/id_rsa_git # prevents "UNPROTECTED PRIVATE KEY FILE" error
+
+              ./scripts/release_prod.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -82,28 +104,9 @@ jobs:
           command: |
             cd java/secure-memory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/secure-memory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: java/secure-memory
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
       - save_cache:
           paths:
             - ~/.m2
@@ -141,28 +144,9 @@ jobs:
           command: |
             cd java/app-encryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/app-encryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: java/app-encryption
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
       - save_cache:
           paths:
             - ~/.m2
@@ -257,25 +241,9 @@ jobs:
           command: |
             cd csharp/Logging
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/Logging
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/Logging
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
@@ -326,25 +294,9 @@ jobs:
           command: |
             cd csharp/SecureMemory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/SecureMemory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/SecureMemory
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
@@ -396,29 +348,18 @@ jobs:
           file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: csharp_AppEncryption
       - run:
+          name: Integration Tests
+          command: |
+            cd csharp/AppEncryption
+            ./scripts/integration_test.sh
+      - run:
           name: Install locally
           command: |
             cd csharp/AppEncryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/AppEncryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/AppEncryption
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
@@ -498,6 +439,9 @@ jobs:
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
+      - maybe-deploy:
+          project: go/securememory
+          version: cat .versionfile
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -553,6 +497,9 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
+      - maybe-deploy:
+          project: go/appencryption
+          version: cat .versionfile
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -682,3 +629,4 @@ jobs:
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
+

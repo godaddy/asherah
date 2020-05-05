@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>securememory</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0-alpha</version>
   <name>SecureMemory</name>
   <description>Secure off-heap memory storage for application secrets (like cryptographic keys)</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -213,6 +213,17 @@
       </activation>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.8</version>
+            <extensions>true</extensions>
+            <configuration>
+                <serverId>ossrh</serverId>
+                <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>

@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <cucumber.version>5.4.0</cucumber.version>
     <junit.jupiter.version>5.1.0</junit.jupiter.version>
-    <appencryption.version>1.0.0-SNAPSHOT</appencryption.version>
+    <appencryption.version>0.1.0-alpha</appencryption.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
 

@@ -11,7 +11,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="GoDaddy.Asherah.Logging" Version="1.0.0-alpha*" />
+    <PackageReference Include="GoDaddy.Asherah.Logging" Version="0.1.0-alpha*" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>

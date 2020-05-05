@@ -6,6 +6,7 @@
     <!--<Version></Version>-->
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <Description>Provides a secure area of memory to store sensitive data</Description>
     <RootNamespace>GoDaddy.Asherah.SecureMemory</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
