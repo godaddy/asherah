@@ -2,7 +2,7 @@
 set -e
 
 BASE_VERSION=$(cat .versionfile)
-ARTIFACT_NAME=$(go mod edit -json | jq -r '.Module.Path')
+ARTIFACT_NAME='securememory'
 TAG=`echo go/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
