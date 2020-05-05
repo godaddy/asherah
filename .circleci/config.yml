@@ -58,9 +58,7 @@ workflows:
           requires:
             - csharp-app-encryption
       - go-securememory
-      - go-appencryption:
-          requires:
-            - go-securememory
+      - go-appencryption
       - go-referenceapp:
           requires:
             - go-appencryption
@@ -467,7 +465,6 @@ jobs:
           name: Build
           command: |
             cd go/appencryption
-            go get github.com/godaddy/asherah/go/securememory@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Unit Tests
