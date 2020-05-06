@@ -3,7 +3,6 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
 
 [![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/appencryption?status.svg)](https://pkg.go.dev/github.com/godaddy/asherah/go/appencryption)
 
-  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -15,14 +14,16 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
   * [Documentation](#documentation)
   * [Development Notes](#development-notes)
 
-### Installation
-```bash
-go get github.com/godaddy/asherah/go/appencryption
-```
-
 ## Quick Start
 
 ```go
+import (
+	"github.com/godaddy/asherah/go/appencryption"
+	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
+	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
+	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+)
+
 crypto := aead.NewAES256GCM()
 // Create a session factory. The builder steps used below are for testing only.
 factory := appencryption.NewSessionFactory(
