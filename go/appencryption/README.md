@@ -17,43 +17,51 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
 ## Quick Start
 
 ```go
+package main
+
 import (
-	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
-	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+    "github.com/godaddy/asherah/go/appencryption"
+    "github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
+    "github.com/godaddy/asherah/go/appencryption/pkg/kms"
+    "github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 )
 
-crypto := aead.NewAES256GCM()
-// Create a session factory. The builder steps used below are for testing only.
-factory := appencryption.NewSessionFactory(
-    &appencryption.Config{ 
+func main() {
+    crypto := aead.NewAES256GCM()
+    config := &appencryption.Config{
         Service: "reference_app",
         Product: "productId",
         Policy:  appencryption.NewCryptoPolicy(),
-    },
-    persistence.NewMemoryMetastore(),
-    kms.NewStatic("mysupersecretstaticmasterkey!!!!", crypto)
-    crypto,
-)
-// Now create a cryptographic session for a partition.
-sess, err := factory.GetSession("shopper123")
-if err != nil {
-    panic(err)
-}
-// Close frees the memory held by the intermediate keys used in this session
-defer sess.Close() 
-	
- // Now encrypt some data
-dataRow, err := sess.Encrypt([]byte("mysupersecretpayload"))
-if err != nil {
-	panic(err)
-}
+    }
+    metastore := persistence.NewMemoryMetastore()
+    key, err := kms.NewStatic("mysupersecretstaticmasterkey!!!!", crypto)
+    if err != nil {
+        panic(err)
+    }
 
-//Decrypt the data
-data, err := sess.Decrypt(*dataRow)
-if err != nil {
-	panic(err)
+    // Create a session factory. The builder steps used below are for testing only.
+    factory := appencryption.NewSessionFactory(config, metastore, key, crypto)
+    defer factory.Close()
+
+    // Now create a cryptographic session for a partition.
+    sess, err := factory.GetSession("shopper123")
+    if err != nil {
+        panic(err)
+    }
+    // Close frees the memory held by the intermediate keys used in this session
+    defer sess.Close()
+
+    // Now encrypt some data
+    dataRow, err := sess.Encrypt([]byte("mysupersecretpayload"))
+    if err != nil {
+        panic(err)
+    }
+
+    //Decrypt the data
+    data, err := sess.Decrypt(*dataRow)
+    if err != nil {
+        panic(err)
+    }
 }
 ```
 
