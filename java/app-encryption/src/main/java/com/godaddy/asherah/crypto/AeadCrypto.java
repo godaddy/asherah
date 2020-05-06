@@ -64,8 +64,8 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes. <b>NOTE</b>: you MUST wipe out the source
    * bytes after the completion of this call!
-   * @param sourceBytes
-   * @return
+   * @param sourceBytes the source bytes to use.
+   * @return a generated CryptoKey.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes) {
     return generateKeyFromBytes(sourceBytes, Instant.now());
@@ -74,9 +74,9 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes and created time. <b>NOTE</b>: you MUST wipe
    * out the source bytes after the completion of this call!
-   * @param sourceBytes
-   * @param created
-   * @return
+   * @param sourceBytes the source bytes to use.
+   * @param created the time to use for creation of <code>CryptoKey</code>.
+   * @return a generated CryptoKey.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes, final Instant created) {
     return generateKeyFromBytes(sourceBytes, created, false);
@@ -85,10 +85,10 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes, created time, and revoked flag. <b>NOTE</b>:
    * you MUST wipe out the source bytes after the completion of this call!
-   * @param sourceBytes
-   * @param created
-   * @param revoked
-   * @return
+   * @param sourceBytes the source bytes to use.
+   * @param created the time to use for creation of <code>CryptoKey</code>.
+   * @param revoked the flag to set while creating <code>CryptoKey</code>.
+   * @return a generated new CryptoKey.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes, final Instant created, final boolean revoked) {
     byte[] clonedBytes = sourceBytes.clone();

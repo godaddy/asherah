@@ -199,7 +199,7 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
 
   public interface BuildStep {
     /**
-     * Specifies the key rotation strategy to use. Defaults to {@value Builder#DEFAULT_KEY_ROTATION_STRATEGY}.
+     * Specifies the key rotation strategy to use. Defaults to {@link KeyRotationStrategy#INLINE}.
      * @param rotationStrategy the strategy to use
      * @return The current {@code BuildStep} instance.
      */
