@@ -1,8 +1,9 @@
 # Asherah - Go
 Application level envelope encryption SDK for Golang with support for cloud-agnostic data storage and key management.
 
-[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/appencryption?status.svg)](https://godoc.org/github.com/godaddy/asherah/go/appencryption)
+[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/appencryption?status.svg)](https://pkg.go.dev/github.com/godaddy/asherah/go/appencryption)
 
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -13,6 +14,11 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
     * [Performing Cryptographic Operations](#performing-cryptographic-operations)
   * [Documentation](#documentation)
   * [Development Notes](#development-notes)
+
+### Installation
+```bash
+go get github.com/godaddy/asherah/go/appencryption
+```
 
 ## Quick Start
 

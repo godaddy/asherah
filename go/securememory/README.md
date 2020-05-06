@@ -1,8 +1,13 @@
 # Secure Memory Go Edition
-[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/securememory?status.svg)](https://godoc.org/github.com/godaddy/asherah/go/securememory)
+[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/securememory?status.svg)](https://pkg.go.dev/github.com/godaddy/asherah/go/securememory)
 
 This package provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
+
+## Installation
+```bash
+go get github.com/godaddy/asherah/go/securememory
+```
 
 ## Currently supported / tested platforms
 * MacOS x86-64
