@@ -3,6 +3,17 @@ version: 2.1
 orbs:
   codecov: codecov/codecov@1.0.5
 
+parameters:
+  db-name:
+    type: "string"
+    default: "testdb"
+  db-user:
+    type: "string"
+    default: "root"
+  db-password:
+    type: "string"
+    default: "Password123"
+
 commands:
   maybe-deploy:
     description: "If required, deploy the specified project"
@@ -33,6 +44,7 @@ commands:
             else
               echo "Not releasable build, skipping deployment step"
             fi
+
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -57,10 +69,10 @@ workflows:
             - csharp-app-encryption
       - go-securememory
       - go-appencryption
-      - go-referenceapp:
+      - samples-go-reference-app:
           requires:
             - go-appencryption
-      - cross-language:
+      - tests-cross-language:
           requires:
             - java-app-encryption
             - csharp-app-encryption
@@ -128,6 +140,7 @@ jobs:
       - run:
           name: Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd java/app-encryption
             ./scripts/test.sh
       - store_test_results:
@@ -303,8 +316,8 @@ jobs:
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - restore_cache:
@@ -331,6 +344,7 @@ jobs:
       - run:
           name: Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd csharp/AppEncryption
             ./scripts/test.sh
       - run:
@@ -448,8 +462,8 @@ jobs:
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - restore_cache:
@@ -467,6 +481,7 @@ jobs:
       - run:
           name: Unit Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd go/appencryption
             ./scripts/test.sh
       - run:
@@ -499,7 +514,7 @@ jobs:
           paths:
             - /go/pkg/mod
           key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-  go-referenceapp:
+  samples-go-reference-app:
     docker:
       - image: circleci/golang
     steps:
@@ -515,7 +530,7 @@ jobs:
           name: Build
           command: |
             cd samples/go/referenceapp
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+            go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
             ./scripts/build.sh
       - run:
           name: Static Analysis
@@ -526,7 +541,7 @@ jobs:
           paths:
             - /go/pkg/mod
           key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-  cross-language:
+  tests-cross-language:
     docker:
       - image: ubuntu:18.04
         environment:
@@ -535,9 +550,9 @@ jobs:
           GO111MODULE: "on"
       - image: mysql:5.7
         environment:
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_DATABASE: <<pipeline.parameters.db-name>>
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - run:
@@ -546,7 +561,7 @@ jobs:
             apt-get update
             apt-get -y upgrade
             apt-get install -y mariadb-server ca-certificates
-            mysql -h 127.0.0.1 -u ${TEST_DB_USER} -p${TEST_DB_PASSWORD} -e "CREATE TABLE ${TEST_DB_NAME}.encryption_key (
+            mysql -h 127.0.0.1 -u <<pipeline.parameters.db-user>> -p<<pipeline.parameters.db-password>> -e "CREATE TABLE <<pipeline.parameters.db-name>>.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
               key_record     TEXT         NOT NULL,
@@ -614,14 +629,12 @@ jobs:
             # Build & Lint the Go project
             cd ../go
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
+            go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
             ./scripts/build.sh
             ./scripts/lint.sh
       - run:
           name: Test
           command: |
+            source ./.circleci/set_env_variables.sh
             cd tests/cross-language/
-            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/test.sh
-
