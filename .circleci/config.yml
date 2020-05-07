@@ -635,6 +635,8 @@ jobs:
       - run:
           name: Test
           command: |
-            source ./.circleci/set_env_variables.sh
+            export TEST_DB_NAME=<<pipeline.parameters.db-name>>
+            export TEST_DB_PASSWORD=<<pipeline.parameters.db-password>>
+            export TEST_DB_USER=<<pipeline.parameters.db-user>>
             cd tests/cross-language/
             ./scripts/test.sh
