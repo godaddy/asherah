@@ -51,9 +51,7 @@ workflows:
     jobs:
       - java-secure-memory
       - java-app-encryption
-      - samples-java-reference-app:
-          requires:
-            - java-app-encryption
+      - samples-java-reference-app
       - tests-java-test-app:
           requires:
             - java-app-encryption
@@ -69,9 +67,7 @@ workflows:
             - csharp-app-encryption
       - go-securememory
       - go-appencryption
-      - samples-go-reference-app:
-          requires:
-            - go-appencryption
+      - samples-go-reference-app
       - tests-cross-language:
           requires:
             - java-app-encryption
