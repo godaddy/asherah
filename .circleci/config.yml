@@ -530,7 +530,6 @@ jobs:
           name: Build
           command: |
             cd samples/go/referenceapp
-            go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
             ./scripts/build.sh
       - run:
           name: Static Analysis
