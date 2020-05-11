@@ -3,19 +3,19 @@
 This class provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
 
-  * [Currently supported / tested platforms](#currently-supported--tested-platforms)
   * [Installation](#installation)
+    * [Currently supported / tested platforms](#currently-supported--tested-platforms)
   * [Quick Start](#quick-start)
   * [Goals](#goals)
   * [Guarantees](#guarantees)
   * [Protected Memory Implementation](#protected-memory-implementation)
 
-## Currently supported / tested platforms
+## Installation
+
+### Currently supported / tested platforms
 
 * MacOS x86-64
 * Linux x86-64
-
-## Installation
 
 You can include SecureMemory in Java projects projects using [Maven](https://maven.apache.org/).
 
