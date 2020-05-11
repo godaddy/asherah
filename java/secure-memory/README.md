@@ -35,6 +35,24 @@ The protected memory implementation of secure memory:
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)
 * If the operating system supports it, uses madvise to request that mapped pages be zeroed on exit
 
+## Installation
+
+You can include SecureMemory in Java projects projects using [Maven](https://maven.apache.org/).
+
+The Maven group ID is `com.godaddy.asherah`, and the artifact ID is `securememory`.
+
+You can specify the current release of SecureMemory as a project dependency using the following configuration:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>com.godaddy.asherah</groupId>
+    <artifactId>securememory</artifactId>
+    <version>0.1.0</version>
+  </dependency>
+</dependencies>
+```
+
 ## Usage
 
 ```java
