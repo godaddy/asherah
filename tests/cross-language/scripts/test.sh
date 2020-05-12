@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+export ASHERAH_SERVICE_NAME=service
+export ASHERAH_PRODUCT_NAME=product
+export ASHERAH_KMS_MODE=static
 
 # Run encrypt tests for all languages
 cd java
@@ -20,6 +23,40 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 godog ../features/encrypt.feature
 cd ..
 
+cd sidecar
+echo "----------Encrypting payload with Go sidecar and python client----------"
+pip3 install -r requirements.txt
+cp ../features/* features/
+export ASHERAH_EXPIRE_AFTER=60m
+export ASHERAH_CHECK_INTERVAL=10m
+export ASHERAH_METASTORE_MODE=rdbms
+export ASHERAH_CONNECTION_STRING='root:Password123@tcp(127.0.0.1:3306)/testdb'
+export ASHERAH_SIDECAR=go
+cd ../../../server/go/
+go run main.go -s /tmp/appencryption.sock &
+ASHERAH_GO_SIDECAR_PID=$!
+sleep 10
+cd -
+behave features/encrypt.feature
+kill $ASHERAH_GO_SIDECAR_PID
+rm -rf /tmp/appencryption.sock
+
+echo "---------Encrypting payload with Java sidecar and python client---------"
+# TODO : Remove this after unifying configurations
+# https://github.com/godaddy/asherah/issues/143
+export ASHERAH_EXPIRE_AFTER=90
+export ASHERAH_CHECK_INTERVAL=10
+export ASHERAH_METASTORE_MODE=jdbc
+export ASHERAH_CONNECTION_STRING='jdbc:mysql://127.0.0.1:3306/testdb?user=root&password=Password123'
+export ASHERAH_SIDECAR=java
+java -jar ../../../server/java/target/*ies.jar &
+ASHERAH_JAVA_SIDECAR_PID=$!
+sleep 10
+behave features/encrypt.feature
+kill $ASHERAH_JAVA_SIDECAR_PID
+rm -rf /tmp/appencryption.sock
+cd ..
+
 # Run decrypt tests for all languages
 cd java
 echo "----------------------Decrypting data using Java------------------------"
@@ -35,4 +72,35 @@ cd ..
 cd go
 echo "----------------------Decrypting data using Go--------------------------"
 godog ../features/decrypt.feature
+cd ..
+
+cd sidecar
+echo "----------Decrypting payload with Go sidecar and python client----------"
+export ASHERAH_EXPIRE_AFTER=60m
+export ASHERAH_CHECK_INTERVAL=10m
+export ASHERAH_METASTORE_MODE=rdbms
+export ASHERAH_CONNECTION_STRING='root:Password123@tcp(127.0.0.1:3306)/testdb'
+cd ../../../server/go/
+go run main.go -s /tmp/appencryption.sock &
+ASHERAH_GO_SIDECAR_PID=$!
+sleep 10
+cd -
+behave features/decrypt.feature
+kill $ASHERAH_GO_SIDECAR_PID
+rm -rf /tmp/appencryption.sock
+
+echo "---------Decrypting payload with Java sidecar and python client---------"
+# TODO : Remove this after unifying configurations
+# https://github.com/godaddy/asherah/issues/143
+export ASHERAH_EXPIRE_AFTER=90
+export ASHERAH_CHECK_INTERVAL=10
+export ASHERAH_METASTORE_MODE=jdbc
+export ASHERAH_CONNECTION_STRING='jdbc:mysql://127.0.0.1:3306/testdb?user=root&password=Password123'
+java -jar ../../../server/java/target/*ies.jar &
+ASHERAH_JAVA_SIDECAR_PID=$!
+sleep 10
+behave features/decrypt.feature
+kill $ASHERAH_JAVA_SIDECAR_PID
+rm -rf /tmp/appencryption.sock
+rm -rf features/*.featuree
 cd ..

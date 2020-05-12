@@ -566,6 +566,12 @@ jobs:
       # when project files change, use increasingly general patterns to restore cache.
       # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
+          name: Restore CLTF packages
+          keys:
+            - v1-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v1-cltf-{{ .Branch }}-
+            - v1-cltf-
+      - restore_cache:
           name: Restore JAVA packages
           keys:
             - v1-maven-{{ .Branch }}-{{ .BuildNum }}
@@ -588,7 +594,7 @@ jobs:
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -R /home/circleci/.m2/ /root/.m2/
-            apt-get install -y openjdk-11-jdk
+            apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
           name: Setup csharp environment
@@ -610,13 +616,20 @@ jobs:
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/cucumber/godog/cmd/godog@v0.8.1
       - run:
+          name: Setup python environment
+          command: |
+            apt-get -y upgrade python3
+            apt-get -y install python3-pip
+            cd tests/cross-language/sidecar
+            pip3 install -r requirements.txt
+      - run:
           name: Build
           command: |
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
 
-            #Build the C# project
+            # Build the C# project
             cd ../csharp
             ./scripts/clean.sh
             ./scripts/build.sh
@@ -628,6 +641,21 @@ jobs:
             ./scripts/build.sh
             ./scripts/lint.sh
       - run:
+          name: Build go and Java sidecar
+          command: |
+            source ./.circleci/set_env_variables.sh
+            cd server
+
+            cd go
+            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../go/appencryption
+            go build -o server main.go
+            cd ..
+
+            cd java
+            mvn clean install
+            cd ..
+      - run:
           name: Test
           command: |
             export TEST_DB_NAME=<<pipeline.parameters.db-name>>
@@ -635,3 +663,7 @@ jobs:
             export TEST_DB_USER=<<pipeline.parameters.db-user>>
             cd tests/cross-language/
             ./scripts/test.sh
+      - save_cache:
+          paths:
+            - ~/.cache
+          key: v1-cltf-{{ .Branch }}-{{ .BuildNum }}
