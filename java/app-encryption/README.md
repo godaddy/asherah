@@ -1,6 +1,7 @@
 # Asherah - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -13,6 +14,24 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
   * [Deployment Notes](#deployment-notes)
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
   * [Development Notes](#development-notes)
+
+## Installation
+
+You can include Asherah in Java projects projects using [Maven](https://maven.apache.org/)
+
+The Maven group ID is `com.godaddy.asherah`, and the artifact ID is `appencryption`.
+
+You can specify the current release of Asherah as a project dependency using the following configuration:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>com.godaddy.asherah</groupId>
+    <artifactId>appencryption</artifactId>
+    <version>0.1.0</version>
+  </dependency>
+</dependencies>
+```
 
 ## Quick Start
 
