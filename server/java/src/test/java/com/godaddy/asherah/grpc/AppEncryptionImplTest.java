@@ -44,7 +44,7 @@ class AppEncryptionImplTest {
       .newBuilder("product", "service")
       .withInMemoryMetastore()
       .withNeverExpiredCryptoPolicy()
-      .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
+      .withStaticKeyManagementService("test_master_key_that_is_32_bytes")
       .build();
 
     String serverName = InProcessServerBuilder.generateName();
