@@ -55,9 +55,6 @@ workflows:
       - tests-java-test-app:
           requires:
             - java-app-encryption
-      - server-java:
-          requires:
-            - java-app-encryption
       - csharp-logging
       - csharp-secure-memory:
           requires:
@@ -71,9 +68,8 @@ workflows:
       - go-securememory
       - go-appencryption
       - samples-go-reference-app
-      - server-go:
-          requires:
-            - go-appencryption
+      - server-go
+      - server-java
       - tests-cross-language:
           requires:
             - java-app-encryption
@@ -202,39 +198,6 @@ jobs:
             cd tests/java/test-app
             ./scripts/clean.sh
             ./scripts/build.sh
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
-  server-java:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
-      - run:
-          name: Build
-          command: |
-            cd server/java
-            ./scripts/clean.sh
-            ./scripts/build.sh
-      - run:
-          name: Tests
-          command: |
-            source ./.circleci/set_env_variables.sh
-            cd server/java
-            ./scripts/test.sh
-      - store_test_results:
-          path: server/java/target/surefire-reports
-      - codecov/upload:
-          file: server/java/target/site/jacoco/jacoco.xml
-          flags: server_java
       - save_cache:
           paths:
             - ~/.m2
@@ -619,6 +582,39 @@ jobs:
           paths:
             - /go/pkg/mod
           key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+  server-java:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd server/java
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            source ./.circleci/set_env_variables.sh
+            cd server/java
+            ./scripts/test.sh
+      - store_test_results:
+          path: server/java/target/surefire-reports
+      - codecov/upload:
+          file: server/java/target/site/jacoco/jacoco.xml
+          flags: server_java
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
