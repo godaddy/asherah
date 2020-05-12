@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 
 import static com.godaddy.asherah.grpc.AppEncryptionProtos.*;
 import static com.godaddy.asherah.grpc.AppEncryptionGrpc.*;
@@ -34,8 +35,8 @@ class AppEncryptionImplTest {
     parentKeyMetaCreatedTime = Instant.now().getEpochSecond();
     ekrCreatedTime = Instant.now().minus(1, ChronoUnit.DAYS).getEpochSecond();
     parentKeyMetaKeyId = "someId";
-    drrBytes = "someRandomBytes";
-    ekrBytes = "ekrBytes";
+    drrBytes = "c29tZVJhbmRvbUJ5dGVzCg=="; // "someRandomBytes" in Base64 encoding
+    ekrBytes = "ZWtyQnl0ZXMK"; // "ekrBytes" in Base64 encoding
   }
 
   @BeforeEach
@@ -76,8 +77,8 @@ class AppEncryptionImplTest {
     JsonObject drrJson = new JsonParser().parse(actualJson).getAsJsonObject();
     AppEncryptionProtos.DataRowRecord dataRowRecord = appEncryption.transformJsonToDrr(drrJson);
 
-    assertEquals(dataRowRecord.getData(), ByteString.copyFrom(drrBytes.getBytes(StandardCharsets.UTF_8)));
-    assertEquals(dataRowRecord.getKey().getKey(), ByteString.copyFrom(ekrBytes.getBytes(StandardCharsets.UTF_8)));
+    assertEquals(dataRowRecord.getData(), ByteString.copyFrom(Base64.getDecoder().decode(drrBytes)));
+    assertEquals(dataRowRecord.getKey().getKey(), ByteString.copyFrom(Base64.getDecoder().decode(ekrBytes)));
     assertEquals(dataRowRecord.getKey().getCreated(), ekrCreatedTime);
     assertEquals(dataRowRecord.getKey().getParentKeyMeta().getKeyId(), parentKeyMetaKeyId);
     assertEquals(dataRowRecord.getKey().getParentKeyMeta().getCreated(), parentKeyMetaCreatedTime);
@@ -96,13 +97,13 @@ class AppEncryptionImplTest {
         "\"" + EKR_CREATED + "\":" + ekrCreatedTime + "}}";
 
     AppEncryptionProtos.DataRowRecord dataRowRecord = AppEncryptionProtos.DataRowRecord.newBuilder()
-      .setData(ByteString.copyFrom(drrBytes.getBytes(StandardCharsets.UTF_8)))
+      .setData(ByteString.copyFrom(Base64.getDecoder().decode(drrBytes)))
       .setKey(AppEncryptionProtos.EnvelopeKeyRecord.newBuilder()
         .setParentKeyMeta(AppEncryptionProtos.KeyMeta.newBuilder()
           .setCreated(parentKeyMetaCreatedTime)
           .setKeyId(parentKeyMetaKeyId)
           .build())
-        .setKey(ByteString.copyFrom(ekrBytes.getBytes(StandardCharsets.UTF_8)))
+        .setKey(ByteString.copyFrom(Base64.getDecoder().decode(ekrBytes)))
         .setCreated(ekrCreatedTime)
         .build())
       .build();

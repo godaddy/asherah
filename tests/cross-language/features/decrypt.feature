@@ -7,7 +7,9 @@ Feature: Decrypt Data using RDBMS metastore and static KMS
     Then I should get decrypted_data
     And decrypted_data should be equal to "<data>"
     Examples:
-      | data                 | file_name        |
-      | mySuperSecretPayload | java_encrypted   |
-      | mySuperSecretPayload | csharp_encrypted |
-      | mySuperSecretPayload | go_encrypted     |
+      | data                 | file_name              |
+      | mySuperSecretPayload | java_encrypted         |
+      | mySuperSecretPayload | csharp_encrypted       |
+      | mySuperSecretPayload | go_encrypted           |
+      | mySuperSecretPayload | sidecar_go_encrypted   |
+      | mySuperSecretPayload | sidecar_java_encrypted |
