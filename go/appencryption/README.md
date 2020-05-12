@@ -34,7 +34,7 @@ func main() {
         Policy:  appencryption.NewCryptoPolicy(),
     }
     metastore := persistence.NewMemoryMetastore()
-    key, err := kms.NewStatic("mysupersecretstaticmasterkey!!!!", crypto)
+    key, err := kms.NewStatic("test_master_key_that_is_32_bytes", crypto)
     if err != nil {
         panic(err)
     }
@@ -144,7 +144,7 @@ keyManagementService :=  kms.NewAWS(crypto, "us-west-2", regionArnMap)
 
 ```go
 crypto := aead.NewAES256GCM()
-keyManagementService := kms.NewStatic("mysupersecretstaticmasterkey!!!!", crypto)
+keyManagementService := kms.NewStatic("test_master_key_that_is_32_bytes", crypto)
 ```
 
 ### Define the Crypto Policy

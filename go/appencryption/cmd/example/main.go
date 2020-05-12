@@ -357,7 +357,7 @@ func CreateKMS() appencryption.KeyManagementService {
 	}
 
 	log.Printf("Using static KMS...")
-	kms, err := kms.NewStatic("mysupersecretstaticmasterkey!!!!", crypto)
+	kms, err := kms.NewStatic("test_master_key_that_is_32_bytes", crypto)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create static KMS"))
 	}

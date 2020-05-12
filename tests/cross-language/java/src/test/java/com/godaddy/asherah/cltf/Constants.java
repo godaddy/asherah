@@ -5,7 +5,7 @@ final class Constants {
   private Constants() {
   }
 
-  public static final String KeyManagementStaticMasterKey = "mysupersecretstaticmasterkey!!!!";
+  public static final String KeyManagementStaticMasterKey = "test_master_key_that_is_32_bytes";
 
   public static final String DefaultServiceId = "service";
   public static final String DefaultProductId = "product";

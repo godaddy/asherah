@@ -4,7 +4,7 @@ namespace GoDaddy.Asherah.Cltf
 {
     public static class Constants
     {
-        public const string KeyManagementStaticMasterKey = "mysupersecretstaticmasterkey!!!!";
+        public const string KeyManagementStaticMasterKey = "test_master_key_that_is_32_bytes";
 
         public const string DefaultServiceId = "service";
         public const string DefaultProductId = "product";

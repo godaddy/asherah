@@ -65,7 +65,7 @@ Below is an example of a session factory that uses in-memory persistence and sta
 SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
     .withInMemoryMetastore() // in-memory metastore
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!") // hard-coded/static master key
+    .withStaticKeyManagementService("test_master_key_that_is_32_bytes") // hard-coded/static master key
     .build());
 ```
 
