@@ -68,6 +68,8 @@ workflows:
       - go-securememory
       - go-appencryption
       - samples-go-reference-app
+      - server-go
+      - server-java
       - tests-cross-language:
           requires:
             - java-app-encryption
@@ -536,6 +538,83 @@ jobs:
           paths:
             - /go/pkg/mod
           key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+  server-go:
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+            - go-mod-v4-{{ .Branch }}-
+            - go-mod-v4-
+      - run:
+          name: Build
+          command: |
+            cd server/go
+            ./scripts/build.sh
+      - run:
+          name: Unit Tests
+          command: |
+            cd server/go
+            ./scripts/test.sh
+      - run:
+          name: Convert Test Results
+          command: |
+            cd server/go
+            GO111MODULE=off go get github.com/axw/gocov/gocov
+            GO111MODULE=off go get github.com/AlekSi/gocov-xml
+            echo "Converting coverage.out to cobertura XML..."
+            gocov convert coverage.out | gocov-xml > cobertura-coverage.xml
+      - run:
+          name: Static Analysis
+          command: |
+            cd server/go
+            ./scripts/lint.sh
+      - store_test_results:
+          path: server/go
+      - codecov/upload:
+          file: server/go/cobertura-coverage.xml
+          flags: server_go
+      - save_cache:
+          paths:
+            - /go/pkg/mod
+          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+  server-java:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v1-maven-{{ .Branch }}-
+            - v1-maven-
+      - run:
+          name: Build
+          command: |
+            cd server/java
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            source ./.circleci/set_env_variables.sh
+            cd server/java
+            ./scripts/test.sh
+      - store_test_results:
+          path: server/java/target/surefire-reports
+      - codecov/upload:
+          file: server/java/target/site/jacoco/jacoco.xml
+          flags: server_java
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04

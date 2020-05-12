@@ -25,6 +25,12 @@ coverage:
       java-secure-memory:
         flags: java_secure_memory
         target: 90%
+      server-go:
+        flags: server_go
+        target: 90%
+      server-java:
+        flags: server_java
+        target: 90%
 # Note flags have to be "\w" charset (hence underscore instead of hyphen)
 flags:
   csharp_AppEncryption:
@@ -48,6 +54,12 @@ flags:
   java_secure_memory:
     paths:
       - java/secure-memory
+  server-go:
+    paths:
+      - server/go
+  server-java:
+    paths:
+      - server/java
 ignore:
   # Ignore non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
   # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
