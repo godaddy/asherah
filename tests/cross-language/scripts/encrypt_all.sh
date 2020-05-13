@@ -49,4 +49,3 @@ sleep 10
 behave features/encrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf /tmp/appencryption.sock
-rm -rf features/encrypt.feature
