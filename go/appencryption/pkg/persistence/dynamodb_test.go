@@ -23,13 +23,14 @@ import (
 
 type DynamoDBSuite struct {
 	suite.Suite
-	disableTestContainers bool
-	ctx                   context.Context
-	dbSvc                 *dynamodb.DynamoDB
-	instant               int64
-	sess                  *session.Session
-	container             testcontainers.Container
-	dynamodbMetastore     *DynamoDBMetastore
+	disableTestContainers     bool
+	ctx                       context.Context
+	dbSvc                     *dynamodb.DynamoDB
+	instant                   int64
+	sess                      *session.Session
+	container                 testcontainers.Container
+	dynamodbMetastore         *DynamoDBMetastore
+	prefixedDynamodbMetastore *DynamoDBMetastore
 }
 
 const (
@@ -172,6 +173,7 @@ func (suite *DynamoDBSuite) SetupTest() {
 	suite.putItemInDynamoDB(getDynamoDBItem(en, suite.instant))
 
 	suite.dynamodbMetastore = NewDynamoDBMetastore(suite.sess)
+	suite.prefixedDynamodbMetastore = NewDynamoDBMetastore(suite.sess, WithDynamoDBRegionSuffix(true))
 }
 
 func (suite *DynamoDBSuite) TearDownTest() {
@@ -333,6 +335,14 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 
 	assert.False(suite.T(), res)
 	assert.NotNil(suite.T(), err)
+}
+
+func (suite *DynamoDBSuite) TestDynamoDBMetastore_WithDynamoDBRegionSuffix() {
+	// keyPrefix should be empty unless WithDynamoDBRegionSuffix is used
+	assert.Empty(suite.T(), suite.dynamodbMetastore.keySuffix)
+
+	// WithDynamoDBRegionSuffix should set the keyPrefix equal to the client's region
+	assert.Equal(suite.T(), *suite.sess.Config.Region, suite.prefixedDynamodbMetastore.keySuffix)
 }
 
 func TestDynamoSuite(t *testing.T) {
