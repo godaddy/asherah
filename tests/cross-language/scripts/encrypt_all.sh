@@ -3,10 +3,6 @@ set -e
 
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
-export ASHERAH_SERVICE_NAME=service
-export ASHERAH_PRODUCT_NAME=product
-export ASHERAH_KMS_MODE=static
-
 # Run encrypt tests for all languages
 cd java
 echo "----------------------Encrypting payload using Java---------------------"
@@ -15,7 +11,6 @@ cd ..
 
 cd csharp
 echo "----------------------Encrypting payload using C#-----------------------"
-cp ../features/encrypt.feature .
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.EncryptDataUsingRDBMSMetastoreAndStaticKMSFeature.EncryptingData
 cd ..
 
@@ -26,7 +21,6 @@ cd ..
 
 cd sidecar
 echo "----------Encrypting payload with Go sidecar and python client----------"
-cp ../features/* features/
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
 export ASHERAH_METASTORE_MODE=rdbms
@@ -55,4 +49,4 @@ sleep 10
 behave features/encrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf /tmp/appencryption.sock
-cd ..
+rm -rf features/encrypt.feature

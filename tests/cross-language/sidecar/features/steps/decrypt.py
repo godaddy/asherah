@@ -1,23 +1,28 @@
+# -*- coding: utf-8 -*-
+
+"""Decrypt feature definitions
+"""
+
 import base64
 import json
 
-from behave import *
+from behave import given, when, then
+from appencryption_client import SessionClient
 
 import appencryption_pb2
-from client import SessionClient
 
 
-@given(u'I have encrypted_data from {filename}')
+@given(u'I have encrypted_data from "{filename}"')
 def step_impl(context, filename):
     assert filename != ''
-    context.filename = '/tmp/' + filename.strip('\"')
+    context.filename = '/tmp/' + filename
     f = open(context.filename, 'r')
     context.drr = f.read()
 
 
 @when(u'I decrypt the encrypted_data')
 def step_impl(context):
-    with SessionClient() as client:
+    with SessionClient('/tmp/appencryption.sock', 'partition') as client:
         encrypted_json = json.loads(base64.b64decode(context.drr))
 
         drr = appencryption_pb2.DataRowRecord()
@@ -35,6 +40,6 @@ def step_impl(context):
     assert context.decryptedPayload != ''
 
 
-@then(u'decrypted_data should be equal to {data}')
+@then(u'decrypted_data should be equal to "{data}"')
 def step_impl(context, data):
-    assert context.decryptedPayload.decode() == data.strip('\"')
+    assert context.decryptedPayload.decode() == data

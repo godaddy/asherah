@@ -744,6 +744,9 @@ jobs:
             export TEST_DB_NAME=<<pipeline.parameters.db-name>>
             export TEST_DB_PASSWORD=<<pipeline.parameters.db-password>>
             export TEST_DB_USER=<<pipeline.parameters.db-user>>
+            export ASHERAH_SERVICE_NAME=service
+            export ASHERAH_PRODUCT_NAME=product
+            export ASHERAH_KMS_MODE=static
             cd tests/cross-language/
             ./scripts/encrypt_all.sh
             ./scripts/decrypt_all.sh
@@ -751,5 +754,6 @@ jobs:
           paths:
             - ~/.cache
             - ~/.m2
+            - ~/.nuget
             - /go/pkg/mod
           key: v2-cltf-{{ .Branch }}-{{ .BuildNum }}

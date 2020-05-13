@@ -1,22 +1,27 @@
+# -*- coding: utf-8 -*-
+
+"""Encrypt feature definitions
+"""
+
 import base64
 import json
 import os
 
-from behave import *
-
-from client import SessionClient
+from behave import given, when, then
 from google.protobuf.json_format import MessageToDict
 
+from appencryption_client import SessionClient
 
-@given(u'I have {data}')
+
+@given(u'I have "{data}"')
 def step_impl(context, data):
     assert data != ""
-    context.payloadString = data.strip('\"')
+    context.payloadString = data
 
 
 @when(u'I encrypt the data')
 def step_impl(context):
-    with SessionClient() as client:
+    with SessionClient('/tmp/appencryption.sock', 'partition') as client:
         server_drr = client.encrypt(context.payloadString.encode())
         data_row_record = MessageToDict(server_drr)
         parent_key_meta_json = {'KeyId': data_row_record['key']['parentKeyMeta']['keyId'],
@@ -45,7 +50,7 @@ def step_impl(context):
     # Remove the file if it already exists
     if os.path.exists(file_path):
         os.remove(file_path)
-    f = open(file_path, "w")
+    f = open(file_path, 'w')
     f.write(str(context.drr))
     f.close()
 

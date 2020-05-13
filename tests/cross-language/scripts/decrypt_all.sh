@@ -3,10 +3,6 @@ set -e
 
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
-export ASHERAH_SERVICE_NAME=service
-export ASHERAH_PRODUCT_NAME=product
-export ASHERAH_KMS_MODE=static
-
 # Run decrypt tests for all languages
 cd java
 echo "----------------------Decrypting data using Java------------------------"
@@ -15,7 +11,6 @@ cd ..
 
 cd csharp
 echo "----------------------Decrypting data using C#--------------------------"
-cp ../features/decrypt.feature .
 dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.DecryptDataUsingRDBMSMetastoreAndStaticKMSFeature.DecryptingData
 cd ..
 
@@ -52,4 +47,3 @@ sleep 10
 behave features/decrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf /tmp/appencryption.sock
-cd ..
