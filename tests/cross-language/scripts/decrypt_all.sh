@@ -20,7 +20,7 @@ godog ../features/decrypt.feature
 cd ..
 
 cd sidecar
-echo "----------Decrypting payload with Go sidecar and python client----------"
+echo "------------Decrypting data with Go sidecar and python client-----------"
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
 export ASHERAH_METASTORE_MODE=rdbms
@@ -34,7 +34,7 @@ behave features/decrypt.feature
 kill $ASHERAH_GO_SIDECAR_PID
 rm -rf /tmp/appencryption.sock
 
-echo "---------Decrypting payload with Java sidecar and python client---------"
+echo "-----------Decrypting data with Java sidecar and python client----------"
 # TODO : Remove this after unifying configurations
 # https://github.com/godaddy/asherah/issues/143
 export ASHERAH_EXPIRE_AFTER=90

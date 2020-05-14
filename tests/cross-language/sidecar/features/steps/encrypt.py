@@ -42,10 +42,7 @@ def step_impl(context):
 @then(u'I should get encrypted_data')
 def step_impl(context):
     assert context.drr != ''
-    if os.environ['ASHERAH_SIDECAR'] == 'go':
-        file_path = '/tmp/sidecar_go_encrypted'
-    else:
-        file_path = '/tmp/sidecar_java_encrypted'
+    file_path = context.config.userdata['FILE']
 
     # Remove the file if it already exists
     if os.path.exists(file_path):
