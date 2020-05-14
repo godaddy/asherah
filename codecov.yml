@@ -70,7 +70,11 @@ flags:
     paths:
       - server/java
 ignore:
-  # Ignore non-linux native paths,auto-generated files and server startup files
+  # Non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
+  # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
   - "**/com/godaddy/asherah/securememory/protectedmemoryimpl/macos" # java macos path
-  - "**/com/godaddy/asherah/grpc/ServerApp.java"
-  - "**/target/generated-sources/protobuf"
+  # gRPC auto-generated file
+  - "**/target/generated-sources/protobuf" # Java auto-generated files
+  - "**api/appencryption.pb.go" # Go auto-generated files
+  # Server startup files
+  - "**/com/godaddy/asherah/grpc/ServerApp.java" # Java server startup
