@@ -119,6 +119,7 @@ jobs:
       - codecov/upload:
           file: java/secure-memory/target/site/jacoco/jacoco.xml
           flags: java_secure_memory
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
@@ -160,6 +161,7 @@ jobs:
       - codecov/upload:
           file: java/app-encryption/target/site/jacoco/jacoco.xml
           flags: java_app_encryption
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
@@ -257,6 +259,7 @@ jobs:
       - codecov/upload:
           file: csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: csharp_Logging
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
@@ -310,6 +313,7 @@ jobs:
       - codecov/upload:
           file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: csharp_SecureMemory
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
@@ -369,6 +373,7 @@ jobs:
       - codecov/upload:
           file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: csharp_AppEncryption
+          conf: codecov.yml
       - run:
           name: Integration Tests
           command: |
@@ -461,6 +466,7 @@ jobs:
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
+          conf: codecov.yml
       - maybe-deploy:
           project: go/securememory
           version: cat .versionfile
@@ -519,6 +525,7 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
+          conf: codecov.yml
       - maybe-deploy:
           project: go/appencryption
           version: cat .versionfile
@@ -592,6 +599,7 @@ jobs:
       - codecov/upload:
           file: server/go/cobertura-coverage.xml
           flags: server_go
+          conf: codecov.yml
       - save_cache:
           paths:
             - /go/pkg/mod
@@ -625,6 +633,7 @@ jobs:
       - codecov/upload:
           file: server/java/target/site/jacoco/jacoco.xml
           flags: server_java
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
