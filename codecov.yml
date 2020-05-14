@@ -5,31 +5,40 @@ coverage:
         target: 90%
         threshold: 5%
       csharp-AppEncryption:
-        flags: csharp_AppEncryption
+        flags:
+          - csharp_AppEncryption
         target: 90%
       csharp-Logging:
-        flags: csharp_Logging
+        flags:
+          - csharp_Logging
         target: 90%
       csharp-SecureMemory:
-        flags: csharp_SecureMemory
+        flags:
+          - csharp_SecureMemory
         target: 90%
       go-securememory:
-        flags: go_securememory
+        flags:
+          - go_securememory
         target: 90%
       go-appencryption:
-        flags: go_appencryption
+        flags:
+          - go_appencryption
         target: 90%
       java-app-encryption:
-        flags: java_app_encryption
+        flags:
+          - java_app_encryption
         target: 90%
       java-secure-memory:
-        flags: java_secure_memory
+        flags:
+          - java_secure_memory
         target: 90%
       server-go:
-        flags: server_go
+        flags:
+          - server_go
         target: 90%
       server-java:
-        flags: server_java
+        flags:
+          - server_java
         target: 90%
 # Note flags have to be "\w" charset (hence underscore instead of hyphen)
 flags:
@@ -61,6 +70,11 @@ flags:
     paths:
       - server/java
 ignore:
-  # Ignore non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
-  # No need for C# path since the dotnet test command handles it currently (should change if/when we do the above)
-  - "**/com/godaddy/asherah/securememory/protectedmemoryimpl/macos" # java macos path
+  # Non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
+  - "**/com/godaddy/asherah/securememory/protectedmemoryimpl/macos" # java macOS path
+  - "**/SecureMemory/ProtectedMemoryImpl/MacOS" # C# macOS path
+  # gRPC auto-generated file
+  - "**/target/generated-sources/protobuf" # Java auto-generated files
+  - "**api/appencryption.pb.go" # Go auto-generated files
+  # Server startup files
+  - "**/com/godaddy/asherah/grpc/ServerApp.java" # Java server startup

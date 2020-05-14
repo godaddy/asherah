@@ -56,7 +56,7 @@ func connectSQL() error {
 
 func createMetastore() appencryption.Metastore {
 	switch opts.Metastore {
-	case "SQL":
+	case "RDBMS":
 		logger.Info("using sql metastore")
 
 		if opts.ConnectionString == "" {

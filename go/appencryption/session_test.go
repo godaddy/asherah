@@ -276,3 +276,51 @@ func TestSession_DecryptContext(t *testing.T) {
 	assert.NoError(t, e)
 	assert.Equal(t, someBytes, result)
 }
+
+type MockDynamoDBMetastore struct {
+	*MockMetastore
+}
+
+func (m *MockDynamoDBMetastore) GetSuffix() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+func TestSessionFactory_GetSession_DefaultPartition(t *testing.T) {
+	factory := NewSessionFactory(new(Config), nil, nil, nil)
+
+	sess, err := factory.GetSession("abc")
+	assert.NoError(t, err)
+
+	e := sess.encryption.(*envelopeEncryption)
+	_, ok := e.partition.(defaultPartition)
+	assert.True(t, ok, "expected type defaultParition")
+}
+
+func TestSessionFactory_GetSession_SuffixedPartition(t *testing.T) {
+	store := &MockDynamoDBMetastore{MockMetastore: new(MockMetastore)}
+	store.On("GetSuffix").Return("suffix")
+
+	factory := NewSessionFactory(new(Config), store, nil, nil)
+
+	sess, err := factory.GetSession("abc")
+	assert.NoError(t, err)
+
+	e := sess.encryption.(*envelopeEncryption)
+	_, ok := e.partition.(suffixedPartition)
+	assert.True(t, ok, "expected type suffixedPartition")
+}
+
+func TestSessionFactory_GetSession_Blank_GetSuffix_DefaultPartition(t *testing.T) {
+	store := &MockDynamoDBMetastore{MockMetastore: new(MockMetastore)}
+	store.On("GetSuffix").Return("")
+
+	factory := NewSessionFactory(new(Config), store, nil, nil)
+
+	sess, err := factory.GetSession("abc")
+	assert.NoError(t, err)
+
+	e := sess.encryption.(*envelopeEncryption)
+	_, ok := e.partition.(defaultPartition)
+	assert.True(t, ok, "expected type defaultPartition")
+}
