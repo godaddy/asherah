@@ -1,0 +1,1 @@
+../../../server/samples/clients/python/appencryption_pb2.py

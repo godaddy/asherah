@@ -50,8 +50,12 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - java-secure-memory
-      - java-app-encryption
-      - samples-java-reference-app
+      - java-app-encryption:
+          requires:
+            - java-secure-memory
+      - samples-java-reference-app:
+          requires:
+            - java-app-encryption
       - tests-java-test-app:
           requires:
             - java-app-encryption
@@ -66,15 +70,25 @@ workflows:
           requires:
             - csharp-app-encryption
       - go-securememory
-      - go-appencryption
-      - samples-go-reference-app
-      - server-go
-      - server-java
-      - tests-cross-language:
+      - go-appencryption:
+          requires:
+            - go-securememory
+      - samples-go-reference-app:
+          requires:
+            - go-appencryption
+      - server-go:
+          requires:
+            - go-appencryption
+      - server-java:
           requires:
             - java-app-encryption
+      - tests-cross-language:
+          requires:
             - csharp-app-encryption
             - go-appencryption
+            - java-app-encryption
+            - server-go
+            - server-java
 
 jobs:
   java-secure-memory:
@@ -86,9 +100,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -116,7 +130,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -126,9 +140,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -157,7 +171,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   samples-java-reference-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -167,9 +181,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -179,7 +193,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-java-test-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -189,9 +203,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -201,7 +215,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -211,9 +225,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -254,7 +268,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -264,9 +278,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -307,7 +321,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -322,9 +336,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -371,7 +385,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   samples-csharp-reference-app:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -381,9 +395,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -401,7 +415,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   go-securememory:
     docker:
       - image: circleci/golang
@@ -411,9 +425,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
@@ -453,7 +467,7 @@ jobs:
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
   go-appencryption:
     docker:
       - image: circleci/golang
@@ -468,9 +482,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
@@ -511,7 +525,7 @@ jobs:
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
   samples-go-reference-app:
     docker:
       - image: circleci/golang
@@ -521,9 +535,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
@@ -537,7 +551,7 @@ jobs:
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
   server-go:
     docker:
       - image: circleci/golang
@@ -547,9 +561,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
@@ -581,7 +595,7 @@ jobs:
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
   server-java:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -591,9 +605,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -611,10 +625,15 @@ jobs:
       - codecov/upload:
           file: server/java/target/site/jacoco/jacoco.xml
           flags: server_java
+      - run:
+          name: Install locally
+          command: |
+            cd server/java
+            ./scripts/install_local.sh
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
@@ -645,29 +664,35 @@ jobs:
       # when project files change, use increasingly general patterns to restore cache.
       # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
+          name: Restore CLTF packages
+          keys:
+            - v2-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v2-cltf-{{ .Branch }}-
+            - v2-cltf-
+      - restore_cache:
           name: Restore JAVA packages
           keys:
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - restore_cache:
           name: Restore C# packages
           keys:
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - restore_cache:
           name: Restore GO packages
           keys:
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Setup java environment
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -R /home/circleci/.m2/ /root/.m2/
-            apt-get install -y openjdk-11-jdk
+            apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
           name: Setup csharp environment
@@ -689,28 +714,46 @@ jobs:
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/cucumber/godog/cmd/godog@v0.8.1
       - run:
+          name: Setup python environment
+          command: |
+            apt-get -y upgrade python3
+            apt-get -y install python3-pip
+            cd tests/cross-language/sidecar
+            pip3 install -r requirements.txt
+      - run:
           name: Build
           command: |
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
 
-            #Build the C# project
+            # Build the C# project
             cd ../csharp
             ./scripts/clean.sh
             ./scripts/build.sh
 
-            # Build & Lint the Go project
+            # Lint & Build the Go project
             cd ../go
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+            ./scripts/lint.sh
             go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
             ./scripts/build.sh
-            ./scripts/lint.sh
       - run:
           name: Test
           command: |
             export TEST_DB_NAME=<<pipeline.parameters.db-name>>
             export TEST_DB_PASSWORD=<<pipeline.parameters.db-password>>
             export TEST_DB_USER=<<pipeline.parameters.db-user>>
+            export ASHERAH_SERVICE_NAME=service
+            export ASHERAH_PRODUCT_NAME=product
+            export ASHERAH_KMS_MODE=static
             cd tests/cross-language/
-            ./scripts/test.sh
+            ./scripts/encrypt_all.sh
+            ./scripts/decrypt_all.sh
+      - save_cache:
+          paths:
+            - ~/.cache
+            - ~/.m2
+            - ~/.nuget
+            - /go/pkg/mod
+          key: v2-cltf-{{ .Branch }}-{{ .BuildNum }}
