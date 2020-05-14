@@ -72,6 +72,5 @@ flags:
 ignore:
   # Ignore non-linux native paths,auto-generated files and server startup files
   - "**/com/godaddy/asherah/securememory/protectedmemoryimpl/macos" # java macos path
-  - "**/target/generated-sources/protobuf/java/com/godaddy/asherah/grpc"
-  - "**/target/generated-sources/protobuf/grpc-java/com/godaddy/asherah/grpc"
   - "**/com/godaddy/asherah/grpc/ServerApp.java"
+  - "**/target/generated-sources/protobuf"
