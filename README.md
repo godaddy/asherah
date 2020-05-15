@@ -150,7 +150,7 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 * [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
-* Service Layer (coming soon!)
+* [Service Layer (gRPC)](/server)
 
 ### Feature Support
 
