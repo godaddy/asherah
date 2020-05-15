@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import io.grpc.stub.StreamObserver;
 
@@ -140,12 +141,13 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
     // Build EKR Json
     JsonObject ekrJson = new JsonObject();
     ekrJson.add(Constants.EKR_PARENTKEYMETA, parentKeyMetaJson);
-    ekrJson.addProperty(Constants.EKR_KEY, dataRowRecord.getKey().getKey().toStringUtf8());
+    ekrJson.addProperty(
+        Constants.EKR_KEY, Base64.getEncoder().encodeToString(dataRowRecord.getKey().getKey().toByteArray()));
     ekrJson.addProperty(Constants.EKR_CREATED, dataRowRecord.getKey().getCreated());
 
     // Build DRR Json
     JsonObject drrJson = new JsonObject();
-    drrJson.addProperty(Constants.DRR_DATA, dataRowRecord.getData().toStringUtf8());
+    drrJson.addProperty(Constants.DRR_DATA, Base64.getEncoder().encodeToString(dataRowRecord.getData().toByteArray()));
     drrJson.add(Constants.DRR_KEY, ekrJson);
 
     return drrJson;
@@ -165,16 +167,18 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
         .build();
 
     // Build EKR value
-    byte[] ekrKey = ekrJson.get(Constants.EKR_KEY).getAsString().getBytes(StandardCharsets.UTF_8);
+    String ekrKeyString = ekrJson.get(Constants.EKR_KEY).getAsString();
+    byte[] ekrKeyBytes = Base64.getDecoder().decode(ekrKeyString);
     long ekrCreatedValue = ekrJson.get(Constants.EKR_CREATED).getAsLong();
     EnvelopeKeyRecord envelopeKeyRecordValue = EnvelopeKeyRecord.newBuilder()
         .setCreated(ekrCreatedValue)
-        .setKey(ByteString.copyFrom(ekrKey))
+        .setKey(ByteString.copyFrom(ekrKeyBytes))
         .setParentKeyMeta(keyMetaValue)
         .build();
 
     // Build DRR value
-    byte[] drrDataBytes = drrJson.get(Constants.DRR_DATA).getAsString().getBytes(StandardCharsets.UTF_8);
+    String drrDataString = drrJson.get(Constants.DRR_DATA).getAsString();
+    byte[] drrDataBytes = Base64.getDecoder().decode(drrDataString);
     return DataRowRecord.newBuilder()
         .setData(ByteString.copyFrom(drrDataBytes))
         .setKey(envelopeKeyRecordValue)

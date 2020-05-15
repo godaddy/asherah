@@ -3,10 +3,47 @@
 This class provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
 
-## Currently supported / tested platforms
+  * [Installation](#installation)
+    * [Currently supported / tested platforms](#currently-supported--tested-platforms)
+  * [Quick Start](#quick-start)
+  * [Goals](#goals)
+  * [Guarantees](#guarantees)
+  * [Protected Memory Implementation](#protected-memory-implementation)
+
+## Installation
+
+### Currently supported / tested platforms
 
 * MacOS x86-64
 * Linux x86-64
+
+You can include SecureMemory in Java projects projects using [Maven](https://maven.apache.org/).
+
+The Maven group ID is `com.godaddy.asherah`, and the artifact ID is `securememory`.
+
+You can specify the current release of SecureMemory as a project dependency using the following configuration:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>com.godaddy.asherah</groupId>
+    <artifactId>securememory</artifactId>
+    <version>0.1.0</version>
+  </dependency>
+</dependencies>
+```
+
+## Quick Start
+
+```java
+SecretFactory secretFactory = new ProtectedMemorySecretFactory();
+
+try (Secret secretKey = secretFactory.createSecret(getSecretFromStore())) {
+  secret.withSecretBytes(bytes -> {
+    doSomethingWithSecretBytes(bytes);
+  });
+}
+```
 
 ## Goals
 
@@ -34,15 +71,3 @@ The protected memory implementation of secure memory:
 * Add support for Cleaner rather than finalizer
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)
 * If the operating system supports it, uses madvise to request that mapped pages be zeroed on exit
-
-## Usage
-
-```java
-SecretFactory secretFactory = new ProtectedMemorySecretFactory();
-
-try (Secret secretKey = secretFactory.createSecret(getSecretFromStore())) {
-  secret.withSecretBytes(bytes -> {
-    doSomethingWithSecretBytes(bytes);
-  });
-}
-```

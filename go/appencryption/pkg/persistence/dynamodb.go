@@ -37,15 +37,42 @@ var (
 	storeDynamoDBTimer      = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.dynamodb.store", appencryption.MetricsPrefix), nil)
 )
 
-// DynamoDBMetastore implements the Metastore interface
+// DynamoDBMetastore implements the Metastore interface.
 type DynamoDBMetastore struct {
-	svc dynamodbiface.DynamoDBAPI
+	svc       dynamodbiface.DynamoDBAPI
+	keySuffix string
 }
 
-func NewDynamoDBMetastore(sess client.ConfigProvider) *DynamoDBMetastore {
-	return &DynamoDBMetastore{
+// GetSuffix returns the DynamoDB region suffix or blank if not configured.
+func (d *DynamoDBMetastore) GetSuffix() string {
+	return d.keySuffix
+}
+
+// DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
+type DynamoDBMetastoreOption func(d *DynamoDBMetastore, p client.ConfigProvider)
+
+// WithDynamoDBRegionSuffix configures the DynamoDBMetastore to use a regional suffix for
+// all writes. This feature should be enabled when using DynamoDB global tables to avoid
+// write conflicts arising from the "last writer wins" method of conflict resolution.
+func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
+	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+		if enabled {
+			config := p.ClientConfig(dynamodb.EndpointsID)
+			d.keySuffix = *config.Config.Region
+		}
+	}
+}
+
+func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
+	d := &DynamoDBMetastore{
 		svc: dynamodb.New(sess),
 	}
+
+	for _, opt := range opts {
+		opt(d, sess)
+	}
+
+	return d
 }
 
 func parseResult(av *dynamodb.AttributeValue) (*appencryption.EnvelopeKeyRecord, error) {
@@ -127,7 +154,7 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 }
 
 // We need a new envelope struct to convert the EncryptedKey to a Base64 encoded string
-// to save in DynamoDB
+// to save in DynamoDB.
 type dynamoDBEnvelope struct {
 	Revoked       bool                   `json:"Revoked,omitempty"`
 	Created       int64                  `json:"Created"`
