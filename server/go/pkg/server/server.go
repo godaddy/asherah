@@ -109,7 +109,7 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 			SharedConfigState: awssession.SharedConfigEnable,
 		}))
 
-		return persistence.NewDynamoDBMetastore(sess)
+		return persistence.NewDynamoDBMetastore(sess, persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix))
 	default:
 		return persistence.NewMemoryMetastore()
 	}
