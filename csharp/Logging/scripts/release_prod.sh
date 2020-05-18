@@ -2,7 +2,7 @@
 set -e
 
 BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-ARTIFACT_NAME=$(xmllint --xpath "//package/metadata/title/text()" Logging/Logging.nuspec)
+ARTIFACT_NAME=$(xmllint --xpath "//Project/PropertyGroup/Title/text()" Logging/Logging.csproj)
 TAG=`echo csharp/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
