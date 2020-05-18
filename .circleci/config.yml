@@ -50,7 +50,9 @@ workflows:
   build-test-and-maybe-deploy:
     jobs:
       - java-secure-memory
-      - java-app-encryption
+      - java-app-encryption:
+          requires:
+            - java-secure-memory
       - samples-java-reference-app:
           requires:
             - java-app-encryption
