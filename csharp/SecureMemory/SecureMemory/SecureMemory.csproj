@@ -14,8 +14,8 @@
     <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
-    <RepositoryUrl>https://https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory</RepositoryUrl>
-    <PackageLicense>https://raw.githubusercontent.com/godaddy/asherah/master/LICENSE</PackageLicense>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Project References">
