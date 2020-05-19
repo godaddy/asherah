@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
