@@ -16,7 +16,7 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
   * [Development Notes](#development-notes)
 
 ## Installation
-You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEEncryption/):
+You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/):
 ```xml
 <ItemGroup>
     <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
