@@ -3,6 +3,8 @@
 This class provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
 
+[![Version](https://img.shields.io/maven-central/v/com.godaddy.asherah/securememory)](https://mvnrepository.com/artifact/com.godaddy.asherah/securememory)
+
   * [Installation](#installation)
     * [Currently supported / tested platforms](#currently-supported--tested-platforms)
   * [Quick Start](#quick-start)

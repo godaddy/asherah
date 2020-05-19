@@ -1,5 +1,8 @@
 # Asherah - C#
+
 Application level envelope encryption SDK for C# with support for cloud-agnostic data storage and key management.
+
+[![Version](https://img.shields.io/nuget/v/Godaddy.Asherah.AppEncryption)](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption)
 
   * [Installation](#installation)
   * [Quick Start](#quick-start)

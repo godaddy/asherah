@@ -1,6 +1,8 @@
 # SecureMemory C# Edition
 This class provides a way for applications to keep secret information (like cryptographic keys) in an area of memory that is secure in the described ways.
 
+[![Version](https://img.shields.io/nuget/v/Godaddy.Asherah.SecureMemory)](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption)
+
   * [Installation](#installation)
        * [Currently supported / tested platforms](#currently-supported--tested-platforms)
   * [Quick Start](#quick-start)

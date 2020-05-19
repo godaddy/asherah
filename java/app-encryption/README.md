@@ -1,6 +1,8 @@
 # Asherah - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
+[![Version](https://img.shields.io/maven-central/v/com.godaddy.asherah/appencryption)](https://mvnrepository.com/artifact/com.godaddy.asherah/appencryption)
+
   * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
