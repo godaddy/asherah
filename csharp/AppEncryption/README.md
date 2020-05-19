@@ -1,6 +1,7 @@
 # Asherah - C#
 Application level envelope encryption SDK for C# with support for cloud-agnostic data storage and key management.
 
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -13,6 +14,14 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
   * [Deployment Notes](#deployment-notes)
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
   * [Development Notes](#development-notes)
+
+## Installation
+You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEEncryption/):
+```xml
+<ItemGroup>
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
+</ItemGroup>
+```
 
 ## Quick Start
 
