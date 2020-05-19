@@ -10,6 +10,7 @@ export ASHERAH_KMS_MODE=static
 export ASHERAH_METASTORE_MODE=memory
 
 # Test Go server
+echo "------------Testing clients using go server------------"
 cd ../../go
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
@@ -32,6 +33,7 @@ kill $ASHERAH_GO_SIDECAR_PID
 rm -rf /tmp/appencryption.sock
 
 # Test Java server
+echo "------------Testing clients using java server----------"
 # TODO : Remove this after unifying configurations
 # https://github.com/godaddy/asherah/issues/143
 export ASHERAH_EXPIRE_AFTER=90

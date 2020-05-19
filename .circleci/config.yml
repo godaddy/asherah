@@ -44,7 +44,36 @@ commands:
             else
               echo "Not releasable build, skipping deployment step"
             fi
-
+  restore-java-cache:
+    description: "Restore JAVA pacakges from cache"
+    steps:
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
+  restore-csharp-cache:
+    description: "Restore NuGet packages from cache"
+    steps:
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
+  restore-go-cache:
+    description: "Restore Go packages from cache"
+    steps:
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -100,13 +129,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+      - restore-java-cache
       - run:
           name: Build
           command: |
@@ -141,13 +164,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+      - restore-java-cache
       - run:
           name: Build
           command: |
@@ -183,13 +200,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+      - restore-java-cache
       - run:
           name: Build
           command: |
@@ -205,13 +216,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+      - restore-java-cache
       - run:
           name: Build
           command: |
@@ -227,13 +232,7 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
+      - restore-csharp-cache
       - run:
           name: Setup csharp environment
           command: |
@@ -281,13 +280,7 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
+      - restore-csharp-cache
       - run:
           name: Setup csharp environment
           command: |
@@ -340,13 +333,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
+      - restore-csharp-cache
       - run:
           name: Setup csharp environment
           command: |
@@ -400,13 +387,7 @@ jobs:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
+      - restore-csharp-cache
       - run:
           name: Setup csharp environment
           command: |
@@ -430,13 +411,7 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-go-cache
       - run:
           name: Build
           command: |
@@ -488,13 +463,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-go-cache
       - run:
           name: Build
           command: |
@@ -542,13 +511,7 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-go-cache
       - run:
           name: Build
           command: |
@@ -568,13 +531,7 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-go-cache
       - run:
           name: Build
           command: |
@@ -613,13 +570,7 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when project files change, use increasingly general patterns to restore cache.
-            # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+      - restore-java-cache
       - run:
           name: Build
           command: |
@@ -668,18 +619,8 @@ jobs:
             - v2-clients-{{ .Branch }}-{{ .BuildNum }}
             - v2-clients-{{ .Branch }}-
             - v2-clients-
-      - restore_cache:
-          name: Restore JAVA packages
-          keys:
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
-      - restore_cache:
-          name: Restore GO packages
-          keys:
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-java-cache
+      - restore-go-cache
       - run:
           name: Setup java environment
           command: |
@@ -692,15 +633,12 @@ jobs:
           command: |
             wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
             tar -C /usr/local/ -xzf go*.tar.gz
-            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            go get github.com/cucumber/godog/cmd/godog@v0.8.1
       - run:
           name: Setup python environment
           command: |
             apt-get -y install software-properties-common
             add-apt-repository -y ppa:deadsnakes/ppa
-            apt-get -y install python3.7
-            apt-get -y install python3-pip
+            apt-get -y install python3.7 python3-pip
             python3.7 -m pip install --upgrade pip
       - run:
           name: Setup node environment
@@ -753,24 +691,9 @@ jobs:
             - v2-cltf-{{ .Branch }}-{{ .BuildNum }}
             - v2-cltf-{{ .Branch }}-
             - v2-cltf-
-      - restore_cache:
-          name: Restore JAVA packages
-          keys:
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
-      - restore_cache:
-          name: Restore C# packages
-          keys:
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
-      - restore_cache:
-          name: Restore GO packages
-          keys:
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+      - restore-java-cache
+      - restore-csharp-cache
+      - restore-go-cache
       - run:
           name: Setup java environment
           command: |
@@ -800,10 +723,10 @@ jobs:
       - run:
           name: Setup python environment
           command: |
-            apt-get -y upgrade python3
-            apt-get -y install python3-pip
-            cd tests/cross-language/sidecar
-            pip3 install -r requirements.txt
+            apt-get -y install software-properties-common
+            add-apt-repository -y ppa:deadsnakes/ppa
+            apt-get -y install python3.7 python3-pip
+            python3.7 -m pip install --upgrade pip
       - run:
           name: Build
           command: |
