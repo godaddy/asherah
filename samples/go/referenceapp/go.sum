@@ -29,6 +29,8 @@ github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gG
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/godaddy/asherah/go/appencryption v0.1.0 h1:BVuffWu4x6vg3z49XVmo8cZCI0EgsmVZ8m5uFSFk9Bs=
 github.com/godaddy/asherah/go/appencryption v0.1.0/go.mod h1:Sdf/zejO1+FIYnv7OatryRBrVSzaDBpVTvX5vNeLb0E=
+github.com/godaddy/asherah/go/appencryption v0.1.1 h1:6DNZrgpVeaY5vzsh426K+tm43h2mtbDLYfS67YB5rLA=
+github.com/godaddy/asherah/go/appencryption v0.1.1/go.mod h1:Sdf/zejO1+FIYnv7OatryRBrVSzaDBpVTvX5vNeLb0E=
 github.com/godaddy/asherah/go/securememory v0.1.0 h1:zyJa/rWuc9K6YZdwgbdtk7I6BTshiJDfIQwQkIbxvyk=
 github.com/godaddy/asherah/go/securememory v0.1.0/go.mod h1:N0mgZcRmF/RFjLQBac/LW2EgkBw4BOKHkIT8rO1pBRU=
 github.com/gogo/protobuf v1.2.0 h1:xU6/SpYbvkNYiptHJYEDRseDLvYE7wSqhYYNy0QSUzI=

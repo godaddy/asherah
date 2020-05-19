@@ -1,15 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.SecureMemory</PackageId>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
+    <Title>SecureMemory</Title>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <Description>Provides a secure area of memory to store sensitive data</Description>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.SecureMemory</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Properties related to NuGet packaging: -->
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../PlatformNative/PlatformNative.csproj" />
