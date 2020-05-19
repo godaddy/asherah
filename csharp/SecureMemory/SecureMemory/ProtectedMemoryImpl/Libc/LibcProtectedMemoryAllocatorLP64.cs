@@ -1,9 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.Logging;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
-using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -12,7 +10,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 {
     internal abstract class LibcProtectedMemoryAllocatorLP64 : IProtectedMemoryAllocator
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<LibcProtectedMemoryAllocatorLP64>();
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         private readonly LibcLP64 libc;
@@ -51,13 +48,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // ************************************
         public virtual IntPtr Alloc(ulong length)
         {
-#pragma warning disable 162
-            if (Debug.On)
-            {
-                Logger.LogDebug("attempting to alloc length {length}", length);
-            }
-#pragma warning restore 162
-
             libc.getrlimit(GetMemLockLimit(), out var rlim);
             if (rlim.rlim_max != rlimit.UNLIMITED && rlim.rlim_max < length)
             {
