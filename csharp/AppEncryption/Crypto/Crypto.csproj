@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.Crypto</PackageId>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="BouncyCastle.NetCore" Version="1.8.5" />
-    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="1.0.0-alpha*" />
+    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>

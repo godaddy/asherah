@@ -52,6 +52,8 @@ Asherah Options:
                                           [$ASHERAH_METASTORE_MODE]
       --conn=                             The database connection string (required if --metastore=rdbms)
                                           [$ASHERAH_CONNECTION_STRING]
+      --enable-region-suffix              Configure the metastore to use regional suffixes (only supported by
+                                          --metastore=dynamodb) [$ASHERAH_ENABLE_REGION_SUFFIX]
       --kms=[aws|static]                  Configures the master key management service (default: aws)
                                           [$ASHERAH_KMS_MODE]
       --region-map=                       A comma separated list of key-value pairs in the form of

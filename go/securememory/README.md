@@ -1,5 +1,5 @@
 # Secure Memory Go Edition
-[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/securememory?status.svg)](https://godoc.org/github.com/godaddy/asherah/go/securememory)
+[![GoDoc](https://godoc.org/github.com/godaddy/asherah/go/securememory?status.svg)](https://pkg.go.dev/github.com/godaddy/asherah/go/securememory)
 
 This package provides a way for applications to keep secret information (like cryptographic keys) in an area of memory
 that is secure in the described ways.
@@ -101,7 +101,7 @@ func main() {
 
 ## Documentation
 
-**securememory package:** See the [godocs](https://godoc.org/github.com/godaddy/asherah/go/securememory) for api documentation.
+**securememory package:** See the [godocs](https://pkg.go.dev/github.com/godaddy/asherah/go/securememory) for api documentation.
 
 ## TODO
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)

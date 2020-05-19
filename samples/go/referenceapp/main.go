@@ -26,13 +26,15 @@ var (
 )
 
 type Options struct {
-	Drr              string `short:"d" long:"drr-to-decrypt" description:"DRR to be decrypted"`
-	Payload          string `short:"p" long:"payload-to-encrypt" description:"payload to be encrypted"`
-	Metastore        string `short:"m" long:"metastore" description:"Configure what metastore to use (DYNAMODB/SQL/MEMORY)"`
-	ConnectionString string `short:"c" long:"conn" description:"MySQL connection String"`
-	KmsType          string `long:"kms-type" description:"Type of key management service to use (AWS/STATIC)"`
-	PreferredRegion  string `long:"preferred-region" description:"Preferred region to use for KMS if using AWS KMS. Required for AWS KMS."`
-	RegionTuples     string `long:"region-arn-tuples" description:"Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS."`
+	Drr                string `short:"d" long:"drr-to-decrypt" description:"DRR to be decrypted"`
+	Payload            string `short:"p" long:"payload-to-encrypt" description:"payload to be encrypted"`
+	Metastore          string `short:"m" long:"metastore" description:"Configure what metastore to use (DYNAMODB/SQL/MEMORY)"`
+	EnableRegionSuffix bool   `short:"x" long:"enable-region-suffix" description:"Configure the metastore to use regional suffixes (only supported by DYNAMODB)"`
+	ConnectionString   string `short:"c" long:"conn" description:"MySQL connection String"`
+	KmsType            string `long:"kms-type" description:"Type of key management service to use (AWS/STATIC)"`
+	PreferredRegion    string `long:"preferred-region" description:"Preferred region to use for KMS if using AWS KMS. Required for AWS KMS."`
+	RegionTuples       string `long:"region-arn-tuples" description:"Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS."`
+	PartitionID        string `long:"partition-id" description:"The partition id to use for client sessions"`
 }
 
 // connectSQL connects to the mysql instance with the provided connection string.
@@ -56,7 +58,7 @@ func connectSQL() error {
 
 func createMetastore() appencryption.Metastore {
 	switch opts.Metastore {
-	case "SQL":
+	case "RDBMS":
 		logger.Info("using sql metastore")
 
 		if opts.ConnectionString == "" {
@@ -73,6 +75,7 @@ func createMetastore() appencryption.Metastore {
 
 		sess, e := session.NewSession(&aws.Config{
 			Region: aws.String("us-west-2"),
+			//LogLevel: aws.LogLevel(aws.LogDebug),
 			//Uncomment to use local dynamodb
 			//Endpoint: aws.String("http://localhost:8000"),
 		})
@@ -81,7 +84,7 @@ func createMetastore() appencryption.Metastore {
 			panic(e)
 		}
 
-		return persistence.NewDynamoDBMetastore(sess)
+		return persistence.NewDynamoDBMetastore(sess, persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix))
 	default:
 		logger.Info("using in-memory metastore")
 		return persistence.NewMemoryMetastore()
@@ -152,7 +155,13 @@ func main() {
 
 	// Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
 	// for a transaction and needs to be closed after use.
-	sess, err := factory.GetSession("shopper123")
+
+	partitionID := opts.PartitionID
+	if partitionID == "" {
+		partitionID = "shopper123"
+	}
+
+	sess, err := factory.GetSession(partitionID)
 	if err != nil {
 		panic(err)
 	}

@@ -1,15 +1,49 @@
 version: 2.1
 
-# Aliases for convenience/templating
-references:
-  workspace_root: &workspace_root
-    /tmp/workspace
-  attach_workspace: &attach_workspace
-    attach_workspace:
-      at: *workspace_root
-
 orbs:
   codecov: codecov/codecov@1.0.5
+
+parameters:
+  db-name:
+    type: "string"
+    default: "testdb"
+  db-user:
+    type: "string"
+    default: "root"
+  db-password:
+    type: "string"
+    default: "Password123"
+
+commands:
+  maybe-deploy:
+    description: "If required, deploy the specified project"
+    parameters:
+      project:
+        type: string
+      version:
+        type: string
+    steps:
+      - run:
+          name: Deploy
+          command: |
+            cd <<parameters.project>>
+
+            BASE_VERSION=$(<<parameters.version>>)
+            VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+
+            # We want to trigger deployments only on the release branch, for modules with no version suffix
+            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+              mkdir -p ~/.ssh
+              echo "Adding github.com as known host."
+              echo $GITHUB_PUBLIC_KEY >> ~/.ssh/known_hosts
+              echo "Setting private SSH key."
+              echo $GITHUB_COMMIT_KEY | base64 --decode >> ~/.ssh/id_rsa_git
+              chmod 400 ~/.ssh/id_rsa_git # prevents "UNPROTECTED PRIVATE KEY FILE" error
+
+              ./scripts/release_prod.sh
+            else
+              echo "Not releasable build, skipping deployment step"
+            fi
 
 workflows:
   version: 2
@@ -39,14 +73,22 @@ workflows:
       - go-appencryption:
           requires:
             - go-securememory
-      - go-referenceapp:
+      - samples-go-reference-app:
           requires:
             - go-appencryption
-      - cross-language:
+      - server-go:
+          requires:
+            - go-appencryption
+      - server-java:
           requires:
             - java-app-encryption
+      - tests-cross-language:
+          requires:
             - csharp-app-encryption
             - go-appencryption
+            - java-app-encryption
+            - server-go
+            - server-java
 
 jobs:
   java-secure-memory:
@@ -58,9 +100,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -77,37 +119,19 @@ jobs:
       - codecov/upload:
           file: java/secure-memory/target/site/jacoco/jacoco.xml
           flags: java_secure_memory
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
             cd java/secure-memory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/secure-memory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: java/secure-memory
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   java-app-encryption:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -117,9 +141,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -129,6 +153,7 @@ jobs:
       - run:
           name: Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd java/app-encryption
             ./scripts/test.sh
       - store_test_results:
@@ -136,37 +161,19 @@ jobs:
       - codecov/upload:
           file: java/app-encryption/target/site/jacoco/jacoco.xml
           flags: java_app_encryption
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
             cd java/app-encryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd java/app-encryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for master, RC tags, and prod release tags
-            if [[ "${CIRCLE_BRANCH}" = "master" ]]; then
-              echo "Detected master branch, proceeding to deploy Snapshot"
-              #./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: java/app-encryption
+          version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   samples-java-reference-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -176,9 +183,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -188,7 +195,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   tests-java-test-app:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -198,9 +205,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - run:
           name: Build
           command: |
@@ -210,7 +217,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
   csharp-logging:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -220,9 +227,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -252,34 +259,19 @@ jobs:
       - codecov/upload:
           file: csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: csharp_Logging
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
             cd csharp/Logging
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/Logging
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/Logging
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   csharp-secure-memory:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -289,9 +281,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -321,51 +313,36 @@ jobs:
       - codecov/upload:
           file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: csharp_SecureMemory
+          conf: codecov.yml
       - run:
           name: Install locally
           command: |
             cd csharp/SecureMemory
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/SecureMemory
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/SecureMemory
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   csharp-app-encryption:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -383,6 +360,7 @@ jobs:
       - run:
           name: Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd csharp/AppEncryption
             ./scripts/test.sh
       - run:
@@ -395,34 +373,24 @@ jobs:
       - codecov/upload:
           file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: csharp_AppEncryption
+          conf: codecov.yml
+      - run:
+          name: Integration Tests
+          command: |
+            cd csharp/AppEncryption
+            ./scripts/integration_test.sh
       - run:
           name: Install locally
           command: |
             cd csharp/AppEncryption
             ./scripts/install_local.sh
-      - run:
-          name: Deploy if needed
-          command: |
-            cd csharp/AppEncryption
-
-            # Rather than triggering off tag pushes, we inspect for whether HEAD of release branches are tagged
-            TAG_NAME=$(git tag -l --points-at HEAD)
-            echo "Branch = ${CIRCLE_BRANCH}, Tag = ${TAG_NAME}"
-
-            # Only deploy for RC tags and prod release tags (we won't deploy alpha builds for C#)
-            if [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*-rc[0-9]*$ ]]; then
-              echo "Detected tagged RC, proceeding to deploy"
-              ./scripts/deploy.sh
-            elif [[ "${CIRCLE_BRANCH}" =~ release-.* && "${TAG_NAME}" =~ ^v[0-9]*\.[0-9]*\.[0-9]*$ ]]; then
-              echo "Detected tagged production release, proceeding to deploy"
-              ./scripts/deploy.sh
-            else
-              echo "Not releasable build, skipping deployment step"
-            fi
+      - maybe-deploy:
+          project: csharp/AppEncryption
+          version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   samples-csharp-reference-app:
     docker:
       - image: mcr.microsoft.com/dotnet/core/sdk:2.2
@@ -432,9 +400,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - run:
           name: Setup csharp environment
           command: |
@@ -452,7 +420,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget
-          key: v1-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
   go-securememory:
     docker:
       - image: circleci/golang
@@ -462,9 +430,9 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
@@ -498,36 +466,40 @@ jobs:
       - codecov/upload:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
+          conf: codecov.yml
+      - maybe-deploy:
+          project: go/securememory
+          version: cat .versionfile
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
   go-appencryption:
     docker:
       - image: circleci/golang
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - restore_cache:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
             cd go/appencryption
-            go get github.com/godaddy/asherah/go/securememory@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Unit Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd go/appencryption
             ./scripts/test.sh
       - run:
@@ -553,11 +525,15 @@ jobs:
       - codecov/upload:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
+          conf: codecov.yml
+      - maybe-deploy:
+          project: go/appencryption
+          version: cat .versionfile
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-  go-referenceapp:
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+  samples-go-reference-app:
     docker:
       - image: circleci/golang
     steps:
@@ -566,14 +542,13 @@ jobs:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Build
           command: |
             cd samples/go/referenceapp
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
             ./scripts/build.sh
       - run:
           name: Static Analysis
@@ -583,8 +558,92 @@ jobs:
       - save_cache:
           paths:
             - /go/pkg/mod
-          key: go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-  cross-language:
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+  server-go:
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
+      - run:
+          name: Build
+          command: |
+            cd server/go
+            ./scripts/build.sh
+      - run:
+          name: Unit Tests
+          command: |
+            cd server/go
+            ./scripts/test.sh
+      - run:
+          name: Convert Test Results
+          command: |
+            cd server/go
+            GO111MODULE=off go get github.com/axw/gocov/gocov
+            GO111MODULE=off go get github.com/AlekSi/gocov-xml
+            echo "Converting coverage.out to cobertura XML..."
+            gocov convert coverage.out | gocov-xml > cobertura-coverage.xml
+      - run:
+          name: Static Analysis
+          command: |
+            cd server/go
+            ./scripts/lint.sh
+      - store_test_results:
+          path: server/go
+      - codecov/upload:
+          file: server/go/cobertura-coverage.xml
+          flags: server_go
+          conf: codecov.yml
+      - save_cache:
+          paths:
+            - /go/pkg/mod
+          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+  server-java:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when project files change, use increasingly general patterns to restore cache.
+            # vN prefix in case we ever need to regenerate all caches
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
+      - run:
+          name: Build
+          command: |
+            cd server/java
+            ./scripts/clean.sh
+            ./scripts/build.sh
+      - run:
+          name: Tests
+          command: |
+            source ./.circleci/set_env_variables.sh
+            cd server/java
+            ./scripts/test.sh
+      - store_test_results:
+          path: server/java/target/surefire-reports
+      - codecov/upload:
+          file: server/java/target/site/jacoco/jacoco.xml
+          flags: server_java
+          conf: codecov.yml
+      - run:
+          name: Install locally
+          command: |
+            cd server/java
+            ./scripts/install_local.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
+  tests-cross-language:
     docker:
       - image: ubuntu:18.04
         environment:
@@ -593,9 +652,9 @@ jobs:
           GO111MODULE: "on"
       - image: mysql:5.7
         environment:
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: root
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_DATABASE: <<pipeline.parameters.db-name>>
+          MYSQL_USER: <<pipeline.parameters.db-user>>
+          MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
       - run:
@@ -604,7 +663,7 @@ jobs:
             apt-get update
             apt-get -y upgrade
             apt-get install -y mariadb-server ca-certificates
-            mysql -h 127.0.0.1 -u ${TEST_DB_USER} -p${TEST_DB_PASSWORD} -e "CREATE TABLE ${TEST_DB_NAME}.encryption_key (
+            mysql -h 127.0.0.1 -u <<pipeline.parameters.db-user>> -p<<pipeline.parameters.db-password>> -e "CREATE TABLE <<pipeline.parameters.db-name>>.encryption_key (
               id             VARCHAR(255) NOT NULL,
               created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
               key_record     TEXT         NOT NULL,
@@ -614,29 +673,35 @@ jobs:
       # when project files change, use increasingly general patterns to restore cache.
       # vN prefix in case we ever need to regenerate all caches
       - restore_cache:
+          name: Restore CLTF packages
+          keys:
+            - v2-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v2-cltf-{{ .Branch }}-
+            - v2-cltf-
+      - restore_cache:
           name: Restore JAVA packages
           keys:
-            - v1-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v1-maven-{{ .Branch }}-
-            - v1-maven-
+            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v2-maven-{{ .Branch }}-
+            - v2-maven-
       - restore_cache:
           name: Restore C# packages
           keys:
-            - v1-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v1-nuget-{{ .Branch }}-
-            - v1-nuget-
+            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v2-nuget-{{ .Branch }}-
+            - v2-nuget-
       - restore_cache:
           name: Restore GO packages
           keys:
-            - go-mod-v4-{{ .Branch }}-{{ .BuildNum }}
-            - go-mod-v4-{{ .Branch }}-
-            - go-mod-v4-
+            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v2-go-mod-{{ .Branch }}-
+            - v2-go-mod-
       - run:
           name: Setup java environment
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -R /home/circleci/.m2/ /root/.m2/
-            apt-get install -y openjdk-11-jdk
+            apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
           name: Setup csharp environment
@@ -658,27 +723,46 @@ jobs:
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
             go get github.com/cucumber/godog/cmd/godog@v0.8.1
       - run:
+          name: Setup python environment
+          command: |
+            apt-get -y upgrade python3
+            apt-get -y install python3-pip
+            cd tests/cross-language/sidecar
+            pip3 install -r requirements.txt
+      - run:
           name: Build
           command: |
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
 
-            #Build the C# project
+            # Build the C# project
             cd ../csharp
             ./scripts/clean.sh
             ./scripts/build.sh
 
-            # Build & Lint the Go project
+            # Lint & Build the Go project
             cd ../go
             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
-            ./scripts/build.sh
             ./scripts/lint.sh
+            go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
+            ./scripts/build.sh
       - run:
           name: Test
           command: |
+            export TEST_DB_NAME=<<pipeline.parameters.db-name>>
+            export TEST_DB_PASSWORD=<<pipeline.parameters.db-password>>
+            export TEST_DB_USER=<<pipeline.parameters.db-user>>
+            export ASHERAH_SERVICE_NAME=service
+            export ASHERAH_PRODUCT_NAME=product
+            export ASHERAH_KMS_MODE=static
             cd tests/cross-language/
-            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-            go get github.com/godaddy/asherah/go/appencryption@${CIRCLE_BRANCH}
-            ./scripts/test.sh
+            ./scripts/encrypt_all.sh
+            ./scripts/decrypt_all.sh
+      - save_cache:
+          paths:
+            - ~/.cache
+            - ~/.m2
+            - ~/.nuget
+            - /go/pkg/mod
+          key: v2-cltf-{{ .Branch }}-{{ .BuildNum }}

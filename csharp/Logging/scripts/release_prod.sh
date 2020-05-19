@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-FULL_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-BASE_VERSION=`echo $FULL_VERSION | cut -f1 -d'-'`
-echo $BASE_VERSION
-BRANCH="release-${BASE_VERSION}"
-NEW_VERSION="${BASE_VERSION}"
-echo $NEW_VERSION
+BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
+ARTIFACT_NAME=$(xmllint --xpath "//Project/PropertyGroup/Title/text()" Logging/Logging.csproj)
+TAG=`echo csharp/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
-git fetch
-git checkout "${BRANCH}"
-git pull origin "${BRANCH}"
-setversion "${NEW_VERSION}" Directory.Build.props
-git add Directory.Build.props
-git commit -m "Production release version bump to ${NEW_VERSION}"
-TAG="v${NEW_VERSION}"
-git tag -f ${TAG}
-git push origin "${BRANCH}"
-git push origin ${TAG}
+RESULT=$(git tag -l ${TAG})
+if [[ "$RESULT" != ${TAG} ]]; then
+    dotnet pack -c Release --no-build
+    echo "Releasing ${ARTIFACT_NAME} artifact"
+    find . -name *${BASE_VERSION}.nupkg  | xargs -L1 -I '{}' dotnet nuget push {} -k ${NUGET_KEY} -s ${NUGET_SOURCE}
+
+    # Create tag
+    git tag -f ${TAG} ${CIRCLE_SHA1}
+    ssh-agent sh -c 'ssh-add ~/.ssh/id_rsa_git; git push origin --tags'
+    echo "Created tag ${TAG}"
+else
+    echo "${TAG} exists for ${ARTIFACT_NAME} v${BASE_VERSION}"
+fi
