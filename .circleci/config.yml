@@ -45,9 +45,9 @@ commands:
               echo "Not releasable build, skipping deployment step"
             fi
   restore-java-cache:
-    description: "Restore JAVA pacakges from cache"
     steps:
       - restore_cache:
+          name: Restore JAVA pacakges from cache
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
@@ -55,9 +55,9 @@ commands:
             - v2-maven-{{ .Branch }}-
             - v2-maven-
   restore-csharp-cache:
-    description: "Restore NuGet packages from cache"
     steps:
       - restore_cache:
+          name: Restore NuGet packages from cache
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
@@ -65,9 +65,9 @@ commands:
             - v2-nuget-{{ .Branch }}-
             - v2-nuget-
   restore-go-cache:
-    description: "Restore Go packages from cache"
     steps:
       - restore_cache:
+          name: Restore Go packages from cache
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
