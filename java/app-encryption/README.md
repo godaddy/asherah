@@ -42,7 +42,7 @@ You can specify the current release of Asherah as a project dependency using the
 try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
     .withInMemoryMetastore()
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("test_master_key_that_is_32_bytes")
+    .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .build()) {
 
   // Now create a cryptographic session for a partition.
@@ -112,7 +112,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```java
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("test_master_key_that_is_32_bytes");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

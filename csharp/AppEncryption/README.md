@@ -34,7 +34,7 @@ using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
     .WithMemoryPersistence()
     .WithNeverExpiredCryptoPolicy()
-    .WithStaticKeyManagementService("test_master_key_that_is_32_bytes")
+    .WithStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .Build())
 {
     // Now create a cryptographic session for a partition.
@@ -113,7 +113,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```c#
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("test_master_key_that_is_32_bytes");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

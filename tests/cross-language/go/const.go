@@ -1,7 +1,7 @@
 package cltf
 
 const (
-	keyManagementStaticMasterKey = "test_master_key_that_is_32_bytes"
+	keyManagementStaticMasterKey = "thisIsAStaticMasterKeyForTesting"
 
 	defaultServiceID   = "service"
 	defaultProductID   = "product"

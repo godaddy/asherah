@@ -36,7 +36,7 @@ class AppEncryptionConfig {
 
       case Constants.KMS_STATIC:
         logger.info("using static KMS...");
-        return new StaticKeyManagementServiceImpl("test_master_key_that_is_32_bytes");
+        return new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 
       default:
         logger.error("unable to evaluate kms config");

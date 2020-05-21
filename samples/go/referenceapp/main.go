@@ -112,7 +112,7 @@ func createKMS(crypto appencryption.AEAD) (appencryption.KeyManagementService, e
 		return kms.NewAWS(crypto, opts.PreferredRegion, regionArnMap)
 	default:
 		logger.Info("using static kms")
-		return kms.NewStatic("test_master_key_that_is_32_bytes", crypto)
+		return kms.NewStatic("thisIsAStaticMasterKeyForTesting", crypto)
 	}
 }
 

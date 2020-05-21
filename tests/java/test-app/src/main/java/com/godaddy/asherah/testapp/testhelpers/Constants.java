@@ -19,7 +19,7 @@ public final class Constants {
    */
   public static final String KEY_MANAGEMENT_STATIC = "static";
   public static final String KEY_MANAGEMENT_AWS = "aws";
-  public static final String KEY_MANAGEMENT_STATIC_MASTER_KEY = "test_master_key_that_is_32_bytes";
+  public static final String KEY_MANAGEMENT_STATIC_MASTER_KEY = "thisIsAStaticMasterKeyForTesting";
 
   /*
   Metastore
