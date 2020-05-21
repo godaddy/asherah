@@ -5,7 +5,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>cltf</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <name>CLTF</name>
   <description>Cross-language testing framework to ensure consistent encryption/decryption results.</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -31,7 +31,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <cucumber.version>5.4.0</cucumber.version>
     <junit.jupiter.version>5.1.0</junit.jupiter.version>
-    <appencryption.version>0.1.0</appencryption.version>
+    <hikaricp.version>2.6.1</hikaricp.version>
+    <mysql.connector.version>8.0.13</mysql.connector.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
 
@@ -88,13 +89,13 @@
     <dependency>
       <groupId>com.godaddy.asherah</groupId>
       <artifactId>appencryption</artifactId>
-      <version>${appencryption.version}</version>
+      <version>${revision}</version>
     </dependency>
 
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
-      <version>2.6.1</version>
+      <version>${hikaricp.version}</version>
     </dependency>
 
     <dependency>
@@ -107,7 +108,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.13</version>
+      <version>${mysql.connector.version}</version>
     </dependency>
 
     <!-- Test Dependencies -->

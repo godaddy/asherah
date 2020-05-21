@@ -124,3 +124,5 @@ fabric.properties
 # article says it's ok to ignore it.
 .idea/*.iml
 .idea/modules.xml
+
+repo/**

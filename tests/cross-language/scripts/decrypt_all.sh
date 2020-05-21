@@ -7,7 +7,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 # Run decrypt tests for all languages
 cd java
 echo "----------------------Decrypting data using Java------------------------"
-mvn -Dtest=RunDecryptTest test
+mvn -Drevision=${JAVA_AE_VERSION} -Dtest=RunDecryptTest test
 cd ..
 
 cd csharp
