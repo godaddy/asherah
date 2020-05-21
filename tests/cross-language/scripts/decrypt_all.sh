@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
@@ -20,6 +21,7 @@ godog ../features/decrypt.feature
 cd ..
 
 cd sidecar
+pip3.7 install -r requirements.txt
 echo "------------Decrypting data with Go sidecar and python client-----------"
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
