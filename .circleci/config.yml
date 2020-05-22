@@ -681,7 +681,7 @@ jobs:
           name: Setup java environment
           command: |
             # Need to copy the java cache from circleci user to root user
-            cp -Rf /home/circleci/.m2/ /root/.m2/
+            cp -rf /home/circleci/.m2/* /root/.m2/
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
