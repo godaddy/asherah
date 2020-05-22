@@ -51,9 +51,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v5-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v5-maven-{{ .Branch }}-
-            - v5-maven-
+            - v3-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v3-maven-{{ .Branch }}-
+            - v3-maven-
   restore-csharp-cache:
     steps:
       - restore_cache:
@@ -61,9 +61,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v5-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v5-nuget-{{ .Branch }}-
-            - v5-nuget-
+            - v3-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v3-nuget-{{ .Branch }}-
+            - v3-nuget-
   restore-go-cache:
     steps:
       - restore_cache:
@@ -71,79 +71,82 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v5-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v5-go-mod-{{ .Branch }}-
-            - v5-go-mod-
+            - v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v3-go-mod-{{ .Branch }}-
+            - v3-go-mod-
   save-java-cache:
     steps:
       - save_cache:
           name: Save JAVA packages to cache
           paths:
             - ~/.m2
-          key: v5-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-maven-{{ .Branch }}-{{ .BuildNum }}
   save-csharp-cache:
     steps:
       - save_cache:
           name: Save NuGet packages to cache
           paths:
             - ~/.nuget
-          key: v5-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-nuget-{{ .Branch }}-{{ .BuildNum }}
   save-go-cache:
     steps:
       - save_cache:
           name: Save Go packages to cache
           paths:
             - /go/pkg/mod
-          key: v5-go-mod-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
 
 workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - java-secure-memory
-      - java-app-encryption:
-          requires:
-            - java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
-      - csharp-logging
-      - csharp-secure-memory:
-          requires:
-            - csharp-logging
-      - csharp-app-encryption:
-          requires:
-            - csharp-secure-memory
-      - samples-csharp-reference-app:
-          requires:
-            - csharp-app-encryption
-      - go-securememory
-      - go-appencryption:
-          requires:
-            - go-securememory
-      - samples-go-reference-app:
-          requires:
-            - go-appencryption
-      - server-go:
-          requires:
-            - go-appencryption
-      - server-java:
-          requires:
-            - java-app-encryption
-      - server-samples:
-          requires:
-            - server-go
-            - server-java
+      - server-java
       - tests-cross-language:
           requires:
-            - csharp-app-encryption
-            - go-appencryption
-            - java-app-encryption
-            - server-go
-            - server-java
+#      - java-secure-memory
+#      - java-app-encryption:
+#          requires:
+#            - java-secure-memory
+#      - samples-java-reference-app:
+#          requires:
+#            - java-app-encryption
+#      - tests-java-test-app:
+#          requires:
+#            - java-app-encryption
+#      - csharp-logging
+#      - csharp-secure-memory:
+#          requires:
+#            - csharp-logging
+#      - csharp-app-encryption:
+#          requires:
+#            - csharp-secure-memory
+#      - samples-csharp-reference-app:
+#          requires:
+#            - csharp-app-encryption
+#      - go-securememory
+#      - go-appencryption:
+#          requires:
+#            - go-securememory
+#      - samples-go-reference-app:
+#          requires:
+#            - go-appencryption
+#      - server-go:
+#          requires:
+#            - go-appencryption
+#      - server-java:
+#          requires:
+#            - java-app-encryption
+#      - server-samples:
+#          requires:
+#            - server-go
+#            - server-java
+#      - tests-cross-language:
+#          requires:
+#            - csharp-app-encryption
+#            - go-appencryption
+#            - java-app-encryption
+#            - server-go
+#            - server-java
 
 jobs:
   java-secure-memory:
@@ -606,7 +609,7 @@ jobs:
             - ~/.cache
             - ~/.m2
             - /go/pkg/mod
-          key: v5-clients-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-clients-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
@@ -639,9 +642,9 @@ jobs:
       - restore_cache:
           name: Restore CLTF packages
           keys:
-            - v5-cltf-{{ .Branch }}-{{ .BuildNum }}
-            - v5-cltf-{{ .Branch }}-
-            - v5-cltf-
+            - v3-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v3-cltf-{{ .Branch }}-
+            - v3-cltf-
       - restore-java-cache
       - restore-csharp-cache
       - restore-go-cache
@@ -650,6 +653,7 @@ jobs:
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -rf /home/circleci/.m2/* /root/.m2/
+            ls -ltr /root/.m2/repository/com/godaddy/asherah/grpc-server
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
@@ -714,4 +718,4 @@ jobs:
             - ~/.m2
             - ~/.nuget
             - /go/pkg/mod
-          key: v5-cltf-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-cltf-{{ .Branch }}-{{ .BuildNum }}
