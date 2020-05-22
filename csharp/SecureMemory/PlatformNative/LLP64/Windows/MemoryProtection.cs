@@ -4,7 +4,7 @@ using System;
 // ReSharper disable InconsistentNaming
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums
 {
-    public enum AllocationProtect : uint
+    public enum MemoryProtection : uint
     {
         PAGE_EXECUTE = 0x00000010,
         PAGE_EXECUTE_READ = 0x00000020,
