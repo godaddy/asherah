@@ -25,7 +25,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             process = WindowsInterop.GetCurrentProcess();
 #if USE_HEAPALLOC
-            heap = WindowsInterop.HeapCreate(0, (UIntPtr)0, (UIntPtr)0);
+            heap = WindowsInterop.HeapCreate(0, UIntPtr.Zero, UIntPtr.Zero);
 #endif
         }
 
@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 #if USE_GLOBALALLOC
             var result = WindowsInterop.GlobalAlloc(0, (UIntPtr)length);
 #elif USE_VIRTUALALLOC
-            var result = WindowsInterop.VirtualAllocEx(process, IntPtr.Zero, (IntPtr)length, AllocationType.Commit, MemoryProtection.PAGE_EXECUTE_READWRITE);
+            var result = WindowsInterop.VirtualAllocEx(process, IntPtr.Zero, (UIntPtr)length, AllocationType.Commit, MemoryProtection.PAGE_EXECUTE_READWRITE);
 #elif USE_HEAPALLOC
             var result = WindowsInterop.HeapAlloc(heap, 0, (UIntPtr)length);
 #else
@@ -62,13 +62,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         public void Free(IntPtr pointer, ulong length)
         {
             bool result;
-            WindowsInterop.ZeroMemory(pointer, (IntPtr)length);
+            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
 #if USE_GLOBALALLOC
             result = WindowsInterop.GlobalFree(pointer) != IntPtr.Zero;
 #elif USE_VIRTUALALLOC
-            result = WindowsInterop.VirtualFreeEx(process, pointer, 0, AllocationType.Release);
+            result = WindowsInterop.VirtualFreeEx(process, pointer, UIntPtr.Zero, AllocationType.Release);
 #elif USE_HEAPALLOC
-            result = WindowsInterop.HeapFree(heap, 0, pointer)
+            result = WindowsInterop.HeapFree(heap, 0, pointer);
 #endif
             if (!result)
             {
@@ -106,13 +106,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)MemoryProtection.PAGE_READWRITE, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
+                throw new LibcOperationFailedException("VirtualProtectEx", 0, errno);
             }
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
-            WindowsInterop.ZeroMemory(pointer, (IntPtr)length);
+            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
         }
 #if USE_HEAPALLOC
 
