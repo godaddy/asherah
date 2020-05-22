@@ -49,7 +49,7 @@ class SessionFactoryTest {
   private final static String testPartitionId = "test_partition_id";
   private final static String testServiceId = "test_service_id";
   private final static String testProductId = "test_product_id";
-  private final static String testMasterKey = "test_master_key_that_is_32_bytes";
+  private final static String testStaticMasterKey = "thisIsAStaticMasterKeyForTesting";
 
   private SessionFactory sessionFactory;
 
@@ -123,7 +123,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
         byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
@@ -159,7 +159,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
         byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
@@ -202,7 +202,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
       byte[] drr = null;
@@ -247,7 +247,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
       byte[] drr = null;
@@ -298,7 +298,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
       byte[] drr = null;
@@ -349,7 +349,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
       byte[] drr = null;
@@ -403,7 +403,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
         byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
@@ -446,7 +446,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       int numThreads = 100;
       int numTasks = numThreads * 100;
@@ -496,7 +496,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       ExecutorService pool = Executors.newFixedThreadPool(numThreads);
       LongAdder tasksCompleted = new LongAdder();
@@ -541,7 +541,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       int numThreads = 100;
       int numTasks = numThreads * 100;
@@ -588,7 +588,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       int numThreads = 100;
       int numTasks = numThreads * 100;
@@ -637,7 +637,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       int numThreads = 100;
       int numTasks = numThreads * 100;
@@ -688,7 +688,7 @@ class SessionFactoryTest {
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build()) {
       int numThreads = 100;
       int numTasks = numThreads * 100;
@@ -796,7 +796,7 @@ class SessionFactoryTest {
     assertNotNull(keyManagementServiceStep);
 
     SessionFactory.BuildStep buildStep =
-        keyManagementServiceStep.withStaticKeyManagementService(testMasterKey);
+        keyManagementServiceStep.withStaticKeyManagementService(testStaticMasterKey);
     assertNotNull(buildStep);
 
     SessionFactory sessionFactory = buildStep.build();
@@ -819,7 +819,7 @@ class SessionFactoryTest {
         cryptoPolicyStep.withCryptoPolicy(cryptoPolicy);
     assertNotNull(keyManagementServiceStep);
 
-    KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(testMasterKey);
+    KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(testStaticMasterKey);
     SessionFactory.BuildStep buildStep =
         keyManagementServiceStep.withKeyManagementService(keyManagementService);
     assertNotNull(buildStep);
@@ -833,7 +833,7 @@ class SessionFactoryTest {
     SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .build();
     // Just verify our prefixed metrics result in no-op meters
     assertTrue(Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".should.be.noop") instanceof NoopMeter);
@@ -843,7 +843,7 @@ class SessionFactoryTest {
     SessionFactory.newBuilder(testProductId, testServiceId)
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
-        .withStaticKeyManagementService(testMasterKey)
+        .withStaticKeyManagementService(testStaticMasterKey)
         .withMetricsEnabled()
         .build();
     // Just verify our prefixed metrics do not result in no-op meters

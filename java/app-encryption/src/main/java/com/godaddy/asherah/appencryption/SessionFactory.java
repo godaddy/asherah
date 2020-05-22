@@ -278,8 +278,8 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     @Override
-    public BuildStep withStaticKeyManagementService(final String demoMasterKey) {
-      this.keyManagementService = new StaticKeyManagementServiceImpl(demoMasterKey);
+    public BuildStep withStaticKeyManagementService(final String staticMasterKey) {
+      this.keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
       return this;
     }
 
@@ -323,7 +323,7 @@ public class SessionFactory implements SafeAutoCloseable {
 
   public interface KeyManagementServiceStep {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
-    BuildStep withStaticKeyManagementService(String demoMasterKey);
+    BuildStep withStaticKeyManagementService(String staticMasterKey);
 
     BuildStep withKeyManagementService(KeyManagementService keyManagementService);
   }
