@@ -12,6 +12,10 @@ using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 {
+    /// <summary>
+    /// These tests are a bit impure and expect the platform to be based on libc implementations
+    /// Pure tests have been promoted to ProtectedMemoryAllocatorTest.cs
+    /// </summary>
     [Collection("Logger Fixture collection")]
     public class LibcProtectedMemoryAllocatorTest
     {
@@ -34,11 +38,23 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64();
                 macOsProtectedMemoryAllocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
+            else
+            {
+                libc = null;
+                libcProtectedMemoryAllocator = null;
+                macOsProtectedMemoryAllocatorMock = null;
+            }
         }
 
         [Fact]
         private void TestDisableCoreDumpGlobally()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             // Mac allocator has global core dumps disabled on init
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -58,10 +74,15 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
         }
 
-
         [Fact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 macOsProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
@@ -85,6 +106,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestAllocWithCheckZeroErrorShouldFail()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 macOsProtectedMemoryAllocatorMock.Setup(x => x.CheckZero(It.IsAny<int>(), It.IsAny<string>()))
@@ -108,6 +135,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
@@ -122,6 +155,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 libcProtectedMemoryAllocator.CheckIntPtr(IntPtr.Zero, "blah");
@@ -131,6 +170,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 libcProtectedMemoryAllocator.CheckIntPtr(new IntPtr(-1), "blah");
@@ -140,24 +185,48 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckZeroWithZeroResult()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             libcProtectedMemoryAllocator.CheckZero(0, "blah");
         }
 
         [Fact]
         private void TestCheckZeroWithNonZeroResult()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             Assert.Throws<LibcOperationFailedException>(() => { libcProtectedMemoryAllocator.CheckZero(1, "blah"); });
         }
 
         [Fact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             libcProtectedMemoryAllocator.CheckZero(0, "blah", new InvalidOperationException());
         }
 
         [Fact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
+            // Don't run libc tests on platforms that don't match libc/posix behaviors
+            if (libc == null)
+            {
+                return;
+            }
+
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 libcProtectedMemoryAllocator.CheckZero(1, "blah", new InvalidOperationException());

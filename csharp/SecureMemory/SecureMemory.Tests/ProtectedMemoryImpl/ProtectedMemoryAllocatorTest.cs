@@ -15,9 +15,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
     [Collection("Logger Fixture collection")]
     public class ProtectedMemoryAllocatorTest
     {
-        private readonly IProtectedMemoryAllocator protectedMemoryAllocator;
-
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
+
+        private readonly IProtectedMemoryAllocator protectedMemoryAllocator;
 
         public ProtectedMemoryAllocatorTest()
         {

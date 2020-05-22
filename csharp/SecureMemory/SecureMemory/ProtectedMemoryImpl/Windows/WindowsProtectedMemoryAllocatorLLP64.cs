@@ -9,6 +9,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator, IDisposable
     {
+        private const int PageSize = 4096;
         private IntPtr heap;
         private IntPtr process;
         private bool disposedValue;
@@ -26,7 +27,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public IntPtr Alloc(ulong length)
         {
-            var result = WindowsInterop.HeapAlloc(heap, 0, (UIntPtr)length);
+            var result = WindowsInterop.HeapAlloc(heap, 0, (UIntPtr)Math.Min(length, PageSize));
             if (result == IntPtr.Zero)
             {
                 var errno = Marshal.GetLastWin32Error();

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Moq;
 using Xunit;
 
@@ -28,6 +29,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 protectedMemoryAllocatorController = new LinuxProtectedMemoryAllocatorLP64();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                protectedMemoryAllocatorController = new WindowsProtectedMemoryAllocatorLLP64();
             }
         }
 
