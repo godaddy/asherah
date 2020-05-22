@@ -100,53 +100,50 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - server-java
+      - java-secure-memory
+      - java-app-encryption:
+          requires:
+            - java-secure-memory
+      - samples-java-reference-app:
+          requires:
+            - java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - java-app-encryption
+      - csharp-logging
+      - csharp-secure-memory:
+          requires:
+            - csharp-logging
+      - csharp-app-encryption:
+          requires:
+            - csharp-secure-memory
+      - samples-csharp-reference-app:
+          requires:
+            - csharp-app-encryption
+      - go-securememory
+      - go-appencryption:
+          requires:
+            - go-securememory
+      - samples-go-reference-app:
+          requires:
+            - go-appencryption
+      - server-go:
+          requires:
+            - go-appencryption
+      - server-java:
+          requires:
+            - java-app-encryption
+      - server-samples:
+          requires:
+            - server-go
+            - server-java
       - tests-cross-language:
           requires:
-#      - java-secure-memory
-#      - java-app-encryption:
-#          requires:
-#            - java-secure-memory
-#      - samples-java-reference-app:
-#          requires:
-#            - java-app-encryption
-#      - tests-java-test-app:
-#          requires:
-#            - java-app-encryption
-#      - csharp-logging
-#      - csharp-secure-memory:
-#          requires:
-#            - csharp-logging
-#      - csharp-app-encryption:
-#          requires:
-#            - csharp-secure-memory
-#      - samples-csharp-reference-app:
-#          requires:
-#            - csharp-app-encryption
-#      - go-securememory
-#      - go-appencryption:
-#          requires:
-#            - go-securememory
-#      - samples-go-reference-app:
-#          requires:
-#            - go-appencryption
-#      - server-go:
-#          requires:
-#            - go-appencryption
-#      - server-java:
-#          requires:
-#            - java-app-encryption
-#      - server-samples:
-#          requires:
-#            - server-go
-#            - server-java
-#      - tests-cross-language:
-#          requires:
-#            - csharp-app-encryption
-#            - go-appencryption
-#            - java-app-encryption
-#            - server-go
-#            - server-java
+            - csharp-app-encryption
+            - go-appencryption
+            - java-app-encryption
+            - server-go
+            - server-java
 
 jobs:
   java-secure-memory:
@@ -653,7 +650,7 @@ jobs:
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -rf /home/circleci/.m2/* /root/.m2/
-            ls -ltr /root/.m2/repository/com/godaddy/asherah/grpc-server
+            ls -ltr /root/.m2/repository/com/godaddy/asherah/grpc-server/1.0.0-SNAPSHOT
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
