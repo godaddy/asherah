@@ -650,7 +650,6 @@ jobs:
           command: |
             # Need to copy the java cache from circleci user to root user
             cp -rf /home/circleci/.m2/* /root/.m2/
-            ls -ltr /root/.m2/repository/com/godaddy/asherah/grpc-server/1.0.0-SNAPSHOT
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
       - run:
