@@ -17,7 +17,7 @@ const (
 	product          = "enclibrary"
 	service          = "asherah"
 	partitionID      = "123456"
-	staticKey        = "mysupersecretstaticmasterkey!!!!"
+	staticKey        = "thisIsAStaticMasterKeyForTesting"
 	payloadSizeBytes = 100
 )
 

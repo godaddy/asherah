@@ -1,7 +1,7 @@
 package cltf
 
 const (
-	keyManagementStaticMasterKey = "mysupersecretstaticmasterkey!!!!"
+	keyManagementStaticMasterKey = "thisIsAStaticMasterKeyForTesting"
 
 	defaultServiceID   = "service"
 	defaultProductID   = "product"
