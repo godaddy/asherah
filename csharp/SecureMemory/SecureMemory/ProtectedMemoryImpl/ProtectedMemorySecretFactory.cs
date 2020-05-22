@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
+using GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
@@ -112,7 +113,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                throw new PlatformNotSupportedException("Windows is currently unsupported");
+                return new WindowsProtectedMemoryAllocatorLLP64();
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried
