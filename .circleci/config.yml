@@ -229,7 +229,7 @@ jobs:
       - save-java-cache
   csharp-logging:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -269,7 +269,7 @@ jobs:
       - save-csharp-cache
   csharp-secure-memory:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -309,7 +309,7 @@ jobs:
       - save-csharp-cache
   csharp-app-encryption:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
@@ -360,7 +360,7 @@ jobs:
       - save-csharp-cache
   samples-csharp-reference-app:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
