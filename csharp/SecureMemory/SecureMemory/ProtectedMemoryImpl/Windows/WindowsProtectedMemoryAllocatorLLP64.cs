@@ -48,29 +48,35 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
+            /*
             if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_NOACCESS, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
             }
+            */
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
+            /*
             if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READONLY, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
             }
+            */
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
+            /*
             if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READWRITE, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
             }
+            */
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)
