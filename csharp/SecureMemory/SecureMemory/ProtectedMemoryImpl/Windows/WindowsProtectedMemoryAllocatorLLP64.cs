@@ -5,7 +5,7 @@ using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
+namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator, IDisposable
     {

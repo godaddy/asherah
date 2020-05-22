@@ -37,35 +37,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
         [Fact]
-        private void TestSetNoAccess()
-        {
-        }
-
-        [Fact]
-        private void TestSetReadAccess()
-        {
-        }
-
-        [Fact]
-        private void TestSetReadWriteAccess()
-        {
-            IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
-
-            try
-            {
-                libcProtectedMemoryAllocator.SetReadWriteAccess(pointer, 1);
-
-                // Verifies we can write and read back
-                Marshal.WriteByte(pointer, 0, 42);
-                Assert.Equal(42, Marshal.ReadByte(pointer, 0));
-            }
-            finally
-            {
-                libcProtectedMemoryAllocator.Free(pointer, 1);
-            }
-        }
-
-        [Fact]
         private void TestDisableCoreDumpGlobally()
         {
             // Mac allocator has global core dumps disabled on init
@@ -87,21 +58,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
         }
 
-        [Fact]
-        private void TestAllocSuccess()
-        {
-            IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
-            try
-            {
-                // just do some sanity checks
-                Marshal.WriteByte(pointer, 0, 1);
-                Assert.Equal(1, Marshal.ReadByte(pointer, 0));
-            }
-            finally
-            {
-                libcProtectedMemoryAllocator.Free(pointer, 1);
-            }
-        }
 
         [Fact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
@@ -147,11 +103,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                     linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
                 });
             }
-        }
-
-        [Fact]
-        private void TestFree()
-        {
         }
 
         [Fact]
