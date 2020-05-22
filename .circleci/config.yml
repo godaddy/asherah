@@ -51,9 +51,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v3-maven-{{ .Branch }}-
-            - v3-maven-
+            - v5-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v5-maven-{{ .Branch }}-
+            - v5-maven-
   restore-csharp-cache:
     steps:
       - restore_cache:
@@ -61,9 +61,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v3-nuget-{{ .Branch }}-
-            - v3-nuget-
+            - v5-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v5-nuget-{{ .Branch }}-
+            - v5-nuget-
   restore-go-cache:
     steps:
       - restore_cache:
@@ -71,30 +71,30 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v3-go-mod-{{ .Branch }}-
-            - v3-go-mod-
+            - v5-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v5-go-mod-{{ .Branch }}-
+            - v5-go-mod-
   save-java-cache:
     steps:
       - save_cache:
           name: Save JAVA packages to cache
           paths:
             - ~/.m2
-          key: v3-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v5-maven-{{ .Branch }}-{{ .BuildNum }}
   save-csharp-cache:
     steps:
       - save_cache:
           name: Save NuGet packages to cache
           paths:
             - ~/.nuget
-          key: v3-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v5-nuget-{{ .Branch }}-{{ .BuildNum }}
   save-go-cache:
     steps:
       - save_cache:
           name: Save Go packages to cache
           paths:
             - /go/pkg/mod
-          key: v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
+          key: v5-go-mod-{{ .Branch }}-{{ .BuildNum }}
 
 workflows:
   version: 2
@@ -606,7 +606,7 @@ jobs:
             - ~/.cache
             - ~/.m2
             - /go/pkg/mod
-          key: v3-clients-{{ .Branch }}-{{ .BuildNum }}
+          key: v5-clients-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
@@ -639,9 +639,9 @@ jobs:
       - restore_cache:
           name: Restore CLTF packages
           keys:
-            - v3-cltf-{{ .Branch }}-{{ .BuildNum }}
-            - v3-cltf-{{ .Branch }}-
-            - v3-cltf-
+            - v5-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v5-cltf-{{ .Branch }}-
+            - v5-cltf-
       - restore-java-cache
       - restore-csharp-cache
       - restore-go-cache
@@ -714,4 +714,4 @@ jobs:
             - ~/.m2
             - ~/.nuget
             - /go/pkg/mod
-          key: v3-cltf-{{ .Branch }}-{{ .BuildNum }}
+          key: v5-cltf-{{ .Branch }}-{{ .BuildNum }}
