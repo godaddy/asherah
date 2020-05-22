@@ -10,10 +10,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
     internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator, IDisposable
     {
         private IntPtr heap;
+        private IntPtr process;
         private bool disposedValue;
 
         public WindowsProtectedMemoryAllocatorLLP64()
         {
+            process = WindowsInterop.GetCurrentProcess();
             heap = WindowsInterop.HeapCreate(0, (UIntPtr)0, (UIntPtr)0);
         }
 
@@ -45,7 +47,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(IntPtr.Zero, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_NOACCESS, out var _))
+            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_NOACCESS, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
@@ -54,7 +56,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(IntPtr.Zero, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READONLY, out var _))
+            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READONLY, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
@@ -63,7 +65,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(IntPtr.Zero, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READWRITE, out var _))
+            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)AllocationProtect.PAGE_READWRITE, out var _))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);

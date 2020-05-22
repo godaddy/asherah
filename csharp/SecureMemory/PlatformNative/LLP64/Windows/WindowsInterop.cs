@@ -11,16 +11,19 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         [DllImport("kernel32.dll", SetLastError=true)]
         public static extern bool HeapDestroy(IntPtr hHeap);
 
-        [DllImport("kernel32.dll", SetLastError=false)]
+        [DllImport("kernel32.dll", SetLastError=true)]
         public static extern IntPtr HeapAlloc(IntPtr hHeap, uint dwFlags, UIntPtr dwBytes);
 
         [DllImport("kernel32.dll", SetLastError=true)]
         public static extern bool HeapFree(IntPtr hHeap, uint dwFlags, IntPtr lpMem);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError=true)]
         public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
 
-        [DllImport("Kernel32.dll", EntryPoint="RtlZeroMemory", SetLastError=false)]
+        [DllImport("Kernel32.dll", EntryPoint="RtlZeroMemory", SetLastError=true)]
         public static extern void ZeroMemory(IntPtr dest, IntPtr size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetCurrentProcess();
     }
 }
