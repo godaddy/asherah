@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
