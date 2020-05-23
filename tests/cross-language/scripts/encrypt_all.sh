@@ -7,7 +7,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 # Run encrypt tests for all languages
 cd java
 echo "----------------------Encrypting payload using Java---------------------"
-mvn -Dtest=RunEncryptTest test
+mvn -Drevision=${JAVA_AE_VERSION} -Dtest=RunEncryptTest test
 cd ..
 
 cd csharp

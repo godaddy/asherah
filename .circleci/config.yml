@@ -51,9 +51,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v2-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v2-maven-{{ .Branch }}-
-            - v2-maven-
+            - v3-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v3-maven-{{ .Branch }}-
+            - v3-maven-
   restore-csharp-cache:
     steps:
       - restore_cache:
@@ -61,9 +61,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v2-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v2-nuget-{{ .Branch }}-
-            - v2-nuget-
+            - v3-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v3-nuget-{{ .Branch }}-
+            - v3-nuget-
   restore-go-cache:
     steps:
       - restore_cache:
@@ -71,30 +71,30 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v2-go-mod-{{ .Branch }}-
-            - v2-go-mod-
+            - v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v3-go-mod-{{ .Branch }}-
+            - v3-go-mod-
   save-java-cache:
     steps:
       - save_cache:
           name: Save JAVA packages to cache
           paths:
             - ~/.m2
-          key: v2-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-maven-{{ .Branch }}-{{ .BuildNum }}
   save-csharp-cache:
     steps:
       - save_cache:
           name: Save NuGet packages to cache
           paths:
             - ~/.nuget
-          key: v2-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-nuget-{{ .Branch }}-{{ .BuildNum }}
   save-go-cache:
     steps:
       - save_cache:
           name: Save Go packages to cache
           paths:
             - /go/pkg/mod
-          key: v2-go-mod-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
 
 workflows:
   version: 2
@@ -169,11 +169,6 @@ jobs:
           file: java/secure-memory/target/site/jacoco/jacoco.xml
           flags: java_secure_memory
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd java/secure-memory
-            ./scripts/install_local.sh
       - maybe-deploy:
           project: java/secure-memory
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
@@ -202,11 +197,6 @@ jobs:
           file: java/app-encryption/target/site/jacoco/jacoco.xml
           flags: java_app_encryption
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd java/app-encryption
-            ./scripts/install_local.sh
       - maybe-deploy:
           project: java/app-encryption
           version: mvn -q -DforceStdout help:evaluate -Dexpression=project.version
@@ -239,7 +229,7 @@ jobs:
       - save-java-cache
   csharp-logging:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -273,18 +263,13 @@ jobs:
           file: csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: csharp_Logging
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd csharp/Logging
-            ./scripts/install_local.sh
       - maybe-deploy:
           project: csharp/Logging
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save-csharp-cache
   csharp-secure-memory:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -318,18 +303,13 @@ jobs:
           file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: csharp_SecureMemory
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd csharp/SecureMemory
-            ./scripts/install_local.sh
       - maybe-deploy:
           project: csharp/SecureMemory
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save-csharp-cache
   csharp-app-encryption:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
@@ -374,18 +354,13 @@ jobs:
           command: |
             cd csharp/AppEncryption
             ./scripts/integration_test.sh
-      - run:
-          name: Install locally
-          command: |
-            cd csharp/AppEncryption
-            ./scripts/install_local.sh
       - maybe-deploy:
           project: csharp/AppEncryption
           version: xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props
       - save-csharp-cache
   samples-csharp-reference-app:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -599,9 +574,9 @@ jobs:
       - restore_cache:
           name: Restore clients packages
           keys:
-            - v2-clients-{{ .Branch }}-{{ .BuildNum }}
-            - v2-clients-{{ .Branch }}-
-            - v2-clients-
+            - v3-clients-{{ .Branch }}-{{ .BuildNum }}
+            - v3-clients-{{ .Branch }}-
+            - v3-clients-
       - restore-java-cache
       - restore-go-cache
       - run:
@@ -619,10 +594,9 @@ jobs:
       - run:
           name: Setup python environment
           command: |
-            apt-get -y install software-properties-common
-            add-apt-repository -y ppa:deadsnakes/ppa
-            apt-get -y install python3.7 python3-pip
-            python3.7 -m pip install --upgrade pip
+            apt-get -y install python3.7 python3-distutils
+            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+            python3.7 get-pip.py
       - run:
           name: Setup node environment
           command: |
@@ -638,7 +612,7 @@ jobs:
             - ~/.cache
             - ~/.m2
             - /go/pkg/mod
-          key: v2-clients-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-clients-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
@@ -671,9 +645,9 @@ jobs:
       - restore_cache:
           name: Restore CLTF packages
           keys:
-            - v2-cltf-{{ .Branch }}-{{ .BuildNum }}
-            - v2-cltf-{{ .Branch }}-
-            - v2-cltf-
+            - v3-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v3-cltf-{{ .Branch }}-
+            - v3-cltf-
       - restore-java-cache
       - restore-csharp-cache
       - restore-go-cache
@@ -706,10 +680,9 @@ jobs:
       - run:
           name: Setup python environment
           command: |
-            apt-get -y install software-properties-common
-            add-apt-repository -y ppa:deadsnakes/ppa
-            apt-get -y install python3.7 python3-pip
-            python3.7 -m pip install --upgrade pip
+            apt-get install -y python3.7 python3-distutils
+            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+            python3.7 get-pip.py
       - run:
           name: Build
           command: |
@@ -737,6 +710,7 @@ jobs:
             export ASHERAH_SERVICE_NAME=service
             export ASHERAH_PRODUCT_NAME=product
             export ASHERAH_KMS_MODE=static
+            export JAVA_AE_VERSION=$(mvn -f java/app-encryption/pom.xml -q -DforceStdout help:evaluate -Dexpression=project.version)
             cd tests/cross-language/
             ./scripts/encrypt_all.sh
             ./scripts/decrypt_all.sh
@@ -746,4 +720,4 @@ jobs:
             - ~/.m2
             - ~/.nuget
             - /go/pkg/mod
-          key: v2-cltf-{{ .Branch }}-{{ .BuildNum }}
+          key: v3-cltf-{{ .Branch }}-{{ .BuildNum }}
