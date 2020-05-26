@@ -550,11 +550,6 @@ jobs:
           file: server/java/target/site/jacoco/jacoco.xml
           flags: server_java
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd server/java
-            ./scripts/install_local.sh
       - save-java-cache
   server-samples:
     docker:
@@ -684,6 +679,8 @@ jobs:
       - run:
           name: Build
           command: |
+            # Create Java server jar
+            mvn -f server/java/pom.xml compile assembly:single
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
