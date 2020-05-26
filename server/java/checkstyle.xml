@@ -70,7 +70,9 @@
         <property name="message" value="Line has trailing spaces."/>
     </module>
 
-    <module name="SuppressionFilter"/>
+    <module name="SuppressionFilter">
+        <property name="file" value="suppressions.xml"/>
+    </module>
 
     <!-- Use annotations to suppress audit events. -->
     <!-- See http://checkstyle.sourceforge.net/config_filters.html#SuppressWarningsFilter -->

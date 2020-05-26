@@ -43,7 +43,7 @@ export ASHERAH_EXPIRE_AFTER=90
 export ASHERAH_CHECK_INTERVAL=10
 export ASHERAH_METASTORE_MODE=jdbc
 export ASHERAH_CONNECTION_STRING='jdbc:mysql://127.0.0.1:3306/testdb?user=root&password=Password123'
-find . -name "*grpc-server*dependencies.jar" | xargs  java -jar &
+java -jar /home/circleci/.m2/repository/com/godaddy/asherah/grpc-server/1.0.0-SNAPSHOT/*dependencies.jar &
 ASHERAH_JAVA_SIDECAR_PID=$!
 sleep 10
 behave features/decrypt.feature

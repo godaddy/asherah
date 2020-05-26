@@ -25,7 +25,6 @@
     <slf4j.version>1.7.25</slf4j.version>
     <jacoco.version>0.8.2</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
-    <suppressions.config>${project.basedir}/suppressions.xml</suppressions.config>
   </properties>
 
   <dependencies>
@@ -164,7 +163,6 @@
               <encoding>UTF-8</encoding>
               <consoleOutput>true</consoleOutput>
               <configLocation>${checkstyle.config}</configLocation>
-              <suppressionsLocation>${suppressions.config}</suppressionsLocation>
               <includeResources>false</includeResources>
               <failOnViolation>true</failOnViolation>
             </configuration>
