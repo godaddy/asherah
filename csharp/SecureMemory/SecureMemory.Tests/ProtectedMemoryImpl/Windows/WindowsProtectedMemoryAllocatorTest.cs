@@ -22,6 +22,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
         [Fact]
         private void TestAllocSuccess()
         {
+            if (windowsProtectedMemoryAllocator == null)
+            {
+                return;
+            }
+
             IntPtr pointer = windowsProtectedMemoryAllocator.Alloc(1);
             try
             {
