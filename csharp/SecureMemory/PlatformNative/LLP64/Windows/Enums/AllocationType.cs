@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InconsistentNaming
+namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums
 {
     [Flags]
     public enum AllocationType : uint

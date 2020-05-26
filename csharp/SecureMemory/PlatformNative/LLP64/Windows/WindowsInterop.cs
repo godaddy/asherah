@@ -6,24 +6,6 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     public class WindowsInterop
     {
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern IntPtr HeapCreate(uint flOptions, UIntPtr dwInitialSize, UIntPtr dwMaximumSize);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern bool HeapDestroy(IntPtr hHeap);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern IntPtr GlobalFree(IntPtr hMem);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern IntPtr HeapAlloc(IntPtr hHeap, uint dwFlags, UIntPtr dwBytes);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern bool HeapFree(IntPtr hHeap, uint dwFlags, IntPtr lpMem);
-
         [DllImport("Kernel32.dll", EntryPoint="RtlZeroMemory", SetLastError=true, ExactSpelling=true)]
         public static extern void ZeroMemory(IntPtr dest, UIntPtr size);
 
