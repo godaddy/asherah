@@ -219,6 +219,7 @@ public class SessionFactory implements SafeAutoCloseable {
 
   Partition getPartition(final String partitionId) {
     String regionSuffix = metastore.getRegionSuffix();
+
     if (regionSuffix.isEmpty()) {
       return new DefaultPartition(partitionId, serviceId, productId);
     }

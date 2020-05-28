@@ -45,13 +45,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private final Table table;
   private final String regionSuffix;
 
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
   public DynamoDbMetastoreImpl(final DynamoDB client, final String regionSuffix) {
     this.table = client.getTable(TABLE_NAME);
     this.regionSuffix = regionSuffix;
-  }
-
-  public static Builder newBuilder() {
-    return new Builder();
   }
 
   @Override
