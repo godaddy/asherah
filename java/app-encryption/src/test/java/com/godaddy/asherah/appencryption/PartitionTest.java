@@ -15,7 +15,7 @@ class PartitionTest {
 
     @BeforeEach
     void setUp() {
-        partition = new Partition(testPartitionId, testServiceId, testProductId);
+        partition = new DefaultPartition(testPartitionId, testServiceId, testProductId);
     }
 
     @Test
@@ -31,24 +31,5 @@ class PartitionTest {
     @Test
     void testGetProductId() {
         assertEquals(testProductId, partition.getProductId());
-    }
-
-    @Test
-    void testGetSystemKeyId() {
-        String systemKeyIdString = "_SK_" + testServiceId + "_" + testProductId;
-        assertEquals(systemKeyIdString, partition.getSystemKeyId());
-    }
-
-    @Test
-    void testGetIntermediateKeyId() {
-        String intermediateKeyIdString = "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId;
-        assertEquals(intermediateKeyIdString, partition.getIntermediateKeyId());
-    }
-
-    @Test
-    void testToString() {
-        String toStringString = partition.getClass().getSimpleName() + "[partitionId=" + testPartitionId +
-                ", serviceId=" + testServiceId + ", productId=" + testProductId + "]";
-        assertEquals(toStringString, partition.toString());
     }
 }

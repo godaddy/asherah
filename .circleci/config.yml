@@ -646,7 +646,6 @@ jobs:
             - v3-cltf-{{ .Branch }}-{{ .BuildNum }}
             - v3-cltf-{{ .Branch }}-
             - v3-cltf-
-      - restore-java-cache
       - restore-csharp-cache
       - restore-go-cache
       - run:
@@ -682,6 +681,7 @@ jobs:
       - run:
           name: Build
           command: |
+            mvn clean install -f java/app-encryption/pom.xml -DskipTests
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
