@@ -3,10 +3,7 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Crypto.Exceptions;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -29,11 +26,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private const string LoadLatestQuery =
             @"SELECT key_record from encryption_key where id = @id order by created DESC limit 1";
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<AdoMetastoreImpl>();
+        private static readonly TimerOptions LoadTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.load" };
 
-        private static readonly TimerOptions LoadTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.load" };
-        private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.loadlatest" };
-        private static readonly TimerOptions StoreTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.store" };
+        private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.loadlatest" };
+
+        private static readonly TimerOptions StoreTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.store" };
 
         private readonly string connectionString;
         private readonly DbProviderFactory dbProviderFactory;
@@ -52,85 +52,46 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         public virtual Option<JObject> Load(string keyId, DateTimeOffset created)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadTimerOptions))
+            using (DbConnection connection = GetConnection())
+            using (DbCommand command = CreateCommand(connection))
             {
-                try
-                {
-                    using (DbConnection connection = GetConnection())
-                    {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = LoadQuery;
-                            AddParameter(command, Id, keyId);
-                            AddParameter(command, Created, created.UtcDateTime);
+                command.CommandText = LoadQuery;
+                AddParameter(command, Id, keyId);
+                AddParameter(command, Created, created.UtcDateTime);
 
-                            return ExecuteQueryAndLoadJsonObjectFromKey(command);
-                        }
-                    }
-                }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error");
-                }
-
-                return Option<JObject>.None;
+                return ExecuteQueryAndLoadJsonObjectFromKey(command);
             }
         }
 
         public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
+            using (DbConnection connection = GetConnection())
             {
-                try
+                using (DbCommand command = CreateCommand(connection))
                 {
-                    using (DbConnection connection = GetConnection())
-                    {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = LoadLatestQuery;
-                            AddParameter(command, Id, keyId);
+                    command.CommandText = LoadLatestQuery;
+                    AddParameter(command, Id, keyId);
 
-                            return ExecuteQueryAndLoadJsonObjectFromKey(command);
-                        }
-                    }
+                    return ExecuteQueryAndLoadJsonObjectFromKey(command);
                 }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error");
-                }
-
-                return Option<JObject>.None;
             }
         }
 
         public bool Store(string keyId, DateTimeOffset created, JObject value)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(StoreTimerOptions))
+            using (DbConnection connection = GetConnection())
+            using (DbCommand command = CreateCommand(connection))
             {
-                try
-                {
-                    using (DbConnection connection = GetConnection())
-                    {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = StoreQuery;
-                            AddParameter(command, Id, keyId);
-                            AddParameter(command, Created, created.UtcDateTime);
-                            AddParameter(command, KeyRecord, value.ToString(Formatting.None));
+                command.CommandText = StoreQuery;
+                AddParameter(command, Id, keyId);
+                AddParameter(command, Created, created.UtcDateTime);
+                AddParameter(command, KeyRecord, value.ToString(Formatting.None));
 
-                            int result = command.ExecuteNonQuery();
+                int result = command.ExecuteNonQuery();
 
-                            return result == 1;
-                        }
-                    }
-                }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error during store");
-
-                    // ADO based persistence does not provide any kind of specific integrity violation error
-                    // code/exception. Hence we always return false even for systemic issues to keep things simple.
-                    return false;
-                }
+                return result == 1;
             }
         }
 
@@ -149,15 +110,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 if (reader.Read())
                 {
                     string keyString = reader.GetString(reader.GetOrdinal(KeyRecord));
-
-                    try
-                    {
-                        return Option<JObject>.Some(JObject.Parse(keyString));
-                    }
-                    catch (JsonException e)
-                    {
-                        Logger.LogError(e, "Failed to create JSON from key");
-                    }
+                    return JObject.Parse(keyString);
                 }
             }
 

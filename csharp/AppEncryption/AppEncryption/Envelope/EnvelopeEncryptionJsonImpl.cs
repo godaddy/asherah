@@ -23,12 +23,18 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionJsonImpl>();
 
-        private static readonly TimerOptions EncryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
-        private static readonly TimerOptions DecryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
+        private static readonly TimerOptions EncryptTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
+
+        private static readonly TimerOptions DecryptTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
 
         private readonly Partition partition;
         private readonly IMetastore<JObject> metastore;
-        private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache; // assuming limited to 1 product/service id pair
+
+        private readonly SecureCryptoKeyDictionary<DateTimeOffset>
+            systemKeyCache; // assuming limited to 1 product/service id pair
+
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache;
         private readonly AeadEnvelopeCrypto crypto;
         private readonly CryptoPolicy cryptoPolicy;
@@ -70,10 +76,13 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
                 byte[] decryptedPayload = WithIntermediateKeyForRead(
                     dataRowKeyRecord.ParentKeyMeta.IfNone(() =>
-                        throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey")),
-                    intermediateCryptoKey =>
-                        crypto.EnvelopeDecrypt(
-                            payloadEncrypted, dataRowKeyRecord.EncryptedKey, dataRowKeyRecord.Created, intermediateCryptoKey));
+                        throw new MetadataMissingException(
+                            "Could not find parentKeyMeta {IK} for dataRowKey")),
+                    intermediateCryptoKey => crypto.EnvelopeDecrypt(
+                        payloadEncrypted,
+                        dataRowKeyRecord.EncryptedKey,
+                        dataRowKeyRecord.Created,
+                        intermediateCryptoKey));
 
                 return decryptedPayload;
             }
@@ -83,7 +92,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
             {
-                EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
+                EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey =>
+                    crypto.EnvelopeEncrypt(
                         payload,
                         intermediateCryptoKey,
                         new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
@@ -144,7 +154,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                             "Attempting to update cache for IK {keyId} with created {created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
-                        intermediateKey = intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
+                        intermediateKey =
+                            intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
                     }
                     catch (Exception e)
                     {
@@ -181,7 +192,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                             "Attempting to update cache for IK {keyId} with created {created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
-                        intermediateKey = intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
+                        intermediateKey =
+                            intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
                     }
                     catch (Exception e)
                     {
@@ -338,7 +350,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 // Fall through as if we didn't have the key
             }
 
-            DateTimeOffset intermediateKeyCreated = cryptoPolicy.TruncateToIntermediateKeyPrecision(DateTimeOffset.UtcNow);
+            DateTimeOffset intermediateKeyCreated =
+                cryptoPolicy.TruncateToIntermediateKeyPrecision(DateTimeOffset.UtcNow);
             CryptoKey intermediateKey = crypto.GenerateKey(intermediateKeyCreated);
             try
             {
@@ -379,7 +392,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             // in the metastore, so let's grab it and return it.
 
             // Using a new variable instead of the one above because the WithSystemKeyForWrite use above wants finality
-            Option<EnvelopeKeyRecord> actualLatestIntermediateKeyRecord = LoadLatestKeyRecord(partition.IntermediateKeyId);
+            Option<EnvelopeKeyRecord> actualLatestIntermediateKeyRecord =
+                LoadLatestKeyRecord(partition.IntermediateKeyId);
 
             if (actualLatestIntermediateKeyRecord.IsSome)
             {
@@ -388,7 +402,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 // NOTE: Not wrapping this in try/catch to allow errors to bubble up. If we're missing meta in this flow, something's wrong.
                 return WithExistingSystemKey(
                     keyRecord.ParentKeyMeta.IfNone(() =>
-                        throw new MetadataMissingException("Could not find parentKeyMeta (SK) for intermediateKey")),
+                        throw new MetadataMissingException(
+                            "Could not find parentKeyMeta (SK) for intermediateKey")),
                     true,
                     key => DecryptKey(keyRecord, key));
             }
@@ -484,11 +499,13 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <exception cref="MetadataMissingException">if the intermediate key is not found, or it has missing system key info</exception>
         internal virtual CryptoKey GetIntermediateKey(DateTimeOffset intermediateKeyCreated)
         {
-            EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(partition.IntermediateKeyId, intermediateKeyCreated);
+            EnvelopeKeyRecord intermediateKeyRecord =
+                LoadKeyRecord(partition.IntermediateKeyId, intermediateKeyCreated);
 
             return WithExistingSystemKey(
                 intermediateKeyRecord.ParentKeyMeta.IfNone(() =>
-                    throw new MetadataMissingException("Could not find parentKeyMeta (SK) for intermediateKey")),
+                    throw new MetadataMissingException(
+                        "Could not find parentKeyMeta (SK) for intermediateKey")),
                 false,
                 key => DecryptKey(intermediateKeyRecord, key));
         }
@@ -535,11 +552,22 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         internal virtual EnvelopeKeyRecord LoadKeyRecord(string keyId, DateTimeOffset created)
         {
             Logger.LogDebug("Attempting to load key with KeyID {keyId} created {created}", keyId, created);
-            return metastore.Load(keyId, created)
-                .Map(jsonObject => new Json(jsonObject))
-                .Map(sourceJson => new EnvelopeKeyRecord(sourceJson))
-                .IfNone(() => throw new MetadataMissingException(
-                    $"Could not find EnvelopeKeyRecord with keyId = {keyId}, created = {created}"));
+
+            Option<JObject> metastoreRecord;
+            try
+            {
+                metastoreRecord = metastore.Load(keyId, created);
+            }
+            catch (Exception e)
+            {
+                throw new AppEncryptionException("Encountered an error while loading key from metastore.", e);
+            }
+
+            return metastoreRecord
+                   .Map(jsonObject => new Json(jsonObject))
+                   .Map(sourceJson => new EnvelopeKeyRecord(sourceJson))
+                   .IfNone(() => throw new MetadataMissingException(
+                       $"Could not find EnvelopeKeyRecord with keyId = {keyId}, created = {created}"));
         }
 
         /// <summary>
@@ -553,8 +581,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             Logger.LogDebug("Attempting to load latest key with keyId {keyId}", keyId);
             return metastore.LoadLatest(keyId)
-                .Map(jsonObject => new Json(jsonObject))
-                .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));
+                            .Map(jsonObject => new Json(jsonObject))
+                            .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));
         }
 
         internal virtual bool IsKeyExpiredOrRevoked(EnvelopeKeyRecord envelopeKeyRecord)

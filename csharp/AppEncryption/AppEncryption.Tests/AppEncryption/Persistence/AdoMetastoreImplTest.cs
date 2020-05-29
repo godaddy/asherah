@@ -2,7 +2,6 @@ using System;
 using System.Data;
 using System.Data.Common;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
 using Moq;
 using MySql.Data.MySqlClient;
@@ -103,27 +102,28 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 string insertDataQuery =
                     @"INSERT INTO testdb.encryption_key (id, created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery;
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithParentKeyMetaValue);
+                var mockMetastore = adoMetastoreImplSpy.Object;
+                mockMetastore.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
+                mockMetastore.AddParameter(dbCommand, Created, created.UtcDateTime);
+                mockMetastore.AddParameter(dbCommand, KeyRecord, KeyStringWithParentKeyMetaValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
                 string insertDataQuery1 =
                     @"INSERT INTO testdb.encryption_key (id ,created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery1;
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithNoParentKeyMetaKey);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringWithNoParentKeyMetaValue);
+                mockMetastore.AddParameter(dbCommand, Id, KeyStringWithNoParentKeyMetaKey);
+                mockMetastore.AddParameter(dbCommand, Created, created.UtcDateTime);
+                mockMetastore.AddParameter(dbCommand, KeyRecord, KeyStringWithNoParentKeyMetaValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
                 string insertDataQuery2 =
                     @"INSERT INTO testdb.encryption_key (id ,created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery2;
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, MalformedKeyStringKey);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.UtcDateTime);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, MalformedKeyStringValue);
+                mockMetastore.AddParameter(dbCommand, Id, MalformedKeyStringKey);
+                mockMetastore.AddParameter(dbCommand, Created, created.UtcDateTime);
+                mockMetastore.AddParameter(dbCommand, KeyRecord, MalformedKeyStringValue);
                 dbCommand.ExecuteNonQuery();
                 dbCommand.Parameters.Clear();
 
@@ -131,9 +131,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     @"INSERT INTO testdb.encryption_key (id, created, key_record) VALUES(@id, @created, @key_record);";
                 dbCommand.CommandText = insertDataQuery4;
 
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, Created, created.AddHours(1).UtcDateTime);
-                adoMetastoreImplSpy.Object.AddParameter(dbCommand, KeyRecord, KeyStringLatestValue);
+                mockMetastore.AddParameter(dbCommand, Id, KeyStringWithParentKeyMetaKey);
+                mockMetastore.AddParameter(dbCommand, Created, created.AddHours(1).UtcDateTime);
+                mockMetastore.AddParameter(dbCommand, KeyRecord, KeyStringLatestValue);
                 dbCommand.ExecuteNonQuery();
                 Console.WriteLine("Starting test");
             }
@@ -177,7 +177,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestExecuteQueryAndLoadJsonObjectFromKeyWithExceptionShouldReturnNone()
+        private void TestExecuteQueryAndLoadJsonObjectFromKeyWithExceptionShouldThrowException()
         {
             using (DbCommand command = dbConnection.CreateCommand())
             {
@@ -187,10 +187,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 adoMetastoreImplSpy.Object.AddParameter(command, Id, MalformedKeyStringKey);
                 adoMetastoreImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
 
-                Option<JObject> actualValue =
-                    adoMetastoreImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command);
-
-                Assert.Equal(Option<JObject>.None, actualValue);
+                Assert.ThrowsAny<Exception>(() =>
+                    adoMetastoreImplSpy.Object.ExecuteQueryAndLoadJsonObjectFromKey(command));
             }
         }
 
@@ -204,14 +202,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadWithSqlException()
+        private void TestLoadWithSqlExceptionThrowsException()
         {
             AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastoreImpl.Load(keyId, created.UtcDateTime);
-            Assert.Equal(Option<JObject>.None, actualJsonObject);
+            Assert.ThrowsAny<Exception>(() => adoMetastoreImpl.Load(keyId, created.UtcDateTime));
         }
 
         [Fact]
@@ -224,14 +221,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithSqlException()
+        private void TestLoadLatestWithSqlExceptionThrowsException()
         {
             AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            Option<JObject> actualJsonObject = adoMetastoreImpl.LoadLatest(keyId);
-            Assert.Equal(Option<JObject>.None, actualJsonObject);
+
+            Assert.ThrowsAny<Exception>(() => adoMetastoreImpl.LoadLatest(keyId));
         }
 
         [Fact]
@@ -252,8 +249,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 dbProviderFactory,
                 fakeDbConnectionStringBuilder.ConnectionString);
             string keyId = KeyStringWithParentKeyMetaKey;
-            bool actualValue = adoMetastoreImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject());
-            Assert.False(actualValue);
+            Assert.ThrowsAny<Exception>(() => adoMetastoreImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject()));
         }
 
         [Fact]

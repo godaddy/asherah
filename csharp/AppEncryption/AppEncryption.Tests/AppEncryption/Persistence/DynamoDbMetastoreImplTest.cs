@@ -106,12 +106,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadWithFailureShouldReturnEmpty()
+        private void TestLoadWithFailureShouldThrowException()
         {
             Dispose();
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
-
-            Assert.False(actualJsonObject.IsSome);
+            Assert.Throws<Exception>(() => dynamoDbMetastoreImpl.Load(TestKey, created));
         }
 
         [Fact]
@@ -191,12 +189,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithFailureShouldReturnEmpty()
+        private void TestLoadLatestWithFailureShouldThrowException()
         {
             Dispose();
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
-
-            Assert.False(actualJsonObject.IsSome);
+            Assert.Throws<Exception>(() => dynamoDbMetastoreImpl.LoadLatest(TestKey));
         }
 
         [Fact]

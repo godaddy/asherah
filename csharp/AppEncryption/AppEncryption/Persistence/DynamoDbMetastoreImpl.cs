@@ -7,7 +7,6 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -25,9 +24,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         internal const string SortKey = "Created";
         internal const string AttributeKeyRecord = "KeyRecord";
 
-        private static readonly TimerOptions LoadTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.load" };
-        private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.loadlatest" };
-        private static readonly TimerOptions StoreTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.store" };
+        private static readonly TimerOptions LoadTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.load" };
+
+        private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.loadlatest" };
+
+        private static readonly TimerOptions StoreTimerOptions = new TimerOptions
+            { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.store" };
 
         private static readonly ILogger Logger = LogManager.CreateLogger<DynamoDbMetastoreImpl>();
 
@@ -49,27 +53,16 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadTimerOptions))
             {
-                try
+                GetItemOperationConfig config = new GetItemOperationConfig
                 {
-                    GetItemOperationConfig config = new GetItemOperationConfig
-                    {
-                        AttributesToGet = new List<string> { AttributeKeyRecord },
-                        ConsistentRead = true, // Always use strong consistency
-                    };
-                    Document result = table.GetItemAsync(keyId, created.ToUnixTimeSeconds(), config).Result;
-                    if (result != null)
-                    {
-                        // TODO Optimize Document to JObject conversion. Helper method could enumerate over Document KeyPairs
-                        // and convert DynamoDBEntry values based on type inspection
-                        return Option<JObject>.Some(JObject.Parse(result[AttributeKeyRecord].AsDocument().ToJson()));
-                    }
-                }
-                catch (AggregateException ae)
-                {
-                    Logger.LogError(ae, "Metastore error");
-                }
+                    AttributesToGet = new List<string> { AttributeKeyRecord },
+                    ConsistentRead = true, // Always use strong consistency
+                };
+                Document result = table.GetItemAsync(keyId, created.ToUnixTimeSeconds(), config).Result;
+                return result == null ? Option<JObject>.None : JObject.Parse(result[AttributeKeyRecord].AsDocument().ToJson());
 
-                return Option<JObject>.None;
+                // TODO Optimize Document to JObject conversion. Helper method could enumerate over Document KeyPairs
+                // and convert DynamoDBEntry values based on type inspection
             }
         }
 
@@ -78,35 +71,30 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
             {
                 // Have to use query api to use limit and reverse sort order
-                try
+                QueryFilter filter = new QueryFilter(PartitionKey, QueryOperator.Equal, keyId);
+                QueryOperationConfig config = new QueryOperationConfig
                 {
-                    QueryFilter filter = new QueryFilter(PartitionKey, QueryOperator.Equal, keyId);
-                    QueryOperationConfig config = new QueryOperationConfig
-                    {
-                        Limit = 1,
-                        ConsistentRead = true, // always use strong consistency
-                        BackwardSearch = true, // sorts descending
-                        Filter = filter,
-                        AttributesToGet = new List<string> { AttributeKeyRecord },
-                        Select = SelectValues.SpecificAttributes,
-                    };
-                    Search search = table.Query(config);
-                    List<Document> result = search.GetNextSetAsync().Result;
-                    if (result.Count > 0)
-                    {
-                        Document keyRecordDocument = result.First();
-
-                        // TODO Optimize Document to JObject conversion. Helper method could enumerate over Document KeyPairs
-                        // and convert DynamoDBEntry values based on type inspection
-                        return Option<JObject>.Some(JObject.Parse(keyRecordDocument[AttributeKeyRecord].AsDocument().ToJson()));
-                    }
-                }
-                catch (AggregateException se)
+                    Limit = 1,
+                    ConsistentRead = true, // always use strong consistency
+                    BackwardSearch = true, // sorts descending
+                    Filter = filter,
+                    AttributesToGet = new List<string> { AttributeKeyRecord },
+                    Select = SelectValues.SpecificAttributes,
+                };
+                Search search = table.Query(config);
+                List<Document> result = search.GetNextSetAsync().Result;
+                if (result.Count < 1)
                 {
-                    Logger.LogError(se, "Metastore error");
+                    return Option<JObject>.None;
                 }
 
-                return Option<JObject>.None;
+                Document keyRecordDocument = result.First();
+
+                // TODO Optimize Document to JObject conversion. Helper method could enumerate over Document KeyPairs
+                // and convert DynamoDBEntry values based on type inspection
+                return JObject.Parse(keyRecordDocument[AttributeKeyRecord]
+                                     .AsDocument()
+                                     .ToJson());
             }
         }
 
@@ -137,7 +125,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     };
 
                     // This a blocking call using Result because we need to wait for the call to complete before proceeding
-                    Document result = table.PutItemAsync(document, config).Result;
+                    table.PutItemAsync(document, config).Wait();
                     return true;
                 }
                 catch (AggregateException ae)
@@ -146,13 +134,11 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     {
                         if (exception is ConditionalCheckFailedException)
                         {
-                            Logger.LogInformation("Attempted to create duplicate key: {keyId} {created}", keyId, created);
                             return false;
                         }
                     }
 
-                    Logger.LogError(ae, "Metastore error during store");
-                    throw new AppEncryptionException("Metastore error:", ae);
+                    throw;
                 }
             }
         }
