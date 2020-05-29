@@ -31,7 +31,6 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
   static final String TABLE_NAME = "EncryptionKey";
-  static final String DEFAULT_REGION = "us-west-2";
   static final String PARTITION_KEY = "Id";
   static final String SORT_KEY = "Created";
   static final String ATTRIBUTE_KEY_RECORD = "KeyRecord";
@@ -147,19 +146,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
     @Override
     public BuildStep withDynamoDbRegionSuffix(final String region) {
-      if (region.isEmpty()) {
-        this.regionSuffix = DEFAULT_REGION;
-      }
-      else {
-        this.regionSuffix = region;
-      }
+      this.regionSuffix = region;
       return this;
     }
 
     @Override
     public DynamoDbMetastoreImpl build() {
       client = AmazonDynamoDBClientBuilder.standard().build();
-
       return new DynamoDbMetastoreImpl(new DynamoDB(client), regionSuffix);
     }
   }
