@@ -12,7 +12,6 @@ class SuffixedPartitionTest {
     private final static String testProductId = "test_product_id";
     private final static String testRegionSuffix = "test_region_suffix";
 
-
     private Partition partition;
 
     @BeforeEach

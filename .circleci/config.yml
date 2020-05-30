@@ -681,7 +681,7 @@ jobs:
       - run:
           name: Build
           command: |
-            # Build Java AppEEncryption locally
+            # Build Java AppEncryption locally
             mvn clean install -f java/app-encryption/pom.xml -DskipTests
             # Build the Java project
             cd tests/cross-language/java
