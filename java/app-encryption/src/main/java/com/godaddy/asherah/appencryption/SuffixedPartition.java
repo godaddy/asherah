@@ -12,12 +12,12 @@ public class SuffixedPartition extends Partition {
 
   @Override
   public String getSystemKeyId() {
-    return "_SK_" + getServiceId() + "_" + getProductId() + "_" + this.regionSuffix;
+    return super.getSystemKeyId() + "_" + this.regionSuffix;
   }
 
   @Override
   public String getIntermediateKeyId() {
-    return "_IK_" + getPartitionId() + "_" + getServiceId() + "_" + getProductId() + "_" + this.regionSuffix;
+    return super.getIntermediateKeyId() + "_" + this.regionSuffix;
   }
 
   @Override

@@ -24,15 +24,17 @@ public abstract class Partition {
     return productId;
   }
 
-  /**
-   * Gets the SystemKey Id associated with the partition
-   * @return The System Key Id
-   */
-  public abstract String getSystemKeyId();
+  public String getSystemKeyId() {
+    return "_SK_" + serviceId + "_" + productId;
+  }
 
-  /**
-   * Gets the Intermediate Key Id associated with the partition
-   * @return The IntermediateKey Id
-   */
-  public abstract String getIntermediateKeyId();
+  public String getIntermediateKeyId() {
+    return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[partitionId=" + partitionId +
+      ", serviceId=" + serviceId + ", productId=" + productId + "]";
+  }
 }

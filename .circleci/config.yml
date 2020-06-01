@@ -584,6 +584,9 @@ jobs:
           command: |
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
+            # Delete Java gRPC server from local maven repo/cache and build from the current branch
+            rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server
+            mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup go environment
           command: |
@@ -653,6 +656,10 @@ jobs:
           command: |
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
+            # Delete Java appencryption & gRPC server from local maven repo/cache and build from the current branch
+            rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+            mvn clean install -f java/app-encryption/pom.xml -DskipTests
+            mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup csharp environment
           command: |
@@ -681,8 +688,6 @@ jobs:
       - run:
           name: Build
           command: |
-            # Build Java AppEncryption locally
-            mvn clean install -f java/app-encryption/pom.xml -DskipTests
             # Build the Java project
             cd tests/cross-language/java
             ./scripts/build.sh
