@@ -100,50 +100,51 @@ workflows:
   version: 2
   build-test-and-maybe-deploy:
     jobs:
-      - java-secure-memory
-      - java-app-encryption:
-          requires:
-            - java-secure-memory
-      - samples-java-reference-app:
-          requires:
-            - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
-      - csharp-logging
-      - csharp-secure-memory:
-          requires:
-            - csharp-logging
-      - csharp-app-encryption:
-          requires:
-            - csharp-secure-memory
-      - samples-csharp-reference-app:
-          requires:
-            - csharp-app-encryption
-      - go-securememory
-      - go-appencryption:
-          requires:
-            - go-securememory
-      - samples-go-reference-app:
-          requires:
-            - go-appencryption
-      - server-go:
-          requires:
-            - go-appencryption
-      - server-java:
-          requires:
-            - java-app-encryption
-      - server-samples:
-          requires:
-            - server-go
-            - server-java
-      - tests-cross-language:
-          requires:
-            - csharp-app-encryption
-            - go-appencryption
-            - java-app-encryption
-            - server-go
-            - server-java
+      - server-samples
+#      - java-secure-memory
+#      - java-app-encryption:
+#          requires:
+#            - java-secure-memory
+#      - samples-java-reference-app:
+#          requires:
+#            - java-app-encryption
+#      - tests-java-test-app:
+#          requires:
+#            - java-app-encryption
+#      - csharp-logging
+#      - csharp-secure-memory:
+#          requires:
+#            - csharp-logging
+#      - csharp-app-encryption:
+#          requires:
+#            - csharp-secure-memory
+#      - samples-csharp-reference-app:
+#          requires:
+#            - csharp-app-encryption
+#      - go-securememory
+#      - go-appencryption:
+#          requires:
+#            - go-securememory
+#      - samples-go-reference-app:
+#          requires:
+#            - go-appencryption
+#      - server-go:
+#          requires:
+#            - go-appencryption
+#      - server-java:
+#          requires:
+#            - java-app-encryption
+#      - server-samples:
+#          requires:
+#            - server-go
+#            - server-java
+#      - tests-cross-language:
+#          requires:
+#            - csharp-app-encryption
+#            - go-appencryption
+#            - java-app-encryption
+#            - server-go
+#            - server-java
 
 jobs:
   java-secure-memory:
