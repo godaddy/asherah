@@ -33,11 +33,29 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         // Note this instance is thread-safe
         private readonly Table table;
+        private readonly string regionSuffix;
 
-        internal DynamoDbMetastoreImpl(IAmazonDynamoDB dbClient)
+        internal DynamoDbMetastoreImpl(IAmazonDynamoDB dbClient, string region)
         {
             // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
             table = Table.LoadTable(dbClient, TableName);
+            regionSuffix = region;
+        }
+
+        public interface IBuildStep
+        {
+            /// <summary>
+            /// Specifies whether region suffix should be enabled for DynamoDB.
+            /// </summary>
+            /// <param name="region">the region to be used as suffix.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithDynamoDbRegionSuffix(string region);
+
+            /// <summary>
+            /// Builds the finalized <code>DynamoDbMetastoreImpl</code> with the parameters specified in the builder.
+            /// </summary>
+            /// <returns>The fully instantiated <code>DynamoDbMetastoreImpl</code>.</returns>
+            DynamoDbMetastoreImpl Build();
         }
 
         public static Builder NewBuilder()
@@ -157,12 +175,26 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public class Builder
+        public string GetRegionSuffix()
         {
+            return regionSuffix;
+        }
+
+        public class Builder : IBuildStep
+        {
+            private string regionSuffix = string.Empty;
+            private IAmazonDynamoDB dbClient;
+
+            public IBuildStep WithDynamoDbRegionSuffix(string region)
+            {
+                regionSuffix = region;
+                return this;
+            }
+
             public DynamoDbMetastoreImpl Build()
             {
-                IAmazonDynamoDB dbClient = new AmazonDynamoDBClient();
-                return new DynamoDbMetastoreImpl(dbClient);
+                dbClient = new AmazonDynamoDBClient();
+                return new DynamoDbMetastoreImpl(dbClient, regionSuffix);
             }
         }
     }

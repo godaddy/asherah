@@ -134,6 +134,11 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
+        public string GetRegionSuffix()
+        {
+            return string.Empty;
+        }
+
         internal virtual void AddParameter(DbCommand command, string name, object value)
         {
             DbParameter parameter = command.CreateParameter();

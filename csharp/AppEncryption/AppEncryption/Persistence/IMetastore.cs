@@ -41,5 +41,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <param name="created">the created time to store</param>
         /// <param name="value">the value to store</param>
         bool Store(string keyId, DateTimeOffset created, T value);
+
+        /// <summary>
+        /// Returns the region suffix or "" if region suffix option is disabled.
+        /// </summary>
+        ///
+        /// <returns>
+        /// The region suffix.
+        /// </returns>
+        string GetRegionSuffix();
     }
 }

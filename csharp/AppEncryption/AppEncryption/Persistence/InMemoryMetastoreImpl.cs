@@ -72,5 +72,10 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 return true;
             }
         }
+
+        public string GetRegionSuffix()
+        {
+            return string.Empty;
+        }
     }
 }

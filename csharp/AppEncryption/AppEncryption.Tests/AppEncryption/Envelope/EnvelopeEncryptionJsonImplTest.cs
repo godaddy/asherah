@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
         private readonly Partition partition =
-            new Partition("shopper_123", "payments", "ecomm");
+            new DefaultPartition("shopper_123", "payments", "ecomm");
 
         // Setup DateTimeOffsets truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple level keys
         private readonly DateTimeOffset drkDateTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromSeconds(1));

@@ -157,7 +157,16 @@ namespace GoDaddy.Asherah.AppEncryption
 
         internal Partition GetPartition(string partitionId)
         {
-            return new Partition(partitionId, serviceId, productId);
+            string regionSuffix = metastore.GetRegionSuffix();
+
+            if (string.IsNullOrEmpty(regionSuffix))
+            {
+                return new DefaultPartition(partitionId, serviceId, productId);
+            }
+            else
+            {
+                return new SuffixedPartition(partitionId, serviceId, productId, regionSuffix);
+            }
         }
 
         /// <summary>

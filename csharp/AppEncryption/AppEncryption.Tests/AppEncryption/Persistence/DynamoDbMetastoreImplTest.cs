@@ -73,7 +73,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             Document result = table.PutItemAsync(document).Result;
 
-            dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(amazonDynamoDbClient);
+            dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(amazonDynamoDbClient, string.Empty);
         }
 
         public void Dispose()
@@ -224,6 +224,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             Assert.True(firstAttempt);
             Assert.False(secondAttempt);
+        }
+
+        [Fact]
+        private void TestMetastoreWithRegionSuffix()
+        {
+            DynamoDbMetastoreImpl dynamoDbMetastore = new DynamoDbMetastoreImpl(amazonDynamoDbClient, Amazon.RegionEndpoint.USWest2.SystemName);
+
+            Assert.Equal(string.Empty, dynamoDbMetastoreImpl.GetRegionSuffix());
+            Assert.Equal(Amazon.RegionEndpoint.USWest2.SystemName, dynamoDbMetastore.GetRegionSuffix());
         }
 
         // This test is commented out since the constructor initializes the Table, which results in a network call. We decided
