@@ -573,16 +573,19 @@ jobs:
             - v3-clients-{{ .Branch }}-{{ .BuildNum }}
             - v3-clients-{{ .Branch }}-
             - v3-clients-
-      - restore-java-cache
       - restore-go-cache
       - run:
           name: Setup java environment
           command: |
+            ls -ltra /root/.m2
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
             # Delete Java gRPC server from local maven repo/cache and build from the current branch
             rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server
+            ls -ltra /root/.m2
+            ls -ltra ~/.m2/repository/com/godaddy/asherah
             mvn clean install -f server/java/pom.xml -DskipTests
+            ls -ltra /root/.m2
       - run:
           name: Setup go environment
           command: |
