@@ -18,7 +18,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public IntPtr Alloc(ulong length)
         {
-            var result = WindowsInterop.VirtualAllocEx(process, IntPtr.Zero, (UIntPtr)length, AllocationType.Commit | AllocationType.Reserve, MemoryProtection.PAGE_EXECUTE_READWRITE);
+            length = AdjustLength(length);
+
+            var result = WindowsInterop.VirtualAllocEx(process, IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_EXECUTE_READWRITE);
             if (result == IntPtr.Zero || result == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
@@ -32,7 +34,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
 
-            if (!WindowsInterop.VirtualFreeEx(process, pointer, UIntPtr.Zero, AllocationType.Release))
+            if (!WindowsInterop.VirtualFreeEx(process, pointer, UIntPtr.Zero, AllocationType.RELEASE))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualFreeEx", 0L, errno);
@@ -41,34 +43,47 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)MemoryProtection.PAGE_NOACCESS, out var _))
+            length = AdjustLength(length);
+
+            if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
+                throw new LibcOperationFailedException("CryptProtectMemory", 0L, errno);
             }
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)MemoryProtection.PAGE_READONLY, out var _))
+            length = AdjustLength(length);
+
+            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualProtectEx", 0L, errno);
+                throw new LibcOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            if (!WindowsInterop.VirtualProtectEx(process, pointer, (UIntPtr)length, (uint)MemoryProtection.PAGE_READWRITE, out var _))
+            length = AdjustLength(length);
+
+            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualProtectEx", 0, errno);
+                throw new LibcOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
+        }
+
+        private ulong AdjustLength(ulong length)
+        {
+            return length % CryptProtect.BLOCKSIZE != 0
+                ? ((length / CryptProtect.BLOCKSIZE) + 1) * CryptProtect.BLOCKSIZE
+                : length;
         }
     }
 }

@@ -7,14 +7,14 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums
     [Flags]
     public enum AllocationType : uint
     {
-        Commit = 0x1000,
-        Reserve = 0x2000,
-        Decommit = 0x4000,
-        Release = 0x8000,
-        Reset = 0x80000,
-        Physical = 0x400000,
-        TopDown = 0x100000,
-        WriteWatch = 0x200000,
-        LargePages = 0x20000000,
+        COMMIT = 0x1000,
+        RESERVE = 0x2000,
+        DECOMMIT = 0x4000,
+        RELEASE = 0x8000,
+        RESET = 0x80000,
+        PHYSICAL = 0x400000,
+        TOP_DOWN = 0x100000,
+        WRITE_WATCH = 0x200000,
+        LARGE_PAGES = 0x20000000,
     }
 }

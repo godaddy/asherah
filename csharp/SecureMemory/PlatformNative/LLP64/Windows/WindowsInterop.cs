@@ -16,9 +16,12 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, AllocationType flAllocationType, MemoryProtection flProtect);
 
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
-        public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
-
-        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
         public static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, AllocationType dwFreeType);
+
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern bool CryptProtectMemory(IntPtr ptr, UIntPtr dwSize, CryptProtectMemoryOptions dwFlags);
+
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern bool CryptUnprotectMemory(IntPtr ptr, UIntPtr dwSize, CryptProtectMemoryOptions dwFlags);
     }
 }
