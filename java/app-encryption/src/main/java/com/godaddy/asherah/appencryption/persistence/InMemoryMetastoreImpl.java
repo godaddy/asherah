@@ -41,9 +41,4 @@ public class InMemoryMetastoreImpl<T> implements Metastore<T> {
       return true;
     }
   }
-
-  @Override
-  public String getRegionSuffix() {
-    return "";
-  }
 }

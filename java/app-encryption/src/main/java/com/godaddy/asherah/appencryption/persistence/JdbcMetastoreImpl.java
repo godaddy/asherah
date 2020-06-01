@@ -130,11 +130,6 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
-  @Override
-  public String getRegionSuffix() {
-    return "";
-  }
-
   public static final class Builder {
 
     private final DataSource dataSource;

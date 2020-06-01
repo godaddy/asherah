@@ -34,5 +34,7 @@ public interface Metastore<V> {
    * Returns the region suffix or "" if region suffix option is disabled
    * @return The region suffix
    */
-  String getRegionSuffix();
+  default String getRegionSuffix() {
+    return "";
+  }
 }

@@ -38,6 +38,7 @@ echo "------------Testing clients using java server----------"
 # https://github.com/godaddy/asherah/issues/143
 export ASHERAH_EXPIRE_AFTER=90
 export ASHERAH_CHECK_INTERVAL=10
+find ~/.m2/ -name '*grpc-server*dependencies.jar'
 find ~/.m2/ -name '*grpc-server*dependencies.jar' | xargs java -jar &
 ASHERAH_JAVA_SIDECAR_PID=$!
 sleep 10
