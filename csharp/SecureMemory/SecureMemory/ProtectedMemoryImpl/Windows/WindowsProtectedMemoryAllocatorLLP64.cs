@@ -9,18 +9,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
     internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
-        private readonly IntPtr process;
-
-        public WindowsProtectedMemoryAllocatorLLP64()
-        {
-            process = WindowsInterop.GetCurrentProcess();
-        }
 
         public IntPtr Alloc(ulong length)
         {
             length = AdjustLength(length);
 
-            var result = WindowsInterop.VirtualAllocEx(process, IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_EXECUTE_READWRITE);
+            var result = WindowsInterop.VirtualAlloc(IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_EXECUTE_READWRITE);
             if (result == IntPtr.Zero || result == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
@@ -34,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
 
-            if (!WindowsInterop.VirtualFreeEx(process, pointer, UIntPtr.Zero, AllocationType.RELEASE))
+            if (!WindowsInterop.VirtualFree(pointer, UIntPtr.Zero, AllocationType.RELEASE))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("VirtualFreeEx", 0L, errno);
