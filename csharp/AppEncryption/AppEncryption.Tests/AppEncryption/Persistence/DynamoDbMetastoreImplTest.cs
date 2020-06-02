@@ -229,7 +229,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestMetastoreWithRegionSuffix()
         {
-            DynamoDbMetastoreImpl dynamoDbMetastore = new DynamoDbMetastoreImpl(amazonDynamoDbClient, "us-west-2");
+            Builder dynamoDbMetastoreServicePrimaryBuilder = NewBuilder();
+            IBuildStep withDynamoDbRegionSuffix = dynamoDbMetastoreServicePrimaryBuilder
+                .WithDynamoDbRegionSuffix("us-west-2");
+            Assert.NotNull(withDynamoDbRegionSuffix);
+
+            /* Commenting out the actual Build call as it tries to make a network call
+            DynamoDbMetastoreImpl dbMetastoreImpl = withDynamoDbRegionSuffix.Build();
+            Assert.Equal("us-west-2", dbMetastoreImpl.GetRegionSuffix());
+            */
+
+            // Rather test it with an actual call to the constructor
+            DynamoDbMetastoreImpl dynamoDbMetastore =
+                new DynamoDbMetastoreImpl(amazonDynamoDbClient, "us-west-2");
 
             Assert.Equal(string.Empty, dynamoDbMetastoreImpl.GetRegionSuffix());
             Assert.Equal("us-west-2", dynamoDbMetastore.GetRegionSuffix());

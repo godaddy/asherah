@@ -339,5 +339,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             // Verify that DbConnection is closed at the end of the function call
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
+
+        [Fact]
+        private void TestRegionSuffixShouldReturnEmpty()
+        {
+            Assert.Equal(string.Empty, adoMetastoreImplSpy.Object.GetRegionSuffix());
+        }
     }
 }
