@@ -91,5 +91,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(inMemoryMetastoreImpl.Store(keyId, created, value));
             Assert.False(inMemoryMetastoreImpl.Store(keyId, created, value));
         }
+
+        [Fact]
+        private void TestRegionSuffixShouldReturnEmpty()
+        {
+            Assert.Equal(string.Empty, inMemoryMetastoreImpl.GetRegionSuffix());
+        }
     }
 }
