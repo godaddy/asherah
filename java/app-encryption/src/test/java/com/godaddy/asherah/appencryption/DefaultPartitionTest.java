@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PartitionTest {
+class DefaultPartitionTest {
 
     private final static String testPartitionId = "test_partition_id";
     private final static String testServiceId = "test_service_id";
@@ -35,20 +35,20 @@ class PartitionTest {
 
     @Test
     void testGetSystemKeyId() {
-        String systemKeyIdString = "_SK_" + testServiceId + "_" + testProductId;
-        assertEquals(systemKeyIdString, partition.getSystemKeyId());
+      String systemKeyIdString = "_SK_" + testServiceId + "_" + testProductId;
+      assertEquals(systemKeyIdString, partition.getSystemKeyId());
     }
 
     @Test
     void testGetIntermediateKeyId() {
-        String intermediateKeyIdString = "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId;
-        assertEquals(intermediateKeyIdString, partition.getIntermediateKeyId());
+      String intermediateKeyIdString = "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId;
+      assertEquals(intermediateKeyIdString, partition.getIntermediateKeyId());
     }
 
     @Test
     void testToString() {
-        String toStringString = partition.getClass().getSimpleName() + "[partitionId=" + testPartitionId +
-                ", serviceId=" + testServiceId + ", productId=" + testProductId + "]";
-        assertEquals(toStringString, partition.toString());
+      String toStringString = partition.getClass().getSimpleName() + "[partitionId=" + testPartitionId +
+        ", serviceId=" + testServiceId + ", productId=" + testProductId + "]";
+      assertEquals(toStringString, partition.toString());
     }
 }

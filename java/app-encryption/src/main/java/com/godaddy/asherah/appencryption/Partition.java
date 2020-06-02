@@ -25,16 +25,10 @@ public abstract class Partition {
   }
 
   public String getSystemKeyId() {
-    return "_SK_" + serviceId + "_" + productId;
+    return "_SK_" + getServiceId() + "_" + getProductId();
   }
 
   public String getIntermediateKeyId() {
-    return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "[partitionId=" + partitionId +
-      ", serviceId=" + serviceId + ", productId=" + productId + "]";
+    return "_IK_" + getPartitionId() + "_" + getServiceId() + "_" + getProductId();
   }
 }
