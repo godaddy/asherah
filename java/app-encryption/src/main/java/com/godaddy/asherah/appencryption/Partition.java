@@ -25,10 +25,10 @@ public abstract class Partition {
   }
 
   public String getSystemKeyId() {
-    return "_SK_" + getServiceId() + "_" + getProductId();
+    return "_SK_" + serviceId + "_" + productId;
   }
 
   public String getIntermediateKeyId() {
-    return "_IK_" + getPartitionId() + "_" + getServiceId() + "_" + getProductId();
+    return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
   }
 }
