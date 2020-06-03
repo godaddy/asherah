@@ -6,7 +6,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
-    internal class WindowsProtectedMemoryAllocatorVirtualAlloc : WindowsProtectedMemoryAllocatorLLP64
+    internal sealed class WindowsProtectedMemoryAllocatorVirtualAlloc : WindowsProtectedMemoryAllocatorLLP64
     {
         public override IntPtr Alloc(ulong length)
         {

@@ -59,7 +59,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
         }
 
-        protected virtual void LockMemory(IntPtr pointer, ulong length)
+        protected void LockMemory(IntPtr pointer, ulong length)
         {
             if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
             {
@@ -68,7 +68,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             }
         }
 
-        protected virtual void UnlockMemory(IntPtr pointer, ulong length)
+        protected void UnlockMemory(IntPtr pointer, ulong length)
         {
             if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
             {

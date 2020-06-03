@@ -113,7 +113,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new WindowsProtectedMemoryAllocatorHeapAlloc();
+                return new WindowsProtectedMemoryAllocatorVirtualAlloc();
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried

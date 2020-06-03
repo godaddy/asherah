@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                protectedMemoryAllocator = new WindowsProtectedMemoryAllocatorHeapAlloc();
+                protectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
             }
             else
             {

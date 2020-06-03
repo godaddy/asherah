@@ -5,7 +5,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
-    internal class WindowsProtectedMemoryAllocatorHeapAlloc : WindowsProtectedMemoryAllocatorLLP64, IDisposable
+    internal sealed class WindowsProtectedMemoryAllocatorHeapAlloc : WindowsProtectedMemoryAllocatorLLP64, IDisposable
     {
         private IntPtr heap;
 
