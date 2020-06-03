@@ -48,9 +48,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return new Builder();
   }
 
-  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient, final String region) {
+  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient, final String suffix) {
     table = dynamoDbDocumentClient.getTable(TABLE_NAME);
-    regionSuffix = region;
+    regionSuffix = suffix;
   }
 
   @Override

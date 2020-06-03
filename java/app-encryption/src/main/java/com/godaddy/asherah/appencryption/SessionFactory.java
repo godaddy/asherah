@@ -223,9 +223,7 @@ public class SessionFactory implements SafeAutoCloseable {
     if (regionSuffix.isEmpty()) {
       return new DefaultPartition(partitionId, serviceId, productId);
     }
-    else {
-      return new SuffixedPartition(partitionId, serviceId, productId, regionSuffix);
-    }
+    return new SuffixedPartition(partitionId, serviceId, productId, regionSuffix);
   }
 
   @Override
