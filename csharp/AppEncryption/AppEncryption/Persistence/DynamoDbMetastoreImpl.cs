@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Amazon.Runtime;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto.Exceptions;
@@ -38,6 +40,22 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         {
             // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
             table = Table.LoadTable(dbClient, TableName);
+        }
+
+        public interface IBuildStep
+        {
+            /// <summary>
+            /// Specifies whether specific DynamoDB endpoint should be used.
+            /// </summary>
+            /// <param name="region">the AWS region to be used.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithRegion(string region);
+
+            /// <summary>
+            /// Builds the finalized <code>DynamoDbMetastoreImpl</code> with the parameters specified in the builder.
+            /// </summary>
+            /// <returns>The fully instantiated <code>DynamoDbMetastoreImpl</code>.</returns>
+            DynamoDbMetastoreImpl Build();
         }
 
         public static Builder NewBuilder()
@@ -157,11 +175,19 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public class Builder
+        public class Builder : IBuildStep
         {
+            private RegionEndpoint region;
+
+            public IBuildStep WithRegion(string region)
+            {
+                this.region = RegionEndpoint.GetBySystemName(region);
+                return this;
+            }
+
             public DynamoDbMetastoreImpl Build()
             {
-                IAmazonDynamoDB dbClient = new AmazonDynamoDBClient();
+                IAmazonDynamoDB dbClient = region == null ? new AmazonDynamoDBClient() : new AmazonDynamoDBClient(region);
                 return new DynamoDbMetastoreImpl(dbClient);
             }
         }
