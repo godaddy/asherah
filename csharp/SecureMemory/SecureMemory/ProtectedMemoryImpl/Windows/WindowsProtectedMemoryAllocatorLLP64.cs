@@ -9,6 +9,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
     internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
         protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
+        protected const int ErrorNotLocked = 158;
 
         public abstract IntPtr Alloc(ulong length);
 
@@ -23,11 +24,15 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
                 var errno = Marshal.GetLastWin32Error();
                 throw new LibcOperationFailedException("CryptProtectMemory", 0L, errno);
             }
+
+            UnlockMemory(pointer, length);
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
+
+            LockMemory(pointer, length);
 
             if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
@@ -40,6 +45,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             length = AdjustLength(length);
 
+            LockMemory(pointer, length);
+
             if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
@@ -50,6 +57,29 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
+        }
+
+        protected virtual void LockMemory(IntPtr pointer, ulong length)
+        {
+            if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
+            {
+                var errno = Marshal.GetLastWin32Error();
+                throw new LibcOperationFailedException("VirtualLock", 0L, errno);
+            }
+        }
+
+        protected virtual void UnlockMemory(IntPtr pointer, ulong length)
+        {
+            if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
+            {
+                var errno = Marshal.GetLastWin32Error();
+                if (errno == ErrorNotLocked)
+                {
+                    return;
+                }
+
+                throw new LibcOperationFailedException("VirtualUnlock", 0L, errno);
+            }
         }
 
         protected ulong AdjustLength(ulong length)
