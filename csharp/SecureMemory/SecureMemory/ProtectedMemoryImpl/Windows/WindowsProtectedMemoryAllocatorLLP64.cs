@@ -8,8 +8,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
-        protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
         protected const int ErrorNotLocked = 158;
+        protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         public abstract IntPtr Alloc(ulong length);
 
