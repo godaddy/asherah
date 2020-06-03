@@ -51,9 +51,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-maven-{{ .Branch }}-{{ .BuildNum }}
-            - v3-maven-{{ .Branch }}-
-            - v3-maven-
+            - v4-maven-{{ .Branch }}-{{ .BuildNum }}
+            - v4-maven-{{ .Branch }}-
+            - v4-maven-
   restore-csharp-cache:
     steps:
       - restore_cache:
@@ -61,9 +61,9 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-nuget-{{ .Branch }}-{{ .BuildNum }}
-            - v3-nuget-{{ .Branch }}-
-            - v3-nuget-
+            - v4-nuget-{{ .Branch }}-{{ .BuildNum }}
+            - v4-nuget-{{ .Branch }}-
+            - v4-nuget-
   restore-go-cache:
     steps:
       - restore_cache:
@@ -71,30 +71,30 @@ commands:
           keys:
             # when project files change, use increasingly general patterns to restore cache.
             # vN prefix in case we ever need to regenerate all caches
-            - v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
-            - v3-go-mod-{{ .Branch }}-
-            - v3-go-mod-
+            - v4-go-mod-{{ .Branch }}-{{ .BuildNum }}
+            - v4-go-mod-{{ .Branch }}-
+            - v4-go-mod-
   save-java-cache:
     steps:
       - save_cache:
           name: Save JAVA packages to cache
           paths:
             - ~/.m2
-          key: v3-maven-{{ .Branch }}-{{ .BuildNum }}
+          key: v4-maven-{{ .Branch }}-{{ .BuildNum }}
   save-csharp-cache:
     steps:
       - save_cache:
           name: Save NuGet packages to cache
           paths:
             - ~/.nuget
-          key: v3-nuget-{{ .Branch }}-{{ .BuildNum }}
+          key: v4-nuget-{{ .Branch }}-{{ .BuildNum }}
   save-go-cache:
     steps:
       - save_cache:
           name: Save Go packages to cache
           paths:
             - /go/pkg/mod
-          key: v3-go-mod-{{ .Branch }}-{{ .BuildNum }}
+          key: v4-go-mod-{{ .Branch }}-{{ .BuildNum }}
 
 workflows:
   version: 2
@@ -550,11 +550,6 @@ jobs:
           file: server/java/target/site/jacoco/jacoco.xml
           flags: server_java
           conf: codecov.yml
-      - run:
-          name: Install locally
-          command: |
-            cd server/java
-            ./scripts/install_local.sh
       - save-java-cache
   server-samples:
     docker:
@@ -574,16 +569,18 @@ jobs:
       - restore_cache:
           name: Restore clients packages
           keys:
-            - v3-clients-{{ .Branch }}-{{ .BuildNum }}
-            - v3-clients-{{ .Branch }}-
-            - v3-clients-
-      - restore-java-cache
+            - v4-clients-{{ .Branch }}-{{ .BuildNum }}
+            - v4-clients-{{ .Branch }}-
+            - v4-clients-
       - restore-go-cache
       - run:
           name: Setup java environment
           command: |
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
+            # Delete Java gRPC server from local maven repo/cache and build from the current branch
+            rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server
+            mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup go environment
           command: |
@@ -610,7 +607,7 @@ jobs:
             - ~/.cache
             - ~/.m2
             - /go/pkg/mod
-          key: v3-clients-{{ .Branch }}-{{ .BuildNum }}
+          key: v4-clients-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
       - image: ubuntu:18.04
@@ -643,10 +640,9 @@ jobs:
       - restore_cache:
           name: Restore CLTF packages
           keys:
-            - v3-cltf-{{ .Branch }}-{{ .BuildNum }}
-            - v3-cltf-{{ .Branch }}-
-            - v3-cltf-
-      - restore-java-cache
+            - v4-cltf-{{ .Branch }}-{{ .BuildNum }}
+            - v4-cltf-{{ .Branch }}-
+            - v4-cltf-
       - restore-csharp-cache
       - restore-go-cache
       - run:
@@ -654,6 +650,10 @@ jobs:
           command: |
             apt-get install -y openjdk-8-jdk
             apt-get install -y maven
+            # Delete Java appencryption & gRPC server from local maven repo/cache and build from the current branch
+            rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+            mvn clean install -f java/app-encryption/pom.xml -DskipTests
+            mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup csharp environment
           command: |
@@ -716,4 +716,4 @@ jobs:
             - ~/.m2
             - ~/.nuget
             - /go/pkg/mod
-          key: v3-cltf-{{ .Branch }}-{{ .BuildNum }}
+          key: v4-cltf-{{ .Branch }}-{{ .BuildNum }}
