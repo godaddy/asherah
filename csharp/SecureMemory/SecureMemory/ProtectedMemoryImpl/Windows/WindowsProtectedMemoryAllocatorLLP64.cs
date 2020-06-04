@@ -8,7 +8,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
-        protected const int ErrorNotLocked = 158;
         protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         public abstract IntPtr Alloc(ulong length);
@@ -22,7 +21,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("CryptProtectMemory", 0L, errno);
+                throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
             }
 
             UnlockMemory(pointer, length);
@@ -37,7 +36,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("CryptUnprotectMemory", 0L, errno);
+                throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
         }
 
@@ -50,7 +49,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("CryptUnprotectMemory", 0L, errno);
+                throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
         }
 
@@ -64,7 +63,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualLock", 0L, errno);
+                throw new WindowsOperationFailedException("VirtualLock", 0L, errno);
             }
         }
 
@@ -73,12 +72,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
             {
                 var errno = Marshal.GetLastWin32Error();
-                if (errno == ErrorNotLocked)
+                if (errno == VirtualUnlock.ERROR_NOT_LOCKED)
                 {
                     return;
                 }
 
-                throw new LibcOperationFailedException("VirtualUnlock", 0L, errno);
+                throw new WindowsOperationFailedException("VirtualUnlock", 0L, errno);
             }
         }
 
