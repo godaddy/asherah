@@ -14,7 +14,8 @@
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="BouncyCastle.NetCore" Version="1.8.5" />
-    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.1" />
+    <PackageReference Include="GoDaddy.Asherah.Logging" Version="0.1.1" />
+    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>
