@@ -12,10 +12,10 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
         public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize, AllocationType flAllocationType, MemoryProtection flProtect);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError=true)]
         public static extern bool VirtualLock(IntPtr lpAddress, UIntPtr dwSize);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError=true)]
         public static extern bool VirtualUnlock(IntPtr lpAddress, UIntPtr dwSize);
 
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
