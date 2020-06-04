@@ -43,7 +43,6 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
   private final DynamoDB client;
-
   private final String tableName;
   private final String regionSuffix;
 

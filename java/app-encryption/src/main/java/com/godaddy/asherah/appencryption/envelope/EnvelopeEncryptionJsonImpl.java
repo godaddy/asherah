@@ -386,7 +386,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
-   * @param keyMeta creation time of intermediate key
+   * @param keyMeta intermediate key meta of intermediate key
    * @return The decrypted intermediate key.
    * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info
    */
