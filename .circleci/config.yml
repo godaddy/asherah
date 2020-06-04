@@ -107,11 +107,9 @@ workflows:
       - samples-java-reference-app:
           requires:
             - java-app-encryption
-# Disabling this job since it does not test anything currently.
-# TODO: Re-enable once the circleCi is setup to run the tests or move into Java AE as integration tests
-#      - tests-java-test-app:
-#          requires:
-#            - java-app-encryption
+      - tests-java-test-app:
+          requires:
+            - java-app-encryption
       - csharp-logging
       - csharp-secure-memory:
           requires:

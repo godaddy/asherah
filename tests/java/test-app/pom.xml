@@ -207,33 +207,34 @@
       <artifactId>HikariCP</artifactId>
       <version>${com.zaxxer.hikaricp.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.almworks.sqlite4java</groupId>
-      <artifactId>sqlite4java</artifactId>
-      <version>1.0.392</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>DynamoDBLocal</artifactId>
-      <version>1.11.477</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-server</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--    Enable to run the DynamoDbGlobalTableTest-->
+<!--    <dependency>-->
+<!--      <groupId>com.almworks.sqlite4java</groupId>-->
+<!--      <artifactId>sqlite4java</artifactId>-->
+<!--      <version>1.0.392</version>-->
+<!--      <scope>compile</scope>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>com.amazonaws</groupId>-->
+<!--      <artifactId>DynamoDBLocal</artifactId>-->
+<!--      <version>1.11.477</version>-->
+<!--      <scope>compile</scope>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.eclipse.jetty</groupId>-->
+<!--          <artifactId>jetty-server</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
   </dependencies>
 
-<repositories>
-  <repository>
-    <id>dynamodb-local</id>
-    <name>DynamoDB Local Release Repository</name>
-    <url>https://s3-us-west-2.amazonaws.com/dynamodb-local/release</url>
-  </repository>
-</repositories>
+<!--<repositories>-->
+<!--  <repository>-->
+<!--    <id>dynamodb-local</id>-->
+<!--    <name>DynamoDB Local Release Repository</name>-->
+<!--    <url>https://s3-us-west-2.amazonaws.com/dynamodb-local/release</url>-->
+<!--  </repository>-->
+<!--</repositories>-->
 
   <profiles>
     <profile>
