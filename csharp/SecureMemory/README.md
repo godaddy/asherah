@@ -21,7 +21,8 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 ### Currently supported / tested platforms
 * MacOS x86-64
 * Linux x86-64
-* Windows x86-64 (Support is provided primarily for local development)
+* Windows x86-64
+  > Initial Windows support is provided primarily for local development
 
 ## Quick Start
 ```c#
@@ -51,6 +52,7 @@ Linux/Mac:
 
 Windows:
 * Values are encrypted in memory
+* Values stored will not be swapped
 * Values stored will be explicitly zeroed out when no longer in use
 
 ## Protected Memory Implementation
@@ -64,4 +66,3 @@ The protected memory implementation of secure memory
 ## TODO
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)
 * If the operating system supports it, uses madvise to request that mapped pages be zeroed on exit
-
