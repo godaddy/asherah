@@ -16,7 +16,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (result == IntPtr.Zero || result == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualAlloc", (long)result, errno);
+                throw new WindowsOperationFailedException("VirtualAlloc", (long)result, errno);
             }
 
             return result;
@@ -29,7 +29,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.VirtualFree(pointer, UIntPtr.Zero, AllocationType.RELEASE))
             {
                 var errno = Marshal.GetLastWin32Error();
-                throw new LibcOperationFailedException("VirtualFree", 0L, errno);
+                throw new WindowsOperationFailedException("VirtualFree", 0L, errno);
             }
         }
     }
