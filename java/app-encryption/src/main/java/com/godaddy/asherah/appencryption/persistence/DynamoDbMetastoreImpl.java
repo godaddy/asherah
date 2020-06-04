@@ -40,11 +40,11 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.loadlatest");
   private final Timer storeTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.store");
 
-  // Table instance can be cached since thread-safe and no state other than description, which we don't use
-  private final Table table;
   private final DynamoDB client;
   private final String tableName;
   private final String regionSuffix;
+  // Table instance can be cached since thread-safe and no state other than description, which we don't use
+  private final Table table;
 
   public static Builder newBuilder() {
     return new Builder();
@@ -53,8 +53,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   DynamoDbMetastoreImpl(final Builder builder) {
     this.client = new DynamoDB(builder.client);
     this.tableName = builder.tableName;
-    this.table = client.getTable(tableName);
     this.regionSuffix = builder.regionSuffix;
+    this.table = client.getTable(tableName);
   }
 
   @Override
