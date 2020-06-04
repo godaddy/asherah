@@ -1,6 +1,10 @@
 # Asherah - C#
+
 Application level envelope encryption SDK for C# with support for cloud-agnostic data storage and key management.
 
+[![Version](https://img.shields.io/nuget/v/Godaddy.Asherah.AppEncryption)](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption)
+
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -14,6 +18,14 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
   * [Development Notes](#development-notes)
 
+## Installation
+You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/):
+```xml
+<ItemGroup>
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
+</ItemGroup>
+```
+
 ## Quick Start
 
 ```c#
@@ -22,7 +34,7 @@ using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
     .WithMemoryPersistence()
     .WithNeverExpiredCryptoPolicy()
-    .WithStaticKeyManagementService("secretmasterkey!")
+    .WithStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .Build())
 {
     // Now create a cryptographic session for a partition.
@@ -101,7 +113,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```c#
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

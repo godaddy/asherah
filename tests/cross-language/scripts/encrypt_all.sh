@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
@@ -6,7 +7,7 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 # Run encrypt tests for all languages
 cd java
 echo "----------------------Encrypting payload using Java---------------------"
-mvn -Dtest=RunEncryptTest test
+mvn -Drevision=${JAVA_AE_VERSION} -Dtest=RunEncryptTest test
 cd ..
 
 cd csharp
@@ -20,6 +21,7 @@ godog ../features/encrypt.feature
 cd ..
 
 cd sidecar
+pip3.7 install -r requirements.txt
 echo "----------Encrypting payload with Go sidecar and python client----------"
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
@@ -41,7 +43,7 @@ export ASHERAH_EXPIRE_AFTER=90
 export ASHERAH_CHECK_INTERVAL=10
 export ASHERAH_METASTORE_MODE=jdbc
 export ASHERAH_CONNECTION_STRING='jdbc:mysql://127.0.0.1:3306/testdb?user=root&password=Password123'
-java -jar ~/.m2/repository/com/godaddy/asherah/grpc-server/1.0.0-SNAPSHOT/*dependencies.jar &
+find ~/.m2/ -name '*grpc-server*dependencies.jar' | xargs java -jar &
 ASHERAH_JAVA_SIDECAR_PID=$!
 sleep 10
 behave -D FILE=/tmp/sidecar_java_encrypted features/encrypt.feature

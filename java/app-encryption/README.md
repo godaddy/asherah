@@ -1,6 +1,8 @@
 # Asherah - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
+[![Version](https://img.shields.io/maven-central/v/com.godaddy.asherah/appencryption)](https://mvnrepository.com/artifact/com.godaddy.asherah/appencryption)
+
   * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
@@ -40,7 +42,7 @@ You can specify the current release of Asherah as a project dependency using the
 try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
     .withInMemoryMetastore()
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
+    .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .build()) {
 
   // Now create a cryptographic session for a partition.
@@ -110,7 +112,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```java
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

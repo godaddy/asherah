@@ -24,7 +24,7 @@ class AppEncryptionServerTest {
       .newBuilder("product", "service")
       .withInMemoryMetastore()
       .withNeverExpiredCryptoPolicy()
-      .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
+      .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
       .build();
   }
 

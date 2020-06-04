@@ -1,5 +1,6 @@
 package com.godaddy.asherah.appencryption.envelope;
 
+import com.godaddy.asherah.appencryption.DefaultPartition;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
@@ -54,7 +55,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Mock
   KeyMeta keyMeta;
 
-  Partition partition = new Partition("shopper_123", "payments", "ecomm");
+  Partition partition = new DefaultPartition("shopper_123", "payments", "ecomm");
 
   // Setup Instants truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple
   // level keys

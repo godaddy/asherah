@@ -117,7 +117,7 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 
 func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagementService {
 	if opts.KMS == "static" {
-		m, err := kms.NewStatic("mysupersecretstaticmasterkey!!!!", aead.NewAES256GCM())
+		m, err := kms.NewStatic("thisIsAStaticMasterKeyForTesting", aead.NewAES256GCM())
 		if err != nil {
 			panic(err)
 		}

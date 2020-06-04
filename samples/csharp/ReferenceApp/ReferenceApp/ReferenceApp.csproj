@@ -1,18 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <PackageId>GoDaddy.Asherah.ReferenceApp</PackageId>
+        <Authors>GoDaddy</Authors>
+        <Description>CSharp AppEncryption Reference App</Description>
+        <AssemblyName>ReferenceApp</AssemblyName>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.1</TargetFramework>
-        <PackageId>GoDaddy.Asherah.ReferenceApp</PackageId>
         <!-- NOTE: Version controlled via Directory.Build.props  -->
         <!--<Version></Version>-->
-        <Authors>GoDaddy</Authors>
         <RootNamespace>GoDaddy.Asherah.ReferenceApp</RootNamespace>
         <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <AssemblyName>ReferenceApp</AssemblyName>
+        <!-- Properties related to NuGet packaging: -->
+        <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+        <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/samples/csharp/ReferenceApp</RepositoryUrl>
+        <!-- End of Properties related to NuGet packaging: -->
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.0-alpha*" />
+        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
         <PackageReference Include="CommandLineParser" Version="2.4.3" />
         <PackageReference Include="MySql.Data" Version="8.0.16" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.3" />

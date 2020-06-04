@@ -134,7 +134,7 @@ public final class App implements Callable<Void> {
     else {
       logger.info("using static KMS...");
 
-      keyManagementService = new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
+      keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
     }
 
     CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy

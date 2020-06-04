@@ -42,13 +42,15 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
+  private final String regionSuffix;
 
   public static Builder newBuilder() {
     return new Builder();
   }
 
-  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient) {
+  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient, final String suffix) {
     table = dynamoDbDocumentClient.getTable(TABLE_NAME);
+    regionSuffix = suffix;
   }
 
   @Override
@@ -132,11 +134,41 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
-  public static final class Builder {
+  @Override
+  public String getRegionSuffix() {
+    return regionSuffix;
+  }
 
-    public DynamoDbMetastoreImpl build() {
-      AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
-      return new DynamoDbMetastoreImpl(new DynamoDB(client));
+  public static final class Builder implements BuildStep {
+
+    private String regionSuffix = "";
+    private AmazonDynamoDB client;
+
+    @Override
+    public BuildStep withDynamoDbRegionSuffix(final String region) {
+      this.regionSuffix = region;
+      return this;
     }
+
+    @Override
+    public DynamoDbMetastoreImpl build() {
+      client = AmazonDynamoDBClientBuilder.standard().build();
+      return new DynamoDbMetastoreImpl(new DynamoDB(client), regionSuffix);
+    }
+  }
+
+  public interface BuildStep {
+    /**
+     * Specifies whether region suffix should be enabled for DynamoDB
+     * @param region The region to be used as suffix
+     * @return The current {@code BuildStep} instance.
+     */
+    BuildStep withDynamoDbRegionSuffix(String region);
+
+    /**
+     * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
+     * @return The fully instantiated {@code DynamoDbMetastoreImpl}.
+     */
+    DynamoDbMetastoreImpl build();
   }
 }

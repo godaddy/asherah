@@ -76,7 +76,7 @@ class DynamoDbMetastoreImplTest {
                 "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
             .build());
 
-    dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(dynamoDbDocumentClient);
+    dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(dynamoDbDocumentClient, "");
 
     // Create table schema
     dynamoDbDocumentClient.createTable(new CreateTableRequest()
@@ -216,11 +216,17 @@ class DynamoDbMetastoreImplTest {
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
-    DynamoDbMetastoreImpl.Builder dynamoDbMetastoreServicePrimaryBuilder =
-        DynamoDbMetastoreImpl.newBuilder();
+
     DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
-        dynamoDbMetastoreServicePrimaryBuilder.build();
+      DynamoDbMetastoreImpl.newBuilder().build();
     assertNotNull(dynamoDbMetastoreImpl);
   }
 
+  @Test
+  void testMetastoreWithRegionSuffix() {
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().withDynamoDbRegionSuffix("us-west-2").build();
+
+    assertEquals("", dynamoDbMetastoreImpl.getRegionSuffix());
+    assertEquals("us-west-2", dynamoDbMetastore.getRegionSuffix());
+  }
 }

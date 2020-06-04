@@ -73,7 +73,7 @@ namespace GoDaddy.Asherah.AppEncryption
         public interface IKeyManagementServiceStep
         {
             // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
-            IBuildStep WithStaticKeyManagementService(string demoMasterKey);
+            IBuildStep WithStaticKeyManagementService(string staticMasterKey);
 
             IBuildStep WithKeyManagementService(KeyManagementService keyManagementService);
         }
@@ -363,9 +363,9 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public IBuildStep WithStaticKeyManagementService(string demoMasterKey)
+            public IBuildStep WithStaticKeyManagementService(string staticMasterKey)
             {
-                keyManagementService = new StaticKeyManagementServiceImpl(demoMasterKey);
+                keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
                 return this;
             }
 

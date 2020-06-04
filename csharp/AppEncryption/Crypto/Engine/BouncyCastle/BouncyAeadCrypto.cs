@@ -4,7 +4,6 @@ using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
-using GoDaddy.Asherah.SecureMemory;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -69,13 +68,9 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
 
                 if (position != outputLen)
                 {
-                    if (Debug.On)
-                    #pragma warning disable 162
-                    {
-                        Logger.LogError("position {position} not equal to outputLength {outputLen}", position, outputLen);
-                    }
-                    #pragma warning restore 162
-
+#if DEBUG
+                    Logger.LogError("position {position} not equal to outputLength {outputLen}", position, outputLen);
+#endif
                     throw new AppEncryptionException("unexpected error during decrypt cipher finalization");
                 }
 
