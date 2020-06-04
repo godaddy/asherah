@@ -241,7 +241,7 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testWithTableName() {
+  void testMetastoreWithConfigurableTableName() {
     String tableName = "DummyTable";
 
     AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()

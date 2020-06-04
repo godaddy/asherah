@@ -152,13 +152,14 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   public static final class Builder implements BuildStep, EndPointStep, RegionStep {
+    static final String DEFAULT_TABLE_NAME = "EncryptionKey";
+    static final String DEFAULT_REGION_SUFFIX = "";
 
     private AmazonDynamoDB client;
 
-    private String regionSuffix = "";
     private AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
-    private String tableName = "EncryptionKey";
-
+    private String regionSuffix = DEFAULT_REGION_SUFFIX;
+    private String tableName = DEFAULT_TABLE_NAME;
 
     @Override
     public BuildStep withEndPointConfiguration(final String endPoint, final String signingRegion) {
