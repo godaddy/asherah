@@ -72,7 +72,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
             {
                 var errno = Marshal.GetLastWin32Error();
-                if (errno == VirtualUnlock.ERROR_NOT_LOCKED)
+                if (errno == (int)VirtualUnlockErrors.ERROR_NOT_LOCKED)
                 {
                     return;
                 }
