@@ -21,6 +21,8 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 ### Currently supported / tested platforms
 * MacOS x86-64
 * Linux x86-64
+* Windows x86-64
+  > Initial Windows support is provided primarily for local development
 
 ## Quick Start
 ```c#
@@ -43,9 +45,15 @@ using (Secret secretKey = secretFactory.CreateSecret(secretBytes))
 ## Guarantees
 Any implementation must have the following guarantees in so far as secret information stored in secure memory
 
+Linux/Mac:
 * Values stored will not show up in core dumps
 * Values stored will not be swapped
 * Values stored will be securely / explicitly zeroed out when no longer in use
+
+Windows:
+* Values are encrypted in memory
+* Values stored will not be swapped
+* Values stored will be explicitly zeroed out when no longer in use
 
 ## Protected Memory Implementation
 The protected memory implementation of secure memory
@@ -58,4 +66,3 @@ The protected memory implementation of secure memory
 ## TODO
 * Add unit tests that generate core dumps and scan them for secrets (need to extract gcore source)
 * If the operating system supports it, uses madvise to request that mapped pages be zeroed on exit
-
