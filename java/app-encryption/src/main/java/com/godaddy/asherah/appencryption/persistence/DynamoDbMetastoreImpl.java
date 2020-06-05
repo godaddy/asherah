@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 import com.amazonaws.SdkBaseException;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -30,7 +31,6 @@ import org.slf4j.LoggerFactory;
 public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
-  static final String TABLE_NAME = "EncryptionKey";
   static final String PARTITION_KEY = "Id";
   static final String SORT_KEY = "Created";
   static final String ATTRIBUTE_KEY_RECORD = "KeyRecord";
@@ -40,17 +40,21 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.loadlatest");
   private final Timer storeTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.store");
 
+  private final DynamoDB client;
+  private final String tableName;
+  private final String regionSuffix;
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
-  private final String regionSuffix;
 
   public static Builder newBuilder() {
     return new Builder();
   }
 
-  DynamoDbMetastoreImpl(final DynamoDB dynamoDbDocumentClient, final String suffix) {
-    table = dynamoDbDocumentClient.getTable(TABLE_NAME);
-    regionSuffix = suffix;
+  DynamoDbMetastoreImpl(final Builder builder) {
+    this.client = new DynamoDB(builder.client);
+    this.tableName = builder.tableName;
+    this.regionSuffix = builder.regionSuffix;
+    this.table = client.getTable(tableName);
   }
 
   @Override
@@ -139,31 +143,88 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return regionSuffix;
   }
 
-  public static final class Builder implements BuildStep {
+  String getTableName() {
+    return tableName;
+  }
 
-    private String regionSuffix = "";
+  DynamoDB getClient() {
+    return client;
+  }
+
+  public static final class Builder implements BuildStep, EndPointStep, RegionStep {
+    static final String DEFAULT_TABLE_NAME = "EncryptionKey";
+    static final String DEFAULT_REGION_SUFFIX = "";
+
     private AmazonDynamoDB client;
 
+    private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
+    private String regionSuffix = DEFAULT_REGION_SUFFIX;
+    private String tableName = DEFAULT_TABLE_NAME;
+
     @Override
-    public BuildStep withDynamoDbRegionSuffix(final String region) {
-      this.regionSuffix = region;
+    public BuildStep withEndPointConfiguration(final String endPoint, final String signingRegion) {
+      standardBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, signingRegion));
+      return this;
+    }
+
+    @Override
+    public BuildStep withTableName(final String table) {
+      this.tableName = table;
+      return this;
+    }
+
+    @Override
+    public BuildStep withDynamoDbRegionSuffix(final String suffix) {
+      this.regionSuffix = suffix;
+      return this;
+    }
+
+    @Override
+    public BuildStep withRegion(final String region) {
+      standardBuilder.withRegion(region);
       return this;
     }
 
     @Override
     public DynamoDbMetastoreImpl build() {
-      client = AmazonDynamoDBClientBuilder.standard().build();
-      return new DynamoDbMetastoreImpl(new DynamoDB(client), regionSuffix);
+      client = standardBuilder.build();
+      return new DynamoDbMetastoreImpl(this);
     }
+  }
+
+  public interface EndPointStep {
+    /**
+     * Adds EndPoint config to the AWS DynamoDb client
+     * @param endPoint the service endpoint either with or without the protocol
+     * @param signingRegion the region to use for SigV4 signing of requests (e.g. us-west-1)
+     * @return The current {@code BuildStep} instance
+     */
+    BuildStep withEndPointConfiguration(String endPoint, String signingRegion);
+  }
+
+  public interface RegionStep {
+    /**
+     * Specifies the region for the AWS DynamoDb client
+     * @param region The region for the DynamoDb client
+     * @return The current {@code BuildStep} instance
+     */
+    BuildStep withRegion(String region);
   }
 
   public interface BuildStep {
     /**
      * Specifies whether region suffix should be enabled for DynamoDB
-     * @param region The region to be used as suffix
+     * @param suffix The region to be used as suffix
      * @return The current {@code BuildStep} instance.
      */
-    BuildStep withDynamoDbRegionSuffix(String region);
+    BuildStep withDynamoDbRegionSuffix(String suffix);
+
+    /**
+     * Specifies the name of the table
+     * @param table The name of the table
+     * @return The current {@code BuildStep} instance.
+     */
+    BuildStep withTableName(String table);
 
     /**
      * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
