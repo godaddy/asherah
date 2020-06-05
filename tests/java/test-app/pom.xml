@@ -319,7 +319,7 @@
               </buildArgs>
             </configuration>
           </plugin>
-        <!--    Enable to run the DynamoDbGlobalTableTest-->
+        <!--Enable to run the DynamoDbGlobalTableTest-->
 <!--          <plugin>-->
 <!--            <groupId>org.apache.maven.plugins</groupId>-->
 <!--            <artifactId>maven-dependency-plugin</artifactId>-->

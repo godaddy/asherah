@@ -1,5 +1,8 @@
 /*
+This test ensures that old keys are compatible even when a new DynamoDb metastore is created
+with the region suffix enabled.
 Currently disabled because DynamoDbLocal isn't playing nice with maven-shade-plugin.
+TODO - The test-app is a placeholder for Java integration tests and we plan to move them to the Java AE project
  */
 
 
@@ -71,7 +74,7 @@ Currently disabled because DynamoDbLocal isn't playing nice with maven-shade-plu
 //  }
 //
 //  @Test
-//  void testTest() {
+//  void testRegionSuffixBackwardCompatibility() {
 //    String dataRowString;
 //    String decryptedPayloadString;
 //    String originalPayloadString;
@@ -79,7 +82,8 @@ Currently disabled because DynamoDbLocal isn't playing nice with maven-shade-plu
 //    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
 //        .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
 //        .build();
-//
+
+//    // Encrypt originalPayloadString with metastore without region suffix
 //    try (SessionFactory sessionFactory = SessionFactory
 //      .newBuilder("productId", "reference_app")
 //      .withMetastore(dynamoDbMetastore)
@@ -105,6 +109,7 @@ Currently disabled because DynamoDbLocal isn't playing nice with maven-shade-plu
 //        .withDynamoDbRegionSuffix("us-west-2")
 //        .build();
 //
+//    // Decrypt dataRowString with metastore with region suffix
 //    try (SessionFactory sessionFactory = SessionFactory
 //      .newBuilder("productId", "reference_app")
 //      .withMetastore(dynamoDbMetastoreWithSuffix)
