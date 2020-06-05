@@ -16,8 +16,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
     public class DynamoDbMetastoreImplTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
     {
         private const string TestKey = "some_key";
+        private const string DynamoDbPort = "8000";
 
-        private readonly AmazonDynamoDBClient amazonDynamoDbClient;
+        private readonly IAmazonDynamoDB amazonDynamoDbClient;
 
         private readonly Dictionary<string, object> keyRecord = new Dictionary<string, object>
         {
@@ -38,15 +39,45 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
-            {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
-            };
-            amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
+            dynamoDbMetastoreImpl = NewBuilder()
+                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
+                .Build();
+            amazonDynamoDbClient = dynamoDbMetastoreImpl.GetClient();
 
+            CreateTableSchema(amazonDynamoDbClient, dynamoDbMetastoreImpl.GetTableName());
+
+            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.GetTableName());
+
+            JObject jObject = JObject.FromObject(keyRecord);
+            Document document = new Document
+            {
+                [PartitionKey] = TestKey,
+                [SortKey] = created.ToUnixTimeSeconds(),
+                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+            };
+
+            Document result = table.PutItemAsync(document).Result;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
+                    .DeleteTableAsync(dynamoDbMetastoreImpl.GetTableName())
+                    .Result;
+            }
+            catch (AggregateException)
+            {
+                // There is no such table.
+            }
+        }
+
+        private void CreateTableSchema(IAmazonDynamoDB client, string tableName)
+        {
             CreateTableRequest request = new CreateTableRequest
             {
-                TableName = TableName,
+                TableName = tableName,
                 AttributeDefinitions = new List<AttributeDefinition>
                 {
                     new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
@@ -60,32 +91,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
             };
 
-            CreateTableResponse createTableResponse = amazonDynamoDbClient.CreateTableAsync(request).Result;
-            table = Table.LoadTable(amazonDynamoDbClient, TableName);
-
-            JObject jObject = JObject.FromObject(keyRecord);
-            Document document = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
-
-            Document result = table.PutItemAsync(document).Result;
-
-            dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(amazonDynamoDbClient);
-        }
-
-        public void Dispose()
-        {
-            try
-            {
-                DeleteTableResponse deleteTableResponse = amazonDynamoDbClient.DeleteTableAsync(TableName).Result;
-            }
-            catch (AggregateException)
-            {
-                // There is no such table.
-            }
+            CreateTableResponse createTableResponse = client.CreateTableAsync(request).Result;
         }
 
         [Fact]
@@ -226,16 +232,81 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(secondAttempt);
         }
 
-        // This test is commented out since the constructor initializes the Table, which results in a network call. We decided
-        // it wasn't worth the effort of refactoring it with thread-safe lazy loading for slightly higher code coverage.
-//        [Fact]
-//        private void TestPrimaryBuilderPath()
-//        {
-//            AWSConfigs.AWSRegion = "us-west-2";
-//            Builder dynamoDbMetastoreServicePrimaryBuilder = NewBuilder();
-//            DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
-//                dynamoDbMetastoreServicePrimaryBuilder.Build();
-//            Assert.NotNull(dynamoDbMetastoreImpl);
-//        }
+        [Fact]
+        private void TestPrimaryBuilderPath()
+        {
+            DynamoDbMetastoreImpl dynamoDbMetastoreImpl = NewBuilder()
+                .WithRegion("us-west-2")
+                .Build();
+
+            Assert.NotNull(dynamoDbMetastoreImpl);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithEndPointConfiguration()
+        {
+            NewBuilder()
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2")
+                .Build();
+
+            Assert.NotNull(dynamoDbMetastoreImpl);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithRegion()
+        {
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
+                .WithRegion("us-west-2")
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithRegionSuffix()
+        {
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
+                .WithKeySuffix("us-west-2")
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithTableName()
+        {
+            const string tempTableName = "DummyTable";
+
+            // Use AWS SDK to create client
+            AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
+            {
+                ServiceURL = "http://localhost:8000",
+                AuthenticationRegion = "us-west-2",
+            };
+            AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
+            CreateTableSchema(tempDynamoDbClient, tempTableName);
+
+            // Put the object in temp table
+            Table tempTable = Table.LoadTable(tempDynamoDbClient, tempTableName);
+            JObject jObject = JObject.FromObject(keyRecord);
+            Document document = new Document
+            {
+                [PartitionKey] = TestKey,
+                [SortKey] = created.ToUnixTimeSeconds(),
+                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+            };
+            Document result = tempTable.PutItemAsync(document).Result;
+
+            // Create a metastore object using the withTableName step
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2")
+                .WithTableName(tempTableName)
+                .Build();
+            Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
+
+            // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
+            Assert.True(actualJsonObject.IsSome);
+            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+        }
     }
 }

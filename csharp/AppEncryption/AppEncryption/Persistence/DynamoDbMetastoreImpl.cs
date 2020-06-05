@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -20,7 +21,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     public class DynamoDbMetastoreImpl : IMetastore<JObject>
     {
-        internal const string TableName = "EncryptionKey";
         internal const string PartitionKey = "Id";
         internal const string SortKey = "Created";
         internal const string AttributeKeyRecord = "KeyRecord";
@@ -31,13 +31,59 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         private static readonly ILogger Logger = LogManager.CreateLogger<DynamoDbMetastoreImpl>();
 
-        // Note this instance is thread-safe
-        private readonly Table table;
+        private readonly IAmazonDynamoDB dbClient;
+        private readonly string keySuffix;
+        private readonly string tableName;
 
-        internal DynamoDbMetastoreImpl(IAmazonDynamoDB dbClient)
+        private DynamoDbMetastoreImpl(Builder builder)
         {
-            // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
-            table = Table.LoadTable(dbClient, TableName);
+            dbClient = builder.DbClient;
+            keySuffix = builder.KeySuffix;
+            tableName = builder.TableName;
+        }
+
+        public interface IBuildStep
+        {
+            /// <summary>
+            /// Specifies whether key suffix should be enabled for DynamoDB.
+            /// </summary>
+            /// <param name="suffix">the region to be used as suffix.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithKeySuffix(string suffix);
+
+            /// <summary>
+            /// Specifies the name of the table.
+            /// </summary>
+            /// <param name="tableName">The name of the table.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithTableName(string tableName);
+
+            /// <summary>
+            /// Builds the finalized <code>DynamoDbMetastoreImpl</code> with the parameters specified in the builder.
+            /// </summary>
+            /// <returns>The fully instantiated <code>DynamoDbMetastoreImpl</code>.</returns>
+            DynamoDbMetastoreImpl Build();
+        }
+
+        private interface IEndPointStep
+        {
+            /// <summary>
+            /// Adds EndPoint config to the AWS DynamoDb client.
+            /// </summary>
+            /// <param name="endPoint">the service endpoint either with or without the protocol.</param>
+            /// <param name="signingRegion">the region to use for SigV4 signing of requests (e.g. us-west-1).</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithEndPointConfiguration(string endPoint, string signingRegion);
+        }
+
+        private interface IRegionStep
+        {
+            /// <summary>
+            /// Specifies the region for the AWS DynamoDb client.
+            /// </summary>
+            /// <param name="region">The region for the DynamoDb client.</param>
+            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            IBuildStep WithRegion(string region);
         }
 
         public static Builder NewBuilder()
@@ -51,6 +97,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             {
                 try
                 {
+                    Table table = Table.LoadTable(dbClient, tableName);
                     GetItemOperationConfig config = new GetItemOperationConfig
                     {
                         AttributesToGet = new List<string> { AttributeKeyRecord },
@@ -80,6 +127,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 // Have to use query api to use limit and reverse sort order
                 try
                 {
+                    Table table = Table.LoadTable(dbClient, tableName);
                     QueryFilter filter = new QueryFilter(PartitionKey, QueryOperator.Equal, keyId);
                     QueryOperationConfig config = new QueryOperationConfig
                     {
@@ -116,6 +164,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             {
                 try
                 {
+                    Table table = Table.LoadTable(dbClient, tableName);
                     Document document = new Document
                     {
                         [PartitionKey] = keyId,
@@ -157,12 +206,62 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        public class Builder
+        public IAmazonDynamoDB GetClient()
         {
+            return dbClient;
+        }
+
+        public string GetKeySuffix()
+        {
+            return keySuffix;
+        }
+
+        public string GetTableName()
+        {
+            return tableName;
+        }
+
+        public class Builder : IBuildStep, IEndPointStep, IRegionStep
+        {
+            #pragma warning disable SA1401
+            internal IAmazonDynamoDB DbClient;
+            internal string KeySuffix = DefaultKeySuffix;
+            internal string TableName = DefaultTableName;
+            #pragma warning restore SA1401
+
+            private const string DefaultTableName = "EncryptionKey";
+            private static readonly string DefaultKeySuffix = string.Empty;
+            private readonly AmazonDynamoDBConfig dbConfig = new AmazonDynamoDBConfig();
+
+            public IBuildStep WithKeySuffix(string suffix)
+            {
+                KeySuffix = suffix;
+                return this;
+            }
+
+            public IBuildStep WithTableName(string tableName)
+            {
+                TableName = tableName;
+                return this;
+            }
+
+            public IBuildStep WithEndPointConfiguration(string endPoint, string signingRegion)
+            {
+                dbConfig.ServiceURL = endPoint;
+                dbConfig.AuthenticationRegion = signingRegion;
+                return this;
+            }
+
+            public IBuildStep WithRegion(string region)
+            {
+                dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(region);
+                return this;
+            }
+
             public DynamoDbMetastoreImpl Build()
             {
-                IAmazonDynamoDB dbClient = new AmazonDynamoDBClient();
-                return new DynamoDbMetastoreImpl(dbClient);
+                DbClient = new AmazonDynamoDBClient(dbConfig);
+                return new DynamoDbMetastoreImpl(this);
             }
         }
     }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using App.Metrics;
 using App.Metrics.Concurrency;
 using GoDaddy.Asherah.AppEncryption.Envelope;
@@ -157,7 +156,14 @@ namespace GoDaddy.Asherah.AppEncryption
 
         internal Partition GetPartition(string partitionId)
         {
-            return new Partition(partitionId, serviceId, productId);
+            string regionSuffix = metastore.GetKeySuffix();
+
+            if (!string.IsNullOrEmpty(regionSuffix))
+            {
+                return new SuffixedPartition(partitionId, serviceId, productId, regionSuffix);
+            }
+
+            return new DefaultPartition(partitionId, serviceId, productId);
         }
 
         /// <summary>

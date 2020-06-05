@@ -24,7 +24,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
 
         public AppJsonEncryptionImplTest()
         {
-            partition = new Partition("PARTITION", "SYSTEM", "PRODUCT");
+            partition = new DefaultPartition("PARTITION", "SYSTEM", "PRODUCT");
             Dictionary<string, JObject> memoryPersistence = new Dictionary<string, JObject>();
 
             dataPersistence = new AdhocPersistence<JObject>(
