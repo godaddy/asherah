@@ -21,10 +21,10 @@ import (
 )
 
 const (
-	tableName    = "EncryptionKey"
-	partitionKey = "Id"
-	sortKey      = "Created"
-	keyRecord    = "KeyRecord"
+	defaultTableName = "EncryptionKey"
+	partitionKey     = "Id"
+	sortKey          = "Created"
+	keyRecord        = "KeyRecord"
 )
 
 var (
@@ -41,6 +41,7 @@ var (
 type DynamoDBMetastore struct {
 	svc       dynamodbiface.DynamoDBAPI
 	keySuffix string
+	tableName string
 }
 
 // GetSuffix returns the DynamoDB region suffix or blank if not configured.
@@ -63,9 +64,19 @@ func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
 	}
 }
 
+// WithTableName configures the DynamoDBMetastore to use the specified table name.
+func WithTableName(table string) DynamoDBMetastoreOption {
+	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+		if len(table) > 0 {
+			d.tableName = table
+		}
+	}
+}
+
 func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
 	d := &DynamoDBMetastore{
-		svc: dynamodb.New(sess),
+		svc:       dynamodb.New(sess),
+		tableName: defaultTableName,
 	}
 
 	for _, opt := range opts {
@@ -103,7 +114,7 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 			sortKey:      {N: aws.String(strconv.FormatInt(created, 10))},
 		},
 		ProjectionExpression: expr.Projection(),
-		TableName:            aws.String(tableName),
+		TableName:            aws.String(d.tableName),
 		ConsistentRead:       aws.Bool(true), // always use strong consistency
 	})
 
@@ -140,7 +151,7 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 		Limit:                     aws.Int64(1), // limit 1
 		ProjectionExpression:      expr.Projection(),
 		ScanIndexForward:          aws.Bool(false), // sorts descending
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(d.tableName),
 	})
 	if err != nil {
 		return nil, err
@@ -190,7 +201,7 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 			sortKey:      {N: aws.String(strconv.FormatInt(created, 10))},
 			keyRecord:    {M: av},
 		},
-		TableName:           aws.String(tableName),
+		TableName:           aws.String(d.tableName),
 		ConditionExpression: aws.String("attribute_not_exists(" + partitionKey + ")"),
 	})
 	if err != nil {

@@ -34,6 +34,7 @@ type DynamoDBSuite struct {
 }
 
 const (
+	tableName            = "CustomTableName"
 	portProtocolDynamoDB = "8000/tcp"
 	maxTriesDynamoDB     = 5
 	waitTimeDynamoDB     = 10
@@ -172,7 +173,7 @@ func (suite *DynamoDBSuite) SetupTest() {
 	}
 	suite.putItemInDynamoDB(getDynamoDBItem(en, suite.instant))
 
-	suite.dynamodbMetastore = NewDynamoDBMetastore(suite.sess)
+	suite.dynamodbMetastore = NewDynamoDBMetastore(suite.sess, WithTableName(tableName))
 	suite.prefixedDynamodbMetastore = NewDynamoDBMetastore(suite.sess, WithDynamoDBRegionSuffix(true))
 }
 
@@ -339,10 +340,23 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_WithDynamoDBRegionSuffix() {
 	// keyPrefix should be empty unless WithDynamoDBRegionSuffix is used
-	assert.Empty(suite.T(), suite.dynamodbMetastore.keySuffix)
+	assert.Empty(suite.T(), suite.dynamodbMetastore.GetSuffix())
 
 	// WithDynamoDBRegionSuffix should set the keyPrefix equal to the client's region
-	assert.Equal(suite.T(), *suite.sess.Config.Region, suite.prefixedDynamodbMetastore.keySuffix)
+	assert.Equal(suite.T(), *suite.sess.Config.Region, suite.prefixedDynamodbMetastore.GetSuffix())
+}
+
+func (suite *DynamoDBSuite) TestDynamoDBMetastore_WithTableName() {
+	table := "DummyTable"
+	db := NewDynamoDBMetastore(suite.sess, WithTableName(table))
+
+	assert.Equal(suite.T(), table, db.tableName)
+}
+
+func (suite *DynamoDBSuite) TestDynamoDBMetastore_DefaultTableName() {
+	db := NewDynamoDBMetastore(suite.sess)
+
+	assert.Equal(suite.T(), defaultTableName, db.tableName)
 }
 
 func TestDynamoSuite(t *testing.T) {
