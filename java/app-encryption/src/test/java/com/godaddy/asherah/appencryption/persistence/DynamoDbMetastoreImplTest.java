@@ -231,7 +231,16 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testMetastoreWithRegionSuffix() {
+  void testBuilderPathWithEndPointConfiguration() {
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder()
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .build();
+
+    assertNotNull(dynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testBuilderPathWithRegionSuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
       .withDynamoDbRegionSuffix("us-west-2")
       .build();
@@ -241,7 +250,7 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testMetastoreWithConfigurableTableName() {
+  void testBuilderPathWithTableName() {
     String tableName = "DummyTable";
 
     AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()

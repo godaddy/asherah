@@ -157,7 +157,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
     private AmazonDynamoDB client;
 
-    private AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
+    private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
     private String regionSuffix = DEFAULT_REGION_SUFFIX;
     private String tableName = DEFAULT_TABLE_NAME;
 
@@ -205,7 +205,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   public interface RegionStep {
     /**
      * Specifies the region for the AWS DynamoDb client
-     * @param region
+     * @param region The region for the DynamoDb client
      * @return The current {@code BuildStep} instance
      */
     BuildStep withRegion(String region);
