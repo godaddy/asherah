@@ -13,8 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -69,27 +70,15 @@ class DynamoDbMetastoreImplTest {
 
   @BeforeEach
   void setUp() {
-    // Setup client pointing to our local dynamodb
-    dynamoDbDocumentClient = new DynamoDB(
-        AmazonDynamoDBClientBuilder.standard()
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
-            .build());
-
-    dynamoDbMetastoreImpl = new DynamoDbMetastoreImpl(dynamoDbDocumentClient, "");
+    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder()
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .build();
+    dynamoDbDocumentClient = dynamoDbMetastoreImpl.getClient();
 
     // Create table schema
-    dynamoDbDocumentClient.createTable(new CreateTableRequest()
-        .withTableName(TABLE_NAME)
-        .withKeySchema(
-            new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
-            new KeySchemaElement(SORT_KEY, KeyType.RANGE))
-        .withAttributeDefinitions(
-            new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
-            new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
-        .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+    createTableSchema(dynamoDbDocumentClient, dynamoDbMetastoreImpl.getTableName());
 
-    table = dynamoDbDocumentClient.getTable(TABLE_NAME);
+    table = dynamoDbDocumentClient.getTable(dynamoDbMetastoreImpl.getTableName());
     Item item = new Item()
         .withPrimaryKey(
             PARTITION_KEY, TEST_KEY,
@@ -98,10 +87,23 @@ class DynamoDbMetastoreImplTest {
     table.putItem(item);
   }
 
+  public void createTableSchema(final DynamoDB client,final String tableName) {
+    // Create table schema
+    client.createTable(new CreateTableRequest()
+      .withTableName(tableName)
+      .withKeySchema(
+        new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
+        new KeySchemaElement(SORT_KEY, KeyType.RANGE))
+      .withAttributeDefinitions(
+        new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
+        new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
+      .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+  }
+
   @AfterEach
   void tearDown() {
     // Blow out the whole table so we have clean slate each time
-    dynamoDbDocumentClient.getTable(TABLE_NAME).delete();
+    dynamoDbDocumentClient.getTable(dynamoDbMetastoreImpl.getTableName()).delete();
   }
 
   @Test
@@ -216,17 +218,63 @@ class DynamoDbMetastoreImplTest {
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder().build();
 
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
-      DynamoDbMetastoreImpl.newBuilder().build();
     assertNotNull(dynamoDbMetastoreImpl);
   }
 
   @Test
-  void testMetastoreWithRegionSuffix() {
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().withDynamoDbRegionSuffix("us-west-2").build();
+  void testBuilderPathWithRegion() {
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder().withRegion("us-west-2").build();
+
+    assertNotNull(dynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testBuilderPathWithEndPointConfiguration() {
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder()
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .build();
+
+    assertNotNull(dynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testBuilderPathWithRegionSuffix() {
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+      .withDynamoDbRegionSuffix("us-west-2")
+      .build();
 
     assertEquals("", dynamoDbMetastoreImpl.getRegionSuffix());
     assertEquals("us-west-2", dynamoDbMetastore.getRegionSuffix());
+  }
+
+  @Test
+  void testBuilderPathWithTableName() {
+    String tableName = "DummyTable";
+
+    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+      .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
+      .build();
+    DynamoDB dynamoDBclient = new DynamoDB(client);
+
+    createTableSchema(dynamoDBclient, tableName);
+
+    Table table = dynamoDBclient.getTable(tableName);
+    Item item = new Item()
+      .withPrimaryKey(
+        PARTITION_KEY, TEST_KEY,
+        SORT_KEY, instant.getEpochSecond())
+      .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
+    table.putItem(item);
+
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+      .withEndPointConfiguration("http://localhost:8000", "us-west-2")
+      .withTableName(tableName)
+      .build();
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastore.load(TEST_KEY, instant);
+
+    assertTrue(actualJsonObject.isPresent());
+    assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
 }

@@ -163,14 +163,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         private static void Release(IProtectedMemoryAllocator pm, ref IntPtr ptr, ulong len)
         {
-            #pragma warning disable 162
-            if (Debug.On)
-            {
-                // TODO Add/uncomment this when we refactor logging to use static creation
-                // log.LogDebug("closing: {pointer}", ptr);
-            }
-            #pragma warning restore 162
-
+#if DEBUG
+            // TODO Add/uncomment this when we refactor logging to use static creation
+            // log.LogDebug("closing: {pointer}", ptr);
+#endif
             IntPtr oldPtr = Interlocked.Exchange(ref ptr, IntPtr.Zero);
             if (oldPtr != IntPtr.Zero)
             {
