@@ -16,6 +16,7 @@ type Options struct {
 	ConnectionString   string        `long:"conn" description:"The database connection string (required if --metastore=rdbms)" env:"ASHERAH_CONNECTION_STRING"`
 	EnableRegionSuffix bool          `long:"enable-region-suffix" description:"Configure the metastore to use regional suffixes (only supported by --metastore=dynamodb)" env:"ASHERAH_ENABLE_REGION_SUFFIX"`
 	DynamoDBEndpoint   string        `long:"dynamodb-endpoint" description:"An optional endpoint URL (hostname only or fully qualified URI) (only supported by --metastore=dynamodb)" env:"ASHERAH_DYNAMODB_ENDPOINT"`
+	DynamoDBRegion     string        `long:"dynamodb-region" description:"The AWS region for DynamoDB requests (defaults to globally configured region) (only supported by --metastore=dynamodb)" env:"ASHERAH_DYNAMODB_REGION"`
 	KMS                string        `long:"kms" choice:"aws" choice:"static" default:"aws" description:"Configures the master key management service" env:"ASHERAH_KMS_MODE"`
 	RegionMap          RegionMap     `long:"region-map" description:"A comma separated list of key-value pairs in the form of REGION1=ARN1[,REGION2=ARN2] (required if --kms=aws)" env:"ASHERAH_REGION_MAP"`
 	PreferredRegion    string        `long:"preferred-region" description:"The preferred AWS region (required if --kms=aws)" env:"ASHERAH_PREFERRED_REGION"`

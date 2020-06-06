@@ -111,9 +111,11 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 		}
 
 		if len(opts.DynamoDBEndpoint) > 0 {
-			awsOpts.Config = aws.Config{
-				Endpoint: aws.String(opts.DynamoDBEndpoint),
-			}
+			awsOpts.Config.Endpoint = aws.String(opts.DynamoDBEndpoint)
+		}
+
+		if len(opts.DynamoDBRegion) > 0 {
+			awsOpts.Config.Region = aws.String(opts.DynamoDBRegion)
 		}
 
 		sess := awssession.Must(awssession.NewSessionWithOptions(awsOpts))
