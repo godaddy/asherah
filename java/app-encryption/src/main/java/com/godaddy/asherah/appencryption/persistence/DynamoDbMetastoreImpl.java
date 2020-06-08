@@ -42,7 +42,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   private final DynamoDB client;
   private final String tableName;
-  private final String regionSuffix;
+  private final String keySuffix;
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
@@ -53,7 +53,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   DynamoDbMetastoreImpl(final Builder builder) {
     this.client = new DynamoDB(builder.client);
     this.tableName = builder.tableName;
-    this.regionSuffix = builder.regionSuffix;
+    this.keySuffix = builder.keySuffix;
     this.table = client.getTable(tableName);
   }
 
@@ -139,8 +139,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   @Override
-  public String getRegionSuffix() {
-    return regionSuffix;
+  public String getKeySuffix() {
+    return keySuffix;
   }
 
   String getTableName() {
@@ -153,12 +153,12 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public static final class Builder implements BuildStep, EndPointStep, RegionStep {
     static final String DEFAULT_TABLE_NAME = "EncryptionKey";
-    static final String DEFAULT_REGION_SUFFIX = "";
+    static final String DEFAULT_KEY_SUFFIX = "";
 
     private AmazonDynamoDB client;
 
     private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
-    private String regionSuffix = DEFAULT_REGION_SUFFIX;
+    private String keySuffix = DEFAULT_KEY_SUFFIX;
     private String tableName = DEFAULT_TABLE_NAME;
 
     @Override
@@ -174,8 +174,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     }
 
     @Override
-    public BuildStep withDynamoDbRegionSuffix(final String suffix) {
-      this.regionSuffix = suffix;
+    public BuildStep withKeySuffix(final String suffix) {
+      this.keySuffix = suffix;
       return this;
     }
 
@@ -213,11 +213,11 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface BuildStep {
     /**
-     * Specifies whether region suffix should be enabled for DynamoDB
+     * Specifies whether key suffix should be enabled for DynamoDB
      * @param suffix The region to be used as suffix
      * @return The current {@code BuildStep} instance.
      */
-    BuildStep withDynamoDbRegionSuffix(String suffix);
+    BuildStep withKeySuffix(String suffix);
 
     /**
      * Specifies the name of the table

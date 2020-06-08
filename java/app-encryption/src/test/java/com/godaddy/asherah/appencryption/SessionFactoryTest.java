@@ -86,7 +86,7 @@ class SessionFactoryTest {
 
   @Test
   void testSessionCacheSetupAndClose() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     // Test flows around session cache setup, including cache loader and removal flows (via close)
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
@@ -731,7 +731,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetSessionJson() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     Session<?,?> session = sessionFactory.getSessionJson(testPartitionId);
     assertNotNull(session);
@@ -739,7 +739,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetSessionBytes() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     Session<?,?> session = sessionFactory.getSessionBytes(testPartitionId);
     assertNotNull(session);
@@ -747,7 +747,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetSessionJsonAsJson() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     Session<?,?> session = sessionFactory.getSessionJsonAsJson(testPartitionId);
     assertNotNull(session);
@@ -755,7 +755,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetSessionBytesAsJson() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     Session<?,?> session = sessionFactory.getSessionBytesAsJson(testPartitionId);
     assertNotNull(session);
@@ -763,7 +763,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetEnvelopeEncryptionBytes() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     EnvelopeEncryption<?> envelopeEncryption = sessionFactory.getEnvelopeEncryptionBytes(testPartitionId);
     assertNotNull(envelopeEncryption);
@@ -771,7 +771,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetPartitionWithPartitionId() {
-    when(metastoreMock.getRegionSuffix()).thenReturn("");
+    when(metastoreMock.getKeySuffix()).thenReturn("");
 
     Partition partition =
         sessionFactory.getPartition(testPartitionId);
@@ -782,7 +782,7 @@ class SessionFactoryTest {
 
   @Test
   void testGetPartitionWithSuffixedPartition() {
-    when(metastoreMock.getRegionSuffix()).thenReturn(testRegionSuffix);
+    when(metastoreMock.getKeySuffix()).thenReturn(testRegionSuffix);
 
     Partition partition =
       sessionFactory.getPartition(testPartitionId);

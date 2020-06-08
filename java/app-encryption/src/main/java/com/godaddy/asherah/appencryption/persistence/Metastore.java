@@ -31,10 +31,10 @@ public interface Metastore<V> {
   boolean store(String keyId, Instant created, V value);
 
   /**
-   * Returns the region suffix or "" if region suffix option is disabled
-   * @return The region suffix
+   * Returns the key suffix or "" if key suffix option is disabled
+   * @return The key suffix
    */
-  default String getRegionSuffix() {
+  default String getKeySuffix() {
     return "";
   }
 }
