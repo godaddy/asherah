@@ -30,7 +30,7 @@ You can specify the current release of Asherah as a project dependency using the
   <dependency>
     <groupId>com.godaddy.asherah</groupId>
     <artifactId>appencryption</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
   </dependency>
 </dependencies>
 ```

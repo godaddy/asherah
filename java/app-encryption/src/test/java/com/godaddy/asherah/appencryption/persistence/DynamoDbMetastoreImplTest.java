@@ -242,17 +242,18 @@ class DynamoDbMetastoreImplTest {
   @Test
   void testBuilderPathWithRegionSuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
-      .withDynamoDbRegionSuffix("us-west-2")
+      .withKeySuffix("us-west-2")
       .build();
 
-    assertEquals("", dynamoDbMetastoreImpl.getRegionSuffix());
-    assertEquals("us-west-2", dynamoDbMetastore.getRegionSuffix());
+    assertEquals("", dynamoDbMetastoreImpl.getKeySuffix());
+    assertEquals("us-west-2", dynamoDbMetastore.getKeySuffix());
   }
 
   @Test
   void testBuilderPathWithTableName() {
     String tableName = "DummyTable";
 
+    // Use AWS SDK to create client
     AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
       .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
       .build();
@@ -260,6 +261,7 @@ class DynamoDbMetastoreImplTest {
 
     createTableSchema(dynamoDBclient, tableName);
 
+    // Put the object in DummyTable
     Table table = dynamoDBclient.getTable(tableName);
     Item item = new Item()
       .withPrimaryKey(
@@ -268,12 +270,15 @@ class DynamoDbMetastoreImplTest {
       .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
     table.putItem(item);
 
+    // Create a metastore object using the withTableName step
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
       .withEndPointConfiguration("http://localhost:8000", "us-west-2")
       .withTableName(tableName)
       .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastore.load(TEST_KEY, instant);
 
+    // Verify that we were able to load and successfully decrypt the item from the
+    //metastore object created withTableName
     assertTrue(actualJsonObject.isPresent());
     assertEquals(keyRecord, actualJsonObject.get().toMap());
   }
