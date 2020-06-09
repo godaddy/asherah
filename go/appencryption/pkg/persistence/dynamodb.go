@@ -39,14 +39,14 @@ var (
 
 // DynamoDBMetastore implements the Metastore interface.
 type DynamoDBMetastore struct {
-	svc       dynamodbiface.DynamoDBAPI
-	keySuffix string
-	tableName string
+	svc          dynamodbiface.DynamoDBAPI
+	regionSuffix string
+	tableName    string
 }
 
-// GetKeySuffix returns the DynamoDB region suffix or blank if not configured.
-func (d *DynamoDBMetastore) GetKeySuffix() string {
-	return d.keySuffix
+// GetRegionSuffix returns the DynamoDB region suffix or blank if not configured.
+func (d *DynamoDBMetastore) GetRegionSuffix() string {
+	return d.regionSuffix
 }
 
 // DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
@@ -59,7 +59,7 @@ func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
 	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
 		if enabled {
 			config := p.ClientConfig(dynamodb.EndpointsID)
-			d.keySuffix = *config.Config.Region
+			d.regionSuffix = *config.Config.Region
 		}
 	}
 }

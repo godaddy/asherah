@@ -340,10 +340,10 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_WithDynamoDBRegionSuffix() {
 	// keyPrefix should be empty unless WithDynamoDBRegionSuffix is used
-	assert.Empty(suite.T(), suite.dynamodbMetastore.GetKeySuffix())
+	assert.Empty(suite.T(), suite.dynamodbMetastore.GetRegionSuffix())
 
 	// WithDynamoDBRegionSuffix should set the keyPrefix equal to the client's region
-	assert.Equal(suite.T(), *suite.sess.Config.Region, suite.prefixedDynamodbMetastore.GetKeySuffix())
+	assert.Equal(suite.T(), *suite.sess.Config.Region, suite.prefixedDynamodbMetastore.GetRegionSuffix())
 }
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_WithTableName() {
