@@ -34,12 +34,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly IAmazonDynamoDB dbClient;
         private readonly string keySuffix;
         private readonly string tableName;
+        private readonly Table table;
 
         private DynamoDbMetastoreImpl(Builder builder)
         {
             dbClient = builder.DbClient;
             keySuffix = builder.KeySuffix;
             tableName = builder.TableName;
+            Table.TryLoadTable(dbClient, tableName, out table);
         }
 
         public interface IBuildStep
@@ -97,7 +99,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             {
                 try
                 {
-                    Table table = Table.LoadTable(dbClient, tableName);
                     GetItemOperationConfig config = new GetItemOperationConfig
                     {
                         AttributesToGet = new List<string> { AttributeKeyRecord },
@@ -127,7 +128,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 // Have to use query api to use limit and reverse sort order
                 try
                 {
-                    Table table = Table.LoadTable(dbClient, tableName);
                     QueryFilter filter = new QueryFilter(PartitionKey, QueryOperator.Equal, keyId);
                     QueryOperationConfig config = new QueryOperationConfig
                     {
@@ -164,7 +164,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             {
                 try
                 {
-                    Table table = Table.LoadTable(dbClient, tableName);
                     Document document = new Document
                     {
                         [PartitionKey] = keyId,
@@ -185,8 +184,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                         ConditionalExpression = expr,
                     };
 
-                    // This a blocking call using Result because we need to wait for the call to complete before proceeding
-                    Document result = table.PutItemAsync(document, config).Result;
+                    table.PutItemAsync(document, config).Wait();
                     return true;
                 }
                 catch (AggregateException ae)
