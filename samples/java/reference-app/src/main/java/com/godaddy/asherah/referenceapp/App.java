@@ -133,7 +133,7 @@ public final class App implements Callable<Void> {
       if (dynamoDbConfig.dynamoDbEndpointConfig != null) {
         if (dynamoDbConfig.dynamoDbEndpointConfig.length == 2) {
           builder.withEndPointConfiguration(dynamoDbConfig.dynamoDbEndpointConfig[0],
-            dynamoDbConfig.dynamoDbEndpointConfig[1]);
+              dynamoDbConfig.dynamoDbEndpointConfig[1]);
         }
         else {
           logger.error("Missing parameters for endpoint configuration");
