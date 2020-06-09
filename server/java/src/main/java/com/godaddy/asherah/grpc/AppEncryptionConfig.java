@@ -71,7 +71,6 @@ class AppEncryptionConfig {
         String tableName = dynamoDbConfig.getTableName();
         String[] endPointConfig = dynamoDbConfig.getDynamoDbEndpointConfig();
 
-
         if (dynamoDbRegion != null && !dynamoDbRegion.isEmpty()) {
           builder.withRegion(dynamoDbRegion);
         }
