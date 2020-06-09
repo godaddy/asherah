@@ -89,8 +89,8 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 	}
 
 	var p partition
-	if v, ok := f.Metastore.(interface{ GetSuffix() string }); ok && len(v.GetSuffix()) > 0 {
-		p = newSuffixedPartition(id, f.Config.Service, f.Config.Product, v.GetSuffix())
+	if v, ok := f.Metastore.(interface{ GetKeySuffix() string }); ok && len(v.GetKeySuffix()) > 0 {
+		p = newSuffixedPartition(id, f.Config.Service, f.Config.Product, v.GetKeySuffix())
 	} else {
 		p = newPartition(id, f.Config.Service, f.Config.Product)
 	}

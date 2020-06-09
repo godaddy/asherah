@@ -281,7 +281,7 @@ type MockDynamoDBMetastore struct {
 	*MockMetastore
 }
 
-func (m *MockDynamoDBMetastore) GetSuffix() string {
+func (m *MockDynamoDBMetastore) GetKeySuffix() string {
 	args := m.Called()
 	return args.String(0)
 }
@@ -299,7 +299,7 @@ func TestSessionFactory_GetSession_DefaultPartition(t *testing.T) {
 
 func TestSessionFactory_GetSession_SuffixedPartition(t *testing.T) {
 	store := &MockDynamoDBMetastore{MockMetastore: new(MockMetastore)}
-	store.On("GetSuffix").Return("suffix")
+	store.On("GetKeySuffix").Return("suffix")
 
 	factory := NewSessionFactory(new(Config), store, nil, nil)
 
@@ -313,7 +313,7 @@ func TestSessionFactory_GetSession_SuffixedPartition(t *testing.T) {
 
 func TestSessionFactory_GetSession_Blank_GetSuffix_DefaultPartition(t *testing.T) {
 	store := &MockDynamoDBMetastore{MockMetastore: new(MockMetastore)}
-	store.On("GetSuffix").Return("")
+	store.On("GetKeySuffix").Return("")
 
 	factory := NewSessionFactory(new(Config), store, nil, nil)
 

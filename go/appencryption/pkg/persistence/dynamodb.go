@@ -44,8 +44,8 @@ type DynamoDBMetastore struct {
 	tableName string
 }
 
-// GetSuffix returns the DynamoDB region suffix or blank if not configured.
-func (d *DynamoDBMetastore) GetSuffix() string {
+// GetKeySuffix returns the DynamoDB region suffix or blank if not configured.
+func (d *DynamoDBMetastore) GetKeySuffix() string {
 	return d.keySuffix
 }
 
