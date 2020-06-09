@@ -36,7 +36,7 @@ class ServerApp implements Callable<Void> {
     private static String[] dynamoDbEndpointConfig;
     @CommandLine.Option(names = "--dynamodb-region",
         description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
-    private static String dynamoDbRegion = "";
+    private static String dynamoDbRegion;
   }
 
   // Options to configure the metastore
@@ -49,10 +49,10 @@ class ServerApp implements Callable<Void> {
   private static String jdbcUrl;
   @CommandLine.Option(names = "--enable-region-suffix",
       description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
-  private String regionSuffix = "";
+  private String regionSuffix;
   @CommandLine.Option(names = "--dynamodb-table-name",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")
-  private String tableName = "";
+  private String tableName;
 
   // Options to configure the KMS
   @CommandLine.Option(names = "--kms-type", defaultValue = "${env:ASHERAH_KMS_MODE}",

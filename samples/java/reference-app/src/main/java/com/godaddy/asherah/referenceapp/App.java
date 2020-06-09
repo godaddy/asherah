@@ -55,7 +55,7 @@ public final class App implements Callable<Void> {
 
   enum KmsType { STATIC, AWS }
 
-  @CommandLine.ArgGroup(multiplicity = "0..1")
+  @CommandLine.ArgGroup
   private DynamoDbConfig dynamoDbConfig;
 
   static class DynamoDbConfig {
@@ -65,7 +65,7 @@ public final class App implements Callable<Void> {
     private static String[] dynamoDbEndpointConfig;
     @Option(names = "--dynamodb-region",
         description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
-    private static String dynamoDbRegion = "";
+    private static String dynamoDbRegion;
   }
 
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
@@ -76,10 +76,10 @@ public final class App implements Callable<Void> {
   private String jdbcUrl;
   @Option(names = "--enable-region-suffix",
       description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
-  private String regionSuffix = "";
+  private String regionSuffix;
   @Option(names = "--dynamodb-table-name",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")
-  private String tableName = "";
+  private String tableName;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
@@ -108,7 +108,7 @@ public final class App implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    Metastore<JSONObject> metastore = null;
+    Metastore<JSONObject> metastore;
     if (metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
@@ -125,9 +125,9 @@ public final class App implements Callable<Void> {
     }
     else if (metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
-      Builder builder = DynamoDbMetastoreImpl.newBuilder();
+      DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      if (!dynamoDbConfig.dynamoDbRegion.isEmpty()) {
+      if (dynamoDbConfig.dynamoDbRegion != null) {
         builder.withRegion(dynamoDbConfig.dynamoDbRegion);
       }
       if (dynamoDbConfig.dynamoDbEndpointConfig != null) {
@@ -141,10 +141,10 @@ public final class App implements Callable<Void> {
           return null;
         }
       }
-      if (!tableName.isEmpty()) {
+      if (tableName != null) {
         builder.withTableName(tableName);
       }
-      if (!regionSuffix.isEmpty()) {
+      if (regionSuffix != null) {
         builder.withKeySuffix(regionSuffix);
       }
 
@@ -211,7 +211,7 @@ public final class App implements Callable<Void> {
       // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
-          .getSessionBytes("shopper12345")) {
+          .getSessionBytes("shopper123")) {
 
         String originalPayloadString = "mysupersecretpayload";
 
