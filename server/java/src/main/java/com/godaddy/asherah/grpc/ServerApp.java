@@ -26,6 +26,19 @@ class ServerApp implements Callable<Void> {
     }
   }
 
+  @CommandLine.ArgGroup
+  private DynamoDbConfig dynamoDbConfig;
+
+  static class DynamoDbConfig {
+    @CommandLine.Option(names = "--dynamodb-endpoint", split = ",",
+      description = "Comma separated values for the dynamodb <service endpoint,signing region> " +
+        "(only supported by DYNAMODB)")
+    private static String[] dynamoDbEndpointConfig;
+    @CommandLine.Option(names = "--dynamodb-region",
+        description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
+    private static String dynamoDbRegion = "";
+  }
+
   // Options to configure the metastore
   @CommandLine.Option(names = "--metastore-type", defaultValue = "${env:ASHERAH_METASTORE_MODE}",
       completionCandidates = MetastoreTypes.class,
@@ -34,6 +47,12 @@ class ServerApp implements Callable<Void> {
   @CommandLine.Option(names = "--jdbc-url", defaultValue = "${env:ASHERAH_CONNECTION_STRING}",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private static String jdbcUrl;
+  @CommandLine.Option(names = "--enable-region-suffix",
+      description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
+  private String regionSuffix = "";
+  @CommandLine.Option(names = "--dynamodb-table-name",
+      description = "The table name for DynamoDb (only supported by DYNAMODB)")
+  private String tableName = "";
 
   // Options to configure the KMS
   @CommandLine.Option(names = "--kms-type", defaultValue = "${env:ASHERAH_KMS_MODE}",
@@ -82,7 +101,12 @@ class ServerApp implements Callable<Void> {
 
     KeyManagementService keyManagementService =
         appEncryptionConfig.setupKeyManagementService(kmsType, preferredRegion, regionMap);
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType, jdbcUrl);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType,
+        jdbcUrl,
+        DynamoDbConfig.dynamoDbEndpointConfig,
+        DynamoDbConfig.dynamoDbRegion,
+        regionSuffix,
+        tableName);
 
     if (keyManagementService == null || metastore == null) {
       CommandLine.usage(this, System.out);

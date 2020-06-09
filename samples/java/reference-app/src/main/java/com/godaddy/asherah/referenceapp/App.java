@@ -41,9 +41,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-/**
- * Hello world!
- */
 @Command(mixinStandardHelpOptions = true, description = "Runs an example end-to-end encryption and decryption round "
                                                       + "trip. NOTE: Some metastore and kms types depend on required "
                                                       + "parameters. Refer to parameter descriptions for which types "
@@ -58,12 +55,31 @@ public final class App implements Callable<Void> {
 
   enum KmsType { STATIC, AWS }
 
+  @CommandLine.ArgGroup(multiplicity = "0..1")
+  private DynamoDbConfig dynamoDbConfig;
+
+  static class DynamoDbConfig {
+    @Option(names = "--dynamodb-endpoint", split = ",",
+        description = "Comma separated values for the dynamodb <service endpoint,signing region> " +
+        "(only supported by DYNAMODB)")
+    private static String[] dynamoDbEndpointConfig;
+    @Option(names = "--dynamodb-region",
+        description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
+    private static String dynamoDbRegion = "";
+  }
+
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
       description = "Type of metastore to use. Enum values: ${COMPLETION-CANDIDATES}")
   private MetastoreType metastoreType;
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
+  @Option(names = "--enable-region-suffix",
+      description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
+  private String regionSuffix = "";
+  @Option(names = "--dynamodb-table-name",
+      description = "The table name for DynamoDb (only supported by DYNAMODB)")
+  private String tableName = "";
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
@@ -92,8 +108,8 @@ public final class App implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    Metastore<JSONObject> metastore;
-    if (this.metastoreType == MetastoreType.JDBC) {
+    Metastore<JSONObject> metastore = null;
+    if (metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
 
@@ -107,10 +123,32 @@ public final class App implements Callable<Void> {
         return null;
       }
     }
-    else if (this.metastoreType == MetastoreType.DYNAMODB) {
+    else if (metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
+      Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      metastore = DynamoDbMetastoreImpl.newBuilder().build();
+      if (!dynamoDbConfig.dynamoDbRegion.isEmpty()) {
+        builder.withRegion(dynamoDbConfig.dynamoDbRegion);
+      }
+      if (dynamoDbConfig.dynamoDbEndpointConfig != null) {
+        if (dynamoDbConfig.dynamoDbEndpointConfig.length == 2) {
+          builder.withEndPointConfiguration(dynamoDbConfig.dynamoDbEndpointConfig[0],
+            dynamoDbConfig.dynamoDbEndpointConfig[1]);
+        }
+        else {
+          logger.error("Missing parameters for endpoint configuration");
+          CommandLine.usage(this, System.out);
+          return null;
+        }
+      }
+      if (!tableName.isEmpty()) {
+        builder.withTableName(tableName);
+      }
+      if (!regionSuffix.isEmpty()) {
+        builder.withKeySuffix(regionSuffix);
+      }
+
+      metastore = builder.build();
     }
     else {
       logger.info("using in-memory metastore...");
@@ -173,7 +211,7 @@ public final class App implements Callable<Void> {
       // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
-          .getSessionBytes("shopper123")) {
+          .getSessionBytes("shopper12345")) {
 
         String originalPayloadString = "mysupersecretpayload";
 

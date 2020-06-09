@@ -87,6 +87,19 @@ Configuration options are provided via command-line arguments or environment var
 follows:
 
 ```console
+--dynamodb-endpoint=<dynamoDbEndpointConfig>[,<dynamoDbEndpointConfig>...]
+                          Comma separated values for the dynamodb <service
+                          endpoint,signing region> (only supported by
+                          DYNAMODB)
+--dynamodb-region=<dynamoDbRegion>
+                          The AWS region for DynamoDB requests (only
+                          supported by DYNAMODB)
+--dynamodb-table-name=<tableName>
+                          The table name for DynamoDb (only supported by
+                          DYNAMODB)
+--enable-region-suffix=<regionSuffix>
+                          Configure the metastore to use regional suffixes
+                          (only supported by DYNAMODB)
 --jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>
                           The number of days after which a key will expire
@@ -105,7 +118,7 @@ follows:
                           Required for AWS KMS.
 --revoke-check-minutes=<revokeCheckMinutes>
                           Sets the cache's TTL in minutes to revoke the keys in the cache
---service-id=<serviceId>   Specify the service id
+--service-id=<serviceId>  Specify the service id
 --session-cache-expire-minutes=<sessionCacheExpireMinutes>
                           Evict the session from cache after some minutes.
 --session-cache-max-size=<sessionCacheMaxSize>

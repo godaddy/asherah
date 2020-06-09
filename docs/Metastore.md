@@ -55,8 +55,32 @@ aws dynamodb create-table \
    AttributeName=Created,AttributeType=N \
 <billing mode / provisioned throughput setup>
 ```
-**NOTE:** The DynamoDB metastore implementation does not currently support global tables. If/when it does, we will add any additional info.
 
+#### Configuration
+
+For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
+
+To obtain an instance of the builder, use the static factory method `newBuilder`. 
+``` java
+DynamoDbMetastoreImpl.newBuilder();
+```
+Once you have a builder, you can either use the `withXXX` setter methods to configure the metastore properties or simply
+build the metastore object by calling the `build` method.
+
+ - **withKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. This is required to enable Global
+ Tables.
+ - **withTableName**: Specifies the name of the DynamoDb table.
+ - **withRegion**: Specifies the region for the AWS DynamoDb client.
+ - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+
+Below is an example of a DynamoDB metastore that use a Global Table named `TestTable`
+
+``` java
+DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+      .withKeySuffix("us-west-2")
+      .withTableName("TestTable")
+      .build();
+```
 ##### Item Data Size Estimates
 The estimates provided are based on examples using product id, system id, and partition id with lengths of 11, 13, and 10 bytes respectively.
 

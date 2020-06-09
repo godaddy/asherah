@@ -44,7 +44,12 @@ class AppEncryptionConfigTest {
 
   @Test
   void testInMemorySetupMetastore() {
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("meMoRy", null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("meMoRy",
+        null,
+        null,
+        null,
+        null,
+        null);
 
     assertNotNull(metastore);
     assertTrue(metastore instanceof InMemoryMetastoreImpl);
@@ -52,7 +57,13 @@ class AppEncryptionConfigTest {
 
   @Test
   void testDynamoDbSetupMetastore() {
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb",
+      null,
+      null,
+      null,
+      null,
+      null);
+
 
     assertNotNull(metastore);
     assertTrue(metastore instanceof DynamoDbMetastoreImpl);
@@ -60,13 +71,28 @@ class AppEncryptionConfigTest {
 
   @Test
   void testJdbcBasedSetupMetastore() {
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("invalid_value", null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("invalid_value",
+      null,
+      null,
+      null,
+      null,
+      null);
     assertNull(metastore);
 
-    metastore = appEncryptionConfig.setupMetastore("jdbc", null);
+    metastore = appEncryptionConfig.setupMetastore("jdbc",
+      null,
+      null,
+      null,
+      null,
+      null);
     assertNull(metastore);
 
-    metastore = appEncryptionConfig.setupMetastore("jdBC", "someJdbcUrl");
+    metastore = appEncryptionConfig.setupMetastore("jdBC",
+      "someJdbcUrl",
+      null,
+      null,
+      null,
+      null);
     assertNotNull(metastore);
     assertTrue(metastore instanceof JdbcMetastoreImpl);
   }

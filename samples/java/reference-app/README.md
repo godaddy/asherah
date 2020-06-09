@@ -39,7 +39,6 @@ Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iteration
 [user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar --metastore-type JDBC --jdbc-url 'jdbc:mysql://localhost/test?user=root&password=password' --kms-type AWS --preferred-region us-west-2 --region-arn-tuples us-west-2=<YOUR_USWEST2_ARN>,us-east-1=<YOUR_USEAST1_ARN> --enable-cw --iterations 100
 ```
 
-
 ## General Notes
 
 - Both the `SessionFactory` and the `Session` classes implement the AutoCloseable interface for easy resource
@@ -81,6 +80,17 @@ To use the DynamoDB Metastore included with the App Encryption library, the foll
  --provisioned-throughput \
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
-TODO: Add link to Sceptre template example  
 
-TODO: Add multi-region info if/when we handle it  
+#### Global Tables
+
+To use Global Tables, the above table needs to be created with few modifications.
+
+More details about how to create a Global Table can be found [here](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html)
+
+Example run using DynamoDB metastore with regional suffixes enabled (for Global Tables), static KMS, and 100 iterations:
+
+```console
+[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar --metastore-type DYNAMODB --enable-region-suffix us-west-2 --iterations 100
+``` 
+
+TODO: Add link to Sceptre template example  
