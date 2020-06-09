@@ -47,10 +47,7 @@ class AppEncryptionConfig {
 
   Metastore<JSONObject> setupMetastore(final String metastoreType,
                                        final String jdbcUrl,
-                                       final String[] dynamoDbEndpointConfig,
-                                       final String dynamoDbRegion,
-                                       final String regionSuffix,
-                                       final String tableName) {
+                                       final DynamoDbConfig dynamoDbConfig) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
         if (jdbcUrl == null) {
@@ -69,14 +66,18 @@ class AppEncryptionConfig {
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
         DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
+        String dynamoDbRegion = dynamoDbConfig.getDynamoDbRegion();
+        String regionSuffix = dynamoDbConfig.getRegionSuffix();
+        String tableName = dynamoDbConfig.getTableName();
+        String[] endPointConfig = dynamoDbConfig.getDynamoDbEndpointConfig();
+
 
         if (dynamoDbRegion != null && !dynamoDbRegion.isEmpty()) {
           builder.withRegion(dynamoDbRegion);
         }
-        if (dynamoDbEndpointConfig != null) {
-          if (dynamoDbEndpointConfig.length == 2) {
-            builder.withEndPointConfiguration(dynamoDbEndpointConfig[0],
-                dynamoDbEndpointConfig[1]);
+        if (endPointConfig != null) {
+          if (endPointConfig.length == 2) {
+            builder.withEndPointConfiguration(endPointConfig[0], endPointConfig[1]);
           }
           else {
             logger.error("Missing parameters for endpoint configuration");

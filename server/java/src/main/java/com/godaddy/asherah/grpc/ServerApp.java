@@ -27,9 +27,9 @@ class ServerApp implements Callable<Void> {
   }
 
   @CommandLine.ArgGroup
-  private DynamoDbConfig dynamoDbConfig;
+  private DynamoDbFlags dynamoDbFlags;
 
-  static class DynamoDbConfig {
+  static class DynamoDbFlags {
     @CommandLine.Option(names = "--dynamodb-endpoint", split = ",",
       description = "Comma separated values for the dynamodb <service endpoint,signing region> " +
         "(only supported by DYNAMODB)")
@@ -101,12 +101,14 @@ class ServerApp implements Callable<Void> {
 
     KeyManagementService keyManagementService =
         appEncryptionConfig.setupKeyManagementService(kmsType, preferredRegion, regionMap);
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType,
-        jdbcUrl,
-        DynamoDbConfig.dynamoDbEndpointConfig,
-        DynamoDbConfig.dynamoDbRegion,
+
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(DynamoDbFlags.dynamoDbEndpointConfig,
+        DynamoDbFlags.dynamoDbRegion,
         regionSuffix,
         tableName);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType,
+        jdbcUrl,
+        dynamoDbConfig);
 
     if (keyManagementService == null || metastore == null) {
       CommandLine.usage(this, System.out);

@@ -103,7 +103,7 @@ public final class App implements Callable<Void> {
   }
 
   public static void main(final String[] args) {
-    CommandLine.call(new App(), args);
+    new CommandLine(new App()).execute(args);
   }
 
   @Override
