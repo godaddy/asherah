@@ -24,12 +24,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         public DynamoDbCompatibilityTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.NewBuilder()
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .Build();
-
-            // Create table schema
-            IAmazonDynamoDB amazonDynamoDbClient = dynamoDbMetastoreImpl.GetClient();
+            // Use AWS SDK to create client and initialize table
+            AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
+            {
+                ServiceURL = "http://localhost:8000",
+                AuthenticationRegion = "us-west-2",
+            };
+            IAmazonDynamoDB tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
             CreateTableRequest request = new CreateTableRequest
             {
                 TableName = DefaultTableName,
@@ -45,7 +46,12 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 },
                 ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
             };
-            amazonDynamoDbClient.CreateTableAsync(request).Wait();
+            tempDynamoDbClient.CreateTableAsync(request).Wait();
+
+            // Use a builder without the suffix
+            dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.NewBuilder()
+                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
+                .Build();
 
             // Connect to the same metastore but initialize it with a key suffix
             dynamoDbMetastoreImplWithKeySuffix = DynamoDbMetastoreImpl.NewBuilder()
