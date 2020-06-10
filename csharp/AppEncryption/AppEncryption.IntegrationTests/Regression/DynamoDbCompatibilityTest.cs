@@ -27,7 +27,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             // Use AWS SDK to create client and initialize table
             AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = "http://localhost:8000",
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
                 AuthenticationRegion = "us-west-2",
             };
             IAmazonDynamoDB tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
