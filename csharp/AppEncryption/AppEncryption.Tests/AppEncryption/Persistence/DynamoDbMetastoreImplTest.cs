@@ -265,7 +265,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithRegionSuffix()
+        private void TestBuilderPathWithKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
                 .WithKeySuffix("us-west-2")

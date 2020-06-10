@@ -93,7 +93,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestRegionSuffixShouldReturnEmpty()
+        private void TestKeySuffixShouldReturnEmpty()
         {
             Assert.Equal(string.Empty, inMemoryMetastoreImpl.GetKeySuffix());
         }
