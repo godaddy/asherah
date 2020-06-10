@@ -122,7 +122,10 @@ func Test_Streamer_NewHandler(t *testing.T) {
 	optCombos := []*Options{
 		{KMS: "aws", Metastore: "rdbms"},
 		{KMS: "aws", Metastore: "dynamodb"},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1"},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000"},
 		{KMS: "static", Metastore: "rdbms"},
+		{KMS: "static", Metastore: "memory"},
 	}
 
 	for _, opts := range optCombos {
