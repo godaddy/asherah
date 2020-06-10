@@ -133,7 +133,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
             if (intermediateKey == null)
             {
-                intermediateKey = GetIntermediateKey(intermediateKeyMeta.Created);
+                intermediateKey = GetIntermediateKey(intermediateKeyMeta);
 
                 // Put the key into our cache if allowed
                 if (cryptoPolicy.CanCacheIntermediateKeys())
@@ -480,11 +480,11 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         ///
         /// <returns>The decrypted intermediate key.</returns>
         ///
-        /// <param name="intermediateKeyCreated">creation time of intermediate key</param>
+        /// <param name="intermediateKeyMeta">intermediate key meta of intermediate key</param>
         /// <exception cref="MetadataMissingException">if the intermediate key is not found, or it has missing system key info</exception>
-        internal virtual CryptoKey GetIntermediateKey(DateTimeOffset intermediateKeyCreated)
+        internal virtual CryptoKey GetIntermediateKey(KeyMeta intermediateKeyMeta)
         {
-            EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(partition.IntermediateKeyId, intermediateKeyCreated);
+            EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(intermediateKeyMeta.KeyId, intermediateKeyMeta.Created);
 
             return WithExistingSystemKey(
                 intermediateKeyRecord.ParentKeyMeta.IfNone(() =>

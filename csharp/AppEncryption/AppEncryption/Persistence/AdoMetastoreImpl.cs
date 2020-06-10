@@ -3,7 +3,6 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -132,6 +131,11 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     return false;
                 }
             }
+        }
+
+        public string GetKeySuffix()
+        {
+            return string.Empty;
         }
 
         internal virtual void AddParameter(DbCommand command, string name, object value)
