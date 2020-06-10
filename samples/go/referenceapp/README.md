@@ -91,5 +91,19 @@ To use the DynamoDB Metastore included with Asherah, the following table should 
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
 
+#### Global Tables
+
+To use Global Tables, the above table needs to be created with few modifications.
+
+More details about how to create a Global Table can be found in the [AWS Developer Guide](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html)
+
+Example run using DynamoDB metastore with regional suffixes enabled (for Global Tables) and static KMS
+
+```console
+[user@machine referenceapp]$ go run . \
+--metastore DYNAMODB \
+--enable-region-suffix \
+--payload-to-encrypt "some super secret value"
+ ```
+
 TODO: Add link to Sceptre template example  
-TODO: Add multi-region info if/when we handle it
