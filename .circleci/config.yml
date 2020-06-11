@@ -352,6 +352,7 @@ jobs:
       - run:
           name: Integration Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd csharp/AppEncryption
             ./scripts/integration_test.sh
       - maybe-deploy:
