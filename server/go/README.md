@@ -58,6 +58,8 @@ Asherah Options:
                                           supported by --metastore=dynamodb) [$ASHERAH_DYNAMODB_ENDPOINT]
       --dynamodb-region=                  The AWS region for DynamoDB requests (defaults to globally configured region)
                                           (only supported by --metastore=dynamodb) [$ASHERAH_DYNAMODB_REGION]
+      --dynamodb-table-name=              The table name for DynamoDB (only supported by --metastore=dynamodb)
+                                          [$ASHERAH_DYNAMODB_TABLE_NAME]
       --kms=[aws|static]                  Configures the master key management service (default: aws)
                                           [$ASHERAH_KMS_MODE]
       --region-map=                       A comma separated list of key-value pairs in the form of

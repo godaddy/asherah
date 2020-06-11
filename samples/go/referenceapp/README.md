@@ -17,6 +17,7 @@ Table of Contents
   * [External Resource Setup](#external-resource-setup)
     * [Using an RDBMS Metastore](#using-an-rdbms-metastore)
     * [Using a DynamoDB Metastore](#using-a-dynamodb-metastore)
+  * [Configuring the Reference App](#configuring-the-reference-app)
 
 ## How to Run Reference App
 
@@ -91,5 +92,53 @@ To use the DynamoDB Metastore included with Asherah, the following table should 
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
 
+**NOTE**: To use a custom name for your DynamoDB table, replace `EncryptionKey` in the above command with your preferred
+table name. You will also need to configure the Reference App to use your custom table via the `--dynamodb-table-name`
+flag (example below).
+
+#### Global Tables
+
+To use Global Tables, the above table needs to be created with few modifications.
+
+More details about how to create a Global Table can be found in the [AWS Developer Guide](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html)
+
+Example run using DynamoDB metastore with regional suffixes enabled (for Global Tables), a custom table name, and a
+local DynamoDB endpoint.
+
+```console
+[user@machine referenceapp]$ go run . \
+--metastore DYNAMODB \
+--enable-region-suffix \
+--dynamodb-endpoint http://localhost:8000 \
+--dynamodb-table-name MyCustomTableName \
+--payload-to-encrypt "some super secret value"
+ ```
+
+## Configuring the Reference App
+Configuration options are provided via command-line arguments. Supported options are as
+follows:
+
+```
+Usage:
+  main [OPTIONS]
+
+Application Options:
+  -d, --drr-to-decrypt=       DRR to be decrypted
+  -p, --payload-to-encrypt=   payload to be encrypted
+  -m, --metastore=            Configure what metastore to use (DYNAMODB/SQL/MEMORY)
+  -x, --enable-region-suffix  Configure the metastore to use regional suffixes (only supported by DYNAMODB)
+  -c, --conn=                 MySQL connection String
+      --dynamodb-endpoint=    An optional endpoint URL (hostname only or fully qualified URI) (only supported by
+                              DYNAMODB)
+      --dynamodb-region=      The AWS region for DynamoDB requests (only supported by DYNAMODB) (default: us-west-2)
+      --dynamodb-table-name=  The table name for DynamoDB (only supported by DYNAMODB)
+      --kms-type=             Type of key management service to use (AWS/STATIC)
+      --preferred-region=     Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
+      --region-arn-tuples=    Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
+      --partition-id=         The partition id to use for client sessions
+
+Help Options:
+  -h, --help                  Show this help message
+```
+
 TODO: Add link to Sceptre template example  
-TODO: Add multi-region info if/when we handle it
