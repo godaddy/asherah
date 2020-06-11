@@ -41,9 +41,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-/**
- * Hello world!
- */
 @Command(mixinStandardHelpOptions = true, description = "Runs an example end-to-end encryption and decryption round "
                                                       + "trip. NOTE: Some metastore and kms types depend on required "
                                                       + "parameters. Refer to parameter descriptions for which types "
@@ -58,12 +55,44 @@ public final class App implements Callable<Void> {
 
   enum KmsType { STATIC, AWS }
 
+  @CommandLine.ArgGroup
+  private DynamoDbConfig dynamoDbConfig;
+
+  static class DynamoDbConfig {
+    @CommandLine.ArgGroup(exclusive = false)
+    private EndPoint endPoint;
+
+    static class EndPoint {
+      @Option(names = "--dynamodb-endpoint", required = true,
+          description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
+      private static String endpoint;
+      @Option(names = "--dynamodb-signing-region", required = true,
+          description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
+      private static String signingRegion;
+    }
+
+    @CommandLine.ArgGroup
+    private Region region;
+
+    static class Region {
+      @Option(names = "--dynamodb-region",
+          description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
+      private static String region;
+    }
+  }
+
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
       description = "Type of metastore to use. Enum values: ${COMPLETION-CANDIDATES}")
   private MetastoreType metastoreType;
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
+  @Option(names = "--enable-key-suffix",
+      description = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")
+  private String keySuffix;
+  @Option(names = "--dynamodb-table-name",
+      description = "The table name for DynamoDb (only supported by DYNAMODB)")
+  private String dynamoDbTableName;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
@@ -83,17 +112,17 @@ public final class App implements Callable<Void> {
   @Option(names = "--drr", description = "DRR to be decrypted")
   private String drr;
 
-  private App() {
+  private App() throws InterruptedException {
   }
 
-  public static void main(final String[] args) {
-    CommandLine.call(new App(), args);
+  public static void main(final String[] args) throws InterruptedException {
+    new CommandLine(new App()).execute(args);
   }
 
   @Override
   public Void call() throws Exception {
     Metastore<JSONObject> metastore;
-    if (this.metastoreType == MetastoreType.JDBC) {
+    if (metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
 
@@ -107,10 +136,25 @@ public final class App implements Callable<Void> {
         return null;
       }
     }
-    else if (this.metastoreType == MetastoreType.DYNAMODB) {
+    else if (metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
+      DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      metastore = DynamoDbMetastoreImpl.newBuilder().build();
+      if (DynamoDbConfig.Region.region != null) {
+        builder.withRegion(DynamoDbConfig.Region.region);
+      }
+      if (DynamoDbConfig.EndPoint.endpoint != null && DynamoDbConfig.EndPoint.signingRegion != null) {
+        builder.withEndPointConfiguration(DynamoDbConfig.EndPoint.endpoint,
+            DynamoDbConfig.EndPoint.signingRegion);
+      }
+      if (dynamoDbTableName != null) {
+        builder.withTableName(dynamoDbTableName);
+      }
+      if (keySuffix != null) {
+        builder.withKeySuffix(keySuffix);
+      }
+
+      metastore = builder.build();
     }
     else {
       logger.info("using in-memory metastore...");

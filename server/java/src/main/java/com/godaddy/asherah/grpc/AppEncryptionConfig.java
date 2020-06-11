@@ -45,7 +45,9 @@ class AppEncryptionConfig {
     return null;
   }
 
-  Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl) {
+  Metastore<JSONObject> setupMetastore(final String metastoreType,
+                                       final String jdbcUrl,
+                                       final DynamoDbConfig dynamoDbConfig) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
         if (jdbcUrl == null) {
@@ -63,7 +65,28 @@ class AppEncryptionConfig {
 
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
-        return DynamoDbMetastoreImpl.newBuilder().build();
+        DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
+        String dynamoDbRegion = dynamoDbConfig.getDynamoDbRegion();
+        String regionSuffix = dynamoDbConfig.getRegionSuffix();
+        String tableName = dynamoDbConfig.getTableName();
+        String endPoint = dynamoDbConfig.getDynamoDbEndpointConfig();
+        String signingRegion = dynamoDbConfig.getDynamoDbSigningRegion();
+
+        if (dynamoDbRegion != null && !dynamoDbRegion.isEmpty()) {
+          builder.withRegion(dynamoDbRegion);
+        }
+        if (endPoint != null && signingRegion != null) {
+          builder.withEndPointConfiguration(endPoint, signingRegion);
+        }
+        if (tableName != null && !tableName.isEmpty()) {
+          builder.withTableName(tableName);
+        }
+        if (regionSuffix != null && !regionSuffix.isEmpty()) {
+          builder.withKeySuffix(regionSuffix);
+        }
+
+        return builder.build();
+
 
       case Constants.METASTORE_INMEMORY:
         logger.info("using in-memory metastore...");

@@ -55,7 +55,6 @@ aws dynamodb create-table \
    AttributeName=Created,AttributeType=N \
 <billing mode / provisioned throughput setup>
 ```
-**NOTE:** The DynamoDB metastore implementation does not currently support global tables. If/when it does, we will add any additional info.
 
 ##### Item Data Size Estimates
 The estimates provided are based on examples using product id, system id, and partition id with lengths of 11, 13, and 10 bytes respectively.

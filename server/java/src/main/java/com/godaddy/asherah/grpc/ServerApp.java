@@ -26,6 +26,34 @@ class ServerApp implements Callable<Void> {
     }
   }
 
+  @CommandLine.ArgGroup
+  private DynamoDbFlags dynamoDbFlags;
+
+  static class DynamoDbFlags {
+    @CommandLine.ArgGroup(exclusive = false)
+    private EndPoint endPoint;
+
+    static class EndPoint {
+      @CommandLine.Option(names = "--dynamodb-endpoint", required = true,
+          defaultValue = "${env:ASHERAH_DYNAMODB_ENDPOINT}",
+          description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
+      private static String endpoint;
+      @CommandLine.Option(names = "--dynamodb-signing-region", required = true,
+          defaultValue = "${env:ASHERAH_DYNAMODB_SIGNING_REGION}",
+          description = "The DynamoDb region to use for SigV4 signing of requests (only supported by DYNAMODB)")
+      private static String signingRegion;
+    }
+
+    @CommandLine.ArgGroup
+    private Region region;
+
+    static class Region {
+      @CommandLine.Option(names = "--dynamodb-region", defaultValue = "${env:ASHERAH_DYNAMODB_REGION}",
+          description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
+      private static String region;
+    }
+  }
+
   // Options to configure the metastore
   @CommandLine.Option(names = "--metastore-type", defaultValue = "${env:ASHERAH_METASTORE_MODE}",
       completionCandidates = MetastoreTypes.class,
@@ -34,6 +62,12 @@ class ServerApp implements Callable<Void> {
   @CommandLine.Option(names = "--jdbc-url", defaultValue = "${env:ASHERAH_CONNECTION_STRING}",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private static String jdbcUrl;
+  @CommandLine.Option(names = "--enable-key-suffix", defaultValue = "${env:ASHERAH_ENABLE_KEY_SUFFIX}",
+      description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
+  private String keySuffix;
+  @CommandLine.Option(names = "--dynamodb-table-name", defaultValue = "${env:ASHERAH_DYNAMODB_TABLE_NAME}",
+      description = "The table name for DynamoDb (only supported by DYNAMODB)")
+  private String dynamoDbTableName;
 
   // Options to configure the KMS
   @CommandLine.Option(names = "--kms-type", defaultValue = "${env:ASHERAH_KMS_MODE}",
@@ -82,7 +116,15 @@ class ServerApp implements Callable<Void> {
 
     KeyManagementService keyManagementService =
         appEncryptionConfig.setupKeyManagementService(kmsType, preferredRegion, regionMap);
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType, jdbcUrl);
+
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(DynamoDbFlags.EndPoint.endpoint,
+        DynamoDbFlags.EndPoint.signingRegion,
+        DynamoDbFlags.Region.region,
+        keySuffix,
+        dynamoDbTableName);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType,
+        jdbcUrl,
+        dynamoDbConfig);
 
     if (keyManagementService == null || metastore == null) {
       CommandLine.usage(this, System.out);

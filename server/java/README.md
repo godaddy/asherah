@@ -1,24 +1,15 @@
 # Asherah Server - Java
 
+Table of Contents
+=================
+
+  * [Running the server](#running-the-server)
+  * [Development notes](#development-notes)
+  * [Configuring the server](#configuring-the-server)
+
 ## Running the server
 The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and 
 a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md) for more.
-
-#### Development notes: 
-* Make sure you have JAVA 1.8
-* Create an aws credentials file
-```console
-[user@machine java]$ cat ~/.aws/credentials
-[default]
-aws_access_key_id = secret
-aws_secret_access_key = access
-```
-* Create a aws config file
-```console
-[user@machine java]$ cat ~/.aws/config
-[default]
-region = us-west-2
-```
 
 Running the server:
 ```console
@@ -81,12 +72,42 @@ Successfully built e9cb70abb481
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - revoke check minutes set to = 60 minutes
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - server has started listening on /tmp/appencryption.sock
 ```
+## Development notes: 
+* Make sure you have JAVA 1.8
+* Create an aws credentials file
+```console
+[user@machine java]$ cat ~/.aws/credentials
+[default]
+aws_access_key_id = secret
+aws_secret_access_key = access
+```
+* Create a aws config file
+```console
+[user@machine java]$ cat ~/.aws/config
+[default]
+region = us-west-2
+```
 
 ## Configuring the server
 Configuration options are provided via command-line arguments or environment variables. Supported options are as
 follows:
 
 ```console
+--dynamodb-endpoint=<endpoint>
+                          The DynamoDb service endpoint (only supported by
+                          DYNAMODB)
+--dynamodb-signing-region=<signingRegion>
+                          The DynamoDb region to use for SigV4 signing of
+                          requests (only supported by DYNAMODB)
+--dynamodb-region=<dynamoDbRegion>
+                          The AWS region for DynamoDB requests (only
+                          supported by DYNAMODB)
+--dynamodb-table-name=<dynamoDbTableName>
+                          The table name for DynamoDb (only supported by
+                          DYNAMODB)
+--enable-key-suffix=<keySuffix>
+                          Configure the metastore to use key suffixes
+                          (only supported by DYNAMODB)
 --jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>
                           The number of days after which a key will expire
@@ -105,7 +126,7 @@ follows:
                           Required for AWS KMS.
 --revoke-check-minutes=<revokeCheckMinutes>
                           Sets the cache's TTL in minutes to revoke the keys in the cache
---service-id=<serviceId>   Specify the service id
+--service-id=<serviceId>  Specify the service id
 --session-cache-expire-minutes=<sessionCacheExpireMinutes>
                           Evict the session from cache after some minutes.
 --session-cache-max-size=<sessionCacheMaxSize>

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
@@ -105,11 +106,23 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 
 		return persistence.NewSQLMetastore(db)
 	case "dynamodb":
-		sess := awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
+		awsOpts := awssession.Options{
 			SharedConfigState: awssession.SharedConfigEnable,
-		}))
+		}
 
-		return persistence.NewDynamoDBMetastore(sess, persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix))
+		if len(opts.DynamoDBEndpoint) > 0 {
+			awsOpts.Config.Endpoint = aws.String(opts.DynamoDBEndpoint)
+		}
+
+		if len(opts.DynamoDBRegion) > 0 {
+			awsOpts.Config.Region = aws.String(opts.DynamoDBRegion)
+		}
+
+		return persistence.NewDynamoDBMetastore(
+			awssession.Must(awssession.NewSessionWithOptions(awsOpts)),
+			persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix),
+			persistence.WithTableName(opts.DynamoDBTableName),
+		)
 	default:
 		return persistence.NewMemoryMetastore()
 	}

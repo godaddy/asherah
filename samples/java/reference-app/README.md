@@ -16,6 +16,7 @@ Table of Contents
   * [External Resource Setup](#external-resource-setup)
     * [Using a JDBC Metastore](#using-a-jdbc-metastore)
     * [Using a DynamoDB Metastore](#using-a-dynamodb-metastore)
+  * [Configuring the Reference App](#configuring-the-reference-app)
 
 ## How to Run Reference App
 
@@ -38,7 +39,6 @@ Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iteration
 ```console
 [user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar --metastore-type JDBC --jdbc-url 'jdbc:mysql://localhost/test?user=root&password=password' --kms-type AWS --preferred-region us-west-2 --region-arn-tuples us-west-2=<YOUR_USWEST2_ARN>,us-east-1=<YOUR_USEAST1_ARN> --enable-cw --iterations 100
 ```
-
 
 ## General Notes
 
@@ -81,6 +81,64 @@ To use the DynamoDB Metastore included with the App Encryption library, the foll
  --provisioned-throughput \
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
-TODO: Add link to Sceptre template example  
 
-TODO: Add multi-region info if/when we handle it  
+#### Global Tables
+
+To use Global Tables, the above table needs to be created with few modifications.
+
+More details about how to create a Global Table can be found in the
+[AWS Developer Guide](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html)
+
+Example run using DynamoDB metastore with key suffixes enabled (for Global Tables), a custom table name, and a
+local DynamoDB endpoint.
+
+```console
+[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar \
+--metastore-type DYNAMODB \
+--enable-region-suffix us-west-2 \
+--dynamodb-endpoint http://localhost:8000 \
+--dynamodb-signing-region us-west-2 \
+--dynamodb-table-name MyGlobalTable
+``` 
+
+## Configuring the Reference App
+Configuration options are provided via command-line arguments. Supported options are as
+follows:
+
+```console
+--drr=<drr>          DRR to be decrypted
+--dynamodb-endpoint=<endpoint>
+                     The DynamoDb service endpoint (only supported by
+                     DYNAMODB)
+--dynamodb-region=<region>
+                     The AWS region for DynamoDB requests (only
+                     supported by DYNAMODB)
+--dynamodb-signing-region=<signingRegion>
+                     The DynamoDb service endpoint (only supported by
+                     DYNAMODB)
+--dynamodb-table-name=<dynamoDbTableName>
+                     The table name for DynamoDb (only supported by
+                     DYNAMODB)
+--enable-cw            Enable CloudWatch Metrics output
+--enable-key-suffix=<keySuffix>
+                     Configure the metastore to use key suffixes (only
+                     supported by DYNAMODB)
+-h, --help                 Show this help message and exit.
+--iterations=<iterations>
+                     Number of encrypt/decrypt iterations to run
+--jdbc-url=<jdbcUrl> JDBC URL to use for JDBC metastore. Required for
+                     JDBC metastore.
+--kms-type=<kmsType> Type of key management service to use. Enum
+                     values: STATIC, AWS
+--metastore-type=<metastoreType>
+                     Type of metastore to use. Enum values: MEMORY,
+                     JDBC, DYNAMODB
+--preferred-region=<preferredRegion>
+                     Preferred region to use for KMS if using AWS KMS.
+                     Required for AWS KMS.
+--region-arn-tuples=<String=String>[,<String=String>...]
+                     Comma separated list of <region>=<kms_arn> tuples.
+                     Required for AWS KMS.
+```
+
+TODO: Add link to Sceptre template example  

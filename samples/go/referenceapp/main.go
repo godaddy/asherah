@@ -31,6 +31,9 @@ type Options struct {
 	Metastore          string `short:"m" long:"metastore" description:"Configure what metastore to use (DYNAMODB/SQL/MEMORY)"`
 	EnableRegionSuffix bool   `short:"x" long:"enable-region-suffix" description:"Configure the metastore to use regional suffixes (only supported by DYNAMODB)"`
 	ConnectionString   string `short:"c" long:"conn" description:"MySQL connection String"`
+	DynamoDBEndpoint   string `long:"dynamodb-endpoint" description:"An optional endpoint URL (hostname only or fully qualified URI) (only supported by DYNAMODB)"`
+	DynamoDBRegion     string `long:"dynamodb-region" description:"The AWS region for DynamoDB requests (only supported by DYNAMODB)" default:"us-west-2"`
+	DynamoDBTableName  string `long:"dynamodb-table-name" description:"The table name for DynamoDB (only supported by DYNAMODB)"`
 	KmsType            string `long:"kms-type" description:"Type of key management service to use (AWS/STATIC)"`
 	PreferredRegion    string `long:"preferred-region" description:"Preferred region to use for KMS if using AWS KMS. Required for AWS KMS."`
 	RegionTuples       string `long:"region-arn-tuples" description:"Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS."`
@@ -73,18 +76,26 @@ func createMetastore() appencryption.Metastore {
 	case "DYNAMODB":
 		logger.Info("using dynamodb metastore")
 
-		sess, e := session.NewSession(&aws.Config{
-			Region: aws.String("us-west-2"),
+		awsConfig := &aws.Config{
+			Region: aws.String(opts.DynamoDBRegion),
 			//LogLevel: aws.LogLevel(aws.LogDebug),
-			//Uncomment to use local dynamodb
-			//Endpoint: aws.String("http://localhost:8000"),
-		})
+		}
+
+		if len(opts.DynamoDBEndpoint) > 0 {
+			awsConfig.Endpoint = aws.String(opts.DynamoDBEndpoint)
+		}
+
+		sess, e := session.NewSession(awsConfig)
 
 		if e != nil {
 			panic(e)
 		}
 
-		return persistence.NewDynamoDBMetastore(sess, persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix))
+		return persistence.NewDynamoDBMetastore(
+			sess,
+			persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix),
+			persistence.WithTableName(opts.DynamoDBTableName),
+		)
 	default:
 		logger.Info("using in-memory metastore")
 		return persistence.NewMemoryMetastore()
