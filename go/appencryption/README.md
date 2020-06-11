@@ -107,7 +107,7 @@ metastore := persistence.NewSQLMetastore(db)
 ```go
 awsConfig := &aws.Config{
     Region: aws.String("us-west-2"), // specify preferred region here
- }
+}
 
 sess, err = session.NewSession(awsConfig)
 if err != nil {

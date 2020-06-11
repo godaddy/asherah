@@ -63,7 +63,7 @@ class ServerApp implements Callable<Void> {
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private static String jdbcUrl;
   @CommandLine.Option(names = "--enable-key-suffix", defaultValue = "${env:ASHERAH_ENABLE_KEY_SUFFIX}",
-      description = "Configure the metastore to use regional suffixes (only supported by DYNAMODB)")
+      description = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")
   private String keySuffix;
   @CommandLine.Option(names = "--dynamodb-table-name", defaultValue = "${env:ASHERAH_DYNAMODB_TABLE_NAME}",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")

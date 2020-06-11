@@ -67,7 +67,7 @@ public final class App implements Callable<Void> {
           description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
       private static String endpoint;
       @Option(names = "--dynamodb-signing-region", required = true,
-          description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
+          description = "The DynamoDb region to use for SigV4 signing of requests (only supported by DYNAMODB)")
       private static String signingRegion;
     }
 

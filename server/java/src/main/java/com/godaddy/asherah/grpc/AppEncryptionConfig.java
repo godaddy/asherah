@@ -10,6 +10,7 @@ import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,26 +68,25 @@ class AppEncryptionConfig {
         logger.info("using DynamoDB-based metastore...");
         DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
         String dynamoDbRegion = dynamoDbConfig.getDynamoDbRegion();
-        String regionSuffix = dynamoDbConfig.getRegionSuffix();
+        String keySuffix = dynamoDbConfig.getKeySuffix();
         String tableName = dynamoDbConfig.getTableName();
         String endPoint = dynamoDbConfig.getDynamoDbEndpointConfig();
         String signingRegion = dynamoDbConfig.getDynamoDbSigningRegion();
 
-        if (dynamoDbRegion != null && !dynamoDbRegion.isEmpty()) {
+        if (!StringUtils.isEmpty(dynamoDbRegion)) {
           builder.withRegion(dynamoDbRegion);
         }
         if (endPoint != null && signingRegion != null) {
           builder.withEndPointConfiguration(endPoint, signingRegion);
         }
-        if (tableName != null && !tableName.isEmpty()) {
+        if (!StringUtils.isEmpty(tableName)) {
           builder.withTableName(tableName);
         }
-        if (regionSuffix != null && !regionSuffix.isEmpty()) {
-          builder.withKeySuffix(regionSuffix);
+        if (!StringUtils.isEmpty(keySuffix)) {
+          builder.withKeySuffix(keySuffix);
         }
 
         return builder.build();
-
 
       case Constants.METASTORE_INMEMORY:
         logger.info("using in-memory metastore...");

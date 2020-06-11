@@ -5,18 +5,18 @@ public class DynamoDbConfig {
 
   private static String dynamoDbSigningRegion;
   private static String dynamoDbRegion;
-  private static String regionSuffix;
+  private static String keySuffix;
   private static String tableName;
 
   protected DynamoDbConfig(final String dynamoDbEndpointConfig,
                         final String dynamoDbSigningRegion,
                         final String dynamoDbRegion,
-                        final String regionSuffix,
+                        final String keySuffix,
                         final String tableName) {
     this.dynamoDbEndpointConfig = dynamoDbEndpointConfig;
     this.dynamoDbSigningRegion = dynamoDbSigningRegion;
     this.dynamoDbRegion = dynamoDbRegion;
-    this.regionSuffix = regionSuffix;
+    this.keySuffix = keySuffix;
     this.tableName = tableName;
   }
 
@@ -32,8 +32,8 @@ public class DynamoDbConfig {
     return dynamoDbRegion;
   }
 
-  public static String getRegionSuffix() {
-    return regionSuffix;
+  public static String getKeySuffix() {
+    return keySuffix;
   }
 
   public static String getTableName() {
