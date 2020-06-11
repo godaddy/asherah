@@ -92,6 +92,10 @@ To use the DynamoDB Metastore included with Asherah, the following table should 
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
 
+**NOTE**: To use a custom name for your DynamoDB table, replace `EncryptionKey` in the above command with your preferred
+table name. You will also need to configure the Reference App to use your custom table via the `--dynamodb-table-name`
+flag (example below).
+
 #### Global Tables
 
 To use Global Tables, the above table needs to be created with few modifications.
@@ -106,7 +110,7 @@ local DynamoDB endpoint.
 --metastore DYNAMODB \
 --enable-region-suffix \
 --dynamodb-endpoint http://localhost:8000 \
---dynamodb-table-name MyGlobalTable \
+--dynamodb-table-name MyCustomTableName \
 --payload-to-encrypt "some super secret value"
  ```
 
