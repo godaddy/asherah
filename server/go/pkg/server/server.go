@@ -118,9 +118,11 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 			awsOpts.Config.Region = aws.String(opts.DynamoDBRegion)
 		}
 
-		sess := awssession.Must(awssession.NewSessionWithOptions(awsOpts))
-
-		return persistence.NewDynamoDBMetastore(sess, persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix))
+		return persistence.NewDynamoDBMetastore(
+			awssession.Must(awssession.NewSessionWithOptions(awsOpts)),
+			persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix),
+			persistence.WithTableName(opts.DynamoDBTableName),
+		)
 	default:
 		return persistence.NewMemoryMetastore()
 	}
