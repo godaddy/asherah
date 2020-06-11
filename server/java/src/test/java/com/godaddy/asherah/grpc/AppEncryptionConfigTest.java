@@ -45,7 +45,7 @@ class AppEncryptionConfigTest {
   @Test
   void testInMemorySetupMetastore() {
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("meMoRy",
-        null,
+      null,
       null);
 
     assertNotNull(metastore);

@@ -112,10 +112,10 @@ public final class App implements Callable<Void> {
   @Option(names = "--drr", description = "DRR to be decrypted")
   private String drr;
 
-  private App() throws InterruptedException {
+  private App() {
   }
 
-  public static void main(final String[] args) throws InterruptedException {
+  public static void main(final String[] args) {
     new CommandLine(new App()).execute(args);
   }
 
