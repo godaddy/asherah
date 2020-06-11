@@ -3,7 +3,7 @@
     <PackageId>GoDaddy.Asherah.Crypto</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
