@@ -95,7 +95,7 @@ local DynamoDB endpoint.
 ```console
 [user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar \
 --metastore-type DYNAMODB \
---enable-region-suffix us-west-2 \
+--enable-key-suffix us-west-2 \
 --dynamodb-endpoint http://localhost:8000 \
 --dynamodb-signing-region us-west-2 \
 --dynamodb-table-name MyGlobalTable
