@@ -4,12 +4,31 @@ Table of Contents
 =================
 
   * [Running the server](#running-the-server)
-  * [Development notes](#development-notes)
+    * [Prerequisites](#prerequisites)
   * [Configuring the server](#configuring-the-server)
 
 ## Running the server
 The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and 
 a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md) for more.
+
+#### Prerequisites: 
+* Make sure you have JAVA 1.8
+* Some unit tests will use the AWS SDK, If you don’t already have a local
+[AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
+create  *dummy* files called **`~/.aws/credentials`** and **`~/.aws/config`** with the below contents:
+
+```console
+[user@machine java]$ cat ~/.aws/credentials
+[default]
+aws_access_key_id = foobar
+aws_secret_access_key = barfoo
+
+[user@machine java]$ cat ~/.aws/config
+[default]
+region = us-west-2
+```
+
+Alternately, you can set the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION` environment variables.
 
 Running the server:
 ```console
@@ -72,21 +91,6 @@ Successfully built e9cb70abb481
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - revoke check minutes set to = 60 minutes
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionServer - server has started listening on /tmp/appencryption.sock
 ```
-## Development notes: 
-* Make sure you have JAVA 1.8
-* Create an aws credentials file
-```console
-[user@machine java]$ cat ~/.aws/credentials
-[default]
-aws_access_key_id = secret
-aws_secret_access_key = access
-```
-* Create a aws config file
-```console
-[user@machine java]$ cat ~/.aws/config
-[default]
-region = us-west-2
-```
 
 ## Configuring the server
 Configuration options are provided via command-line arguments or environment variables. Supported options are as
@@ -104,18 +108,15 @@ follows:
                           The table name for DynamoDb (only supported by --metastore-type=DYNAMODB)
 --enable-key-suffix=<keySuffix>
                           Configure the metastore to use key suffixes (only supported by --metastore-type=DYNAMODB)
---jdbc-url=<jdbcUrl>      
-                          JDBC URL to use for JDBC metastore. Required for JDBC metastore.
+--jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>
                           The number of days after which a key will expire
---kms-type=<kmsType>      
-                          Type of key management service to use. Possible values: STATIC, AWS
+--kms-type=<kmsType>      Type of key management service to use. Possible values: STATIC, AWS
 --metastore-type=<metastoreType>
                           Type of metastore to use. Possible values: MEMORY, JDBC, DYNAMODB
 --preferred-region=<preferredRegion>
                           Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
---product-id=<productId>
-                          Specify the product id
+--product-id=<productId>  Specify the product id
 --region-arn-tuples=<String=String>[,<String=String>...]
                           Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 --revoke-check-minutes=<revokeCheckMinutes>

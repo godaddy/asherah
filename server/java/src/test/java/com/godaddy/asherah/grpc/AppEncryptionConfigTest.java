@@ -3,6 +3,7 @@ package com.godaddy.asherah.grpc;
 import com.godaddy.asherah.appencryption.kms.*;
 import com.godaddy.asherah.appencryption.persistence.*;
 import com.godaddy.asherah.crypto.*;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -44,9 +45,7 @@ class AppEncryptionConfigTest {
 
   @Test
   void testInMemorySetupMetastore() {
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("meMoRy",
-      null,
-      null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("meMoRy", null, null);
 
     assertNotNull(metastore);
     assertTrue(metastore instanceof InMemoryMetastoreImpl);
@@ -54,10 +53,52 @@ class AppEncryptionConfigTest {
 
   @Test
   void testDynamoDbSetupMetastore() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null,null, null, null);
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb",
-      null,
-      dynamoDbConfig);
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, null, null, null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNotNull(metastore);
+    assertTrue(metastore instanceof DynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testDynamoDbWithInvalidEndpointConfigurationSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("", "", null, null, null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNull(metastore);
+  }
+
+  @Test
+  void testDynamoDbWithEndpointConfigurationSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "signingRegion", null, null, null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNotNull(metastore);
+    assertTrue(metastore instanceof DynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testDynamoDbWithTableNameSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "signingRegion", null, null, "CustomTableName");
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNotNull(metastore);
+    assertTrue(metastore instanceof DynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testDynamoDbWithKeySuffixEnabledSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, null, "us-west-2", "");
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNotNull(metastore);
+    assertTrue(metastore instanceof DynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testDynamoDbWithRegionSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, "us-west-2", null, "");
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNotNull(metastore);
     assertTrue(metastore instanceof DynamoDbMetastoreImpl);
@@ -65,19 +106,13 @@ class AppEncryptionConfigTest {
 
   @Test
   void testJdbcBasedSetupMetastore() {
-    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("invalid_value",
-      null,
-      null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("invalid_value", null, null);
     assertNull(metastore);
 
-    metastore = appEncryptionConfig.setupMetastore("jdbc",
-      null,
-      null);
+    metastore = appEncryptionConfig.setupMetastore("jdbc", null, null);
     assertNull(metastore);
 
-    metastore = appEncryptionConfig.setupMetastore("jdBC",
-      "someJdbcUrl",
-      null);
+    metastore = appEncryptionConfig.setupMetastore("jdBC", "someJdbcUrl", null);
     assertNotNull(metastore);
     assertTrue(metastore instanceof JdbcMetastoreImpl);
   }

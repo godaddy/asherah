@@ -73,15 +73,25 @@ class AppEncryptionConfig {
         String endPoint = dynamoDbConfig.getDynamoDbEndpointConfig();
         String signingRegion = dynamoDbConfig.getDynamoDbSigningRegion();
 
+        // Check for region configuration
         if (!StringUtils.isEmpty(dynamoDbRegion)) {
           builder.withRegion(dynamoDbRegion);
         }
-        if (endPoint != null && signingRegion != null) {
-          builder.withEndPointConfiguration(endPoint, signingRegion);
+        // Check for endpoint configuration
+        if (endPoint != null || signingRegion != null) {
+          if (!StringUtils.isEmpty(endPoint) && !StringUtils.isEmpty(signingRegion)) {
+            builder.withEndPointConfiguration(endPoint, signingRegion);
+          }
+          else {
+            logger.error("One or more parameter(s) for endpoint configuration missing.");
+            return null;
+          }
         }
+        //Check for table name
         if (!StringUtils.isEmpty(tableName)) {
           builder.withTableName(tableName);
         }
+        // Check for key suffix
         if (!StringUtils.isEmpty(keySuffix)) {
           builder.withKeySuffix(keySuffix);
         }

@@ -1,12 +1,12 @@
 package com.godaddy.asherah.grpc;
 
 public class DynamoDbConfig {
-  private static String dynamoDbEndpointConfig;
+  private String dynamoDbEndpointConfig;
 
-  private static String dynamoDbSigningRegion;
-  private static String dynamoDbRegion;
-  private static String keySuffix;
-  private static String tableName;
+  private String dynamoDbSigningRegion;
+  private String dynamoDbRegion;
+  private String keySuffix;
+  private String tableName;
 
   protected DynamoDbConfig(final String dynamoDbEndpointConfig,
                         final String dynamoDbSigningRegion,
@@ -20,23 +20,23 @@ public class DynamoDbConfig {
     this.tableName = tableName;
   }
 
-  public static String getDynamoDbEndpointConfig() {
+  public String getDynamoDbEndpointConfig() {
     return dynamoDbEndpointConfig;
   }
 
-  public static String getDynamoDbSigningRegion() {
+  public String getDynamoDbSigningRegion() {
     return dynamoDbSigningRegion;
   }
 
-  public static String getDynamoDbRegion() {
+  public String getDynamoDbRegion() {
     return dynamoDbRegion;
   }
 
-  public static String getKeySuffix() {
+  public String getKeySuffix() {
     return keySuffix;
   }
 
-  public static String getTableName() {
+  public String getTableName() {
     return tableName;
   }
 }

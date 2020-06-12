@@ -122,8 +122,7 @@ follows:
                      The DynamoDb service endpoint (only supported by DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
                      The table name for DynamoDb (only supported by DYNAMODB)
---enable-cw          
-                     Enable CloudWatch Metrics output
+--enable-cw          Enable CloudWatch Metrics output
 --enable-key-suffix=<keySuffix>
                      Configure the metastore to use key suffixes (only supported by DYNAMODB)
 --iterations=<iterations>

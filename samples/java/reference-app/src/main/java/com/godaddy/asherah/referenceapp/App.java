@@ -11,6 +11,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,12 +141,18 @@ public final class App implements Callable<Void> {
       logger.info("using DynamoDB-based metastore...");
       DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      if (DynamoDbConfig.Region.region != null) {
+      if (!StringUtils.isEmpty(DynamoDbConfig.Region.region)) {
         builder.withRegion(DynamoDbConfig.Region.region);
       }
-      if (DynamoDbConfig.EndPoint.endpoint != null && DynamoDbConfig.EndPoint.signingRegion != null) {
-        builder.withEndPointConfiguration(DynamoDbConfig.EndPoint.endpoint,
-            DynamoDbConfig.EndPoint.signingRegion);
+      if (DynamoDbConfig.EndPoint.endpoint != null || DynamoDbConfig.EndPoint.signingRegion != null) {
+        if (!StringUtils.isEmpty(DynamoDbConfig.EndPoint.endpoint) &&
+              !StringUtils.isEmpty(DynamoDbConfig.EndPoint.signingRegion)) {
+          builder.withEndPointConfiguration(DynamoDbConfig.EndPoint.endpoint, DynamoDbConfig.EndPoint.signingRegion);
+        }
+        else {
+          logger.error("One or more parameter(s) for endpoint configuration missing.");
+          return null;
+        }
       }
       if (dynamoDbTableName != null) {
         builder.withTableName(dynamoDbTableName);
