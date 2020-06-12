@@ -37,7 +37,14 @@ Example run using defaults (in-memory metastore, static KMS, console metrics onl
 Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iterations:
 
 ```console
-[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar --metastore-type JDBC --jdbc-url 'jdbc:mysql://localhost/test?user=root&password=password' --kms-type AWS --preferred-region us-west-2 --region-arn-tuples us-west-2=<YOUR_USWEST2_ARN>,us-east-1=<YOUR_USEAST1_ARN> --enable-cw --iterations 100
+[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar \
+--metastore-type JDBC \
+--jdbc-url 'jdbc:mysql://localhost/test?user=root&password=password' \
+--kms-type AWS \
+ --preferred-region us-west-2 \
+--region-arn-tuples us-west-2=<YOUR_USWEST2_ARN>,us-east-1=<YOUR_USEAST1_ARN> \
+--enable-cw \
+--iterations 100
 ```
 
 ## General Notes
@@ -53,7 +60,7 @@ To run the reference app with external metastores or KMS implementations, some a
 
 To use the JDBC-compliant Metastore included with the App Encryption library, the following table should be created:
 
-``` sql
+```sql
 CREATE TABLE encryption_key (
   id             VARCHAR(255) NOT NULL,
   created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -69,7 +76,7 @@ CREATE TABLE encryption_key (
 ### Using a DynamoDB Metastore
 To use the DynamoDB Metastore included with the App Encryption library, the following table should be created:
 
-``` console
+```console
 [user@machine AppEncryptionJava]$ aws dynamodb create-table \
  --table-name EncryptionKey \
  --key-schema \
@@ -108,37 +115,27 @@ follows:
 ```console
 --drr=<drr>          DRR to be decrypted
 --dynamodb-endpoint=<endpoint>
-                     The DynamoDb service endpoint (only supported by
-                     DYNAMODB)
+                     The DynamoDb service endpoint (only supported by DYNAMODB)
 --dynamodb-region=<region>
-                     The AWS region for DynamoDB requests (only
-                     supported by DYNAMODB)
+                     The AWS region for DynamoDB requests (only supported by DYNAMODB)
 --dynamodb-signing-region=<signingRegion>
-                     The DynamoDb service endpoint (only supported by
-                     DYNAMODB)
+                     The DynamoDb service endpoint (only supported by DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
-                     The table name for DynamoDb (only supported by
-                     DYNAMODB)
---enable-cw            Enable CloudWatch Metrics output
+                     The table name for DynamoDb (only supported by DYNAMODB)
+--enable-cw          
+                     Enable CloudWatch Metrics output
 --enable-key-suffix=<keySuffix>
-                     Configure the metastore to use key suffixes (only
-                     supported by DYNAMODB)
--h, --help                 Show this help message and exit.
+                     Configure the metastore to use key suffixes (only supported by DYNAMODB)
 --iterations=<iterations>
                      Number of encrypt/decrypt iterations to run
---jdbc-url=<jdbcUrl> JDBC URL to use for JDBC metastore. Required for
-                     JDBC metastore.
---kms-type=<kmsType> Type of key management service to use. Enum
-                     values: STATIC, AWS
+--jdbc-url=<jdbcUrl> JDBC URL to use for JDBC metastore. Required for JDBC metastore.
+--kms-type=<kmsType> Type of key management service to use. Enum values: STATIC, AWS
 --metastore-type=<metastoreType>
-                     Type of metastore to use. Enum values: MEMORY,
-                     JDBC, DYNAMODB
+                     Type of metastore to use. Enum values: MEMORY, JDBC, DYNAMODB
 --preferred-region=<preferredRegion>
-                     Preferred region to use for KMS if using AWS KMS.
-                     Required for AWS KMS.
+                     Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
 --region-arn-tuples=<String=String>[,<String=String>...]
-                     Comma separated list of <region>=<kms_arn> tuples.
-                     Required for AWS KMS.
+                     Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 ```
 
 TODO: Add link to Sceptre template example  

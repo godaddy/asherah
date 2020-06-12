@@ -94,36 +94,30 @@ follows:
 
 ```console
 --dynamodb-endpoint=<endpoint>
-                          The DynamoDb service endpoint (only supported by
-                          DYNAMODB)
+                          The DynamoDb service endpoint (only supported by --metastore-type=DYNAMODB)
 --dynamodb-signing-region=<signingRegion>
-                          The DynamoDb region to use for SigV4 signing of
-                          requests (only supported by DYNAMODB)
+                          The DynamoDb region to use for SigV4 signing of requests 
+                          (only supported by --metastore-type=DYNAMODB)
 --dynamodb-region=<dynamoDbRegion>
-                          The AWS region for DynamoDB requests (only
-                          supported by DYNAMODB)
+                          The AWS region for DynamoDB requests (only supported by --metastore-type=DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
-                          The table name for DynamoDb (only supported by
-                          DYNAMODB)
+                          The table name for DynamoDb (only supported by --metastore-type=DYNAMODB)
 --enable-key-suffix=<keySuffix>
-                          Configure the metastore to use key suffixes
-                          (only supported by DYNAMODB)
---jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
+                          Configure the metastore to use key suffixes (only supported by --metastore-type=DYNAMODB)
+--jdbc-url=<jdbcUrl>      
+                          JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>
                           The number of days after which a key will expire
---kms-type=<kmsType>      Type of key management service to use.
-                          Possible values: STATIC, AWS
+--kms-type=<kmsType>      
+                          Type of key management service to use. Possible values: STATIC, AWS
 --metastore-type=<metastoreType>
-                          Type of metastore to use. 
-                          Possible values: MEMORY, JDBC, DYNAMODB
+                          Type of metastore to use. Possible values: MEMORY, JDBC, DYNAMODB
 --preferred-region=<preferredRegion>
-                          Preferred region to use for KMS if using AWS KMS.
-                          Required for AWS KMS.
+                          Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
 --product-id=<productId>
                           Specify the product id
 --region-arn-tuples=<String=String>[,<String=String>...]
-                          Comma separated list of <region>=<kms_arn> tuples.
-                          Required for AWS KMS.
+                          Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 --revoke-check-minutes=<revokeCheckMinutes>
                           Sets the cache's TTL in minutes to revoke the keys in the cache
 --service-id=<serviceId>  Specify the service id
