@@ -41,7 +41,7 @@ Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iteration
 --metastore-type JDBC \
 --jdbc-url 'jdbc:mysql://localhost/test?user=root&password=password' \
 --kms-type AWS \
- --preferred-region us-west-2 \
+--preferred-region us-west-2 \
 --region-arn-tuples us-west-2=<YOUR_USWEST2_ARN>,us-east-1=<YOUR_USEAST1_ARN> \
 --enable-cw \
 --iterations 100
