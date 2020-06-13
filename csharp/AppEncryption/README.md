@@ -77,13 +77,33 @@ IMetastore<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory
 ```
 
 #### DynamoDB Metastore
+For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
+
+To obtain an instance of the builder, use the static factory method `NewBuilder`. 
+```c#
+DynamoDbMetastoreImpl.NewBuilder();
+```
+Once you have a builder, you can either use the `WithXXX` setter methods to configure the metastore properties or simply
+build the metastore by calling the `Build` method.
+
+ - **WithKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. **This is required to enable Global
+ Tables**.
+ - **WithTableName**: Specifies the name of the DynamoDb table.
+ - **WithRegion**: Specifies the region for the AWS DynamoDb client.
+ - **WithEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+
+Below is an example of a DynamoDB metastore that use a Global Table named `TestTable`
 
 ```c#
 // Setup region via global default or via other AWS .NET SDK mechanisms
 AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder()
 IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
+      .WithKeySuffix("us-west-2")
+      .WithTableName("TestTable")
+      .Build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)

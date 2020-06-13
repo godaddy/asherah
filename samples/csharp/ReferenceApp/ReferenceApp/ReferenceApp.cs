@@ -81,7 +81,53 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
-                metastore = DynamoDbMetastoreImpl.NewBuilder().Build();
+                DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder();
+
+                if (!string.IsNullOrEmpty(options.DynamodbRegion))
+                {
+                    if (!string.IsNullOrEmpty(options.DynamodbEndpoint) ||
+                        !string.IsNullOrEmpty(options.DynamodbSigningRegion))
+                    {
+                        logger.LogError("Either provide a DynamoDb region OR Endpoint with signing region");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    builder.WithRegion(options.DynamodbRegion);
+                }
+
+                if (!string.IsNullOrEmpty(options.DynamodbEndpoint) ||
+                    !string.IsNullOrEmpty(options.DynamodbSigningRegion))
+                {
+                    if (!string.IsNullOrEmpty(options.DynamodbRegion))
+                    {
+                        logger.LogError("Either provide a DynamoDb region OR Endpoint with signing region");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    if (string.IsNullOrEmpty(options.DynamodbEndpoint) ||
+                        string.IsNullOrEmpty(options.DynamodbSigningRegion))
+                    {
+                        logger.LogError("One or more parameter(s) for endpoint configuration missing.");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    builder.WithEndPointConfiguration(options.DynamodbEndpoint, options.DynamodbSigningRegion);
+                }
+
+                if (!string.IsNullOrEmpty(options.DynamodbTableName))
+                {
+                    builder.WithTableName(options.DynamodbTableName);
+                }
+
+                if (!string.IsNullOrEmpty(options.KeySuffix))
+                {
+                    builder.WithKeySuffix(options.KeySuffix);
+                }
+
+                metastore = builder.Build();
             }
             else
             {
