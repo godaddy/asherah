@@ -3,7 +3,6 @@ package com.godaddy.asherah.grpc;
 import com.godaddy.asherah.appencryption.kms.*;
 import com.godaddy.asherah.appencryption.persistence.*;
 import com.godaddy.asherah.crypto.*;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 

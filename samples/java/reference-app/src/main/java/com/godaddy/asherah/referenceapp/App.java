@@ -70,10 +70,10 @@ public final class App implements Callable<Void> {
   @CommandLine.Option(names = "--dynamodb-endpoint",
       defaultValue = "${env:ASHERAH_DYNAMODB_ENDPOINT}",
       description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
-  private static String dynamoDbEndpoint;
+  private String dynamoDbEndpoint;
   @CommandLine.Option(names = "--dynamodb-region", defaultValue = "${env:ASHERAH_DYNAMODB_REGION}",
       description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
-  private static String dynamoDbRegion;
+  private String dynamoDbRegion;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
@@ -110,56 +110,44 @@ public final class App implements Callable<Void> {
         dataSource.setJdbcUrl(jdbcUrl);
         return JdbcMetastoreImpl.newBuilder(dataSource).build();
       }
-      else {
-        CommandLine.usage(this, System.out);
-        return null;
-      }
+      CommandLine.usage(this, System.out);
+      return null;
     }
-    else if (metastoreType == MetastoreType.DYNAMODB) {
+    if (metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
       DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      // Check for region configuration.
+      // Check for region and endpoint configuration.
       // The client can use either withRegion or withEndPointConfiguration but not both
-      if (dynamoDbRegion != null && dynamoDbEndpoint == null) {
-        if (!dynamoDbRegion.trim().isEmpty()) {
-          builder.withRegion(dynamoDbRegion);
-        }
-        else {
-          logger.error("Region cannot be empty.");
-          return null;
-        }
-      }
-      // Check for endpoint configuration
       if (dynamoDbEndpoint != null) {
-        // If an endpoint is provided, a region should be provided as well
-        if (!dynamoDbEndpoint.trim().isEmpty() && (dynamoDbRegion != null && !dynamoDbRegion.trim().isEmpty())) {
-          builder.withEndPointConfiguration(dynamoDbEndpoint, dynamoDbRegion);
-        }
-        else {
+        if (dynamoDbRegion == null || dynamoDbRegion.trim().isEmpty() || dynamoDbEndpoint.trim().isEmpty()) {
           logger.error("One or more parameter(s) for endpoint configuration missing.");
           return null;
         }
+        builder.withEndPointConfiguration(dynamoDbEndpoint, dynamoDbRegion);
+      }
+      else if (dynamoDbRegion != null) {
+        if (dynamoDbRegion.trim().isEmpty()) {
+          logger.error("Region cannot be empty.");
+          return null;
+        }
+        builder.withRegion(dynamoDbRegion);
       }
       //Check for table name
       if (dynamoDbTableName != null) {
-        if (!dynamoDbTableName.trim().isEmpty()) {
-          builder.withTableName(dynamoDbTableName);
-        }
-        else {
+        if (dynamoDbTableName.trim().isEmpty()) {
           logger.error("Table name cannot be empty.");
           return null;
         }
+        builder.withTableName(dynamoDbTableName);
       }
       // Check for key suffix
       if (keySuffix != null) {
-        if (!keySuffix.trim().isEmpty()) {
-          builder.withKeySuffix(keySuffix);
-        }
-        else {
+        if (keySuffix.trim().isEmpty()) {
           logger.error("KeySuffix cannot be empty.");
           return null;
         }
+        builder.withKeySuffix(keySuffix);
       }
       return builder.build();
     }
@@ -174,16 +162,12 @@ public final class App implements Callable<Void> {
         // build the ARN regions including preferred region
         return AwsKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
       }
-      else {
-        CommandLine.usage(this, System.out);
-        return null;
-      }
+      CommandLine.usage(this, System.out);
+      return null;
     }
-    else {
-      logger.info("using static KMS...");
+    logger.info("using static KMS...");
 
-      return new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
-    }
+    return new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
   }
 
   @Override

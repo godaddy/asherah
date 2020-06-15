@@ -45,8 +45,7 @@ class AppEncryptionConfig {
     return null;
   }
 
-  Metastore<JSONObject> setupMetastore(final String metastoreType,
-                                       final String jdbcUrl,
+  Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl,
                                        final DynamoDbConfig dynamoDbConfig) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
@@ -71,47 +70,37 @@ class AppEncryptionConfig {
         String tableName = dynamoDbConfig.getTableName();
         String endPoint = dynamoDbConfig.getEndpointConfig();
 
-        // Check for region configuration.
+        // Check for region and endpoint configuration.
         // The client can use either withRegion or withEndPointConfiguration but not both
-        if (region != null && endPoint == null) {
-          if (!region.trim().isEmpty()) {
-            builder.withRegion(region);
-          }
-          else {
-            logger.error("Region cannot be empty.");
-            return null;
-          }
-        }
-        // Check for endpoint configuration
         if (endPoint != null) {
-          // If an endpoint is provided, a region should be provided as well
-          if (!endPoint.trim().isEmpty() && (region != null && !region.trim().isEmpty())) {
-            builder.withEndPointConfiguration(endPoint, region);
-          }
-          else {
+          if (region == null || region.trim().isEmpty() || endPoint.trim().isEmpty()) {
             logger.error("One or more parameter(s) for endpoint configuration missing.");
             return null;
           }
+          builder.withEndPointConfiguration(endPoint, region);
+        }
+        else if (region != null) {
+          if (region.trim().isEmpty()) {
+            logger.error("Region cannot be empty.");
+            return null;
+          }
+          builder.withRegion(region);
         }
         //Check for table name
         if (tableName != null) {
-          if (!tableName.trim().isEmpty()) {
-            builder.withTableName(tableName);
-          }
-          else {
+          if (tableName.trim().isEmpty()) {
             logger.error("Table name cannot be empty.");
             return null;
           }
+          builder.withTableName(tableName);
         }
         // Check for key suffix
         if (keySuffix != null) {
-          if (!keySuffix.trim().isEmpty()) {
-            builder.withKeySuffix(keySuffix);
-          }
-          else {
+          if (keySuffix.trim().isEmpty()) {
             logger.error("KeySuffix cannot be empty.");
             return null;
           }
+          builder.withKeySuffix(keySuffix);
         }
 
         return builder.build();

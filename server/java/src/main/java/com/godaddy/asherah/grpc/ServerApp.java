@@ -43,10 +43,10 @@ class ServerApp implements Callable<Void> {
   @CommandLine.Option(names = "--dynamodb-endpoint",
       defaultValue = "${env:ASHERAH_DYNAMODB_ENDPOINT}",
       description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
-  private static String dynamoDbEndpoint;
+  private String dynamoDbEndpoint;
   @CommandLine.Option(names = "--dynamodb-region", defaultValue = "${env:ASHERAH_DYNAMODB_REGION}",
       description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
-  private static String dynamoDbRegion;
+  private String dynamoDbRegion;
 
   // Options to configure the KMS
   @CommandLine.Option(names = "--kms-type", defaultValue = "${env:ASHERAH_KMS_MODE}",
