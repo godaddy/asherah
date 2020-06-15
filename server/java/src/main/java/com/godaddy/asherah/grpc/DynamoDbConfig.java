@@ -6,10 +6,8 @@ public class DynamoDbConfig {
   private final String keySuffix;
   private final String tableName;
 
-  protected DynamoDbConfig(final String endpointConfig,
-                        final String region,
-                        final String keySuffix,
-                        final String tableName) {
+  protected DynamoDbConfig(final String endpointConfig, final String region, final String keySuffix,
+      final String tableName) {
     this.endpointConfig = endpointConfig;
     this.region = region;
     this.keySuffix = keySuffix;
