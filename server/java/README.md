@@ -97,11 +97,8 @@ Configuration options are provided via command-line arguments or environment var
 follows:
 
 ```console
---dynamodb-endpoint=<endpoint>
+--dynamodb-endpoint=<dynamoDbEndpoint>
                           The DynamoDb service endpoint (only supported by --metastore-type=DYNAMODB)
---dynamodb-signing-region=<signingRegion>
-                          The DynamoDb region to use for SigV4 signing of requests 
-                          (only supported by --metastore-type=DYNAMODB)
 --dynamodb-region=<dynamoDbRegion>
                           The AWS region for DynamoDB requests (only supported by --metastore-type=DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>

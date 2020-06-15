@@ -55,32 +55,6 @@ public final class App implements Callable<Void> {
 
   enum KmsType { STATIC, AWS }
 
-  @CommandLine.ArgGroup
-  private DynamoDbConfig dynamoDbConfig;
-
-  static class DynamoDbConfig {
-    @CommandLine.ArgGroup(exclusive = false)
-    private EndPoint endPoint;
-
-    static class EndPoint {
-      @Option(names = "--dynamodb-endpoint", required = true,
-          description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
-      private static String endpoint;
-      @Option(names = "--dynamodb-signing-region", required = true,
-          description = "The DynamoDb region to use for SigV4 signing of requests (only supported by DYNAMODB)")
-      private static String signingRegion;
-    }
-
-    @CommandLine.ArgGroup
-    private Region region;
-
-    static class Region {
-      @Option(names = "--dynamodb-region",
-          description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
-      private static String region;
-    }
-  }
-
   @Option(names = "--metastore-type", defaultValue = "MEMORY",
       description = "Type of metastore to use. Enum values: ${COMPLETION-CANDIDATES}")
   private MetastoreType metastoreType;
@@ -93,6 +67,13 @@ public final class App implements Callable<Void> {
   @Option(names = "--dynamodb-table-name",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")
   private String dynamoDbTableName;
+  @CommandLine.Option(names = "--dynamodb-endpoint",
+      defaultValue = "${env:ASHERAH_DYNAMODB_ENDPOINT}",
+      description = "The DynamoDb service endpoint (only supported by DYNAMODB)")
+  private static String dynamoDbEndpoint;
+  @CommandLine.Option(names = "--dynamodb-region", defaultValue = "${env:ASHERAH_DYNAMODB_REGION}",
+      description = "The AWS region for DynamoDB requests (only supported by DYNAMODB)")
+  private static String dynamoDbRegion;
 
   @Option(names = "--kms-type", defaultValue = "STATIC",
       description = "Type of key management service to use. Enum values: ${COMPLETION-CANDIDATES}")
@@ -119,9 +100,7 @@ public final class App implements Callable<Void> {
     new CommandLine(new App()).execute(args);
   }
 
-  @Override
-  public Void call() throws Exception {
-    Metastore<JSONObject> metastore;
+  private Metastore<JSONObject> setupMetastore() {
     if (metastoreType == MetastoreType.JDBC) {
       if (jdbcUrl != null) {
         logger.info("using JDBC-based metastore...");
@@ -129,7 +108,7 @@ public final class App implements Callable<Void> {
         // Setup JDBC persistence from command line argument using Hikari connection pooling
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
-        metastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
+        return JdbcMetastoreImpl.newBuilder(dataSource).build();
       }
       else {
         CommandLine.usage(this, System.out);
@@ -140,19 +119,22 @@ public final class App implements Callable<Void> {
       logger.info("using DynamoDB-based metastore...");
       DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      if (DynamoDbConfig.Region.region != null) {
-        if (!DynamoDbConfig.Region.region.trim().isEmpty()) {
-          builder.withRegion(DynamoDbConfig.Region.region);
+      // Check for region configuration.
+      // The client can use either withRegion or withEndPointConfiguration but not both
+      if (dynamoDbRegion != null && dynamoDbEndpoint == null) {
+        if (!dynamoDbRegion.trim().isEmpty()) {
+          builder.withRegion(dynamoDbRegion);
         }
         else {
-          logger.error("Region cannot be blank.");
+          logger.error("Region cannot be empty.");
           return null;
         }
       }
       // Check for endpoint configuration
-      if (DynamoDbConfig.EndPoint.endpoint != null || DynamoDbConfig.EndPoint.signingRegion != null) {
-        if (!DynamoDbConfig.EndPoint.endpoint.trim().isEmpty() && !DynamoDbConfig.EndPoint.signingRegion.trim().isEmpty()) {
-          builder.withEndPointConfiguration(DynamoDbConfig.EndPoint.endpoint, DynamoDbConfig.EndPoint.signingRegion);
+      if (dynamoDbEndpoint != null) {
+        // If an endpoint is provided, a region should be provided as well
+        if (!dynamoDbEndpoint.trim().isEmpty() && (dynamoDbRegion != null && !dynamoDbRegion.trim().isEmpty())) {
+          builder.withEndPointConfiguration(dynamoDbEndpoint, dynamoDbRegion);
         }
         else {
           logger.error("One or more parameter(s) for endpoint configuration missing.");
@@ -165,7 +147,7 @@ public final class App implements Callable<Void> {
           builder.withTableName(dynamoDbTableName);
         }
         else {
-          logger.error("Table name cannot be blank.");
+          logger.error("Table name cannot be empty.");
           return null;
         }
       }
@@ -175,26 +157,22 @@ public final class App implements Callable<Void> {
           builder.withKeySuffix(keySuffix);
         }
         else {
-          logger.error("KeySuffix cannot be blank.");
+          logger.error("KeySuffix cannot be empty.");
           return null;
         }
       }
-
-      metastore = builder.build();
+      return builder.build();
     }
-    else {
-      logger.info("using in-memory metastore...");
+    return new InMemoryMetastoreImpl<>();
+  }
 
-      metastore = new InMemoryMetastoreImpl<>();
-    }
-
-    KeyManagementService keyManagementService;
+  private KeyManagementService setupKeyManagementService() {
     if (kmsType == KmsType.AWS) {
       if (preferredRegion != null && regionMap != null) {
         logger.info("using AWS KMS...");
 
         // build the ARN regions including preferred region
-        keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
+        return AwsKeyManagementServiceImpl.newBuilder(regionMap, preferredRegion).build();
       }
       else {
         CommandLine.usage(this, System.out);
@@ -204,7 +182,18 @@ public final class App implements Callable<Void> {
     else {
       logger.info("using static KMS...");
 
-      keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
+      return new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
+    }
+  }
+
+  @Override
+  public Void call() throws Exception {
+    KeyManagementService keyManagementService = setupKeyManagementService();
+    Metastore<JSONObject> metastore = setupMetastore();
+
+    if (keyManagementService == null || metastore == null) {
+      CommandLine.usage(this, System.out);
+      System.exit(-1);
     }
 
     CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy

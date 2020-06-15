@@ -98,7 +98,7 @@ build the metastore by calling the `build` method.
  - **withRegion**: Specifies the region for the AWS DynamoDb client.
  - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
 
-Below is an example of a DynamoDB metastore that use a Global Table named `TestTable`
+Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
 ```java
 Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()

@@ -104,7 +104,7 @@ local DynamoDB endpoint.
 --metastore-type DYNAMODB \
 --key-suffix us-west-2 \
 --dynamodb-endpoint http://localhost:8000 \
---dynamodb-signing-region us-west-2 \
+--dynamodb-region us-west-2 \
 --dynamodb-table-name MyGlobalTable
 ``` 
 
@@ -114,12 +114,10 @@ follows:
 
 ```console
 --drr=<drr>          DRR to be decrypted
---dynamodb-endpoint=<endpoint>
+--dynamodb-endpoint=<dynamoDbEndpoint>
                      The DynamoDb service endpoint (only supported by DYNAMODB)
---dynamodb-region=<region>
+--dynamodb-region=<dynamoDbRegion>
                      The AWS region for DynamoDB requests (only supported by DYNAMODB)
---dynamodb-signing-region=<signingRegion>
-                     The DynamoDb service endpoint (only supported by DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
                      The table name for DynamoDb (only supported by DYNAMODB)
 --enable-cw          Enable CloudWatch Metrics output

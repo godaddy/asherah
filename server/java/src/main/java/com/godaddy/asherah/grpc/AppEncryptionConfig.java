@@ -70,10 +70,10 @@ class AppEncryptionConfig {
         String keySuffix = dynamoDbConfig.getKeySuffix();
         String tableName = dynamoDbConfig.getTableName();
         String endPoint = dynamoDbConfig.getEndpointConfig();
-        String signingRegion = dynamoDbConfig.getSigningRegion();
 
-        // Check for region configuration
-        if (region != null) {
+        // Check for region configuration.
+        // The client can use either withRegion or withEndPointConfiguration but not both
+        if (region != null && endPoint == null) {
           if (!region.trim().isEmpty()) {
             builder.withRegion(region);
           }
@@ -83,9 +83,10 @@ class AppEncryptionConfig {
           }
         }
         // Check for endpoint configuration
-        if (endPoint != null || signingRegion != null) {
-          if (!endPoint.trim().isEmpty() && !signingRegion.trim().isEmpty()) {
-            builder.withEndPointConfiguration(endPoint, signingRegion);
+        if (endPoint != null) {
+          // If an endpoint is provided, a region should be provided as well
+          if (!endPoint.trim().isEmpty() && (region != null && !region.trim().isEmpty())) {
+            builder.withEndPointConfiguration(endPoint, region);
           }
           else {
             logger.error("One or more parameter(s) for endpoint configuration missing.");
