@@ -229,7 +229,7 @@ jobs:
       - save-java-cache
   csharp-logging:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -269,7 +269,7 @@ jobs:
       - save-csharp-cache
   csharp-secure-memory:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -309,7 +309,7 @@ jobs:
       - save-csharp-cache
   csharp-app-encryption:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
@@ -352,6 +352,7 @@ jobs:
       - run:
           name: Integration Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd csharp/AppEncryption
             ./scripts/integration_test.sh
       - maybe-deploy:
@@ -360,7 +361,7 @@ jobs:
       - save-csharp-cache
   samples-csharp-reference-app:
     docker:
-      - image: mcr.microsoft.com/dotnet/core/sdk:2.1
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
     steps:
       - checkout
       - restore-csharp-cache
@@ -572,7 +573,6 @@ jobs:
             - v4-clients-{{ .Branch }}-{{ .BuildNum }}
             - v4-clients-{{ .Branch }}-
             - v4-clients-
-      - restore-go-cache
       - run:
           name: Setup java environment
           command: |
@@ -643,8 +643,6 @@ jobs:
             - v4-cltf-{{ .Branch }}-{{ .BuildNum }}
             - v4-cltf-{{ .Branch }}-
             - v4-cltf-
-      - restore-csharp-cache
-      - restore-go-cache
       - run:
           name: Setup java environment
           command: |
@@ -662,7 +660,7 @@ jobs:
             dpkg -i packages-microsoft-prod.deb
             apt-get install -y apt-transport-https
             apt-get update
-            apt-get install -y dotnet-sdk-2.1
+            apt-get install -y dotnet-sdk-3.1
             mkdir -p ~/.nuget/{NuGet,packages}
             cp build/NuGet.Config ~/.nuget/NuGet/
       - run:

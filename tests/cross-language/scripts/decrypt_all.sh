@@ -12,7 +12,7 @@ cd ..
 
 cd csharp
 echo "----------------------Decrypting data using C#--------------------------"
-dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.DecryptDataUsingRDBMSMetastoreAndStaticKMSFeature.DecryptingData
+dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.DecryptDataUsingRDBMSMetastoreAndStaticKMSFeature.DecryptingData --no-build
 cd ..
 
 cd go
