@@ -1,5 +1,11 @@
 # Asherah Server - Go
 
+Table of Contents
+=================
+
+  * [Running the server](#running-the-server)
+  * [Configuring the server](#configuring-the-server)
+
 ## Running the server
 The following makes use of the `rdbms` metastore implementation and assumes mysql is running on localhost and a
 preexisting asherah database. See [metastore documentation](/docs/Metastore.md) for more.

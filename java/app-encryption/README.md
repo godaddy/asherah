@@ -83,8 +83,28 @@ Metastore jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
 #### DynamoDB Metastore
 
+For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
+
+To obtain an instance of the builder, use the static factory method `newBuilder`. 
 ```java
-Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().build();
+DynamoDbMetastoreImpl.newBuilder();
+```
+Once you have a builder, you can either use the `withXXX` setter methods to configure the metastore properties or simply
+build the metastore by calling the `build` method.
+
+ - **withKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. **This is required to enable Global
+ Tables.**
+ - **withTableName**: Specifies the name of the DynamoDb table.
+ - **withRegion**: Specifies the region for the AWS DynamoDb client.
+ - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+
+Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
+
+```java
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+      .withKeySuffix("us-west-2")
+      .withTableName("TestTable")
+      .build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
