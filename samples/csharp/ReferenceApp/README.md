@@ -128,17 +128,15 @@ Configuration options are provided via command-line arguments. Supported options
 follows:
 
 ```console
-  -m, --metastore-type           (Default: MEMORY) Type of metastore to use. Enum values: MEMORY, JDBC, DYNAMODB
+  -m, --metastore-type           (Default: MEMORY) Type of metastore to use. Enum values: MEMORY, ADO, DYNAMODB
 
   -e, --dynamodb-endpoint        The DynamoDb service endpoint (only supported by DYNAMODB)
 
   -r, --dynamodb-region          The AWS region for DynamoDB requests (only supported by DYNAMODB)
 
-  -s, --dynamodb-signing-region  The DynamoDb service endpoint (only supported by DYNAMODB)
-
   -t, --dynamodb-table-name      The table name for DynamoDb (only supported by DYNAMODB)
 
-  -x, --key-suffix               Configure the metastore to use key suffixes (only supported by DYNAMODB)
+  -s, --key-suffix               Configure the metastore to use key suffixes (only supported by DYNAMODB)
 
   -a, --ado-connection-string    ADO connection string to use for an ADO metastore. Required for ADO metastore.
 

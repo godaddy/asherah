@@ -83,38 +83,21 @@ namespace GoDaddy.Asherah.ReferenceApp
                 AWSConfigs.AWSRegion = "us-west-2";
                 DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder();
 
-                if (!string.IsNullOrEmpty(options.DynamodbRegion))
+                if (!string.IsNullOrEmpty(options.DynamodbEndpoint))
                 {
-                    if (!string.IsNullOrEmpty(options.DynamodbEndpoint) ||
-                        !string.IsNullOrEmpty(options.DynamodbSigningRegion))
+                    if (string.IsNullOrEmpty(options.DynamodbRegion))
                     {
-                        logger.LogError("Either provide a DynamoDb region OR Endpoint with signing region");
+                        // TODO: check if region can be determined from provided endpoint
+                        logger.LogError("DynamoDb region is required when providing a DynamoDb endpoint.");
                         Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                         return;
                     }
 
-                    builder.WithRegion(options.DynamodbRegion);
+                    builder.WithEndPointConfiguration(options.DynamodbEndpoint, options.DynamodbRegion);
                 }
-
-                if (!string.IsNullOrEmpty(options.DynamodbEndpoint) ||
-                    !string.IsNullOrEmpty(options.DynamodbSigningRegion))
+                else if (!string.IsNullOrEmpty(options.DynamodbRegion))
                 {
-                    if (!string.IsNullOrEmpty(options.DynamodbRegion))
-                    {
-                        logger.LogError("Either provide a DynamoDb region OR Endpoint with signing region");
-                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
-                        return;
-                    }
-
-                    if (string.IsNullOrEmpty(options.DynamodbEndpoint) ||
-                        string.IsNullOrEmpty(options.DynamodbSigningRegion))
-                    {
-                        logger.LogError("One or more parameter(s) for endpoint configuration missing.");
-                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
-                        return;
-                    }
-
-                    builder.WithEndPointConfiguration(options.DynamodbEndpoint, options.DynamodbSigningRegion);
+                    builder.WithRegion(options.DynamodbRegion);
                 }
 
                 if (!string.IsNullOrEmpty(options.DynamodbTableName))
@@ -122,8 +105,15 @@ namespace GoDaddy.Asherah.ReferenceApp
                     builder.WithTableName(options.DynamodbTableName);
                 }
 
-                if (!string.IsNullOrEmpty(options.KeySuffix))
+                if (options.KeySuffix != null)
                 {
+                    if (options.KeySuffix.Length == 0)
+                    {
+                        logger.LogError("KeySuffix cannot be blank");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
                     builder.WithKeySuffix(options.KeySuffix);
                 }
 
