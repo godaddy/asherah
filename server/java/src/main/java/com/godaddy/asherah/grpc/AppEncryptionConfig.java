@@ -46,7 +46,7 @@ class AppEncryptionConfig {
   }
 
   Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl,
-                                       final DynamoDbConfig dynamoDbConfig) {
+      final DynamoDbConfig dynamoDbConfig) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
         if (jdbcUrl == null) {
