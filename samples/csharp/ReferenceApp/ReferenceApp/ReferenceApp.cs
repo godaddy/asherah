@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             // Setup our Logger. This is used by the library as well.
             ILoggerFactory loggerFactory = new LoggerFactory();
 
-            loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.AddFilter((category, level) => level >= LogLevel.Information)
                     .AddConsole();

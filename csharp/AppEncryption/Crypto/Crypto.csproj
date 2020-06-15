@@ -3,7 +3,7 @@
     <PackageId>GoDaddy.Asherah.Crypto</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="BouncyCastle.NetCore" Version="1.8.5" />
-    <PackageReference Include="GoDaddy.Asherah.Logging" Version="0.1.1" />
+    <PackageReference Include="GoDaddy.Asherah.Logging" Version="0.1.2" />
     <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
