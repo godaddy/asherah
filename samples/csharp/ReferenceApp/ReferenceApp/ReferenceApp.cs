@@ -100,8 +100,15 @@ namespace GoDaddy.Asherah.ReferenceApp
                     builder.WithRegion(options.DynamodbRegion);
                 }
 
-                if (!string.IsNullOrEmpty(options.DynamodbTableName))
+                if (options.DynamodbTableName != null)
                 {
+                    if (options.DynamodbTableName.Length == 0)
+                    {
+                        logger.LogError("KeySuffix cannot be blank");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
                     builder.WithTableName(options.DynamodbTableName);
                 }
 
