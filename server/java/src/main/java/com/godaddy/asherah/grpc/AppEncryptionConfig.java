@@ -10,7 +10,6 @@ import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.BasicExpiringCryptoPolicy;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,19 +66,25 @@ class AppEncryptionConfig {
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
         DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
-        String dynamoDbRegion = dynamoDbConfig.getDynamoDbRegion();
+        String region = dynamoDbConfig.getRegion();
         String keySuffix = dynamoDbConfig.getKeySuffix();
         String tableName = dynamoDbConfig.getTableName();
-        String endPoint = dynamoDbConfig.getDynamoDbEndpointConfig();
-        String signingRegion = dynamoDbConfig.getDynamoDbSigningRegion();
+        String endPoint = dynamoDbConfig.getEndpointConfig();
+        String signingRegion = dynamoDbConfig.getSigningRegion();
 
         // Check for region configuration
-        if (!StringUtils.isEmpty(dynamoDbRegion)) {
-          builder.withRegion(dynamoDbRegion);
+        if (region != null) {
+          if (!region.trim().isEmpty()) {
+            builder.withRegion(region);
+          }
+          else {
+            logger.error("Region cannot be empty.");
+            return null;
+          }
         }
         // Check for endpoint configuration
         if (endPoint != null || signingRegion != null) {
-          if (!StringUtils.isEmpty(endPoint) && !StringUtils.isEmpty(signingRegion)) {
+          if (!endPoint.trim().isEmpty() && !signingRegion.trim().isEmpty()) {
             builder.withEndPointConfiguration(endPoint, signingRegion);
           }
           else {
@@ -88,12 +93,24 @@ class AppEncryptionConfig {
           }
         }
         //Check for table name
-        if (!StringUtils.isEmpty(tableName)) {
-          builder.withTableName(tableName);
+        if (tableName != null) {
+          if (!tableName.trim().isEmpty()) {
+            builder.withTableName(tableName);
+          }
+          else {
+            logger.error("Table name cannot be empty.");
+            return null;
+          }
         }
         // Check for key suffix
-        if (!StringUtils.isEmpty(keySuffix)) {
-          builder.withKeySuffix(keySuffix);
+        if (keySuffix != null) {
+          if (!keySuffix.trim().isEmpty()) {
+            builder.withKeySuffix(keySuffix);
+          }
+          else {
+            logger.error("KeySuffix cannot be empty.");
+            return null;
+          }
         }
 
         return builder.build();

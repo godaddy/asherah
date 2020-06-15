@@ -61,7 +61,7 @@ class AppEncryptionConfigTest {
   }
 
   @Test
-  void testDynamoDbWithInvalidEndpointConfigurationSetupMetastore() {
+  void testDynamoDbWithEmptyEndpointConfigurationSetupMetastore() {
     DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("", "", null, null, null);
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
@@ -87,8 +87,16 @@ class AppEncryptionConfigTest {
   }
 
   @Test
-  void testDynamoDbWithKeySuffixEnabledSetupMetastore() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, null, "us-west-2", "");
+  void testDynamoDbWithEmptyTableNameSetupMetastoreReturnsNull() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "signingRegion", null, null, "");
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNull(metastore);
+  }
+
+  @Test
+  void testDynamoDbWithKeySuffixSetupMetastore() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, null, "us-west-2", null);
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNotNull(metastore);
@@ -96,12 +104,28 @@ class AppEncryptionConfigTest {
   }
 
   @Test
+  void testDynamoDbWithEmptyKeySuffixSetupMetastoreReturnsNull() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, null, "", null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNull(metastore);
+  }
+
+  @Test
   void testDynamoDbWithRegionSetupMetastore() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, "us-west-2", null, "");
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, "us-west-2", null, null);
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNotNull(metastore);
     assertTrue(metastore instanceof DynamoDbMetastoreImpl);
+  }
+
+  @Test
+  void testDynamoDbWithEmptyRegionSetupMetastoreReturnsNull() {
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(null, null, "", null, null);
+    Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
+
+    assertNull(metastore);
   }
 
   @Test

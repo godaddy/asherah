@@ -11,7 +11,6 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +87,7 @@ public final class App implements Callable<Void> {
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
-  @Option(names = "--enable-key-suffix",
+  @Option(names = "--key-suffix",
       description = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")
   private String keySuffix;
   @Option(names = "--dynamodb-table-name",
@@ -141,12 +140,18 @@ public final class App implements Callable<Void> {
       logger.info("using DynamoDB-based metastore...");
       DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
 
-      if (!StringUtils.isEmpty(DynamoDbConfig.Region.region)) {
-        builder.withRegion(DynamoDbConfig.Region.region);
+      if (DynamoDbConfig.Region.region != null) {
+        if (!DynamoDbConfig.Region.region.trim().isEmpty()) {
+          builder.withRegion(DynamoDbConfig.Region.region);
+        }
+        else {
+          logger.error("Region cannot be blank.");
+          return null;
+        }
       }
+      // Check for endpoint configuration
       if (DynamoDbConfig.EndPoint.endpoint != null || DynamoDbConfig.EndPoint.signingRegion != null) {
-        if (!StringUtils.isEmpty(DynamoDbConfig.EndPoint.endpoint) &&
-              !StringUtils.isEmpty(DynamoDbConfig.EndPoint.signingRegion)) {
+        if (!DynamoDbConfig.EndPoint.endpoint.trim().isEmpty() && !DynamoDbConfig.EndPoint.signingRegion.trim().isEmpty()) {
           builder.withEndPointConfiguration(DynamoDbConfig.EndPoint.endpoint, DynamoDbConfig.EndPoint.signingRegion);
         }
         else {
@@ -154,11 +159,25 @@ public final class App implements Callable<Void> {
           return null;
         }
       }
+      //Check for table name
       if (dynamoDbTableName != null) {
-        builder.withTableName(dynamoDbTableName);
+        if (!dynamoDbTableName.trim().isEmpty()) {
+          builder.withTableName(dynamoDbTableName);
+        }
+        else {
+          logger.error("Table name cannot be blank.");
+          return null;
+        }
       }
+      // Check for key suffix
       if (keySuffix != null) {
-        builder.withKeySuffix(keySuffix);
+        if (!keySuffix.trim().isEmpty()) {
+          builder.withKeySuffix(keySuffix);
+        }
+        else {
+          logger.error("KeySuffix cannot be blank.");
+          return null;
+        }
       }
 
       metastore = builder.build();

@@ -15,7 +15,7 @@ a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md
 * Make sure you have JAVA 1.8
 * Some unit tests will use the AWS SDK, If you don’t already have a local
 [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
-create  *dummy* files called **`~/.aws/credentials`** and **`~/.aws/config`** with the below contents:
+create *dummy* files called **`~/.aws/credentials`** and **`~/.aws/config`** with the below contents:
 
 ```console
 [user@machine java]$ cat ~/.aws/credentials
@@ -106,7 +106,7 @@ follows:
                           The AWS region for DynamoDB requests (only supported by --metastore-type=DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
                           The table name for DynamoDb (only supported by --metastore-type=DYNAMODB)
---enable-key-suffix=<keySuffix>
+--key-suffix=<keySuffix>
                           Configure the metastore to use key suffixes (only supported by --metastore-type=DYNAMODB)
 --jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>

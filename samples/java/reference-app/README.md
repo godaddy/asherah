@@ -102,7 +102,7 @@ local DynamoDB endpoint.
 ```console
 [user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar \
 --metastore-type DYNAMODB \
---enable-key-suffix us-west-2 \
+--key-suffix us-west-2 \
 --dynamodb-endpoint http://localhost:8000 \
 --dynamodb-signing-region us-west-2 \
 --dynamodb-table-name MyGlobalTable
@@ -123,7 +123,7 @@ follows:
 --dynamodb-table-name=<dynamoDbTableName>
                      The table name for DynamoDb (only supported by DYNAMODB)
 --enable-cw          Enable CloudWatch Metrics output
---enable-key-suffix=<keySuffix>
+--key-suffix=<keySuffix>
                      Configure the metastore to use key suffixes (only supported by DYNAMODB)
 --iterations=<iterations>
                      Number of encrypt/decrypt iterations to run
