@@ -20,11 +20,17 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
 
 ## Installation
 You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/):
+
 ```xml
 <ItemGroup>
     <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
 </ItemGroup>
 ```
+
+`GoDaddy.Asherah.AppEncryption` targets NetStandard 2.0 and NetStandard 2.1. See the 
+[.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
+[Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
+for more information.
 
 ## Quick Start
 
@@ -272,6 +278,8 @@ Our [sample application's](../../samples/csharp/ReferenceApp/images/runtime/Dock
 reference.
 
 ## Development Notes
+
+### Multi Targeting
 
 ### Unit Tests
 
