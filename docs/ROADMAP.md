@@ -15,7 +15,7 @@ developers manage private data more securely.
 We plan for each language implementation of Asherah to undergo periodic security audits. As we
 have progressed from testing internally to releasing the codebase as open source to gather more
 feedback about the primary use cases we wish to tackle, these plans are currently tentative.
-Right now, our Java, Go and C# implementations have reached our 1.0.0 feature set and we plan to 
+Right now, our Java, Go and C# implementations are nearing the planned 1.0.0 feature set and we plan to 
 perform a security audit for these in Q4 2020.
 
 Generally, we will target a same- or next-quarter audit as languages hit major version milestones.
@@ -23,9 +23,9 @@ Generally, we will target a same- or next-quarter audit as languages hit major v
 
 ## Languages
 
-Beyond our Java, C# and Golang releases we have already planned out releases for a Go and JAVA based 
-sidecar. Python and Javascript/ECMAScript are tentative languages and we plan to develop native SDKs for
-them if and when we get the requirement.
+Beyond our native Java, C# and Golang implementations we have released [Asherah Server](/server) - a light-weight gRPC service layer built atop the Asherah SDK - which provides access to application-layer encryption from any [gRPC supported language](https://grpc.io/docs/languages/).
+
+Given sufficient demand, additional native implementations may be developed in the future though none are planned at this time.  That said, contributions are always welcome :)
 
 
 ## Features
