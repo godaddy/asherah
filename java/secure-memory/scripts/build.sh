@@ -1,2 +1,1 @@
-#!/usr/bin/env bash
-mvn compile
+../../../build/java/build.sh
