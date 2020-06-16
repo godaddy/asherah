@@ -677,6 +677,8 @@ jobs:
             # Build the C# project
             cd ../csharp
             ./scripts/clean.sh
+            # Workaround for https://github.com/SpecFlowOSS/SpecFlow/issues/1912#issue-583000545
+            export MSBUILDSINGLELOADCONTEXT=1
             ./scripts/build.sh
 
             # Lint & Build the Go project
