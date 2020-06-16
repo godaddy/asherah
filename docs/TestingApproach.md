@@ -5,6 +5,7 @@ Below we describe the set of functional, regression and cross-language tests tha
 * [Regression Tests](#regression-tests)
 * [Multi-threaded Tests](#multi-threaded-tests)
 * [Cross Language Testing Framework (CLTF)](#cross-language-testing-framework-cltf)
+* [Server-Client Tests]()
 * [Future Work](#future-work)
 
 ## Regression Tests
@@ -73,6 +74,14 @@ The CLTF validates inter-language operability between all supported languages by
 - Encrypt operation in all languages
 - Decrypt operation for the encrypted payload generated in all languages
 
+## Server-Client Tests
+Asherah also has a sidecar approach, which allows you to start using it in the language of your choice.
+To make sure that the [grpc-based](https://grpc.io/) servers work correctly, two sample clients in Node.js and 
+Python have been developed.
+
+- Run the java sidecar and make sure that both clients are able to encrypt/decrypt
+- Run the go sidecar and make sure that both clients are able to encrypt/decrypt 
+
 ## Future Work
-- Expand CLTF by adding additional inter-language features.
+- Expand CLTF by adding additional inter-platform features.
 - Add test cases for queued key rotation when implemented.
