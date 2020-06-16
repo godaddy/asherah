@@ -35,7 +35,7 @@ encryption/decryption, AWS KMS key management store, and two backing storage eng
 and DynamoDB. Each implementation of the SDK at this version includes a reference app, unit tests and some kind of 
 testing app or integration test suite.
 
-1.1.0 is currently tentatively targeted for Q3/Q4 2020 and our plans are to enhance our memory 
+1.0.0 is currently tentatively targeted for Q3/Q4 2020 and our plans are to enhance our memory 
 protections and give guidance on how ptrace_scope should be managed on machines running Asherah. In addition, 
 we will formalize a cross-language testing method and implementation so that we have a guarantee that all 
 languages and underlying storage schemas and data are compatible.
