@@ -1,1 +1,1 @@
-../../../../scripts/java/clean.sh
+../../../../build/java/clean.sh

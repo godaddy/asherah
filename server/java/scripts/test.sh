@@ -1,1 +1,1 @@
-../../../scripts/java/test.sh
+../../../build/java/test.sh

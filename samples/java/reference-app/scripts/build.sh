@@ -1,1 +1,1 @@
-../../../../scripts/java/build.sh
+../../../../build/java/build.sh

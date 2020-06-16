@@ -1,1 +1,1 @@
-../../../scripts/java/release_prod.sh
+../../../build/java/release_prod.sh
