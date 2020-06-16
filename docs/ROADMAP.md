@@ -15,18 +15,17 @@ developers manage private data more securely.
 We plan for each language implementation of Asherah to undergo periodic security audits. As we
 have progressed from testing internally to releasing the codebase as open source to gather more
 feedback about the primary use cases we wish to tackle, these plans are currently tentative.
-Right now, our Java and C# implementations have reached our 1.0.0 feature set and we plan to 
-perform a security audit for these in Q3 2019. For Golang, we plan to reach 1.0.0 in Q3
-2019 and peform an audit Q4 2019.
+Right now, our Java, Go and C# implementations are nearing the planned 1.0.0 feature set and we plan to 
+perform a security audit for these in Q4 2020.
 
 Generally, we will target a same- or next-quarter audit as languages hit major version milestones.
 
 
 ## Languages
 
-Beyond our Java, C# and Golang releases we have already planned out releases for Python and 
-Javascript/ECMAScript. These are tentatively targeted for Q3 2019. We hope to add other 
-languages as we get interest in them.
+Beyond our native Java, C# and Golang implementations we have released [Asherah Server](/server) - a light-weight gRPC service layer built atop the Asherah SDK - which provides access to application-layer encryption from any [gRPC supported language](https://grpc.io/docs/languages/).
+
+Given sufficient demand, additional native implementations may be developed in the future though none are planned at this time.  That said, contributions are always welcome :)
 
 
 ## Features
@@ -36,14 +35,7 @@ encryption/decryption, AWS KMS key management store, and two backing storage eng
 and DynamoDB. Each implementation of the SDK at this version includes a reference app, unit tests and some kind of 
 testing app or integration test suite.
 
-1.1.0 is currently tentatively targeted for Q3/Q4 2019 and our plans are to enhance our memory 
+1.0.0 is currently tentatively targeted for Q3/Q4 2020 and our plans are to enhance our memory 
 protections and give guidance on how ptrace_scope should be managed on machines running Asherah. In addition, 
 we will formalize a cross-language testing method and implementation so that we have a guarantee that all 
 languages and underlying storage schemas and data are compatible.
-
-## Issues and Projects
-
-Visit our [GitHub issue tracker](https://github.com/godaddy/asherah/issues) to view and create new
-issues and our [GitHub project page](https://github.com/godaddy/asherah/project) to see our story tracking.
-We are investigating using [ZenHub](https://www.zenhub.com/). Please note our projects page is very much a 
-work in progress as we begin taking internal planning tickets and moving them to Asherah's new home.

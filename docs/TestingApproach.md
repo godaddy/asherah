@@ -74,5 +74,5 @@ The CLTF validates inter-language operability between all supported languages by
 - Decrypt operation for the encrypted payload generated in all languages
 
 ## Future Work
-- Expand CLTF by adding additional inter-language features.
+- Expand the testing framework by adding additional inter-platform features.
 - Add test cases for queued key rotation when implemented.
