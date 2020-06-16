@@ -12,7 +12,7 @@ cd ..
 
 cd csharp
 echo "----------------------Encrypting payload using C#-----------------------"
-dotnet test --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.EncryptDataUsingRDBMSMetastoreAndStaticKMSFeature.EncryptingData --no-build
+dotnet test --configuration Release --filter FullyQualifiedName=GoDaddy.Asherah.Cltf.EncryptDataUsingRDBMSMetastoreAndStaticKMSFeature.EncryptingData --no-build
 cd ..
 
 cd go
