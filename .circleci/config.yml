@@ -240,7 +240,7 @@ jobs:
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
+            cp build/csharp/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Build
           command: |
@@ -280,7 +280,7 @@ jobs:
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
+            cp build/csharp/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Build
           command: |
@@ -325,7 +325,7 @@ jobs:
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
+            cp build/csharp/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Build
           command: |
@@ -372,7 +372,7 @@ jobs:
             apt-get install -y libxml2-utils
             dotnet tool install -g trx2junit
             mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
+            cp build/csharp/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Build
           command: |
@@ -662,7 +662,7 @@ jobs:
             apt-get update
             apt-get install -y dotnet-sdk-3.1
             mkdir -p ~/.nuget/{NuGet,packages}
-            cp build/NuGet.Config ~/.nuget/NuGet/
+            cp build/csharp/NuGet.Config ~/.nuget/NuGet/
       - run:
           name: Setup go environment
           command: |
