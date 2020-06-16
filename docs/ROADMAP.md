@@ -39,9 +39,3 @@ testing app or integration test suite.
 protections and give guidance on how ptrace_scope should be managed on machines running Asherah. In addition, 
 we will formalize a cross-language testing method and implementation so that we have a guarantee that all 
 languages and underlying storage schemas and data are compatible.
-
-## Issues and Feature Requests
-
-Visit our [GitHub issue tracker](https://github.com/godaddy/asherah/issues) to view and create new
-issues. This would also be a good place to have 
-[new feature requests](https://github.com/godaddy/asherah/issues/new?assignees=&labels=&template=feature_request.md).
