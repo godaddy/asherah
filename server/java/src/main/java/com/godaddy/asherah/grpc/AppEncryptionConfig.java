@@ -45,7 +45,8 @@ class AppEncryptionConfig {
     return null;
   }
 
-  Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl) {
+  Metastore<JSONObject> setupMetastore(final String metastoreType, final String jdbcUrl,
+      final DynamoDbConfig dynamoDbConfig) {
     switch (metastoreType.toUpperCase()) {
       case Constants.METASTORE_JDBC:
         if (jdbcUrl == null) {
@@ -63,7 +64,46 @@ class AppEncryptionConfig {
 
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
-        return DynamoDbMetastoreImpl.newBuilder().build();
+        DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
+        String region = dynamoDbConfig.getRegion();
+        String keySuffix = dynamoDbConfig.getKeySuffix();
+        String tableName = dynamoDbConfig.getTableName();
+        String endPoint = dynamoDbConfig.getEndpointConfig();
+
+        // Check for region and endpoint configuration.
+        // The client can use either withRegion or withEndPointConfiguration but not both
+        if (endPoint != null) {
+          if (region == null || region.trim().isEmpty() || endPoint.trim().isEmpty()) {
+            logger.error("One or more parameter(s) for endpoint configuration missing.");
+            return null;
+          }
+          builder.withEndPointConfiguration(endPoint, region);
+        }
+        else if (region != null) {
+          if (region.trim().isEmpty()) {
+            logger.error("Region cannot be empty.");
+            return null;
+          }
+          builder.withRegion(region);
+        }
+        //Check for table name
+        if (tableName != null) {
+          if (tableName.trim().isEmpty()) {
+            logger.error("Table name cannot be empty.");
+            return null;
+          }
+          builder.withTableName(tableName);
+        }
+        // Check for key suffix
+        if (keySuffix != null) {
+          if (keySuffix.trim().isEmpty()) {
+            logger.error("KeySuffix cannot be empty.");
+            return null;
+          }
+          builder.withKeySuffix(keySuffix);
+        }
+
+        return builder.build();
 
       case Constants.METASTORE_INMEMORY:
         logger.info("using in-memory metastore...");

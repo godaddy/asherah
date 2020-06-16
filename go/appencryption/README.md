@@ -105,14 +105,31 @@ metastore := persistence.NewSQLMetastore(db)
 #### DynamoDB Metastore
 
 ```go
-sess, err = session.NewSession(&aws.Config{
+awsConfig := &aws.Config{
     Region: aws.String("us-west-2"), // specify preferred region here
-})
+}
+
+sess, err = session.NewSession(awsConfig)
 if err != nil {
     panic(err)
 }
+
+// To configure an endpoint
+awsConfig.Endpoint = aws.String("http://localhost:8000"), 
+```
+You can also either use the `WithXXX` functional options to configure the metastore properties.
+
+ - **WithDynamoDBRegionSuffix**: Specifies whether regional suffixes should be enabled for DynamoDB. Enabling this
+  suffixes the keys with the DynamoDb preferred region. **This is required to enable Global Tables**.
+ - **WithTableName**: Specifies the name of the DynamoDb table.
+
+``` go
 // Build the Metastore
-metastore := persistence.NewDynamoDBMetastore(sess)
+metastore := persistence.NewDynamoDBMetastore(
+    sess,
+    persistence.WithDynamoDBRegionSuffix(true),
+    persistence.WithTableName("CustomTableName") ,
+)
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)

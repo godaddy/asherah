@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-set -e
-
-mvn test jacoco:report
+../../../build/java/test.sh
