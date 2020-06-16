@@ -1,2 +1,1 @@
-#!/usr/bin/env bash
-mvn clean
+../../../scripts/java/clean.sh
