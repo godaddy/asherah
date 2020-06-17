@@ -78,4 +78,4 @@ If there is a need for irregular rotation of keys (e.g. suspected compromise of 
 as "revoked".
 
 We have created helper python scripts for the above metastore implementations. Usage details on how to run them can
- be found [here](../scripts).
+be found [here](../scripts).
