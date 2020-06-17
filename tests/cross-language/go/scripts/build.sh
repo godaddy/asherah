@@ -1,2 +1,1 @@
-#!/usr/bin/env bash
-go build ./...
+../../../../build/go/build.sh
