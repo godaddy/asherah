@@ -50,7 +50,20 @@ type DynamoDBTestContext struct {
 }
 
 func (d *DynamoDBTestContext) GetMetastore() *persistence.DynamoDBMetastore {
+	if d.dynamodbMetastore == nil {
+		d.dynamodbMetastore = d.NewMetastore()
+	}
+
 	return d.dynamodbMetastore
+}
+
+func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastoreOption) *persistence.DynamoDBMetastore {
+	combinedOpts := []persistence.DynamoDBMetastoreOption{persistence.WithTableName(tableName)}
+	if len(opts) > 0 {
+		combinedOpts = append(combinedOpts, opts...)
+	}
+
+	return persistence.NewDynamoDBMetastore(d.sess, combinedOpts...)
 }
 
 func (d *DynamoDBTestContext) SeedDB() {
@@ -98,8 +111,6 @@ func (d *DynamoDBTestContext) SeedDB() {
 		ParentKeyMeta: &km,
 	}
 	d.putItemInDynamoDB(d.getDynamoDBItem(en, d.instant))
-
-	d.dynamodbMetastore = persistence.NewDynamoDBMetastore(d.sess, persistence.WithTableName(tableName))
 }
 
 func (d *DynamoDBTestContext) CleanDB() {
