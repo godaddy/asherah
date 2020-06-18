@@ -31,13 +31,9 @@ const (
 	portProtocolDynamoDB = "8000/tcp"
 	maxTriesDynamoDB     = 5
 	waitTimeDynamoDB     = 10
-)
-
-// dynamodb.go
-const (
-	partitionKey = "Id"
-	sortKey      = "Created"
-	keyRecord    = "KeyRecord"
+	partitionKey         = "Id"
+	sortKey              = "Created"
+	keyRecord            = "KeyRecord"
 )
 
 type DynamoDBTestContext struct {
@@ -58,7 +54,10 @@ func (d *DynamoDBTestContext) GetMetastore() *persistence.DynamoDBMetastore {
 }
 
 func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastoreOption) *persistence.DynamoDBMetastore {
-	combinedOpts := []persistence.DynamoDBMetastoreOption{persistence.WithTableName(tableName)}
+	combinedOpts := []persistence.DynamoDBMetastoreOption{
+		persistence.WithTableName(tableName),
+	}
+
 	if len(opts) > 0 {
 		combinedOpts = append(combinedOpts, opts...)
 	}

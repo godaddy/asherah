@@ -15,6 +15,8 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence/persistencetest"
 )
 
+const original = "somesupersecretstring!hjdkashfjkdashfd"
+
 type IntegrationTestSuite struct {
 	suite.Suite
 	c      appencryption.AEAD
@@ -50,8 +52,6 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 	session, _ := factory.GetSession(partitionID)
 	defer session.Close()
 
-	original := "somesupersecretstring!hjdkashfjkdashfd"
-
 	dr, err := session.Encrypt([]byte(original))
 	if verify.NoError(err) && verify.NotNil(dr) {
 		verify.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), dr.Key.ParentKeyMeta.ID)
@@ -64,7 +64,6 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 
 func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 	instant := time.Now().Add(-24 * time.Hour).Unix()
-	original := "somesupersecretstring!hjdkashfjkdashfd"
 	verify := assert.New(suite.T())
 
 	testContext := persistencetest.NewDynamoDBTestContext(instant)
