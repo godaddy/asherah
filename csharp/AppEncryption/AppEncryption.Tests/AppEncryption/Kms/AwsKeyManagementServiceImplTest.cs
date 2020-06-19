@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.KeyManagementService;
@@ -363,8 +364,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             {
                 { EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    // For some reason we have to use ConcurrentBag here. Likely due to internal ConcurrentBag list
-                    // structure failing to compare against regular List?
                     KmsKeksKey, new ConcurrentBag<object>
                     {
                         new Dictionary<string, object>
@@ -374,7 +373,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                             { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) },
                         },
                         encryptKeyAndBuildResultJson,
-                    }
+                    }.ToList()
                 },
             });
             GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
@@ -403,10 +402,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 .Returns(Option<JObject>.Some(encryptKeyAndBuildResultJson));
 
             byte[] encryptedResult = awsKeyManagementServiceImplSpy.Object.EncryptKey(cryptoKeyMock.Object);
-            Asherah.AppEncryption.Util.Json kmsKeyEnvelopeResult = new Asherah.AppEncryption.Util.Json(encryptedResult);
+            JObject kmsKeyEnvelopeResult = new Asherah.AppEncryption.Util.Json(encryptedResult).ToJObject();
 
-            Assert.True(JToken.DeepEquals(kmsKeyEnvelope, kmsKeyEnvelopeResult.ToJObject()));
             Assert.Equal(new byte[] { 0, 0 }, dataKeyPlainText);
+
+            // This is a workaround for https://github.com/JamesNK/Newtonsoft.Json/issues/1437
+            // If DeepEquals fails due ot mismatching array order, compare the elements individually
+            if (!JToken.DeepEquals(kmsKeyEnvelope, kmsKeyEnvelopeResult))
+            {
+                JArray kmsKeyEnvelopeKmsKeks = JArray.FromObject(kmsKeyEnvelope[KmsKeksKey]
+                    .OrderBy(k => k[RegionKey]));
+                JArray kmsKeyEnvelopeResultKmsKeks = JArray.FromObject(kmsKeyEnvelopeResult[KmsKeksKey]
+                    .OrderBy(k => k[RegionKey]));
+
+                Assert.True(JToken.DeepEquals(kmsKeyEnvelope[EncryptedKey], kmsKeyEnvelopeResult[EncryptedKey]));
+                Assert.True(JToken.DeepEquals(kmsKeyEnvelopeKmsKeks, kmsKeyEnvelopeResultKmsKeks));
+            }
         }
 
         [Fact]
