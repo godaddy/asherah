@@ -49,6 +49,11 @@ func (d *DynamoDBMetastore) GetRegionSuffix() string {
 	return d.regionSuffix
 }
 
+// GetTableName returns the DynamoDB table name.
+func (d *DynamoDBMetastore) GetTableName() string {
+	return d.tableName
+}
+
 // DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
 type DynamoDBMetastoreOption func(d *DynamoDBMetastore, p client.ConfigProvider)
 
@@ -164,9 +169,9 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 	return parseResult(res.Items[0][keyRecord])
 }
 
-// We need a new envelope struct to convert the EncryptedKey to a Base64 encoded string
+// DynamoDBEnvelope is used to convert the EncryptedKey to a Base64 encoded string
 // to save in DynamoDB.
-type dynamoDBEnvelope struct {
+type DynamoDBEnvelope struct {
 	Revoked       bool                   `json:"Revoked,omitempty"`
 	Created       int64                  `json:"Created"`
 	EncryptedKey  string                 `json:"Key"`
@@ -179,7 +184,7 @@ type dynamoDBEnvelope struct {
 func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int64, envelope *appencryption.EnvelopeKeyRecord) (bool, error) {
 	defer storeDynamoDBTimer.UpdateSince(time.Now())
 
-	en := &dynamoDBEnvelope{
+	en := &DynamoDBEnvelope{
 		Revoked:       envelope.Revoked,
 		Created:       envelope.Created,
 		EncryptedKey:  base64.StdEncoding.EncodeToString(envelope.EncryptedKey),
