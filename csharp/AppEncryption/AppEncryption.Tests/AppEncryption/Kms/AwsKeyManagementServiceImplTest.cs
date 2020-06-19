@@ -407,7 +407,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             Assert.Equal(new byte[] { 0, 0 }, dataKeyPlainText);
 
             // This is a workaround for https://github.com/JamesNK/Newtonsoft.Json/issues/1437
-            // If DeepEquals fails due ot mismatching array order, compare the elements individually
+            // If DeepEquals fails due to mismatching array order, compare the elements individually
             if (!JToken.DeepEquals(kmsKeyEnvelope, kmsKeyEnvelopeResult))
             {
                 JArray kmsKeyEnvelopeKmsKeks = JArray.FromObject(kmsKeyEnvelope[KmsKeksKey]
