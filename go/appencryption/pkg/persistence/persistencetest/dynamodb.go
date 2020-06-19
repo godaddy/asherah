@@ -203,7 +203,7 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 
 	if d.disableTestContainers {
 		host = "localhost"
-		dynamodbNatPort = nat.Port(portProtocolDynamoDB)
+		dynamodbNatPort = portProtocolDynamoDB
 	} else {
 		request := testcontainers.ContainerRequest{
 			Image:        "amazon/dynamodb-local:latest",
@@ -221,7 +221,7 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 			panic(err)
 		}
 
-		if dynamodbNatPort, err = d.container.MappedPort(ctx, nat.Port(portProtocolDynamoDB)); err != nil {
+		if dynamodbNatPort, err = d.container.MappedPort(ctx, portProtocolDynamoDB); err != nil {
 			panic(err)
 		}
 	}
@@ -231,7 +231,6 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 		Endpoint: aws.String("http://" + host + ":" + dynamodbNatPort.Port()),
 	})
 	if err != nil {
-		// suite.T().Logf("error creating new dynamodb session: %s", err)
 		panic(err)
 	}
 
