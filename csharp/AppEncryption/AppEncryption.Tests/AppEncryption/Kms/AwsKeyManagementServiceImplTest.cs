@@ -364,7 +364,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             {
                 { EncryptedKey, Convert.ToBase64String(encryptedKey) },
                 {
-                    KmsKeksKey, new ConcurrentBag<object>
+                    KmsKeksKey, new List<object>
                     {
                         new Dictionary<string, object>
                         {
@@ -373,7 +373,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                             { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) },
                         },
                         encryptKeyAndBuildResultJson,
-                    }.ToList()
+                    }
                 },
             });
             GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
