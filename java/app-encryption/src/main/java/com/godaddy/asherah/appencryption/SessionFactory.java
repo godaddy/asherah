@@ -345,8 +345,8 @@ public class SessionFactory implements SafeAutoCloseable {
 
     /**
      * Initialize a session factory builder step with a {@code Metastore}
-     * @param metastore - the {@code Metastore} implementation to use
-     * @return - builder step to define the {@code CryptoPolicy}
+     * @param metastore the {@code Metastore} implementation to use
+     * @return builder step to define the {@code CryptoPolicy}
      */
     CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
   }
@@ -356,8 +356,8 @@ public class SessionFactory implements SafeAutoCloseable {
 
     /**
      * Initialize a session factory builder step with a {@code CryptoPolicy}
-     * @param policy - the {@code CryptoPolicy} implementation to use
-     * @return - builder step to define the {@code KeyManagementService}
+     * @param policy the {@code CryptoPolicy} implementation to use
+     * @return builder step to define the {@code KeyManagementService}
      */
     KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
   }
@@ -368,8 +368,8 @@ public class SessionFactory implements SafeAutoCloseable {
 
     /**
      * Initialize a session factory builder step with a {@code KeyManagementService}
-     * @param keyManagementService - the {@code KeyManagementService} implementation to use
-     * @return - builder step to build the fully initialized {@code SessionFactory}
+     * @param keyManagementService the {@code KeyManagementService} implementation to use
+     * @return builder step to build the fully initialized {@code SessionFactory}
      */
     BuildStep withKeyManagementService(KeyManagementService keyManagementService);
   }
