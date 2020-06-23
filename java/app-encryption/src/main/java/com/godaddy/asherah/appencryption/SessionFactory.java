@@ -167,24 +167,44 @@ public class SessionFactory implements SafeAutoCloseable {
     });
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}
+   * @param partitionId
+   * @return a session that encrypts a json payload and stored as byte[]
+   */
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}
+   * @param partitionId
+   * @return a session that encrypts a byte[] payload and stored as byte[]
+   */
   public Session<byte[], byte[]> getSessionBytes(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionBytesImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}
+   * @param partitionId
+   * @return a session that encrypts a json payload and stored as json
+   */
   public Session<JSONObject, JSONObject> getSessionJsonAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}
+   * @param partitionId
+   * @return a session that encrypts a byte[] payload and stored as json
+   */
   public Session<byte[], JSONObject> getSessionBytesAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
@@ -240,6 +260,12 @@ public class SessionFactory implements SafeAutoCloseable {
     sessionCache.cleanUp();
   }
 
+  /**
+   * Defines the metastore step for building a session factory
+   * @param productId - product id as a string
+   * @param serviceId - service id as a string
+   * @return a new Builder instance with initialized productId and serviceId
+   */
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);
   }
@@ -317,12 +343,22 @@ public class SessionFactory implements SafeAutoCloseable {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
     CryptoPolicyStep withInMemoryMetastore();
 
+    /**
+     * Initialize a session factory builder step with a {@code Metastore}
+     * @param metastore - the {@code Metastore} implementation to use
+     * @return - builder step to define the {@code CryptoPolicy}
+     */
     CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
   }
 
   public interface CryptoPolicyStep {
     KeyManagementServiceStep withNeverExpiredCryptoPolicy();
 
+    /**
+     * Initialize a session factory builder step with a {@code CryptoPolicy}
+     * @param policy - the {@code CryptoPolicy} implementation to use
+     * @return - builder step to define the {@code KeyManagementService}
+     */
     KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
   }
 
@@ -330,6 +366,11 @@ public class SessionFactory implements SafeAutoCloseable {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
     BuildStep withStaticKeyManagementService(String staticMasterKey);
 
+    /**
+     * Initialize a session factory builder step with a {@code KeyManagementService}
+     * @param keyManagementService - the {@code KeyManagementService} implementation to use
+     * @return - builder step to build the fully initialized {@code SessionFactory}
+     */
     BuildStep withKeyManagementService(KeyManagementService keyManagementService);
   }
 
