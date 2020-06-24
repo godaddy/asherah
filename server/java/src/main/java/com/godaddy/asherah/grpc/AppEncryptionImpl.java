@@ -31,7 +31,7 @@ public class AppEncryptionImpl extends AppEncryptionGrpc.AppEncryptionImplBase {
 
   /**
    * Constructor for AppEncryptionImpl.
-   * @param sessionFactory The session factory to use for the server session
+   * @param sessionFactory The {@link SessionFactory} to use for the server session
    */
   public AppEncryptionImpl(final SessionFactory sessionFactory) {
     this.sessionFactory = sessionFactory;
