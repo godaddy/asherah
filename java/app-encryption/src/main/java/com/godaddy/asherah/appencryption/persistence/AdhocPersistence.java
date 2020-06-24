@@ -15,6 +15,11 @@ public class AdhocPersistence<T> implements Persistence<T> {
   private final Function<String, Optional<T>> persistenceLoad;
   private final BiConsumer<String, T> persistenceStore;
 
+  /**
+   * Constructor for AdhocPersistence.
+   * @param load a {@link java.util.function.Function} object.
+   * @param store a {@link java.util.function.BiConsumer} object.
+   */
   public AdhocPersistence(final Function<String, Optional<T>> load, final BiConsumer<String, T> store) {
     this.persistenceLoad = load;
     this.persistenceStore = store;

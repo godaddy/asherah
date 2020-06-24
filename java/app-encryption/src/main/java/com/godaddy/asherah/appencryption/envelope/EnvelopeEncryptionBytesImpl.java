@@ -11,6 +11,10 @@ public class EnvelopeEncryptionBytesImpl implements EnvelopeEncryption<byte[]> {
 
   private final EnvelopeEncryption<JSONObject> envelopeEncryptionJson;
 
+  /**
+   * Constructor for EnvelopeEncryptionBytesImpl.
+   * @param envelopeEncryptionJson a {@link com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption} object.
+   */
   public EnvelopeEncryptionBytesImpl(final EnvelopeEncryption<JSONObject> envelopeEncryptionJson) {
     this.envelopeEncryptionJson = envelopeEncryptionJson;
   }
@@ -36,5 +40,4 @@ public class EnvelopeEncryptionBytesImpl implements EnvelopeEncryption<byte[]> {
       logger.error("unexpected exception during close", e);
     }
   }
-
 }

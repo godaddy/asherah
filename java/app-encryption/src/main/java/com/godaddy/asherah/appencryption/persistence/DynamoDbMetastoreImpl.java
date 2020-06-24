@@ -46,6 +46,10 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
+  /**
+   * Initialize a {@link DynamoDbMetastoreImpl} builder.
+   * @return The current {@link Builder} object.
+   */
   public static Builder newBuilder() {
     return new Builder();
   }
@@ -194,34 +198,34 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface EndPointStep {
     /**
-     * Adds EndPoint config to the AWS DynamoDb client
-     * @param endPoint the service endpoint either with or without the protocol
-     * @param signingRegion the region to use for SigV4 signing of requests (e.g. us-west-1)
-     * @return The current {@code BuildStep} instance
+     * Adds EndPoint config to the AWS DynamoDb client.
+     * @param endPoint the service endpoint either with or without the protocol.
+     * @param signingRegion the region to use for SigV4 signing of requests (e.g. us-west-1).
+     * @return The current {@code BuildStep} instance.
      */
     BuildStep withEndPointConfiguration(String endPoint, String signingRegion);
   }
 
   public interface RegionStep {
     /**
-     * Specifies the region for the AWS DynamoDb client
-     * @param region The region for the DynamoDb client
-     * @return The current {@code BuildStep} instance
+     * Specifies the region for the AWS DynamoDb client.
+     * @param region The region for the DynamoDb client.
+     * @return The current {@code BuildStep} instance.
      */
     BuildStep withRegion(String region);
   }
 
   public interface BuildStep {
     /**
-     * Specifies whether key suffix should be enabled for DynamoDB
-     * @param suffix The region to be used as suffix
+     * Specifies whether key suffix should be enabled for DynamoDB.
+     * @param suffix The region to be used as suffix.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withKeySuffix(String suffix);
 
     /**
-     * Specifies the name of the table
-     * @param table The name of the table
+     * Specifies the name of the table.
+     * @param table The name of the table.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withTableName(String table);

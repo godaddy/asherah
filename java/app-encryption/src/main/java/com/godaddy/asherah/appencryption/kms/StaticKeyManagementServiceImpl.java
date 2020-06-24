@@ -12,6 +12,10 @@ public class StaticKeyManagementServiceImpl implements KeyManagementService {
   private final CryptoKey encryptionKey;
   private final BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
 
+  /**
+   * Constructor for StaticKeyManagementServiceImpl.
+   * @param key The static master key.
+   */
   public StaticKeyManagementServiceImpl(final String key) {
     byte[] keyBytes = key.getBytes();
     Secret secretKey = new TransientSecretFactory().createSecret(keyBytes);
@@ -28,5 +32,4 @@ public class StaticKeyManagementServiceImpl implements KeyManagementService {
   public CryptoKey decryptKey(final byte[] keyCipherText, final Instant keyCreated, final boolean revoked) {
     return crypto.decryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
   }
-
 }

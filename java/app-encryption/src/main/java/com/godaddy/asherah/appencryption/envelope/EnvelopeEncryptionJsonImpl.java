@@ -24,7 +24,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(EnvelopeEncryptionJsonImpl.class);
 
@@ -39,6 +38,16 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
 
+  /**
+   * Constructor for EnvelopeEncryptionJsonImpl.
+   * @param partition a {@link Partition} object.
+   * @param metastore a {@link Metastore} object.
+   * @param systemKeyCache cache for storing SystemKeys.
+   * @param intermediateKeyCache cache for storing IntermediateKeys.
+   * @param aeadEnvelopeCrypto a {@link AeadEnvelopeCrypto} object.
+   * @param cryptoPolicy a {@link CryptoPolicy} object.
+   * @param keyManagementService a {@link KeyManagementService} object.
+   */
   public EnvelopeEncryptionJsonImpl(final Partition partition,
       final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,
       final SecureCryptoKeyMap<Instant> intermediateKeyCache, final AeadEnvelopeCrypto aeadEnvelopeCrypto,
@@ -105,10 +114,10 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Calls a function using a decrypted intermediate key that was previously used.
-   * @param intermediateKeyMeta intermediate key meta used previously to write a DRR
-   * @param functionWithIntermediateKey the function to call using the decrypted intermediate key
-   * @return The result returned by the {@code functionWithIntermediateKey}
-   * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info
+   * @param intermediateKeyMeta intermediate key meta used previously to write a DRR.
+   * @param functionWithIntermediateKey the function to call using the decrypted intermediate key.
+   * @return The result returned by the {@code functionWithIntermediateKey}.
+   * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info.
    */
   <T> T withIntermediateKeyForRead(final KeyMeta intermediateKeyMeta,
       final Function<CryptoKey, T> functionWithIntermediateKey) {
@@ -164,14 +173,13 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Calls a function using a decrypted system key that was previously used.
-   * @param systemKeyMeta system key meta used previously to write an IK
+   * @param systemKeyMeta system key meta used previously to write an IK.
    * @param treatExpiredAsMissing if {@code true}, will throw a {@code MetadataMissingException} if the key is
-   * expired/revoked
-   * @param functionWithSystemKey the function to call using the decrypted system key
-   * @return The result returned by the {@code functionWithSystemKey}
+   * expired/revoked.
+   * @param functionWithSystemKey the function to call using the decrypted system key.
+   * @return The result returned by the {@code functionWithSystemKey}.
    * @throws MetadataMissingException if the system key is not found, or if its expired/revoked and {@code
-   * treatExpiredAsMissing}
-   * is {@code true}
+   * treatExpiredAsMissing} is {@code true}.
    */
   <T> T withExistingSystemKey(final KeyMeta systemKeyMeta, final boolean treatExpiredAsMissing,
       final Function<CryptoKey, T> functionWithSystemKey) {
@@ -386,9 +394,9 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
-   * @param keyMeta intermediate key meta of intermediate key
+   * @param keyMeta intermediate key meta of intermediate key.
    * @return The decrypted intermediate key.
-   * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info
+   * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info.
    */
   CryptoKey getIntermediateKey(final KeyMeta keyMeta) {
     EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(keyMeta.getKeyId(), keyMeta.getCreated());
@@ -403,9 +411,9 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Fetches a known system key from the metastore and decrypts it using the key management service.
-   * @param systemKeyMeta system key meta of the system key
+   * @param systemKeyMeta system key meta of the system key.
    * @return The decrypted system key.
-   * @throws MetadataMissingException if the system key is not found
+   * @throws MetadataMissingException if the system key is not found.
    */
   CryptoKey getSystemKey(final KeyMeta systemKeyMeta) {
     EnvelopeKeyRecord systemKeyRecord = loadKeyRecord(systemKeyMeta.getKeyId(), systemKeyMeta.getCreated());
@@ -445,7 +453,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Gets the most recently created key for a given key ID, if any.
-   * @param keyId the id to find the latest key of
+   * @param keyId the id to find the latest key of.
    * @return The latest key for the {@code keyId}, if any.
    */
   Optional<EnvelopeKeyRecord> loadLatestKeyRecord(final String keyId) {
@@ -487,6 +495,5 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
       throw new AppEncryptionException("Failed to close/wipe key, error: " + e.getMessage(), e);
     }
   }
-
 }
 

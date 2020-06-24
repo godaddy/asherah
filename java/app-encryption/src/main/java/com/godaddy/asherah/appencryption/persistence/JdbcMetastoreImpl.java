@@ -38,6 +38,11 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
 
   private final DataSource dataSource;
 
+  /**
+   * Initialize a {@link JdbcMetastoreImpl} builder.
+   * @param dataSource The {@link javax.sql.DataSource} object
+   * @return The current {@link Builder} step
+   */
   public static Builder newBuilder(final DataSource dataSource) {
     return new Builder(dataSource);
   }
@@ -138,6 +143,10 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
       this.dataSource = dataSource;
     }
 
+    /**
+     * Builds the {@link JdbcMetastoreImpl} object.
+     * @return The fully instantiated {@link JdbcMetastoreImpl} object.
+     */
     public JdbcMetastoreImpl build() {
       return new JdbcMetastoreImpl(dataSource);
     }

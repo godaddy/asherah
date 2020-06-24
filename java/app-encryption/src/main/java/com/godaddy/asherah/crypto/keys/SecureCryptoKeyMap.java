@@ -11,10 +11,20 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
   private final AtomicBoolean isClosed = new AtomicBoolean(false);
   private final long revokeCheckPeriodMillis;
 
+  /**
+   * Constructor for SecureCryptoKeyMap.
+   * @param revokeCheckPeriodMillis The time, in milliseconds, after which the key revocation status should be checked.
+   */
   public SecureCryptoKeyMap(final long revokeCheckPeriodMillis) {
     this.revokeCheckPeriodMillis = revokeCheckPeriodMillis;
   }
 
+  /**
+   * Retrieves the provided key from the cache.
+   * @param key The key to retrieve.
+   * @return a {@link CryptoKey} object.
+   * @throws IllegalStateException if a closed key is accessed.
+   */
   public CryptoKey get(final K key) {
     if (!isClosed.get()) {
       SharedCryptoKeyEntry entry = sharedCryptoKeyMap.get(key);
@@ -34,6 +44,11 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
     }
   }
 
+  /**
+   * Retrieves the last key from the cache.
+   * @return a {@link CryptoKey} object.
+   * @throws IllegalStateException if a closed key is accessed
+   */
   public CryptoKey getLast() {
     if (!isClosed.get()) {
       Map.Entry<K, SharedCryptoKeyEntry> lastEntry = sharedCryptoKeyMap.lastEntry();
@@ -74,9 +89,9 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
    * key.close();
    * }</pre>
    *
-   * @param key the key to store the cryptoKey
-   * @param cryptoKey the cryptoKey to store
-   * @return the CryptoKey which should be used and subsequently closed after use
+   * @param key the key to store the cryptoKey.
+   * @param cryptoKey the cryptoKey to store.
+   * @return the CryptoKey which should be used and subsequently closed after use.
    */
   public CryptoKey putAndGetUsable(final K key, final CryptoKey cryptoKey) {
     if (!isClosed.get()) {

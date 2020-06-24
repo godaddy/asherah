@@ -87,10 +87,16 @@
 
         <!-- Checks for Javadoc comments.                     -->
         <!-- See http://checkstyle.sf.net/config_javadoc.html -->
-        <!--<module name="JavadocMethod"/>-->
+        <module name="JavadocMethod">
+            <property name="scope" value="public" />
+            <property name="severity" value="error"/>
+        </module>
         <!--<module name="JavadocType"/>-->
         <!--<module name="JavadocVariable"/>-->
-        <!--<module name="JavadocStyle"/>-->
+        <module name="JavadocStyle">
+            <property name="scope" value="public"></property>
+        </module>
+
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->

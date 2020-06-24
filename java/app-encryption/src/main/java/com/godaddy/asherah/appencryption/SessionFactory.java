@@ -44,6 +44,15 @@ public class SessionFactory implements SafeAutoCloseable {
   private final KeyManagementService keyManagementService;
   private final Cache<String, CachedSession> sessionCache;
 
+  /**
+   * Constructor for SessionFactory.
+   * @param productId The product Id.
+   * @param serviceId The service Id.
+   * @param metastore A {@link Metastore} object.
+   * @param systemKeyCache Cache for SystemKeys.
+   * @param cryptoPolicy A {@link CryptoPolicy} object.
+   * @param keyManagementService a {@link KeyManagementService} object.
+   */
   public SessionFactory(
       final String productId,
       final String serviceId,
@@ -132,8 +141,8 @@ public class SessionFactory implements SafeAutoCloseable {
    * Atomically acquires a shared {@code CachedSession} from the session cache for the {@code partitionId}, creating
    * a new one using the given function if needed. This is used to track the number of concurrent users so cache
    * eviction policies don't remove an entry while it's still potentially in use.
-   * @param createSession the function to create a new session if there is no current mapping
-   * @param partitionId
+   * @param createSession the function to create a new session if there is no current mapping.
+   * @param partitionId The partition Id.
    * @return The cached session that's mapped for the given {@code partitionId}.
    */
   CachedSession acquireShared(final Function<String, EnvelopeEncryptionJsonImpl> createSession,
@@ -157,7 +166,7 @@ public class SessionFactory implements SafeAutoCloseable {
    * Atomically marks a shared {@code CachedSession} in the session cache as no longer being used by the current
    * caller for the {@code partitionId}. This is used to track the number of concurrent users so cache eviction
    * policies don't remove an entry while it's still potentially in use.
-   * @param partitionId
+   * @param partitionId The partition Id.
    */
   void releaseShared(final String partitionId) {
     // Decrements the usage counter if still in the cache
@@ -167,24 +176,44 @@ public class SessionFactory implements SafeAutoCloseable {
     });
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}.
+   * @param partitionId The partition Id.
+   * @return a session that encrypts a json payload and stored as byte[].
+   */
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}.
+   * @param partitionId The partition Id.
+   * @return a session that encrypts a byte[] payload and stored as byte[].
+   */
   public Session<byte[], byte[]> getSessionBytes(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionBytesImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}.
+   * @param partitionId The partition Id.
+   * @return a session that encrypts a json payload and stored as json.
+   */
   public Session<JSONObject, JSONObject> getSessionJsonAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@code EnvelopeEncryption}.
+   * @param partitionId The partition Id.
+   * @return a session that encrypts a byte[] payload and stored as json.
+   */
   public Session<byte[], JSONObject> getSessionBytesAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
@@ -240,6 +269,12 @@ public class SessionFactory implements SafeAutoCloseable {
     sessionCache.cleanUp();
   }
 
+  /**
+   * Defines the metastore step for building a session factory.
+   * @param productId - product id as a string.
+   * @param serviceId - service id as a string.
+   * @return a new Builder instance with initialized productId and serviceId.
+   */
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);
   }
@@ -315,27 +350,63 @@ public class SessionFactory implements SafeAutoCloseable {
 
   public interface MetastoreStep {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+    /**
+     * Initialize a session factory builder step with a {@code InMemoryMetastoreImpl}.
+     * @return builder step to define the {@code CryptoPolicy}.
+     */
     CryptoPolicyStep withInMemoryMetastore();
 
+    /**
+     * Initialize a session factory builder step with a {@code Metastore}.
+     * @param metastore the {@code Metastore} implementation to use.
+     * @return builder step to define the {@code CryptoPolicy}.
+     */
     CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
   }
 
   public interface CryptoPolicyStep {
+    /**
+     * Initialize a session factory builder step with a {@code NeverExpiredCryptoPolicy}.
+     * @return builder step to define the {@code KeyManagementService}.
+     */
     KeyManagementServiceStep withNeverExpiredCryptoPolicy();
 
+    /**
+     * Initialize a session factory builder step with a {@code CryptoPolicy}.
+     * @param policy the {@code CryptoPolicy} implementation to use.
+     * @return builder step to define the {@code KeyManagementService}.
+     */
     KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
   }
 
   public interface KeyManagementServiceStep {
     // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+    /**
+     * Initialize a session factory builder step with a {@code StaticKeyManagementServiceImpl}.
+     * @param staticMasterKey The static key.
+     * @return builder step to build the fully initialized {@code SessionFactory}.
+     */
     BuildStep withStaticKeyManagementService(String staticMasterKey);
 
+    /**
+     * Initialize a session factory builder step with a {@code KeyManagementService}.
+     * @param keyManagementService the {@code KeyManagementService} implementation to use.
+     * @return builder step to build the fully initialized {@code SessionFactory}.
+     */
     BuildStep withKeyManagementService(KeyManagementService keyManagementService);
   }
 
   public interface BuildStep {
+    /**
+     * Enable metrics for the session factory.
+     * @return The current {@code BuildStep} step.
+     */
     BuildStep withMetricsEnabled();
 
+    /**
+     * Builds the finalized {@code SessionFactory} with the parameters specified in the builder.
+     * @return The fully instantiated {@code SessionFactory}.
+     */
     SessionFactory build();
   }
 

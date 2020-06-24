@@ -25,8 +25,20 @@ public abstract class AeadCrypto {
 
   protected abstract int getMacSizeBits();
 
+  /**
+   * Encrypts the provided payload.
+   * @param input Payload bytes to be encrypted.
+   * @param key The {@link CryptoKey} to encrypt the payload with.
+   * @return An encrypted payload.
+   */
   public abstract byte[] encrypt(byte[] input, CryptoKey key);
 
+  /**
+   * Decrypts an encrypted payload.
+   * @param input The encrypted payload.
+   * @param key The {@link CryptoKey} to decrypt the payload with.
+   * @return A decrypted payload.
+   */
   public abstract byte[] decrypt(byte[] input, CryptoKey key);
 
   protected AeadCrypto() {
@@ -53,10 +65,19 @@ public abstract class AeadCrypto {
     return nonceGenerator.createNonce(getNonceSizeBits());
   }
 
+  /**
+   * Generate a new {@link CryptoKey}.
+   * @return A newly generate {@link CryptoKey}.
+   */
   public CryptoKey generateKey() {
     return generateRandomCryptoKey();
   }
 
+  /**
+   * Generate a new {@link CryptoKey} using the provided time stamp.
+   * @param created The timestamp to be used for key creation.
+   * @return A newly generate {@link CryptoKey}.
+   */
   public CryptoKey generateKey(final Instant created) {
     return generateRandomCryptoKey(created);
   }
@@ -64,8 +85,8 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes. <b>NOTE</b>: you MUST wipe out the source
    * bytes after the completion of this call!
-   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>
-   * @return a generated <code>CryptoKey</code>
+   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>.
+   * @return a generated <code>CryptoKey</code>.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes) {
     return generateKeyFromBytes(sourceBytes, Instant.now());
@@ -74,9 +95,9 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes and created time. <b>NOTE</b>: you MUST wipe
    * out the source bytes after the completion of this call!
-   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>
-   * @param created the time to associate the generated <code>CryptoKey</code> with
-   * @return a generated <code>CryptoKey</code>
+   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>.
+   * @param created the time to associate the generated <code>CryptoKey</code> with.
+   * @return a generated <code>CryptoKey</code>.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes, final Instant created) {
     return generateKeyFromBytes(sourceBytes, created, false);
@@ -85,10 +106,10 @@ public abstract class AeadCrypto {
   /**
    * Generates a <code>CryptoKey</code> using the provided source bytes, created time, and revoked flag. <b>NOTE</b>:
    * you MUST wipe out the source bytes after the completion of this call!
-   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>
-   * @param created the time to associate the generated <code>CryptoKey</code> with
-   * @param revoked the flag to set while generating <code>CryptoKey</code>
-   * @return a generated new <code>CryptoKey</code>
+   * @param sourceBytes the bytes to use for generating <code>CryptoKey</code>.
+   * @param created the time to associate the generated <code>CryptoKey</code> with.
+   * @param revoked the flag to set while generating <code>CryptoKey</code>.
+   * @return a generated new <code>CryptoKey</code>.
    */
   public CryptoKey generateKeyFromBytes(final byte[] sourceBytes, final Instant created, final boolean revoked) {
     byte[] clonedBytes = sourceBytes.clone();
@@ -107,8 +128,8 @@ public abstract class AeadCrypto {
 
   /**
    * Generates a random <code>CryptoKey</code> using the given time as the created time.
-   * @param created the time to associate the generated <code>CryptoKey</code> with
-   * @return a generated random <code>CryptoKey</code>
+   * @param created the time to associate the generated <code>CryptoKey</code> with.
+   * @return a generated random <code>CryptoKey</code>.
    */
   protected CryptoKey generateRandomCryptoKey(final Instant created) {
     int keyLengthBits = getKeySizeBits();

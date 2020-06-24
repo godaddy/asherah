@@ -15,7 +15,7 @@ The following platforms are supported:
 
 For both Linux and MacOS, Asherah depends on a `libc` implementation being available.
 
-Windows is not currently supported, but we may provide an implementation at a later time.
+Windows is currently supported only for C# SDK, and is primarily intended for local development.
 
 If the library is unable to make the native system calls (e.g. missing method or entire underlying library), the native
 facilities of the language will raise an error.
