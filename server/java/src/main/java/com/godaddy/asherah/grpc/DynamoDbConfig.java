@@ -16,6 +16,7 @@ public class DynamoDbConfig {
 
   /**
    * Getter for the field {@code endpointConfig}.
+   *
    * @return The end point for DynamoDb configuration.
    */
   public String getEndpointConfig() {
@@ -24,6 +25,7 @@ public class DynamoDbConfig {
 
   /**
    * Getter for the field {@code region}.
+   *
    * @return The region for DynamoDb configuration.
    */
   public String getRegion() {
@@ -32,6 +34,7 @@ public class DynamoDbConfig {
 
   /**
    * Getter for the field {@code keySuffix}.
+   *
    * @return The key suffix to be used for DynamoDb Global Tables.
    */
   public String getKeySuffix() {
@@ -40,7 +43,8 @@ public class DynamoDbConfig {
 
   /**
    * Getter for the field {@code tableName}.
-   * @return The DynamoDb table name
+   *
+   * @return The DynamoDb table name.
    */
   public String getTableName() {
     return tableName;
