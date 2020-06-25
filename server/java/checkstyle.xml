@@ -82,6 +82,8 @@
         <property name="optional" value="true"/>
     </module>
 
+    <!-- Use annotations to suppress audit events. -->
+    <!-- See http://checkstyle.sourceforge.net/config_filters.html#SuppressWarningsFilter -->
     <module name="SuppressWarningsFilter" />
 
     <!-- Checks for Headers                                -->
