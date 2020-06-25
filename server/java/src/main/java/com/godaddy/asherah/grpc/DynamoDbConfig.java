@@ -14,38 +14,18 @@ public class DynamoDbConfig {
     this.tableName = tableName;
   }
 
-  /**
-   * Getter for the field {@code endpointConfig}.
-   *
-   * @return The end point for DynamoDb configuration.
-   */
   public String getEndpointConfig() {
     return endpointConfig;
   }
 
-  /**
-   * Getter for the field {@code region}.
-   *
-   * @return The region for DynamoDb configuration.
-   */
   public String getRegion() {
     return region;
   }
 
-  /**
-   * Getter for the field {@code keySuffix}.
-   *
-   * @return The key suffix to be used for DynamoDb Global Tables.
-   */
   public String getKeySuffix() {
     return keySuffix;
   }
 
-  /**
-   * Getter for the field {@code tableName}.
-   *
-   * @return The DynamoDb table name.
-   */
   public String getTableName() {
     return tableName;
   }
