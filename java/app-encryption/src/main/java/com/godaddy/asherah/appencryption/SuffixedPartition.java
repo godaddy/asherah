@@ -4,6 +4,14 @@ public class SuffixedPartition extends Partition {
 
   private final String regionSuffix;
 
+  /**
+   * Constructor for SuffixedPartition.
+   *
+   * @param partitionId The partition id.
+   * @param serviceId The service id.
+   * @param productId The product id.
+   * @param regionSuffix The region suffix.
+   */
   public SuffixedPartition(final String partitionId, final String serviceId, final String productId,
                            final String regionSuffix) {
     super(partitionId, serviceId, productId);

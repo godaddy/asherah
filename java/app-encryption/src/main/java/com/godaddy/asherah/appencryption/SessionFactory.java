@@ -44,6 +44,16 @@ public class SessionFactory implements SafeAutoCloseable {
   private final KeyManagementService keyManagementService;
   private final Cache<String, CachedSession> sessionCache;
 
+  /**
+   * Constructor for SessionFactory.
+   *
+   * @param productId The product id.
+   * @param serviceId The service id.
+   * @param metastore A {@link Metastore} object.
+   * @param systemKeyCache Cache for SystemKeys.
+   * @param cryptoPolicy A {@link CryptoPolicy} object.
+   * @param keyManagementService A {@link KeyManagementService} object.
+   */
   public SessionFactory(
       final String productId,
       final String serviceId,
@@ -129,11 +139,12 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   /**
-   * Atomically acquires a shared {@code CachedSession} from the session cache for the {@code partitionId}, creating
+   * Atomically acquires a shared {@link CachedSession} from the session cache for the {@code partitionId}, creating
    * a new one using the given function if needed. This is used to track the number of concurrent users so cache
    * eviction policies don't remove an entry while it's still potentially in use.
-   * @param createSession the function to create a new session if there is no current mapping
-   * @param partitionId
+   *
+   * @param createSession The function to create a new session if there is no current mapping.
+   * @param partitionId The partition id.
    * @return The cached session that's mapped for the given {@code partitionId}.
    */
   CachedSession acquireShared(final Function<String, EnvelopeEncryptionJsonImpl> createSession,
@@ -154,10 +165,11 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   /**
-   * Atomically marks a shared {@code CachedSession} in the session cache as no longer being used by the current
+   * Atomically marks a shared {@link CachedSession} in the session cache as no longer being used by the current
    * caller for the {@code partitionId}. This is used to track the number of concurrent users so cache eviction
    * policies don't remove an entry while it's still potentially in use.
-   * @param partitionId
+   *
+   * @param partitionId The partition id.
    */
   void releaseShared(final String partitionId) {
     // Decrements the usage counter if still in the cache
@@ -167,24 +179,48 @@ public class SessionFactory implements SafeAutoCloseable {
     });
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
+   *
+   * @param partitionId The partition id.
+   * @return A {@link Session} that encrypts a json payload and stores it as byte[].
+   */
   public Session<JSONObject, byte[]> getSessionJson(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
+   *
+   * @param partitionId The partition id.
+   * @return a {@link Session} that encrypts a byte[] payload and stores it as byte[].
+   */
   public Session<byte[], byte[]> getSessionBytes(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
 
     return new SessionBytesImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
+   *
+   * @param partitionId The partition id.
+   * @return a {@link Session} that encrypts a json payload and stores it as json.
+   */
   public Session<JSONObject, JSONObject> getSessionJsonAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
     return new SessionJsonImpl<>(envelopeEncryption);
   }
 
+  /**
+   * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
+   *
+   * @param partitionId The partition id.
+   * @return a {@link Session} that encrypts a byte[] payload and stores it as json.
+   */
   public Session<byte[], JSONObject> getSessionBytesAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
 
@@ -240,6 +276,13 @@ public class SessionFactory implements SafeAutoCloseable {
     sessionCache.cleanUp();
   }
 
+  /**
+   * Defines the metastore step for building a session factory.
+   *
+   * @param productId The product id.
+   * @param serviceId The service id.
+   * @return A new {@link Builder} instance with initialized {@code productId} and {@code serviceId}.
+   */
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);
   }
@@ -314,28 +357,72 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   public interface MetastoreStep {
-    // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+    /**
+     * Initialize a session factory builder step with a {@link InMemoryMetastoreImpl}. NOTE: This is for
+     * user integration test convenience. Need to add "don't run in prod" checks!
+     *
+     * @return Builder step to define the {@link CryptoPolicy}.
+     */
     CryptoPolicyStep withInMemoryMetastore();
 
+    /**
+     * Initialize a session factory builder step with a {@link Metastore}.
+     *
+     * @param metastore The metastore implementation to use.
+     * @return Builder step to define the {@link CryptoPolicy}.
+     */
     CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
   }
 
   public interface CryptoPolicyStep {
+    /**
+     * Initialize a session factory builder step with a {@link NeverExpiredCryptoPolicy}.
+     *
+     * @return Builder step to define the {@link KeyManagementService}.
+     */
     KeyManagementServiceStep withNeverExpiredCryptoPolicy();
 
+    /**
+     * Initialize a session factory builder step with a {@link CryptoPolicy}.
+     *
+     * @param policy the crypto policy implementation to use.
+     * @return Builder step to define the {@link KeyManagementService}.
+     */
     KeyManagementServiceStep withCryptoPolicy(CryptoPolicy policy);
   }
 
   public interface KeyManagementServiceStep {
-    // Leaving this here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+    /**
+     * Initialize a session factory builder step with a {@link StaticKeyManagementServiceImpl}. NOTE: This is for
+     * user integration test convenience. Need to add "don't run in prod" checks!
+     *
+     * @param staticMasterKey The static key.
+     * @return Builder step to build the fully initialized {@link SessionFactory}.
+     */
     BuildStep withStaticKeyManagementService(String staticMasterKey);
 
+    /**
+     * Initialize a session factory builder step with a {@link KeyManagementService}.
+     *
+     * @param keyManagementService the key management service implementation to use.
+     * @return Builder step to build the fully initialized {@link SessionFactory}.
+     */
     BuildStep withKeyManagementService(KeyManagementService keyManagementService);
   }
 
   public interface BuildStep {
+    /**
+     * Enable metrics for the {@link SessionFactory}.
+     *
+     * @return The current {@code BuildStep} step.
+     */
     BuildStep withMetricsEnabled();
 
+    /**
+     * Builds the finalized session factory with the parameters specified in the builder.
+     *
+     * @return The fully instantiated {@link SessionFactory}.
+     */
     SessionFactory build();
   }
 

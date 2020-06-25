@@ -13,10 +13,25 @@ public class EnvelopeKeyRecord {
   private final byte[] encryptedKey;
   private final Optional<Boolean> revoked;
 
+  /**
+   * Constructor for EnvelopeKeyRecord.
+   *
+   * @param created Creation time of the {@code EnvelopeKeyRecord}.
+   * @param parentKeyMeta The {@link KeyMeta} for encryption keys.
+   * @param encryptedKey The encrypted key.
+   */
   public EnvelopeKeyRecord(final Instant created, final KeyMeta parentKeyMeta, final byte[] encryptedKey) {
     this(created, parentKeyMeta, encryptedKey, null);
   }
 
+  /**
+   * Constructor for EnvelopeKeyRecord.
+   *
+   * @param created Creation time of the {@code EnvelopeKeyRecord}.
+   * @param parentKeyMeta The {@link KeyMeta} for encryption keys.
+   * @param encryptedKey The encrypted key.
+   * @param revoked the revocation status of The encrypted key.
+   */
   public EnvelopeKeyRecord(final Instant created, final KeyMeta parentKeyMeta, final byte[] encryptedKey,
       final Boolean revoked) {
     this.created = created;
@@ -32,6 +47,11 @@ public class EnvelopeKeyRecord {
     revoked = sourceJson.getOptionalBoolean("Revoked");
   }
 
+  /**
+   * Converts The {@code EnvelopeKeyRecord} to a {@link org.json.JSONObject}.
+   *
+   * @return The {@code EnvelopeKeyRecord} converted to a {@link org.json.JSONObject} object.
+   */
   public JSONObject toJson() {
     Json json = new Json();
     json.put("Created", created);
@@ -53,6 +73,11 @@ public class EnvelopeKeyRecord {
     return encryptedKey;
   }
 
+  /**
+   * Checks if the key is revoked.
+   *
+   * @return  {@code true} if key is revoked, else null.
+   */
   public Optional<Boolean> isRevoked() {
     return revoked;
   }

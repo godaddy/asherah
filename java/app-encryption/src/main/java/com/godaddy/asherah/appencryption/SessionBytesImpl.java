@@ -10,6 +10,11 @@ public class SessionBytesImpl<D> implements Session<byte[], D> {
 
   private final EnvelopeEncryption<D> envelopeEncryption;
 
+  /**
+   * Constructor for SessionBytesImpl.
+   *
+   * @param envelopeEncryption An {@link EnvelopeEncryption} object.
+   */
   public SessionBytesImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;
   }

@@ -24,10 +24,21 @@ public abstract class Partition {
     return productId;
   }
 
+
+  /**
+   * Get the system key id.
+   *
+   * @return The system key id as a string.
+   */
   public String getSystemKeyId() {
     return "_SK_" + serviceId + "_" + productId;
   }
 
+  /**
+   * Get the intermediate key id.
+   *
+   * @return The intermediate key id as a string.
+   */
   public String getIntermediateKeyId() {
     return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
   }

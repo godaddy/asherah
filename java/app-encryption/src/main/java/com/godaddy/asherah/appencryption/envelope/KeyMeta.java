@@ -11,6 +11,12 @@ public class KeyMeta {
   private final String keyId;
   private final Instant created;
 
+  /**
+   * Constructor for KeyMeta.
+   *
+   * @param keyId The key Id.
+   * @param created The creation time of the key.
+   */
   public KeyMeta(final String keyId, final Instant created) {
     this.keyId = keyId;
     this.created = created;
@@ -21,6 +27,11 @@ public class KeyMeta {
     created = sourceJson.getInstant("Created");
   }
 
+  /**
+   * Converts the {@code KeyMeta} to a {@link org.json.JSONObject}.
+   *
+   * @return The {@code KeyMeta} converted to a {@link org.json.JSONObject} object.
+   */
   public JSONObject toJson() {
     Json json = new Json();
     json.put("KeyId", keyId);
@@ -59,5 +70,4 @@ public class KeyMeta {
   public String toString() {
     return "KeyMeta [keyId=" + keyId + ", created=" + created + "]";
   }
-
 }
