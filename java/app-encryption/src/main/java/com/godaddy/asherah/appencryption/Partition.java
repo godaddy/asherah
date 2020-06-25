@@ -28,7 +28,7 @@ public abstract class Partition {
   /**
    * Get the system key id.
    *
-   * @return The system key id as a string.
+   * @return The {@code SystemKey} id as a string.
    */
   public String getSystemKeyId() {
     return "_SK_" + serviceId + "_" + productId;
@@ -37,7 +37,7 @@ public abstract class Partition {
   /**
    * Get the intermediate key id.
    *
-   * @return The intermediate key id as a string.
+   * @return The {@code IntermediateKey} id as a string.
    */
   public String getIntermediateKeyId() {
     return "_IK_" + partitionId + "_" + serviceId + "_" + productId;

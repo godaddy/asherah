@@ -139,7 +139,7 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   /**
-   * Atomically acquires a shared {@link CachedSession} from the session cache for the {@code partitionId}, creating
+   * Atomically acquires a shared {@code CachedSession} from the session cache for the {@code partitionId}, creating
    * a new one using the given function if needed. This is used to track the number of concurrent users so cache
    * eviction policies don't remove an entry while it's still potentially in use.
    *
@@ -165,7 +165,7 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   /**
-   * Atomically marks a shared {@link CachedSession} in the session cache as no longer being used by the current
+   * Atomically marks a shared {@code CachedSession} in the session cache as no longer being used by the current
    * caller for the {@code partitionId}. This is used to track the number of concurrent users so cache eviction
    * policies don't remove an entry while it's still potentially in use.
    *
@@ -195,7 +195,7 @@ public class SessionFactory implements SafeAutoCloseable {
    * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
    *
    * @param partitionId The partition id.
-   * @return a {@link Session} that encrypts a byte[] payload and stores it as byte[].
+   * @return A {@link Session} that encrypts a byte[] payload and stores it as byte[].
    */
   public Session<byte[], byte[]> getSessionBytes(final String partitionId) {
     EnvelopeEncryption<byte[]> envelopeEncryption = getEnvelopeEncryptionBytes(partitionId);
@@ -207,7 +207,7 @@ public class SessionFactory implements SafeAutoCloseable {
    * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
    *
    * @param partitionId The partition id.
-   * @return a {@link Session} that encrypts a json payload and stores it as json.
+   * @return A {@link Session} that encrypts a json payload and stores it as json.
    */
   public Session<JSONObject, JSONObject> getSessionJsonAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
@@ -219,7 +219,7 @@ public class SessionFactory implements SafeAutoCloseable {
    * Uses the {@code partitionId} to get the implementation of {@link EnvelopeEncryption}.
    *
    * @param partitionId The partition id.
-   * @return a {@link Session} that encrypts a byte[] payload and stores it as json.
+   * @return A {@link Session} that encrypts a byte[] payload and stores it as json.
    */
   public Session<byte[], JSONObject> getSessionBytesAsJson(final String partitionId) {
     EnvelopeEncryption<JSONObject> envelopeEncryption = getEnvelopeEncryptionJson(partitionId);
@@ -281,7 +281,7 @@ public class SessionFactory implements SafeAutoCloseable {
    *
    * @param productId The product id.
    * @param serviceId The service id.
-   * @return A new {@link Builder} instance with initialized {@code productId} and {@code serviceId}.
+   * @return A new {@code Builder} instance with initialized {@code productId} and {@code serviceId}.
    */
   public static MetastoreStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);

@@ -14,7 +14,7 @@ public interface EnvelopeEncryption<D> extends SafeAutoCloseable {
    * Uses an envelope encryption algorithm to decrypt a Data Row Record and return the payload.
    *
    * @param dataRowRecord The Data Row Record to decrypt.
-   * @return A decrypted payload as bytes..
+   * @return A decrypted payload as bytes.
    */
   byte[] decryptDataRowRecord(D dataRowRecord);
 

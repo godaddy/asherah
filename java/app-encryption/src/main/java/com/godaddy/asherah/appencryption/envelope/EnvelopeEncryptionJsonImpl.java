@@ -116,7 +116,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Calls a function using a decrypted intermediate key that was previously used.
    *
-   * @param intermediateKeyMeta Intermediate key meta used previously to write a DRR.
+   * @param intermediateKeyMeta The {@code IntermediateKey} meta used previously to write a DRR.
    * @param functionWithIntermediateKey The function to call using the decrypted intermediate key.
    * @return The result returned by the {@code functionWithIntermediateKey}.
    * @throws MetadataMissingException If the intermediate key is not found, or it has missing system key info.
@@ -176,7 +176,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Calls a function using a decrypted system key that was previously used.
    *
-   * @param systemKeyMeta System key meta used previously to write an IK.
+   * @param systemKeyMeta The {@code SystemKey} meta used previously to write an IK.
    * @param treatExpiredAsMissing If {@code true}, will throw a {@code MetadataMissingException} if the key is
    * expired/revoked.
    * @param functionWithSystemKey The function to call using the decrypted system key.
@@ -398,7 +398,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
    *
-   * @param keyMeta The key meta of intermediate key.
+   * @param keyMeta The {@link KeyMeta} of {@code IntermediateKey}.
    * @return The decrypted intermediate key.
    * @throws MetadataMissingException If the intermediate key is not found, or it has missing system key info.
    */
@@ -416,7 +416,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Fetches a known system key from the metastore and decrypts it using the key management service.
    *
-   * @param systemKeyMeta The key meta of the system key.
+   * @param systemKeyMeta The {@link KeyMeta} of the {@code SystemKey}.
    * @return The decrypted system key.
    * @throws MetadataMissingException If the system key is not found.
    */
