@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE suppressions PUBLIC
-    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
-    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <suppressions>
     <suppress files="[\\/]test[\\/]" checks="[a-zA-Z0-9]*"/>
