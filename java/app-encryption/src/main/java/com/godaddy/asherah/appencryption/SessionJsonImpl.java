@@ -13,9 +13,11 @@ public class SessionJsonImpl<D> implements Session<JSONObject, D> {
   private final EnvelopeEncryption<D> envelopeEncryption;
 
   /**
-   * Constructor for SessionJsonImpl.
+   * Creates a new {@code SessionJsonImpl} instance using the provided {@link EnvelopeEncryption} object. An
+   * implementation of {@link Session} that encrypts a payload of type {@link org.json.JSONObject}.
    *
-   * @param envelopeEncryption An {@link EnvelopeEncryption} object.
+   * @param envelopeEncryption An implementation of
+   *                           {@link com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionJsonImpl}.
    */
   public SessionJsonImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;

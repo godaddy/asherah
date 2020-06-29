@@ -39,15 +39,20 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   private final KeyManagementService keyManagementService;
 
   /**
-   * Constructor for EnvelopeEncryptionJsonImpl.
+   * Creates a new {@code EnvelopeEncryptionBytesImpl} instance using the provided parameters. This is an
+   * implementation of {@link EnvelopeEncryption} which uses {@link org.json.JSONObject} as the Data Row Record format.
    *
    * @param partition A {@link Partition} object.
-   * @param metastore A {@link Metastore} object.
-   * @param systemKeyCache Cache for storing system keys.
-   * @param intermediateKeyCache Cache for storing intermediate keys.
-   * @param aeadEnvelopeCrypto An {@link AeadEnvelopeCrypto} object.
-   * @param cryptoPolicy A {@link CryptoPolicy} object.
-   * @param keyManagementService A {@link KeyManagementService} object.
+   * @param metastore A {@link Metastore} implementation used to store system & intermediate keys.
+   * @param systemKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
+   *                       system keys.
+   * @param intermediateKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
+   *                       intermediate keys.
+   * @param aeadEnvelopeCrypto An implementation of {@link AeadEnvelopeCrypto}, used to encrypt/decrypt keys and
+   *                           envelopes (payload and the key).
+   * @param cryptoPolicy A {@link CryptoPolicy} implementation that dictates the various behaviors of Asherah.
+   * @param keyManagementService A {@link KeyManagementService} implementation that generates the top level master key
+   *                             and encrypts the system keys.
    */
   public EnvelopeEncryptionJsonImpl(final Partition partition,
       final Metastore<JSONObject> metastore, final SecureCryptoKeyMap<Instant> systemKeyCache,

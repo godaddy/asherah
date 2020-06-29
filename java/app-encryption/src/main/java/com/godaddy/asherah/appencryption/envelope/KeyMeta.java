@@ -7,12 +7,24 @@ import org.json.JSONObject;
 
 import com.godaddy.asherah.appencryption.utils.Json;
 
+/**
+ * The {@code KeyMeta} format is:
+ * <pre>
+ * {
+ *   KeyId: "some_key_id",
+ *   Created: 1534553054
+ * }
+ * </pre>
+ */
 public class KeyMeta {
   private final String keyId;
   private final Instant created;
 
   /**
-   * Constructor for KeyMeta.
+   * Creates a new {@code KeyMeta} instance using the provided parameters. {@code KeyMeta} is the metadata in
+   * {@link EnvelopeKeyRecord} that references a parent key in the key hierarchy.
+   * Note that for system keys, this content may be embedded within the encrypted key content, depending on the KMS
+   * being used.
    *
    * @param keyId The key Id.
    * @param created The creation time of the key.
@@ -28,7 +40,13 @@ public class KeyMeta {
   }
 
   /**
-   * Converts the {@code KeyMeta} to a {@link org.json.JSONObject}.
+   * Converts the {@code KeyMeta} to a {@link org.json.JSONObject} with format
+   * <pre>
+   * {
+   *   "KeyId": "some_key_id",
+   *   "Created": 1534553054
+   * }
+   * </pre>
    *
    * @return The {@code KeyMeta} converted to a {@link org.json.JSONObject} object.
    */

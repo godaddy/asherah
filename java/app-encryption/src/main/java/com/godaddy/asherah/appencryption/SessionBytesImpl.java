@@ -11,9 +11,11 @@ public class SessionBytesImpl<D> implements Session<byte[], D> {
   private final EnvelopeEncryption<D> envelopeEncryption;
 
   /**
-   * Constructor for SessionBytesImpl.
+   * Creates a new {@code SessionBytesImpl} instance using the provided {@link EnvelopeEncryption} object. An
+   * implementation of {@link Session} that encrypts a payload of type byte[].
    *
-   * @param envelopeEncryption An {@link EnvelopeEncryption} object.
+   * @param envelopeEncryption An implementation of
+   *                           {@link com.godaddy.asherah.appencryption.envelope.EnvelopeEncryptionBytesImpl}.
    */
   public SessionBytesImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;

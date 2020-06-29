@@ -3,19 +3,21 @@ package com.godaddy.asherah.appencryption.exceptions;
 public class AppEncryptionException extends RuntimeException {
 
   /**
-   * Constructor for AppEncryptionException.
+   * Creates a new {@code AppEncryptionException}. This signals that a
+   * {@link com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption} exception has occurred.
    *
-   * @param message The exception message.
+   * @param message The detailed exception message.
    */
   public AppEncryptionException(final String message) {
     super(message);
   }
 
   /**
-   * Constructor for AppEncryptionException.
+   * Creates a new {@code AppEncryptionException}. This signals that a
+   * {@link com.godaddy.asherah.appencryption.envelope.EnvelopeEncryption} exception has occurred.
    *
-   * @param message The exception message.
-   * @param cause The {@link java.lang.Exception} object.
+   * @param message The detailed exception message.
+   * @param cause The actual {@link java.lang.Exception} raised.
    */
   public AppEncryptionException(final String message, final Exception cause) {
     super(message, cause);
