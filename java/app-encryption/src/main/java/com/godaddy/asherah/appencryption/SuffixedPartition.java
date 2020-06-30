@@ -6,8 +6,8 @@ public class SuffixedPartition extends Partition {
 
   /**
    * Creates a new {@code SuffixedPartition} instance using the provided parameters. An implementation of
-   * {@link Partition} that
-   * is used to support Global Tables in {@link com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl}.
+   * {@link Partition} that is used to support Global Tables in
+   * {@link com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl}.
    *
    * @param partitionId A unique identifier for a {@link Session}.
    * @param serviceId A unique identifier for a service, used to create a {@link SessionFactory} object.

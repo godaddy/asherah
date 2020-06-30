@@ -17,7 +17,8 @@ import com.godaddy.asherah.appencryption.utils.Json;
  *     KeyId: KeyId of the parent key
  *     Created: Created timestamp of parent key
  *   }
- *   Key: Base64 converted value of "Key encrypted with the parent key"
+ *   Key: Base64 converted value of "Key encrypted with the parent key",
+ *   Revoked: The revocation status of the key (True/False)
  * }
  * </pre>
  *  NOTE: For system key, the parent {@link KeyMeta} (in this case the master key identifier) may instead be a
@@ -68,7 +69,7 @@ public class EnvelopeKeyRecord {
   }
 
   /**
-   * Converts The {@code EnvelopeKeyRecord} to a {@link org.json.JSONObject} with format
+   * Converts The {@code EnvelopeKeyRecord} to a {@link org.json.JSONObject} with below format.
    * <pre>
    * {
    *   "Created": Creation time of the encrypted key,

@@ -46,8 +46,7 @@ public class SessionFactory implements SafeAutoCloseable {
 
   /**
    * Creates a new {@code SessionFactory} instance using the provided parameters. A session factory is required to
-   * generate
-   * encryption/decryption sessions.
+   * generate cryptographic sessions.
    *
    * @param productId A unique identifier for a product.
    * @param serviceId A unique identifier for a service.
@@ -56,7 +55,7 @@ public class SessionFactory implements SafeAutoCloseable {
    *                       system keys.
    * @param cryptoPolicy A {@link CryptoPolicy} implementation that dictates the various behaviors of Asherah.
    * @param keyManagementService A {@link KeyManagementService} implementation that generates the top level master key
-   *                             and encrypts the system keys.
+   *                             and encrypts the system keys using the master key.
    */
   public SessionFactory(
       final String productId,
@@ -222,7 +221,7 @@ public class SessionFactory implements SafeAutoCloseable {
   /**
    * Uses the {@code partitionId} to get the {@link EnvelopeEncryptionJsonImpl} instance.
    *
-   * @param partitionId The partition id.
+   * @param partitionId A unique identifier for a session.
    * @return A {@link Session} that encrypts a byte[] payload and stores it as json.
    */
   public Session<byte[], JSONObject> getSessionBytesAsJson(final String partitionId) {
@@ -365,7 +364,7 @@ public class SessionFactory implements SafeAutoCloseable {
      * Initialize a session factory builder step with an {@link InMemoryMetastoreImpl} object.
      * NOTE: This is for user integration test convenience. Need to add "don't run in prod" checks!
      *
-     * @return The current {@code CryptoPolicyStep} instance initialized with a {@link InMemoryMetastoreImpl} object.
+     * @return The current {@code CryptoPolicyStep} instance initialized with an {@link InMemoryMetastoreImpl} object.
      */
     CryptoPolicyStep withInMemoryMetastore();
 

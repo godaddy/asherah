@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import com.godaddy.asherah.appencryption.utils.Json;
 
 /**
- * The {@code KeyMeta} format is:
+ * The {@code KeyMeta} format is below.
  * <pre>
  * {
  *   KeyId: "some_key_id",
@@ -40,7 +40,7 @@ public class KeyMeta {
   }
 
   /**
-   * Converts the {@code KeyMeta} to a {@link org.json.JSONObject} with format
+   * Converts the {@code KeyMeta} to a {@link org.json.JSONObject} with below format.
    * <pre>
    * {
    *   "KeyId": "some_key_id",
