@@ -11,12 +11,12 @@ import com.godaddy.asherah.appencryption.utils.Json;
  * The {@code EnvelopeKeyRecord} format is:
  * <pre>
  * {
- *   Created: UTC epoch in seconds of when the key was created
+ *   Created: UTC epoch in seconds of when the key was created,
  *   // Identifier data of parent key (which encrypts this key)
  *   ParentKeyMeta: {
- *     KeyId: KeyId of the parent key
- *     Created: Created timestamp of parent key
- *   }
+ *     KeyId: KeyId of the parent key,
+ *     Created: Created timestamp of parent key,
+ *   },
  *   Key: Base64 converted value of "Key encrypted with the parent key",
  *   Revoked: The revocation status of the key (True/False)
  * }
@@ -73,7 +73,7 @@ public class EnvelopeKeyRecord {
    * <pre>
    * {
    *   "Created": Creation time of the encrypted key,
-   *   "ParentKeyMeta" : Parent key meta of the encrypted key, if present.
+   *   "ParentKeyMeta" : Parent key meta of the encrypted key(if present),
    *   "Key": Encrypted key,
    *   "Revoked": True/False
    * }
