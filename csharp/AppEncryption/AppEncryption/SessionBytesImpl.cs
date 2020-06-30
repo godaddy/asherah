@@ -11,6 +11,13 @@ namespace GoDaddy.Asherah.AppEncryption
 
         private readonly IEnvelopeEncryption<TD> envelopeEncryption;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionBytesImpl{TD}"/> class. An implementation of
+        /// <see cref="Session{TP,TD}"/> that encrypts a payload of type byte[].
+        /// </summary>
+        ///
+        /// <param name="envelopeEncryption">An implementation of <see cref="envelopeEncryption"/> that uses byte[] as
+        /// the Data Row Record format.</param>
         public SessionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption)
         {
             this.envelopeEncryption = envelopeEncryption;

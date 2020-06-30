@@ -17,6 +17,9 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption
 {
+    /// <summary>
+    /// A session factory is required to generate cryptographic sessions
+    /// </summary>
     public class SessionFactory : IDisposable
     {
         #pragma warning disable SA1401
@@ -36,6 +39,20 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly KeyManagementService keyManagementService;
         private readonly ConcurrentDictionary<string, object> semaphoreLocks;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionFactory"/> class.
+        /// </summary>
+        /// <param name="productId">A unique identifier for a product.</param>
+        /// <param name="serviceId">A unique identifier for a service.</param>
+        /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
+        /// keys.</param>
+        /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
+        /// caching system keys.</param>
+        /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
+        /// the various behaviors of Asherah.</param>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// implementation that generates the top level master key and encrypts the system keys using the master key.
+        /// </param>
         public SessionFactory(
             string productId,
             string serviceId,
@@ -56,34 +73,103 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public interface IMetastoreStep
         {
-            // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+            /// <summary>
+            /// Initialize a session factory builder step with an <see cref="InMemoryMetastoreImpl{T}"/> object.
+            /// NOTE: Leaving this in here for now for user integration test convenience. Need to add "don't run in
+            /// prod" checks somehow.
+            /// </summary>
+            ///
+            /// <returns>The current <see cref="ICryptoPolicyStep"/> instance initialized with an
+            /// <see cref="InMemoryMetastoreImpl{T}"/> object.</returns>
             ICryptoPolicyStep WithInMemoryMetastore();
 
+            /// <summary>
+            /// Initialize a session factory builder step with the provided metastore.
+            /// </summary>
+            ///
+            /// <param name="metastore">The <see cref="IMetastore{T}"/> implementation to use.</param>
+            ///
+            /// <returns>The current <see cref="ICryptoPolicyStep"/> instance initialized with some
+            /// <see cref="IMetastore{T}"/> implementation.</returns>
             ICryptoPolicyStep WithMetastore(IMetastore<JObject> metastore);
         }
 
         public interface ICryptoPolicyStep
         {
+            /// <summary>
+            /// Initialize a session factory builder step with a new <see cref="NeverExpiredCryptoPolicy"/> object.
+            /// </summary>
+            ///
+            /// <returns>The current <see cref="IKeyManagementServiceStep"/> instance initialized with a
+            /// <see cref="NeverExpiredCryptoPolicy"/> object.</returns>
             IKeyManagementServiceStep WithNeverExpiredCryptoPolicy();
 
+            /// <summary>
+            /// Initialize a session factory builder step with the provided crypto policy.
+            /// </summary>
+            ///
+            /// <param name="cryptoPolicy">The <see cref="CryptoPolicy"/> implementation to use.</param>
+            ///
+            /// <returns>The current <see cref="IKeyManagementServiceStep"/> instance initialized with some
+            /// <see cref="CryptoPolicy"/> implementation.</returns>
             IKeyManagementServiceStep WithCryptoPolicy(CryptoPolicy cryptoPolicy);
         }
 
         public interface IKeyManagementServiceStep
         {
-            // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
+            /// <summary>
+            /// Initialize a session factory builder step with a new <see cref="StaticKeyManagementServiceImpl"/>
+            /// object. NOTE: Leaving this in here for now for user integration test convenience. Need to add "don't
+            /// run in prod" checks somehow.
+            /// </summary>
+            ///
+            /// <param name="staticMasterKey">The static key.</param>
+            ///
+            /// <returns>The current <see cref="IBuildStep"/> instance initialized with a
+            /// <see cref="StaticKeyManagementServiceImpl"/> object.</returns>
             IBuildStep WithStaticKeyManagementService(string staticMasterKey);
 
+            /// <summary>
+            /// Initialize a session factory builder step with the provided key management service.
+            /// </summary>
+            ///
+            /// <param name="keyManagementService">The <see cref="KeyManagementService"/> implementation to use.</param>
+            ///
+            /// <returns>The current <see cref="IBuildStep"/> instance initialized with some
+            /// <see cref="keyManagementService"/> implementation.</returns>
             IBuildStep WithKeyManagementService(KeyManagementService keyManagementService);
         }
 
         public interface IBuildStep
         {
+            /// <summary>
+            /// Enable metrics for the <see cref="SessionFactory"/>.
+            /// </summary>
+            ///
+            /// <param name="metrics">Implementation of <see cref="App.Metrics"/> to use.</param>
+            ///
+            /// <returns>The current <see cref="IBuildStep"/> instance with metrics enabled.</returns>
             IBuildStep WithMetrics(IMetrics metrics);
 
+            /// <summary>
+            /// Builds the finalized session factory with the parameters specified in the <see cref="Builder"/>.
+            /// </summary>
+            ///
+            /// <returns>The fully instantiated <see cref="SessionFactory"/>.</returns>
             SessionFactory Build();
         }
 
+        /// <summary>
+        /// Initialize a session factory builder.
+        /// </summary>
+        ///
+        /// <param name="productId">A unique identifier for a product, used to create a <see cref="SessionFactory"/>
+        /// object.</param>
+        /// <param name="serviceId">A unique identifier for a service, used to create a <see cref="SessionFactory"/>
+        /// object.</param>
+        ///
+        /// <returns>The current <see cref="IMetastoreStep"/> instance with initialized <see cref="productId"/> and
+        /// <see cref="serviceId"/>.</returns>
         public static IMetastoreStep NewBuilder(string productId, string serviceId)
         {
             return new Builder(productId, serviceId);
@@ -121,6 +207,13 @@ namespace GoDaddy.Asherah.AppEncryption
             }
         }
 
+        /// <summary>
+        /// Uses the <see cref="partitionId"/> to get an <see cref="EnvelopeEncryptionBytesImpl"/> instance.
+        /// </summary>
+        ///
+        /// <param name="partitionId">A unique identifier for a session.</param>
+        ///
+        /// <returns>A <see cref="Session{TP,TD}"/> that encrypts a json payload and stores it as a byte[].</returns>
         public Session<JObject, byte[]> GetSessionJson(string partitionId)
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption = GetEnvelopeEncryptionBytes(partitionId);
@@ -128,6 +221,13 @@ namespace GoDaddy.Asherah.AppEncryption
             return new SessionJsonImpl<byte[]>(envelopeEncryption);
         }
 
+        /// <summary>
+        /// Uses the <see cref="partitionId"/> to get an <see cref="EnvelopeEncryptionBytesImpl"/> instance.
+        /// </summary>
+        ///
+        /// <param name="partitionId">A unique identifier for a session.</param>
+        ///
+        /// <returns>A <see cref="Session{TP,TD}"/> that encrypts a byte[] payload and stores it as a byte[].</returns>
         public Session<byte[], byte[]> GetSessionBytes(string partitionId)
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption = GetEnvelopeEncryptionBytes(partitionId);
@@ -135,6 +235,13 @@ namespace GoDaddy.Asherah.AppEncryption
             return new SessionBytesImpl<byte[]>(envelopeEncryption);
         }
 
+        /// <summary>
+        /// Uses the <see cref="partitionId"/> to get an <see cref="EnvelopeEncryptionJsonImpl"/> instance.
+        /// </summary>
+        ///
+        /// <param name="partitionId">A unique identifier for a session.</param>
+        ///
+        /// <returns>A <see cref="Session{TP,TD}"/> that encrypts a json payload and stores it as a json.</returns>
         public Session<JObject, JObject> GetSessionJsonAsJson(string partitionId)
         {
             IEnvelopeEncryption<JObject> envelopeEncryption = GetEnvelopeEncryptionJson(partitionId);
@@ -142,6 +249,13 @@ namespace GoDaddy.Asherah.AppEncryption
             return new SessionJsonImpl<JObject>(envelopeEncryption);
         }
 
+        /// <summary>
+        /// Uses the <see cref="partitionId"/> to get an <see cref="EnvelopeEncryptionJsonImpl"/> instance.
+        /// </summary>
+        ///
+        /// <param name="partitionId">A unique identifier for a session.</param>
+        ///
+        /// <returns>A <see cref="Session{TP,TD}"/> that encrypts a byte[] payload and stores it as a json.</returns>
         public Session<byte[], JObject> GetSessionBytesAsJson(string partitionId)
         {
             IEnvelopeEncryption<JObject> envelopeEncryption = GetEnvelopeEncryptionJson(partitionId);
