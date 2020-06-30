@@ -38,8 +38,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
-        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses JObject as the
-        /// Data Row Record format.
+        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses
+        /// <see cref="JObject"/> as the Data Row Record format.
         /// </summary>
         ///
         /// <param name="partition">A <see cref="GoDaddy.Asherah.AppEncryption.Partition"/> object.</param>
@@ -48,7 +48,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
         /// caching system keys.</param>
         /// <param name="intermediateKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation
-        /// for caching intemediate keys.</param>
+        /// for caching intermediate keys.</param>
         /// <param name="aeadEnvelopeCrypto">An implementation of
         /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/>, used to encrypt/decrypt keys and
         /// envelopes.</param>
@@ -143,9 +143,9 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <summary>
         /// Calls a function using a decrypted intermediate key that was previously used.
         /// </summary>
-        /// <typeparam name="T">The type that the <see cref="functionWithIntermediateKey"/> returns.</typeparam>
+        /// <typeparam name="T">The type that the <paramref name="functionWithIntermediateKey"/> returns.</typeparam>
         ///
-        /// <returns>The result returned by the <see cref="functionWithIntermediateKey"/>.</returns>
+        /// <returns>The result returned by the <paramref name="functionWithIntermediateKey"/>.</returns>
         ///
         /// <param name="intermediateKeyMeta">intermediate key meta used previously to write a DRR.</param>
         /// <param name="functionWithIntermediateKey">the function to call using the decrypted intermediate key.</param>
@@ -224,9 +224,9 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <summary>
         /// Calls a function using a decrypted system key that was previously used.
         /// </summary>
-        /// <typeparam name="T">The type that the <see cref="functionWithSystemKey"/> returns.</typeparam>
+        /// <typeparam name="T">The type that the <paramref name="functionWithSystemKey"/> returns.</typeparam>
         ///
-        /// <returns>The result returned by the <see cref="functionWithSystemKey"/>.</returns>
+        /// <returns>The result returned by the <paramref name="functionWithSystemKey"/>.</returns>
         ///
         /// <param name="systemKeyMeta">system key meta used previously to write an IK.</param>
         /// <param name="treatExpiredAsMissing">if <value>true</value>, will throw a
@@ -540,10 +540,10 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Decrypts the <see cref="EnvelopeKeyRecord"/>'s encrypted key using the provided key.
+        /// Decrypts the <paramref name="keyRecord"/>'s encrypted key using the provided key.
         /// </summary>
         ///
-        /// <returns>The decrypted key contained in the <see cref="EnvelopeKeyRecord"/></returns>
+        /// <returns>The decrypted key contained in the <paramref name="keyRecord"/>.</returns>
         ///
         /// <param name="keyRecord">The key to decrypt.</param>
         /// <param name="keyEncryptionKey">Encryption key to use for decryption.</param>
@@ -577,7 +577,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// Gets the most recently created key for a given key ID, if any.
         /// </summary>
         ///
-        /// <returns>The latest key for the <see cref="keyId"/>, if any.</returns>
+        /// <returns>The latest key for the <paramref name="keyId"/>, if any.</returns>
         ///
         /// <param name="keyId">The id to find the latest key of.</param>
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)

@@ -12,11 +12,12 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     /// The <see cref="EnvelopeKeyRecord"/> format is:
     /// <code>
     /// {
-    ///   Created: UTC epoch in seconds of when the key was created Identifier data of parent key (which encrypts this key)
+    ///   Created: UTC epoch in seconds of when the key was created Identifier data of parent key (which encrypts this
+    ///            key),
     ///   ParentKeyMeta: {
-    ///     KeyId: KeyId of the parent key
+    ///     KeyId: KeyId of the parent key,
     ///     Created: Created timestamp of parent key
-    ///   }
+    ///   },
     ///   Key: Base64 converted value of "Key encrypted with the parent key",
     ///   Revoked: The revocation status of the key (True/False)
     /// }

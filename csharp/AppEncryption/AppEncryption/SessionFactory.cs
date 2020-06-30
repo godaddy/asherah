@@ -176,6 +176,7 @@ namespace GoDaddy.Asherah.AppEncryption
             return new Builder(productId, serviceId);
         }
 
+        /// <inheritdoc/>
         public virtual void Dispose()
         {
             try
@@ -283,15 +284,15 @@ namespace GoDaddy.Asherah.AppEncryption
 
         /// <summary>
         /// Atomically acquires a shared <see cref="CachedSession"/> from the session cache for the
-        /// <see cref="partitionId"/>, creating a new one using the given function if needed. This is used to track the
-        /// number of concurrent users so cache eviction policies don't remove an entry while it's still potentially in
-        /// use.
+        /// <paramref name="partitionId"/>, creating a new one using the given function if needed. This is used to track
+        /// the number of concurrent users so cache eviction policies don't remove an entry while it's still potentially
+        /// in use.
         /// </summary>
         ///
-        /// <returns>The cached session that's mapped for the given <see cref="partitionId"/>.</returns>
+        /// <returns>The cached session that's mapped for the given <paramref name="partitionId"/>.</returns>
         ///
-        /// <param name="createSessionFunc">the function to create a new session if there is no current mapping.</param>
-        /// <param name="partitionId">the partition id for a session.</param>
+        /// <param name="createSessionFunc">The function to create a new session if there is no current mapping.</param>
+        /// <param name="partitionId">The partition id for a session.</param>
         private CachedSession AcquireShared(
             Func<EnvelopeEncryptionJsonImpl> createSessionFunc, string partitionId)
         {
@@ -328,11 +329,11 @@ namespace GoDaddy.Asherah.AppEncryption
 
         /// <summary>
         /// Atomically marks a shared <see cref="CachedSession"/> in the session cache as no longer being used by the
-        /// current caller for the <see cref="partitionId"/>. This is used to track the number of concurrent users so
-        /// cache eviction policies don't remove an entry while it's still potentially in use.
+        /// current caller for the <paramref name="partitionId"/>. This is used to track the number of concurrent users
+        /// so cache eviction policies don't remove an entry while it's still potentially in use.
         /// </summary>
         ///
-        /// <param name="partitionId">the partition id for a session.</param>
+        /// <param name="partitionId">The partition id for a session.</param>
         private void ReleaseShared(string partitionId)
         {
             try

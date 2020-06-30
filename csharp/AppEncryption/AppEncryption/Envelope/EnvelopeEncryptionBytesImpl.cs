@@ -19,8 +19,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// Row Record format.
         /// </summary>
         ///
-        /// <param name="envelopeEncryptionJson">An <see cref="IEnvelopeEncryption{TD}"/> object which uses Jobject as
-        /// Data Row Record format.</param>
+        /// <param name="envelopeEncryptionJson">An <see cref="IEnvelopeEncryption{TD}"/> object which uses
+        /// <see cref="JObject"/> as Data Row Record format.</param>
         public EnvelopeEncryptionBytesImpl(IEnvelopeEncryption<JObject> envelopeEncryptionJson)
         {
             this.envelopeEncryptionJson = envelopeEncryptionJson;
