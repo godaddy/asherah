@@ -18,7 +18,4 @@
     <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
-  <ItemGroup Label="Project References">
-    <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
-  </ItemGroup>
 </Project>

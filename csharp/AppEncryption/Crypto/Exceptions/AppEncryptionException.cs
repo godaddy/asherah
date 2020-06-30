@@ -7,7 +7,7 @@ namespace GoDaddy.Asherah.Crypto.Exceptions
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AppEncryptionException"/> class. This signals that a
-        /// <see cref="GoDaddy.Asherah.AppEncryption.Envelope.IEnvelopeEncryption{TD}"/> exception has occured.
+        /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/> exception has occured.
         /// </summary>
         ///
         /// <param name="message">The detailed exception message.</param>
@@ -18,7 +18,7 @@ namespace GoDaddy.Asherah.Crypto.Exceptions
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AppEncryptionException"/> class. This signals that a
-        /// <see cref="GoDaddy.Asherah.AppEncryption.Envelope.IEnvelopeEncryption{TD}"/> exception has occured.
+        /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/> exception has occured.
         /// </summary>
         ///
         /// <param name="message">The detailed exception message.</param>
