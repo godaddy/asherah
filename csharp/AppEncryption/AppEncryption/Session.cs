@@ -15,6 +15,7 @@ namespace GoDaddy.Asherah.AppEncryption
     /// <typeparam name="TD">The Data Row Record type being used to store it and any supporting metadata.</typeparam>
     public abstract class Session<TP, TD> : IDisposable
     {
+        /// <inheritdoc/>
         public abstract void Dispose();
 
         /// <summary>

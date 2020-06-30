@@ -18,7 +18,7 @@ using Newtonsoft.Json.Linq;
 namespace GoDaddy.Asherah.AppEncryption
 {
     /// <summary>
-    /// A session factory is required to generate cryptographic sessions
+    /// A session factory is required to generate cryptographic sessions.
     /// </summary>
     public class SessionFactory : IDisposable
     {
@@ -42,6 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionFactory"/> class.
         /// </summary>
+        ///
         /// <param name="productId">A unique identifier for a product.</param>
         /// <param name="serviceId">A unique identifier for a service.</param>
         /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
@@ -146,7 +147,7 @@ namespace GoDaddy.Asherah.AppEncryption
             /// Enable metrics for the <see cref="SessionFactory"/>.
             /// </summary>
             ///
-            /// <param name="metrics">Implementation of <see cref="App.Metrics"/> to use.</param>
+            /// <param name="metrics">Implementation of <seealso cref="App.Metrics" /> to use.</param>
             ///
             /// <returns>The current <see cref="IBuildStep"/> instance with metrics enabled.</returns>
             IBuildStep WithMetrics(IMetrics metrics);
@@ -281,16 +282,16 @@ namespace GoDaddy.Asherah.AppEncryption
         }
 
         /// <summary>
-        /// Atomically acquires a shared <code>CachedSession</code> from the session cache for the
-        /// <code>partitionId</code>, creating a new one using the given function if needed. This is used to track the
+        /// Atomically acquires a shared <see cref="CachedSession"/> from the session cache for the
+        /// <see cref="partitionId"/>, creating a new one using the given function if needed. This is used to track the
         /// number of concurrent users so cache eviction policies don't remove an entry while it's still potentially in
         /// use.
         /// </summary>
         ///
-        /// <returns>The cached session that's mapped for the given <code>partitionId</code></returns>
+        /// <returns>The cached session that's mapped for the given <see cref="partitionId"/>.</returns>
         ///
-        /// <param name="createSessionFunc">the function to create a new session if there is no current mapping</param>
-        /// <param name="partitionId">the partition id for a session</param>
+        /// <param name="createSessionFunc">the function to create a new session if there is no current mapping.</param>
+        /// <param name="partitionId">the partition id for a session.</param>
         private CachedSession AcquireShared(
             Func<EnvelopeEncryptionJsonImpl> createSessionFunc, string partitionId)
         {
@@ -326,12 +327,12 @@ namespace GoDaddy.Asherah.AppEncryption
         }
 
         /// <summary>
-        /// Atomically marks a shared <code>CachedSession</code> in the session cache as no longer being used by the
-        /// current caller for the <code>partitionId</code>. This is used to track the number of concurrent users so
+        /// Atomically marks a shared <see cref="CachedSession"/> in the session cache as no longer being used by the
+        /// current caller for the <see cref="partitionId"/>. This is used to track the number of concurrent users so
         /// cache eviction policies don't remove an entry while it's still potentially in use.
         /// </summary>
         ///
-        /// <param name="partitionId">the partition id for a session</param>
+        /// <param name="partitionId">the partition id for a session.</param>
         private void ReleaseShared(string partitionId)
         {
             try

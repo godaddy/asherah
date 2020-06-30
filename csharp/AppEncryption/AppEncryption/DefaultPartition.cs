@@ -19,6 +19,7 @@ namespace GoDaddy.Asherah.AppEncryption
         {
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return GetType().Name + "[partitionId=" + PartitionId +

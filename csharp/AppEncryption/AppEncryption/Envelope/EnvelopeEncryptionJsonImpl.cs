@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
@@ -19,6 +20,7 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Envelope
 {
+    /// <inheritdoc />
     public class EnvelopeEncryptionJsonImpl : IEnvelopeEncryption<JObject>
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionJsonImpl>();
@@ -34,6 +36,27 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
+        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses JObject as the
+        /// Data Row Record format.
+        /// </summary>
+        ///
+        /// <param name="partition">A <see cref="GoDaddy.Asherah.AppEncryption.Partition"/> object.</param>
+        /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
+        /// keys.</param>
+        /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
+        /// caching system keys.</param>
+        /// <param name="intermediateKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation
+        /// for caching intemediate keys.</param>
+        /// <param name="aeadEnvelopeCrypto">An implementation of
+        /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/>, used to encrypt/decrypt keys and
+        /// envelopes.</param>
+        /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
+        /// the various behaviors of Asherah.</param>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// implementation that generates the top level master key and encrypts the system keys using the master key.
+        /// </param>
         public EnvelopeEncryptionJsonImpl(
             Partition partition,
             IMetastore<JObject> metastore,
@@ -57,6 +80,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             // Need default constructor for unit test mocks
         }
 
+        /// <inheritdoc/>
         public virtual byte[] DecryptDataRowRecord(JObject dataRowRecord)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(DecryptTimerOptions))
@@ -79,6 +103,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
         }
 
+        /// <inheritdoc/>
         public virtual JObject EncryptPayload(byte[] payload)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
@@ -101,6 +126,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
         }
 
+        /// <inheritdoc/>
         public virtual void Dispose()
         {
             try
@@ -117,14 +143,15 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <summary>
         /// Calls a function using a decrypted intermediate key that was previously used.
         /// </summary>
-        /// <typeparam name="T">The type that the  <code>functionWithIntermediateKey</code> returns</typeparam>
+        /// <typeparam name="T">The type that the <see cref="functionWithIntermediateKey"/> returns.</typeparam>
         ///
-        /// <returns>The result returned by the <code>functionWithIntermediateKey</code></returns>
+        /// <returns>The result returned by the <see cref="functionWithIntermediateKey"/>.</returns>
         ///
-        /// <param name="intermediateKeyMeta">intermediate key meta used previously to write a DRR</param>
-        /// <param name="functionWithIntermediateKey">the function to call using the decrypted intermediate key</param>
+        /// <param name="intermediateKeyMeta">intermediate key meta used previously to write a DRR.</param>
+        /// <param name="functionWithIntermediateKey">the function to call using the decrypted intermediate key.</param>
         ///
-        /// <exception cref="MetadataMissingException">If the intermediate key is not found, or it has missing system key info</exception>
+        /// <exception cref="MetadataMissingException">If the intermediate key is not found, or it has missing system
+        /// key info.</exception>
         internal virtual T WithIntermediateKeyForRead<T>(
             KeyMeta intermediateKeyMeta, Func<CryptoKey, T> functionWithIntermediateKey)
         {
@@ -197,15 +224,17 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <summary>
         /// Calls a function using a decrypted system key that was previously used.
         /// </summary>
-        /// <typeparam name="T">The type that the  <code>functionWithSystemKey</code> returns</typeparam>
+        /// <typeparam name="T">The type that the <see cref="functionWithSystemKey"/> returns.</typeparam>
         ///
-        /// <returns>The result returned by the <code>functionWithSystemKey</code></returns>
+        /// <returns>The result returned by the <see cref="functionWithSystemKey"/>.</returns>
         ///
-        /// <param name="systemKeyMeta">system key meta used previously to write an IK</param>
-        /// <param name="treatExpiredAsMissing">if <code>true</code>, will throw a <code>MetadataMissingException</code> if the key is expired/revoked</param>
-        /// <param name="functionWithSystemKey">the function to call using the decrypted system key</param>
+        /// <param name="systemKeyMeta">system key meta used previously to write an IK.</param>
+        /// <param name="treatExpiredAsMissing">if <value>true</value>, will throw a
+        /// <see cref="MetadataMissingException"/> if the key is expired/revoked.</param>
+        /// <param name="functionWithSystemKey">the function to call using the decrypted system key.</param>
         ///
-        /// <exception cref="MetadataMissingException">If the system key is not found, or if its expired/revoked and treatExpiredAsMissing is true</exception>
+        /// <exception cref="MetadataMissingException">If the system key is not found, or if its expired/revoked and
+        /// <see cref="treatExpiredAsMissing"/> is <value>true</value>.</exception>
         internal virtual T WithExistingSystemKey<T>(
             KeyMeta systemKeyMeta, bool treatExpiredAsMissing, Func<CryptoKey, T> functionWithSystemKey)
         {
@@ -480,8 +509,9 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         ///
         /// <returns>The decrypted intermediate key.</returns>
         ///
-        /// <param name="intermediateKeyMeta">intermediate key meta of intermediate key</param>
-        /// <exception cref="MetadataMissingException">if the intermediate key is not found, or it has missing system key info</exception>
+        /// <param name="intermediateKeyMeta">The <see cref="KeyMeta"/> of intermediate key.</param>
+        /// <exception cref="MetadataMissingException">If the intermediate key is not found, or it has missing system
+        /// key info.</exception>
         internal virtual CryptoKey GetIntermediateKey(KeyMeta intermediateKeyMeta)
         {
             EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(intermediateKeyMeta.KeyId, intermediateKeyMeta.Created);
@@ -499,8 +529,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         ///
         /// <returns>The decrypted system key.</returns>
         ///
-        /// <param name="systemKeyMeta">system key meta of the system key</param>
-        /// <exception cref="MetadataMissingException">If the system key is not found</exception>
+        /// <param name="systemKeyMeta">The <see cref="KeyMeta"/> of the system key.</param>
+        /// <exception cref="MetadataMissingException">If the system key is not found.</exception>
         internal virtual CryptoKey GetSystemKey(KeyMeta systemKeyMeta)
         {
             EnvelopeKeyRecord systemKeyRecord = LoadKeyRecord(systemKeyMeta.KeyId, systemKeyMeta.Created);
@@ -510,13 +540,13 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Decrypts the <code>EnvelopeKeyRecord</code>'s encrypted key using the provided key.
+        /// Decrypts the <see cref="EnvelopeKeyRecord"/>'s encrypted key using the provided key.
         /// </summary>
         ///
-        /// <returns>The decrypted key contained in the <code>EnvelopeKeyRecord</code></returns>
+        /// <returns>The decrypted key contained in the <see cref="EnvelopeKeyRecord"/></returns>
         ///
-        /// <param name="keyRecord">the key to decrypt</param>
-        /// <param name="keyEncryptionKey">encryption key to use for decryption</param>
+        /// <param name="keyRecord">The key to decrypt.</param>
+        /// <param name="keyEncryptionKey">Encryption key to use for decryption.</param>
         internal virtual CryptoKey DecryptKey(EnvelopeKeyRecord keyRecord, CryptoKey keyEncryptionKey)
         {
             return crypto.DecryptKey(
@@ -524,14 +554,15 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         }
 
         /// <summary>
-        /// Gets a specific <code>EnvelopeKeyRecord</code> or throws a <code>MetadataMissingException</code> if not found.
+        /// Gets a specific <see cref="EnvelopeKeyRecord"/> or throws a <see cref="MetadataMissingException"/> if not
+        /// found.
         /// </summary>
         ///
-        /// <returns>The EnvelopeKeyRecord, if found</returns>
+        /// <returns>The <see cref="EnvelopeKeyRecord"/>, if found.</returns>
         ///
-        /// <param name="keyId">key id of the record to load</param>
-        /// <param name="created">created time of the record to load</param>
-        /// <exception cref="MetadataMissingException">if the EnvelopeKeyRecord is not found</exception>
+        /// <param name="keyId">Key id of the record to load.</param>
+        /// <param name="created">Created time of the record to load.</param>
+        /// <exception cref="MetadataMissingException">If the EnvelopeKeyRecord is not found.</exception>
         internal virtual EnvelopeKeyRecord LoadKeyRecord(string keyId, DateTimeOffset created)
         {
             Logger.LogDebug("Attempting to load key with KeyID {keyId} created {created}", keyId, created);
@@ -546,9 +577,9 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// Gets the most recently created key for a given key ID, if any.
         /// </summary>
         ///
-        /// <returns>The latest key for the <code>keyId</code>, if any.</returns>
+        /// <returns>The latest key for the <see cref="keyId"/>, if any.</returns>
         ///
-        /// <param name="keyId">the id to find the latest key of</param>
+        /// <param name="keyId">The id to find the latest key of.</param>
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)
         {
             Logger.LogDebug("Attempting to load latest key with keyId {keyId}", keyId);
