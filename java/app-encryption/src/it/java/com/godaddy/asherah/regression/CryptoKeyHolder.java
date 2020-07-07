@@ -7,7 +7,7 @@ import com.godaddy.asherah.crypto.keys.CryptoKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import static com.godaddy.asherah.testhelpers.Constants.KEY_EXPIRY_DAYS;
+import static com.godaddy.asherah.testhelpers.Constants.*;
 
 final class CryptoKeyHolder {
   private static final AeadEnvelopeCrypto CRYPTO = new BouncyAes256GcmCrypto();

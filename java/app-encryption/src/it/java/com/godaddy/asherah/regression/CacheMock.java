@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 final class CacheMock {
