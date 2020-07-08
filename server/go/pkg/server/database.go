@@ -18,7 +18,7 @@ func getMysql(connStr string, pool bool) (*sql.DB, error) {
 	if (*sql.DB)(nil) == dbconnection {
 		var err error
 		dbconnection, err = newMysql(connStr)
-		
+
 		if err != nil {
 			return nil, err
 		}
