@@ -13,6 +13,7 @@ type Options struct {
 	ExpireAfter        time.Duration `long:"expire-after" description:"The amount of time a key is considered valid" env:"ASHERAH_EXPIRE_AFTER"`
 	CheckInterval      time.Duration `long:"check-interval" description:"The amount of time before cached keys are considered stale" env:"ASHERAH_CHECK_INTERVAL"`
 	Metastore          string        `long:"metastore" choice:"rdbms" choice:"dynamodb" choice:"memory" required:"yes" description:"Determines the type of metastore to use for persisting keys" env:"ASHERAH_METASTORE_MODE"`
+	ConnectionPool     bool          `long:"conn-pool" description:"Pool database connections (only supported by --metastore=rdbms)" env:"ASHERAH_CONNECTION_POOL"`
 	ConnectionString   string        `long:"conn" description:"The database connection string (required if --metastore=rdbms)" env:"ASHERAH_CONNECTION_STRING"`
 	EnableRegionSuffix bool          `long:"enable-region-suffix" description:"Configure the metastore to use regional suffixes (only supported by --metastore=dynamodb)" env:"ASHERAH_ENABLE_REGION_SUFFIX"`
 	DynamoDBEndpoint   string        `long:"dynamodb-endpoint" description:"An optional endpoint URL (hostname only or fully qualified URI) (only supported by --metastore=dynamodb)" env:"ASHERAH_DYNAMODB_ENDPOINT"`
