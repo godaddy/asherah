@@ -191,6 +191,11 @@ jobs:
             source ./.circleci/set_env_variables.sh
             cd java/app-encryption
             ./scripts/test.sh
+      - run:
+          name: Integration Tests
+          command: |
+            cd java/app-encryption
+            ./scripts/integration_test.sh
       - store_test_results:
           path: java/app-encryption/target/surefire-reports
       - codecov/upload:
