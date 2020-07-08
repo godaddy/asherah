@@ -7,7 +7,8 @@ public interface Metastore<V> {
 
   /**
    * Lookup the keyId and created time and return its associated value, if any.
-   * @param keyId the keyId part of the lookup key
+   *
+   * @param keyId   the keyId part of the lookup key
    * @param created the created time part of the lookup key
    * @return The value associated with the keyId and created tuple, if any.
    */
@@ -15,6 +16,7 @@ public interface Metastore<V> {
 
   /**
    * Lookup the latest value associated with the keyId.
+   *
    * @param keyId the keyId part of the lookup key
    * @return The latest value associated with the keyId, if any.
    */
@@ -22,19 +24,12 @@ public interface Metastore<V> {
 
   /**
    * Stores the value using the specified keyId and created time.
-   * @param keyId the keyId part of the lookup key
+   *
+   * @param keyId   the keyId part of the lookup key
    * @param created the created time part of the lookup key
-   * @param value the value to store
+   * @param value   the value to store
    * @return true if the store succeeded, false if the store failed for a known condition
-   *         e.g., trying to save a duplicate value should return false, not throw an exception.
+   * e.g., trying to save a duplicate value should return false, not throw an exception.
    */
   boolean store(String keyId, Instant created, V value);
-
-  /**
-   * Returns the key suffix or "" if key suffix option is disabled
-   * @return The key suffix
-   */
-  default String getKeySuffix() {
-    return "";
-  }
 }

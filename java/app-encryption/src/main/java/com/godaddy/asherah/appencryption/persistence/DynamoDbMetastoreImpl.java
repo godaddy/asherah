@@ -42,19 +42,29 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   private final DynamoDB client;
   private final String tableName;
-  private final String keySuffix;
+  private final String preferredRegion;
+  private final Boolean hasKeySuffix;
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
-  public static Builder newBuilder() {
-    return new Builder();
+  public static Builder newBuilder(final String region) {
+    return new Builder(region);
   }
 
   DynamoDbMetastoreImpl(final Builder builder) {
     this.client = new DynamoDB(builder.client);
     this.tableName = builder.tableName;
-    this.keySuffix = builder.keySuffix;
+    this.preferredRegion = builder.preferredRegion;
+    this.hasKeySuffix = builder.hasKeySuffix;
     this.table = client.getTable(tableName);
+  }
+
+  private String getHashKey(final String key) {
+    if (this.hasKeySuffix) {
+      return key + "_" + this.preferredRegion;
+    }
+
+    return key;
   }
 
   @Override
@@ -87,7 +97,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       try {
         // Have to use query api to use limit and reverse sort order
         ItemCollection<QueryOutcome> itemCollection = table.query(new QuerySpec()
-            .withHashKey(PARTITION_KEY, key)
+            .withHashKey(PARTITION_KEY, getHashKey(key))
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withScanIndexForward(false) // sorts descending
             .withMaxResultSize(1) // limit 1
@@ -117,7 +127,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         // required.
         Item item = new Item()
             .withPrimaryKey(
-                PARTITION_KEY, key,
+                PARTITION_KEY, getHashKey(key),
                 SORT_KEY, created.getEpochSecond())
             .withMap(ATTRIBUTE_KEY_RECORD, value.toMap());
         table.putItem(new PutItemSpec()
@@ -138,11 +148,6 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
-  @Override
-  public String getKeySuffix() {
-    return keySuffix;
-  }
-
   String getTableName() {
     return tableName;
   }
@@ -151,19 +156,32 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return client;
   }
 
+  Boolean hasKeySuffix() {
+    return hasKeySuffix;
+  }
+
   public static final class Builder implements BuildStep, EndPointStep, RegionStep {
     static final String DEFAULT_TABLE_NAME = "EncryptionKey";
-    static final String DEFAULT_KEY_SUFFIX = "";
 
     private AmazonDynamoDB client;
-
+    private final String preferredRegion;
     private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
-    private String keySuffix = DEFAULT_KEY_SUFFIX;
+
     private String tableName = DEFAULT_TABLE_NAME;
+    private Boolean hasKeySuffix = false;
+    private Boolean hasEndPoint = false;
+    private Boolean hasRegion = false;
+
+    public Builder(final String region) {
+      this.preferredRegion = region;
+    }
 
     @Override
     public BuildStep withEndPointConfiguration(final String endPoint, final String signingRegion) {
-      standardBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, signingRegion));
+      if (!hasRegion) {
+        hasEndPoint = true;
+        standardBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, signingRegion));
+      }
       return this;
     }
 
@@ -174,19 +192,24 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     }
 
     @Override
-    public BuildStep withKeySuffix(final String suffix) {
-      this.keySuffix = suffix;
+    public BuildStep withKeySuffix() {
+      this.hasKeySuffix = true;
       return this;
     }
 
     @Override
     public BuildStep withRegion(final String region) {
-      standardBuilder.withRegion(region);
+      if (!hasEndPoint) {
+        standardBuilder.withRegion(region);
+      }
       return this;
     }
 
     @Override
     public DynamoDbMetastoreImpl build() {
+      if (!hasEndPoint && !hasRegion) {
+        standardBuilder.withRegion(preferredRegion);
+      }
       client = standardBuilder.build();
       return new DynamoDbMetastoreImpl(this);
     }
@@ -214,10 +237,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   public interface BuildStep {
     /**
      * Specifies whether key suffix should be enabled for DynamoDB
-     * @param suffix The region to be used as suffix
      * @return The current {@code BuildStep} instance.
      */
-    BuildStep withKeySuffix(String suffix);
+    BuildStep withKeySuffix();
 
     /**
      * Specifies the name of the table

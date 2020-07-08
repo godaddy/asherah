@@ -49,7 +49,6 @@ class SessionFactoryTest {
   private final static String testPartitionId = "test_partition_id";
   private final static String testServiceId = "test_service_id";
   private final static String testProductId = "test_product_id";
-  private final static String testRegionSuffix = "test_region_suffix";
   private final static String testStaticMasterKey = "thisIsAStaticMasterKeyForTesting";
 
   private SessionFactory sessionFactory;
@@ -86,8 +85,6 @@ class SessionFactoryTest {
 
   @Test
   void testSessionCacheSetupAndClose() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     // Test flows around session cache setup, including cache loader and removal flows (via close)
     CryptoPolicy policy = BasicExpiringCryptoPolicy.newBuilder()
         .withKeyExpirationDays(1)
@@ -731,61 +728,38 @@ class SessionFactoryTest {
 
   @Test
   void testGetSessionJson() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     Session<?,?> session = sessionFactory.getSessionJson(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
   void testGetSessionBytes() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     Session<?,?> session = sessionFactory.getSessionBytes(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
   void testGetSessionJsonAsJson() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     Session<?,?> session = sessionFactory.getSessionJsonAsJson(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
   void testGetSessionBytesAsJson() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     Session<?,?> session = sessionFactory.getSessionBytesAsJson(testPartitionId);
     assertNotNull(session);
   }
 
   @Test
   void testGetEnvelopeEncryptionBytes() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     EnvelopeEncryption<?> envelopeEncryption = sessionFactory.getEnvelopeEncryptionBytes(testPartitionId);
     assertNotNull(envelopeEncryption);
   }
 
   @Test
   void testGetPartitionWithPartitionId() {
-    when(metastoreMock.getKeySuffix()).thenReturn("");
-
     Partition partition =
         sessionFactory.getPartition(testPartitionId);
-    assertEquals(testPartitionId, partition.getPartitionId());
-    assertEquals(testServiceId, partition.getServiceId());
-    assertEquals(testProductId, partition.getProductId());
-  }
-
-  @Test
-  void testGetPartitionWithSuffixedPartition() {
-    when(metastoreMock.getKeySuffix()).thenReturn(testRegionSuffix);
-
-    Partition partition =
-      sessionFactory.getPartition(testPartitionId);
     assertEquals(testPartitionId, partition.getPartitionId());
     assertEquals(testServiceId, partition.getServiceId());
     assertEquals(testProductId, partition.getProductId());

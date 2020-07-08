@@ -115,7 +115,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     // Get from cache or lookup previously used key
     CryptoKey intermediateKey = intermediateKeyCache.get(intermediateKeyMeta.getCreated());
     if (intermediateKey == null) {
-      intermediateKey = getIntermediateKey(intermediateKeyMeta);
+      intermediateKey = getIntermediateKey(intermediateKeyMeta.getCreated());
 
       // Put the key into our cache if allowed
       if (cryptoPolicy.canCacheIntermediateKeys()) {
@@ -386,12 +386,12 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
-   * @param keyMeta intermediate key meta of intermediate key
+   * @param intermediateKeyCreated creation time of intermediate key
    * @return The decrypted intermediate key.
    * @throws MetadataMissingException if the intermediate key is not found, or it has missing system key info
    */
-  CryptoKey getIntermediateKey(final KeyMeta keyMeta) {
-    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(keyMeta.getKeyId(), keyMeta.getCreated());
+  CryptoKey getIntermediateKey(final Instant intermediateKeyCreated) {
+    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(partition.getIntermediateKeyId(), intermediateKeyCreated);
 
     return withExistingSystemKey(
         intermediateKeyRecord.getParentKeyMeta().orElseThrow(
