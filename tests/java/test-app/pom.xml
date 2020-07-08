@@ -15,7 +15,7 @@
     <junit.platform.version>1.2.0</junit.platform.version>
     <dropwizard.version>1.3.5</dropwizard.version>
     <sl4j.version>1.7.25</sl4j.version>
-    <mysql.connector.java.version>8.0.13</mysql.connector.java.version>
+    <mysql.connector.java.version>8.0.16</mysql.connector.java.version>
     <com.zaxxer.hikaricp.version>2.6.1</com.zaxxer.hikaricp.version>
     <mockito.core.version>2.22.0</mockito.core.version>
     <elasticsearch.version>6.3.2</elasticsearch.version>
