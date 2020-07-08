@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using App.Metrics;
 using App.Metrics.Concurrency;
 using GoDaddy.Asherah.AppEncryption.Envelope;
@@ -73,7 +72,7 @@ namespace GoDaddy.Asherah.AppEncryption
         public interface IKeyManagementServiceStep
         {
             // Leaving this in here for now for user integration test convenience. Need to add "don't run in prod" checks somehow
-            IBuildStep WithStaticKeyManagementService(string demoMasterKey);
+            IBuildStep WithStaticKeyManagementService(string staticMasterKey);
 
             IBuildStep WithKeyManagementService(KeyManagementService keyManagementService);
         }
@@ -157,7 +156,14 @@ namespace GoDaddy.Asherah.AppEncryption
 
         internal Partition GetPartition(string partitionId)
         {
-            return new Partition(partitionId, serviceId, productId);
+            string regionSuffix = metastore.GetKeySuffix();
+
+            if (!string.IsNullOrEmpty(regionSuffix))
+            {
+                return new SuffixedPartition(partitionId, serviceId, productId, regionSuffix);
+            }
+
+            return new DefaultPartition(partitionId, serviceId, productId);
         }
 
         /// <summary>
@@ -363,9 +369,9 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public IBuildStep WithStaticKeyManagementService(string demoMasterKey)
+            public IBuildStep WithStaticKeyManagementService(string staticMasterKey)
             {
-                keyManagementService = new StaticKeyManagementServiceImpl(demoMasterKey);
+                keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
                 return this;
             }
 

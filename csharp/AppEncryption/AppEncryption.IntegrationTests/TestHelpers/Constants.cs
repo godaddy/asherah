@@ -5,7 +5,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers
         /// <summary>
         /// KMS
         /// </summary>
-        public const string KeyManagementStaticMasterKey = "secretmasterkey!";
+        public const string KeyManagementStaticMasterKey = "thisIsAStaticMasterKeyForTesting";
         public const string KeyManagementAws = "aws";
         public const string KeyManagementStatic = "static";
         public const string DefaultKeyManagementType = KeyManagementStatic;

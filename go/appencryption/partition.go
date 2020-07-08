@@ -33,3 +33,29 @@ func (p defaultPartition) SystemKeyID() string {
 func (p defaultPartition) IntermediateKeyID() string {
 	return fmt.Sprintf("_IK_%s_%s_%s", p.id, p.service, p.product)
 }
+
+func newSuffixedPartition(partition, service, product, suffix string) suffixedPartition {
+	return suffixedPartition{
+		defaultPartition: defaultPartition{
+			id:      partition,
+			service: service,
+			product: product,
+		},
+		suffix: suffix,
+	}
+}
+
+type suffixedPartition struct {
+	defaultPartition
+	suffix string
+}
+
+// SystemKeyID returns the system key name for the product/service.
+func (p suffixedPartition) SystemKeyID() string {
+	return fmt.Sprintf("_SK_%s_%s_%s", p.service, p.product, p.suffix)
+}
+
+// IntermediateKeyID returns the intermediate key name for the product/service.
+func (p suffixedPartition) IntermediateKeyID() string {
+	return fmt.Sprintf("_IK_%s_%s_%s_%s", p.id, p.service, p.product, p.suffix)
+}

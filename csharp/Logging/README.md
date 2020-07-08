@@ -2,7 +2,12 @@
 
 The logging project provides static factory methods that are used to provide logging within the Asherah SDK.
 
-**This project will be removed once we refactor the usage of ILogger in the SDK.**
+`GoDaddy.Asherah.Logging` targets NetStandard 2.0 and NetStandard 2.1. See the 
+[.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
+[Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
+for more information.
+
+**NOTE: This project will be removed once we refactor the usage of ILogger in the SDK.**
 
 ## Usage
 

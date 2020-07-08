@@ -1,22 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.AppEncryption</PackageId>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
+    <Title>AppEncryption</Title>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <Description>Application level envelope encryption SDK for C#</Description>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.AppEncryption</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Properties related to NuGet packaging: -->
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/AppEncryption</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.15" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.18" />
     <PackageReference Include="LanguageExt.Core" Version="3.4.13" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.3" />
     <PackageReference Include="App.Metrics" Version="3.2.0" />
+  </ItemGroup>
+  <ItemGroup Label="Package References" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.1.1"/>
+  </ItemGroup>
+  <ItemGroup Label="Package References" Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.3"/>
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../Crypto/Crypto.csproj" />

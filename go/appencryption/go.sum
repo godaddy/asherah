@@ -26,8 +26,8 @@ github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
-github.com/godaddy/asherah/go/securememory v0.0.0-20200313205146-453ba3f2f099 h1:fLDPhsMFLtHT3PcdRkhbiVlKfJ3/sBr6dZMUc7vWeEQ=
-github.com/godaddy/asherah/go/securememory v0.0.0-20200313205146-453ba3f2f099/go.mod h1:N0mgZcRmF/RFjLQBac/LW2EgkBw4BOKHkIT8rO1pBRU=
+github.com/godaddy/asherah/go/securememory v0.1.0 h1:zyJa/rWuc9K6YZdwgbdtk7I6BTshiJDfIQwQkIbxvyk=
+github.com/godaddy/asherah/go/securememory v0.1.0/go.mod h1:N0mgZcRmF/RFjLQBac/LW2EgkBw4BOKHkIT8rO1pBRU=
 github.com/gogo/protobuf v1.2.0 h1:xU6/SpYbvkNYiptHJYEDRseDLvYE7wSqhYYNy0QSUzI=
 github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=

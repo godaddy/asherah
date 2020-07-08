@@ -82,16 +82,22 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 	}
 
 	var ikCache cache
-
 	if f.Config.Policy.CacheIntermediateKeys {
 		ikCache = newKeyCache(f.Config.Policy)
 	} else {
 		ikCache = new(neverCache)
 	}
 
+	var p partition
+	if v, ok := f.Metastore.(interface{ GetRegionSuffix() string }); ok && len(v.GetRegionSuffix()) > 0 {
+		p = newSuffixedPartition(id, f.Config.Service, f.Config.Product, v.GetRegionSuffix())
+	} else {
+		p = newPartition(id, f.Config.Service, f.Config.Product)
+	}
+
 	return &Session{
 		encryption: &envelopeEncryption{
-			partition:        newPartition(id, f.Config.Service, f.Config.Product),
+			partition:        p,
 			Metastore:        f.Metastore,
 			KMS:              f.KMS,
 			Policy:           f.Config.Policy,

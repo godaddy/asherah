@@ -8,7 +8,7 @@ import java.util.function.Function;
  * Convenient persistence implementation that allows functional interfaces to be passed in for load and store
  * implementations.
  *
- * @param <T>
+ * @param <T> The type of the value being loaded and stored in the persistent store.
  */
 public class AdhocPersistence<T> implements Persistence<T> {
 

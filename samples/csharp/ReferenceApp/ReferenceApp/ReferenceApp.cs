@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             // Setup our Logger. This is used by the library as well.
             ILoggerFactory loggerFactory = new LoggerFactory();
 
-            loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+            loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.AddFilter((category, level) => level >= LogLevel.Information)
                     .AddConsole();
@@ -81,7 +81,50 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
-                metastore = DynamoDbMetastoreImpl.NewBuilder().Build();
+                DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder();
+
+                if (!string.IsNullOrEmpty(options.DynamodbEndpoint))
+                {
+                    if (string.IsNullOrEmpty(options.DynamodbRegion))
+                    {
+                        // TODO: check if region can be determined from provided endpoint
+                        logger.LogError("DynamoDb region is required when providing a DynamoDb endpoint.");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    builder.WithEndPointConfiguration(options.DynamodbEndpoint, options.DynamodbRegion);
+                }
+                else if (!string.IsNullOrEmpty(options.DynamodbRegion))
+                {
+                    builder.WithRegion(options.DynamodbRegion);
+                }
+
+                if (options.DynamodbTableName != null)
+                {
+                    if (options.DynamodbTableName.Length == 0)
+                    {
+                        logger.LogError("KeySuffix cannot be blank");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    builder.WithTableName(options.DynamodbTableName);
+                }
+
+                if (options.KeySuffix != null)
+                {
+                    if (options.KeySuffix.Length == 0)
+                    {
+                        logger.LogError("KeySuffix cannot be blank");
+                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
+                        return;
+                    }
+
+                    builder.WithKeySuffix(options.KeySuffix);
+                }
+
+                metastore = builder.Build();
             }
             else
             {
@@ -114,7 +157,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             else
             {
                 logger.LogInformation("using static KMS...");
-                keyManagementService = new StaticKeyManagementServiceImpl("mysupersecretstaticmasterkey!!!!");
+                keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
             }
 
             CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy

@@ -1,17 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.PlatformNative</PackageId>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.PlatformNative</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Properties related to NuGet packaging: -->
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory/PlatformNative</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="GoDaddy.Asherah.Logging" Version="1.0.0-alpha*" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>

@@ -130,12 +130,14 @@ if __name__ == '__main__':
     single_parser = subparsers.add_parser('single', help='Revoke a single key by id and created time')
     single_parser.add_argument('--id', required=True, help='The key id')
     single_parser.add_argument('--created', required=True, type=int, help='The key created time')
+    single_parser.add_argument('--table', default=TABLE_NAME, help='The table name to use')
 
     bulk_parser = subparsers.add_parser('bulk', help='Revoke all system or intermediate keys created before the given time. WARNING: Uses Scan API,'
                                         ' which reads the *entire* table and may potentially use up many RCUs. Avoid this if possible, e.g. revoke'
                                         ' individual system keys.')
     bulk_parser.add_argument('--created-before', required=True, type=int, help='The created time cutoff')
     bulk_parser.add_argument('--type', required=True, choices=('system', 'intermediate'), help='The type of keys to revoke')
+    bulk_parser.add_argument('--table', default=TABLE_NAME, help='The table name to use')
 
     arguments = parser.parse_args()
 

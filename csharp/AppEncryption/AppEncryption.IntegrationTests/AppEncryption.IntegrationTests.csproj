@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <IsPackable>false</IsPackable>
         <RootNamespace>GoDaddy.Asherah.AppEncryption.IntegrationTests</RootNamespace>
         <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
@@ -21,6 +21,7 @@
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
+        <ProjectReference Include="../AppEncryption.Tests/AppEncryption.Tests.csproj" />
     </ItemGroup>
     <ItemGroup>
         <None Include="config.yaml" CopyToOutputDirectory="Always" />

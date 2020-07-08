@@ -1,6 +1,9 @@
 # Asherah - Java
 Application level envelope encryption SDK for Java with support for cloud-agnostic data storage and key management.
 
+[![Version](https://img.shields.io/maven-central/v/com.godaddy.asherah/appencryption)](https://mvnrepository.com/artifact/com.godaddy.asherah/appencryption)
+
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -14,6 +17,24 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
   * [Development Notes](#development-notes)
 
+## Installation
+
+You can include Asherah in Java projects projects using [Maven](https://maven.apache.org/)
+
+The Maven group ID is `com.godaddy.asherah`, and the artifact ID is `appencryption`.
+
+You can specify the current release of Asherah as a project dependency using the following configuration:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>com.godaddy.asherah</groupId>
+    <artifactId>appencryption</artifactId>
+    <version>0.1.1</version>
+  </dependency>
+</dependencies>
+```
+
 ## Quick Start
 
 ```java
@@ -21,7 +42,7 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 try (SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
     .withInMemoryMetastore()
     .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("mysupersecretstaticmasterkey!!!!")
+    .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .build()) {
 
   // Now create a cryptographic session for a partition.
@@ -62,8 +83,28 @@ Metastore jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
 #### DynamoDB Metastore
 
+For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
+
+To obtain an instance of the builder, use the static factory method `newBuilder`. 
 ```java
-Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder().build();
+DynamoDbMetastoreImpl.newBuilder();
+```
+Once you have a builder, you can either use the `withXXX` setter methods to configure the metastore properties or simply
+build the metastore by calling the `build` method.
+
+ - **withKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. **This is required to enable Global
+ Tables.**
+ - **withTableName**: Specifies the name of the DynamoDb table.
+ - **withRegion**: Specifies the region for the AWS DynamoDb client.
+ - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+
+Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
+
+```java
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+      .withKeySuffix("us-west-2")
+      .withTableName("TestTable")
+      .build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
@@ -91,7 +132,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```java
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

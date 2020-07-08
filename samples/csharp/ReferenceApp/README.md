@@ -37,7 +37,13 @@ Example run using defaults (in-memory metastore, static KMS, console metrics onl
 Example run using ADO persistence and AWS KMS and 100 iterations:
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll -m ADO -a <AdoConnectionString> -k AWS -p <preferredRegion> -r <region1=arn_of_kms_key_for_region1,region2=arn_of_kms_key_for_region2, ...> -i 100
+[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \ 
+  --metastore-type ADO \
+  --ado-connection-string <AdoConnectionString> \
+  --kms-type AWS \
+  --preferred-region <preferredRegion> \
+  --region-arn-tuples <region1=arn_of_kms_key_for_region1,region2=arn_of_kms_key_for_region2, ...> \
+  --iterations 100
  ```
  
 ### Using a Docker read-only container
@@ -97,6 +103,58 @@ To use the DynamoDB Metastore included with the App Encryption library, the foll
  --provisioned-throughput \
    ReadCapacityUnits=1,WriteCapacityUnits=1
 ```
-TODO: Add link to Sceptre template example
 
-TODO: Add multi-region info if/when we handle it  
+#### Global Tables
+
+To use Global Tables, the above table needs to be created with few modifications.
+
+More details about how to create a Global Table can be found in the
+[AWS Developer Guide](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html)
+
+Example run using DynamoDB metastore with key suffixes enabled (for Global Tables), a custom table name, and a
+local DynamoDB endpoint.
+
+```console
+[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \
+  --metastore-type DYNAMODB \
+  --key-suffix us-west-2 \
+  --dynamodb-endpoint http://localhost:8000 \
+  --dynamodb-signing-region us-west-2 \
+  --dynamodb-table-name MyGlobalTable
+``` 
+
+## Configuring the Reference App
+Configuration options are provided via command-line arguments. Supported options are as
+follows:
+
+```console
+  -m, --metastore-type           (Default: MEMORY) Type of metastore to use. Enum values: MEMORY, ADO, DYNAMODB
+
+  -e, --dynamodb-endpoint        The DynamoDb service endpoint (only supported by DYNAMODB)
+
+  -r, --dynamodb-region          The AWS region for DynamoDB requests (only supported by DYNAMODB)
+
+  -t, --dynamodb-table-name      The table name for DynamoDb (only supported by DYNAMODB)
+
+  -s, --key-suffix               Configure the metastore to use key suffixes (only supported by DYNAMODB)
+
+  -a, --ado-connection-string    ADO connection string to use for an ADO metastore. Required for ADO metastore.
+
+  -k, --kms-type                 (Default: STATIC) Type of key management service to use. Enum values: STATIC, AWS
+
+  -p, --preferred-region         Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
+
+  -t, --region-arn-tuples        Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
+
+  -i, --iterations               (Default: 1) Number of encrypt/decrypt iterations to run
+
+  -c, --enable-cw                Enable CloudWatch Metrics output
+
+  -d, --drr                      DRR to be decrypted
+
+  --help                         Display this help screen.
+
+  --version                      Display version information.
+```
+
+TODO: Add link to Sceptre template example  

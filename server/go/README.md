@@ -1,5 +1,11 @@
 # Asherah Server - Go
 
+Table of Contents
+=================
+
+  * [Running the server](#running-the-server)
+  * [Configuring the server](#configuring-the-server)
+
 ## Running the server
 The following makes use of the `rdbms` metastore implementation and assumes mysql is running on localhost and a
 preexisting asherah database. See [metastore documentation](/docs/Metastore.md) for more.
@@ -52,6 +58,14 @@ Asherah Options:
                                           [$ASHERAH_METASTORE_MODE]
       --conn=                             The database connection string (required if --metastore=rdbms)
                                           [$ASHERAH_CONNECTION_STRING]
+      --enable-region-suffix              Configure the metastore to use regional suffixes (only supported by
+                                          --metastore=dynamodb) [$ASHERAH_ENABLE_REGION_SUFFIX]
+      --dynamodb-endpoint=                An optional endpoint URL (hostname only or fully qualified URI) (only
+                                          supported by --metastore=dynamodb) [$ASHERAH_DYNAMODB_ENDPOINT]
+      --dynamodb-region=                  The AWS region for DynamoDB requests (defaults to globally configured region)
+                                          (only supported by --metastore=dynamodb) [$ASHERAH_DYNAMODB_REGION]
+      --dynamodb-table-name=              The table name for DynamoDB (only supported by --metastore=dynamodb)
+                                          [$ASHERAH_DYNAMODB_TABLE_NAME]
       --kms=[aws|static]                  Configures the master key management service (default: aws)
                                           [$ASHERAH_KMS_MODE]
       --region-map=                       A comma separated list of key-value pairs in the form of

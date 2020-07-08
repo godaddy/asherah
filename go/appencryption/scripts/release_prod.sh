@@ -1,0 +1,1 @@
+../../../build/go/release_prod.sh

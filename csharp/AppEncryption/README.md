@@ -1,6 +1,10 @@
 # Asherah - C#
+
 Application level envelope encryption SDK for C# with support for cloud-agnostic data storage and key management.
 
+[![Version](https://img.shields.io/nuget/v/Godaddy.Asherah.AppEncryption)](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption)
+
+  * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -14,6 +18,20 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
     * [Handling read\-only Docker containers](#handling-read-only-docker-containers)
   * [Development Notes](#development-notes)
 
+## Installation
+You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/):
+
+```xml
+<ItemGroup>
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
+</ItemGroup>
+```
+
+`GoDaddy.Asherah.AppEncryption` targets NetStandard 2.0 and NetStandard 2.1. See the 
+[.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
+[Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
+for more information.
+
 ## Quick Start
 
 ```c#
@@ -22,7 +40,7 @@ using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
     .WithMemoryPersistence()
     .WithNeverExpiredCryptoPolicy()
-    .WithStaticKeyManagementService("secretmasterkey!")
+    .WithStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
     .Build())
 {
     // Now create a cryptographic session for a partition.
@@ -65,13 +83,33 @@ IMetastore<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory
 ```
 
 #### DynamoDB Metastore
+For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
+
+To obtain an instance of the builder, use the static factory method `NewBuilder`. 
+```c#
+DynamoDbMetastoreImpl.NewBuilder();
+```
+Once you have a builder, you can either use the `WithXXX` setter methods to configure the metastore properties or simply
+build the metastore by calling the `Build` method.
+
+ - **WithKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. **This is required to enable Global
+ Tables**.
+ - **WithTableName**: Specifies the name of the DynamoDb table.
+ - **WithRegion**: Specifies the region for the AWS DynamoDb client.
+ - **WithEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+
+Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
 ```c#
 // Setup region via global default or via other AWS .NET SDK mechanisms
 AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder()
 IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
+      .WithKeySuffix("us-west-2")
+      .WithTableName("TestTable")
+      .Build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
@@ -101,7 +139,7 @@ KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuild
 #### Static KMS (FOR TESTING ONLY)
 
 ```c#
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("secretmasterkey!");
+KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy
@@ -260,6 +298,8 @@ Our [sample application's](../../samples/csharp/ReferenceApp/images/runtime/Dock
 reference.
 
 ## Development Notes
+
+### Multi Targeting
 
 ### Unit Tests
 

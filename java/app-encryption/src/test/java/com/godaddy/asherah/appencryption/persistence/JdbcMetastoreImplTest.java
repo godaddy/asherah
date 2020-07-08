@@ -225,4 +225,9 @@ class JdbcMetastoreImplTest {
     assertNotNull(jdbcMetastoreServiceBuilder);
   }
 
+  @Test
+  void testGetRegionSuffixShouldReturnEmpty() {
+
+    assertEquals("", jdbcMetastoreImpl.getKeySuffix());
+  }
 }

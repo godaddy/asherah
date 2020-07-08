@@ -12,7 +12,7 @@
   <properties>
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <appencryption.version>1.0.0-SNAPSHOT</appencryption.version>
+    <appencryption.version>0.1.1</appencryption.version>
     <junit.jupiter.version>5.1.0</junit.jupiter.version>
     <junit.platform.version>1.1.0</junit.platform.version>
     <jacoco.version>0.8.2</jacoco.version>
@@ -132,7 +132,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.13</version>
+      <version>8.0.16</version>
     </dependency>
 
     <dependency>
@@ -150,7 +150,7 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
-      <version>3.8.0</version>
+      <version>4.3.2</version>
     </dependency>
 
     <dependency>

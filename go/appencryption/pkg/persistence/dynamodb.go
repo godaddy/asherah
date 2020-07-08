@@ -21,10 +21,10 @@ import (
 )
 
 const (
-	tableName    = "EncryptionKey"
-	partitionKey = "Id"
-	sortKey      = "Created"
-	keyRecord    = "KeyRecord"
+	defaultTableName = "EncryptionKey"
+	partitionKey     = "Id"
+	sortKey          = "Created"
+	keyRecord        = "KeyRecord"
 )
 
 var (
@@ -37,15 +37,58 @@ var (
 	storeDynamoDBTimer      = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.dynamodb.store", appencryption.MetricsPrefix), nil)
 )
 
-// DynamoDBMetastore implements the Metastore interface
+// DynamoDBMetastore implements the Metastore interface.
 type DynamoDBMetastore struct {
-	svc dynamodbiface.DynamoDBAPI
+	svc          dynamodbiface.DynamoDBAPI
+	regionSuffix string
+	tableName    string
 }
 
-func NewDynamoDBMetastore(sess client.ConfigProvider) *DynamoDBMetastore {
-	return &DynamoDBMetastore{
-		svc: dynamodb.New(sess),
+// GetRegionSuffix returns the DynamoDB region suffix or blank if not configured.
+func (d *DynamoDBMetastore) GetRegionSuffix() string {
+	return d.regionSuffix
+}
+
+// GetTableName returns the DynamoDB table name.
+func (d *DynamoDBMetastore) GetTableName() string {
+	return d.tableName
+}
+
+// DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
+type DynamoDBMetastoreOption func(d *DynamoDBMetastore, p client.ConfigProvider)
+
+// WithDynamoDBRegionSuffix configures the DynamoDBMetastore to use a regional suffix for
+// all writes. This feature should be enabled when using DynamoDB global tables to avoid
+// write conflicts arising from the "last writer wins" method of conflict resolution.
+func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
+	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+		if enabled {
+			config := p.ClientConfig(dynamodb.EndpointsID)
+			d.regionSuffix = *config.Config.Region
+		}
 	}
+}
+
+// WithTableName configures the DynamoDBMetastore to use the specified table name.
+func WithTableName(table string) DynamoDBMetastoreOption {
+	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+		if len(table) > 0 {
+			d.tableName = table
+		}
+	}
+}
+
+func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
+	d := &DynamoDBMetastore{
+		svc:       dynamodb.New(sess),
+		tableName: defaultTableName,
+	}
+
+	for _, opt := range opts {
+		opt(d, sess)
+	}
+
+	return d
 }
 
 func parseResult(av *dynamodb.AttributeValue) (*appencryption.EnvelopeKeyRecord, error) {
@@ -76,7 +119,7 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 			sortKey:      {N: aws.String(strconv.FormatInt(created, 10))},
 		},
 		ProjectionExpression: expr.Projection(),
-		TableName:            aws.String(tableName),
+		TableName:            aws.String(d.tableName),
 		ConsistentRead:       aws.Bool(true), // always use strong consistency
 	})
 
@@ -113,7 +156,7 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 		Limit:                     aws.Int64(1), // limit 1
 		ProjectionExpression:      expr.Projection(),
 		ScanIndexForward:          aws.Bool(false), // sorts descending
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(d.tableName),
 	})
 	if err != nil {
 		return nil, err
@@ -126,9 +169,9 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 	return parseResult(res.Items[0][keyRecord])
 }
 
-// We need a new envelope struct to convert the EncryptedKey to a Base64 encoded string
-// to save in DynamoDB
-type dynamoDBEnvelope struct {
+// DynamoDBEnvelope is used to convert the EncryptedKey to a Base64 encoded string
+// to save in DynamoDB.
+type DynamoDBEnvelope struct {
 	Revoked       bool                   `json:"Revoked,omitempty"`
 	Created       int64                  `json:"Created"`
 	EncryptedKey  string                 `json:"Key"`
@@ -141,7 +184,7 @@ type dynamoDBEnvelope struct {
 func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int64, envelope *appencryption.EnvelopeKeyRecord) (bool, error) {
 	defer storeDynamoDBTimer.UpdateSince(time.Now())
 
-	en := &dynamoDBEnvelope{
+	en := &DynamoDBEnvelope{
 		Revoked:       envelope.Revoked,
 		Created:       envelope.Created,
 		EncryptedKey:  base64.StdEncoding.EncodeToString(envelope.EncryptedKey),
@@ -163,7 +206,7 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 			sortKey:      {N: aws.String(strconv.FormatInt(created, 10))},
 			keyRecord:    {M: av},
 		},
-		TableName:           aws.String(tableName),
+		TableName:           aws.String(d.tableName),
 		ConditionExpression: aws.String("attribute_not_exists(" + partitionKey + ")"),
 	})
 	if err != nil {

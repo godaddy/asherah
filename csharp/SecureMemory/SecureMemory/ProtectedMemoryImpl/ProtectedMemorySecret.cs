@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using GoDaddy.Asherah.Logging;
-using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 
@@ -12,8 +10,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
     internal class ProtectedMemorySecret : Secret
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<ProtectedMemorySecret>();
-
         private readonly object accessLock = new object();
 
         private readonly ulong length;
@@ -35,12 +31,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 throw new ProtectedMemoryAllocationFailedException("Protected memory allocation failed");
             }
-            #pragma warning disable 162
-            if (Debug.On)
-            {
-                Logger.LogDebug("allocated: {pointer}", pointer);
-            }
-            #pragma warning restore 162
 
             try
             {
@@ -84,13 +74,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 SetReadAccessIfNeeded();
                 try
                 {
-                    #pragma warning disable 162
-                    if (Debug.On)
-                    {
-                        Logger.LogDebug("reading: {pointer}", pointer);
-                    }
-                    #pragma warning restore 162
-
                     Marshal.Copy(pointer, bytes, 0, (int)length);
                 }
                 finally
@@ -180,14 +163,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         private static void Release(IProtectedMemoryAllocator pm, ref IntPtr ptr, ulong len)
         {
-            #pragma warning disable 162
-            if (Debug.On)
-            {
-                // TODO Add/uncomment this when we refactor logging to use static creation
-                // log.LogDebug("closing: {pointer}", ptr);
-            }
-            #pragma warning restore 162
-
+#if DEBUG
+            // TODO Add/uncomment this when we refactor logging to use static creation
+            // log.LogDebug("closing: {pointer}", ptr);
+#endif
             IntPtr oldPtr = Interlocked.Exchange(ref ptr, IntPtr.Zero);
             if (oldPtr != IntPtr.Zero)
             {
