@@ -194,6 +194,7 @@ jobs:
       - run:
           name: Integration Tests
           command: |
+            source ./.circleci/set_env_variables.sh
             cd java/app-encryption
             ./scripts/integration_test.sh
       - store_test_results:
