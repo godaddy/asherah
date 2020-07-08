@@ -1,19 +1,78 @@
 package com.godaddy.asherah;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
+import com.godaddy.asherah.appencryption.kms.AwsKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
+import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.JdbcMetastoreImpl;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
+import com.google.common.base.Splitter;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
-import static com.godaddy.asherah.testhelpers.Constants.KEY_MANAGEMENT_STATIC_MASTER_KEY;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
+import static com.godaddy.asherah.testhelpers.Constants.*;
 
 public class TestSetup {
-  public static KeyManagementService getDefaultKeyManagemementService() {
+
+  public static Metastore<JSONObject> createMetastore() {
+    String metastoreType = getConfig().getMetastoreType();
+    if (metastoreType.equalsIgnoreCase(METASTORE_JDBC)) {
+      String jdbcUrl = getConfig().getMetastoreJdbcUrl();
+      if (StringUtils.isEmpty(jdbcUrl)) {
+        throw new AppEncryptionException("Missing JDBC connection string");
+      }
+
+      HikariDataSource dataSource = new HikariDataSource();
+      dataSource.setJdbcUrl(jdbcUrl);
+
+      return JdbcMetastoreImpl.newBuilder(dataSource).build();
+    }
+
+    if (metastoreType.equalsIgnoreCase(METASTORE_DYNAMODB)) {
+      return DynamoDbMetastoreImpl.newBuilder().build();
+    }
+
+    return new InMemoryMetastoreImpl<>();
+  }
+
+  public static KeyManagementService createKeyManagemementService() {
+    String kmsType = getConfig().getKmsType();
+    if (kmsType.equalsIgnoreCase(KEY_MANAGEMENT_AWS)) {
+      String regionToArnTuples = getConfig().getKmsAwsRegionArnTuples();
+      if (StringUtils.isEmpty(regionToArnTuples)) {
+        throw new AppEncryptionException("Missing AWS Region ARN tuples");
+      }
+
+      Map<String, String> regionToArnMap = Splitter.on(',').withKeyValueSeparator('=').split(regionToArnTuples);
+
+      String preferredRegion = getConfig().getKmsAwsPreferredRegion();
+      if (StringUtils.isEmpty(preferredRegion)) {
+        preferredRegion = AWS_DEFAULT_PREFERRED_REGION;
+      }
+
+      return AwsKeyManagementServiceImpl.newBuilder(regionToArnMap, preferredRegion).build();
+    }
+
     return new StaticKeyManagementServiceImpl(KEY_MANAGEMENT_STATIC_MASTER_KEY);
   }
 
-  public static Metastore<JSONObject> getDefaultMetastore() {
-    return new InMemoryMetastoreImpl<>();
+  private static ConfigReader getConfig() {
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    ConfigReader configReader = null;
+    try {
+      configReader = mapper.readValue(new File("src/it/resources/config.yaml"), ConfigReader.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return configReader;
   }
 }

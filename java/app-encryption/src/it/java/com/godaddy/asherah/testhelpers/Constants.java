@@ -28,7 +28,6 @@ public final class Constants {
   public static final String METASTORE_JDBC = "jdbc";
   public static final String METASTORE_DYNAMODB = "dynamodb";
 
-
   /*
   AWS
    */

@@ -1,5 +1,6 @@
 package com.godaddy.asherah.regression;
 
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
@@ -35,7 +36,8 @@ public class SessionJsonIT {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createDefaultRandomJsonPayload();
-    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(),
+      TestSetup.createMetastore());
     partitionId = DEFAULT_PARTITION_ID + "_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime();
     sessionJson = sessionFactory.getSessionJson(partitionId);
   }
@@ -74,8 +76,7 @@ public class SessionJsonIT {
 
     if (decryptedJsonPayload.isPresent()) {
       assertTrue(payload.similar(decryptedJsonPayload.get()));
-    }
-    else {
+    } else {
       fail("Json load did not return decrypted payload");
     }
   }

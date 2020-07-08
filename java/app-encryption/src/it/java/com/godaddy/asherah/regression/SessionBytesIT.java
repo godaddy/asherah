@@ -1,5 +1,6 @@
 package com.godaddy.asherah.regression;
 
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
@@ -34,7 +35,8 @@ public class SessionBytesIT {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createDefaultRandomBytePayload();
-    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(),
+      TestSetup.createMetastore());
     partitionId = DEFAULT_PARTITION_ID + "_" + DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime();
     sessionBytes = sessionFactory.getSessionBytes(partitionId);
   }

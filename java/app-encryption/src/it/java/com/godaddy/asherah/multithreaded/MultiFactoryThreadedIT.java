@@ -25,7 +25,8 @@ class MultiFactoryThreadedIT {
   private static final Logger LOG = LoggerFactory.getLogger(MultiFactoryThreadedIT.class);
 
   private void runPartitionTest(final int testIterations, final String partitionId, final int payloadSizeBytesBase) {
-    try (SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory()) {
+    try (SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(
+      TestSetup.createKeyManagemementService(), TestSetup.createMetastore())) {
       try (Session<JSONObject, byte[]> session = sessionFactory.getSessionJson(partitionId)) {
         Map<String, byte[]> dataStore = new HashMap<>();
 

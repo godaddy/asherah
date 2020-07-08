@@ -16,8 +16,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.IntStream;
 
 import static com.godaddy.asherah.testhelpers.Constants.*;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class MultiThreadedSecretIT {
   private static final Logger LOG = LoggerFactory.getLogger(MultiThreadedSecretIT.class);

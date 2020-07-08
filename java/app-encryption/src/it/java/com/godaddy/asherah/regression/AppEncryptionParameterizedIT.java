@@ -183,12 +183,12 @@ public class AppEncryptionParameterizedIT {
         DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime() + "_" + RANDOM.nextInt(),
       DEFAULT_PRODUCT_ID);
 
-    KeyManagementService kms = TestSetup.getDefaultKeyManagemementService();
+    KeyManagementService kms = TestSetup.createKeyManagemementService();
 
     CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.generateIKSK();
 
     Metastore<JSONObject> metastore = MetastoreMock.createMetastoreMock(partition, kms,
-      TestSetup.getDefaultMetastore(), metaIK, metaSK, cryptoKeyHolder);
+      TestSetup.createMetastore(), metaIK, metaSK, cryptoKeyHolder);
 
     CacheMock cacheMock = CacheMock.createCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
 

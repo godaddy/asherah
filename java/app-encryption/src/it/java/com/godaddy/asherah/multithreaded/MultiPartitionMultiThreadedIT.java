@@ -1,5 +1,6 @@
 package com.godaddy.asherah.multithreaded;
 
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.Persistence;
@@ -41,7 +42,8 @@ class MultiPartitionMultiThreadedIT {
 
   @BeforeEach
   public void setUp() {
-    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(),
+      TestSetup.createMetastore());
   }
 
   @AfterEach

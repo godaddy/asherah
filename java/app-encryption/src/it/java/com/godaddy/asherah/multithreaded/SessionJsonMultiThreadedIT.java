@@ -1,5 +1,6 @@
 package com.godaddy.asherah.multithreaded;
 
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.utils.PayloadGenerator;
@@ -33,7 +34,8 @@ public class SessionJsonMultiThreadedIT {
   @BeforeEach
   public void setupTest() {
     payload = PayloadGenerator.createRandomJsonPayload(TEST_PARAM_PAYLOAD_SIZE_BYTES);
-    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory();
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(),
+      TestSetup.createMetastore());
     partitionId  = DEFAULT_PARTITION_ID + "_" + LocalDateTime.now().toString();
     sessionJson = sessionFactory.getSessionJson(partitionId);
   }

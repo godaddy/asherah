@@ -14,9 +14,9 @@ public final class SessionFactoryGenerator {
   private SessionFactoryGenerator() {
   }
 
-  public static SessionFactory createDefaultSessionFactory() {
-    return createDefaultSessionFactory(DEFAULT_PRODUCT_ID, DEFAULT_SYSTEM_ID,
-      TestSetup.getDefaultKeyManagemementService(), TestSetup.getDefaultMetastore());
+  public static SessionFactory createDefaultSessionFactory(KeyManagementService keyManagementService,
+      Metastore<JSONObject> metastore) {
+    return createDefaultSessionFactory(DEFAULT_PRODUCT_ID, DEFAULT_SYSTEM_ID, keyManagementService, metastore);
   }
 
   public static SessionFactory createDefaultSessionFactory(final String productId, final String serviceId,
