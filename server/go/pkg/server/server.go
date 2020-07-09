@@ -99,7 +99,7 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 	switch opts.Metastore {
 	case "rdbms":
 		// TODO: support other databases
-		db, err := getMysql(opts.ConnectionString, opts.ConnectionPool)
+		db, err := newMysql(opts.ConnectionString)
 		if err != nil {
 			panic(err)
 		}
