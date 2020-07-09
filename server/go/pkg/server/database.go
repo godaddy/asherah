@@ -8,6 +8,7 @@ import (
 
 var (
 	dbconnection *sql.DB
+	dbdriver     = "mysql"
 )
 
 func newMysql(connStr string) (*sql.DB, error) {
@@ -19,7 +20,7 @@ func newMysql(connStr string) (*sql.DB, error) {
 
 		dsn.ParseTime = true
 
-		dbconnection, err = sql.Open("mysql", dsn.FormatDSN())
+		dbconnection, err = sql.Open(dbdriver, dsn.FormatDSN())
 		if err != nil {
 			return nil, err
 		}
