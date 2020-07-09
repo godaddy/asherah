@@ -107,9 +107,6 @@ workflows:
       - samples-java-reference-app:
           requires:
             - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
       - csharp-logging
       - csharp-secure-memory:
           requires:
@@ -217,19 +214,6 @@ jobs:
           name: Build
           command: |
             cd samples/java/reference-app
-            ./scripts/clean.sh
-            ./scripts/build.sh
-      - save-java-cache
-  tests-java-test-app:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - restore-java-cache
-      - run:
-          name: Build
-          command: |
-            cd tests/java/test-app
             ./scripts/clean.sh
             ./scripts/build.sh
       - save-java-cache

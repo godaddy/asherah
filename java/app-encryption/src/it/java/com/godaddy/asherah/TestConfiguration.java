@@ -1,6 +1,6 @@
 package com.godaddy.asherah;
 
-public class ConfigReader {
+public class TestConfiguration {
 
   private String metastoreType;
   private String metastoreJdbcUrl;

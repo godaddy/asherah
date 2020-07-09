@@ -24,9 +24,9 @@ import static com.godaddy.asherah.testhelpers.Constants.*;
 public class TestSetup {
 
   public static Metastore<JSONObject> createMetastore() {
-    String metastoreType = getConfig().getMetastoreType();
+    String metastoreType = configReader().getMetastoreType();
     if (metastoreType.equalsIgnoreCase(METASTORE_JDBC)) {
-      String jdbcUrl = getConfig().getMetastoreJdbcUrl();
+      String jdbcUrl = configReader().getMetastoreJdbcUrl();
       if (StringUtils.isEmpty(jdbcUrl)) {
         throw new AppEncryptionException("Missing JDBC connection string");
       }
@@ -45,16 +45,16 @@ public class TestSetup {
   }
 
   public static KeyManagementService createKeyManagemementService() {
-    String kmsType = getConfig().getKmsType();
+    String kmsType = configReader().getKmsType();
     if (kmsType.equalsIgnoreCase(KEY_MANAGEMENT_AWS)) {
-      String regionToArnTuples = getConfig().getKmsAwsRegionArnTuples();
+      String regionToArnTuples = configReader().getKmsAwsRegionArnTuples();
       if (StringUtils.isEmpty(regionToArnTuples)) {
         throw new AppEncryptionException("Missing AWS Region ARN tuples");
       }
 
       Map<String, String> regionToArnMap = Splitter.on(',').withKeyValueSeparator('=').split(regionToArnTuples);
 
-      String preferredRegion = getConfig().getKmsAwsPreferredRegion();
+      String preferredRegion = configReader().getKmsAwsPreferredRegion();
       if (StringUtils.isEmpty(preferredRegion)) {
         preferredRegion = AWS_DEFAULT_PREFERRED_REGION;
       }
@@ -65,14 +65,14 @@ public class TestSetup {
     return new StaticKeyManagementServiceImpl(KEY_MANAGEMENT_STATIC_MASTER_KEY);
   }
 
-  private static ConfigReader getConfig() {
+  private static TestConfiguration configReader() {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    ConfigReader configReader = null;
+    TestConfiguration testConfiguration = null;
     try {
-      configReader = mapper.readValue(new File("src/it/resources/config.yaml"), ConfigReader.class);
+      testConfiguration = mapper.readValue(new File("src/it/resources/config.yaml"), TestConfiguration.class);
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return configReader;
+    return testConfiguration;
   }
 }
