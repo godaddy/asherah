@@ -6,18 +6,25 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+var (
+	dbconnection *sql.DB
+	dbdriver     = "mysql"
+)
+
 func newMysql(connStr string) (*sql.DB, error) {
-	dsn, err := mysql.ParseDSN(connStr)
-	if err != nil {
-		return nil, err
+	if dbconnection == nil {
+		dsn, err := mysql.ParseDSN(connStr)
+		if err != nil {
+			return nil, err
+		}
+
+		dsn.ParseTime = true
+
+		dbconnection, err = sql.Open(dbdriver, dsn.FormatDSN())
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	dsn.ParseTime = true
-
-	db, err := sql.Open("mysql", dsn.FormatDSN())
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return dbconnection, nil
 }
