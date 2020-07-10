@@ -177,8 +177,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     }
 
     @Override
-    public BuildStep withTableName(final String table) {
-      this.tableName = table;
+    public BuildStep withTableName(final String tableName) {
+      this.tableName = tableName;
       return this;
     }
 
@@ -238,10 +238,10 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   public interface BuildStep {
     /**
      * Specifies the name of the table
-     * @param table The name of the table
+     * @param tableName The name of the table
      * @return The current {@code BuildStep} instance.
      */
-    BuildStep withTableName(String table);
+    BuildStep withTableName(String tableName);
 
     /**
      * Specifies whether key suffix should be enabled for DynamoDB
