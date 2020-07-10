@@ -168,12 +168,18 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
 
     private String tableName = DEFAULT_TABLE_NAME;
-    private boolean hasKeySuffix = false;
     private boolean hasEndPoint = false;
+    private boolean hasKeySuffix = false;
     private boolean hasRegion = false;
 
     public Builder(final String region) {
       this.preferredRegion = region;
+    }
+
+    @Override
+    public BuildStep withTableName(final String table) {
+      this.tableName = table;
+      return this;
     }
 
     @Override
@@ -182,12 +188,6 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         hasEndPoint = true;
         standardBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, signingRegion));
       }
-      return this;
-    }
-
-    @Override
-    public BuildStep withTableName(final String table) {
-      this.tableName = table;
       return this;
     }
 
@@ -237,17 +237,17 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface BuildStep {
     /**
-     * Specifies whether key suffix should be enabled for DynamoDB
-     * @return The current {@code BuildStep} instance.
-     */
-    BuildStep withKeySuffix();
-
-    /**
      * Specifies the name of the table
      * @param table The name of the table
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withTableName(String table);
+
+    /**
+     * Specifies whether key suffix should be enabled for DynamoDB
+     * @return The current {@code BuildStep} instance.
+     */
+    BuildStep withKeySuffix();
 
     /**
      * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
