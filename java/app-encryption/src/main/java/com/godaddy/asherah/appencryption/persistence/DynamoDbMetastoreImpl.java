@@ -177,8 +177,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     }
 
     @Override
-    public BuildStep withTableName(final String tableName) {
-      this.tableName = tableName;
+    public BuildStep withTableName(final String table) {
+      this.tableName = table;
       return this;
     }
 
