@@ -43,7 +43,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private final DynamoDB client;
   private final String tableName;
   private final String preferredRegion;
-  private final Boolean hasKeySuffix;
+  private final boolean hasKeySuffix;
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
@@ -156,7 +156,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return client;
   }
 
-  Boolean hasKeySuffix() {
+  boolean hasKeySuffix() {
     return hasKeySuffix;
   }
 
@@ -168,9 +168,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
 
     private String tableName = DEFAULT_TABLE_NAME;
-    private Boolean hasKeySuffix = false;
-    private Boolean hasEndPoint = false;
-    private Boolean hasRegion = false;
+    private boolean hasKeySuffix = false;
+    private boolean hasEndPoint = false;
+    private boolean hasRegion = false;
 
     public Builder(final String region) {
       this.preferredRegion = region;
