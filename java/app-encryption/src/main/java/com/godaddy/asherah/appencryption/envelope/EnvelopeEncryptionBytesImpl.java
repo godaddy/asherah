@@ -11,6 +11,13 @@ public class EnvelopeEncryptionBytesImpl implements EnvelopeEncryption<byte[]> {
 
   private final EnvelopeEncryption<JSONObject> envelopeEncryptionJson;
 
+  /**
+   * Creates a new {@code EnvelopeEncryptionBytesImpl} instance using the provided parameters. This is an
+   * implementation of {@link EnvelopeEncryption} which uses byte[] as the Data Row Record format.
+   *
+   * @param envelopeEncryptionJson An {@link EnvelopeEncryption} object which uses {@link org.json.JSONObject} as the
+   *                               Data Row Record format.
+   */
   public EnvelopeEncryptionBytesImpl(final EnvelopeEncryption<JSONObject> envelopeEncryptionJson) {
     this.envelopeEncryptionJson = envelopeEncryptionJson;
   }
@@ -36,5 +43,4 @@ public class EnvelopeEncryptionBytesImpl implements EnvelopeEncryption<byte[]> {
       logger.error("unexpected exception during close", e);
     }
   }
-
 }

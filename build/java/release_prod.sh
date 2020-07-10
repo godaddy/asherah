@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)

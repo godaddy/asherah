@@ -12,14 +12,16 @@ import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
 public interface EnvelopeEncryption<D> extends SafeAutoCloseable {
   /**
    * Uses an envelope encryption algorithm to decrypt a Data Row Record and return the payload.
-   * @param dataRowRecord the Data Row Record to decrypt
+   *
+   * @param dataRowRecord The Data Row Record to decrypt.
    * @return A decrypted payload as bytes.
    */
   byte[] decryptDataRowRecord(D dataRowRecord);
 
   /**
    * Uses an envelope encryption algorithm to encrypt a payload and return the resulting Data Row Record.
-   * @param payload the payload to encrypt
+   *
+   * @param payload The payload to encrypt.
    * @return The Data Row Record that contains the now-encrypted payload and corresponding Data Row Key.
    */
   D encryptPayload(byte[] payload);
