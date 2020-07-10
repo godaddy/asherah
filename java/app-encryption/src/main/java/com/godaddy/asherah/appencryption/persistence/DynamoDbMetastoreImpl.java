@@ -200,6 +200,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     @Override
     public BuildStep withRegion(final String region) {
       if (!hasEndPoint) {
+        hasRegion = true;
         standardBuilder.withRegion(region);
       }
       return this;
