@@ -12,6 +12,13 @@ public class SessionJsonImpl<D> implements Session<JSONObject, D> {
 
   private final EnvelopeEncryption<D> envelopeEncryption;
 
+  /**
+   * Creates a new {@code SessionJsonImpl} instance using the provided {@link EnvelopeEncryption} object. An
+   * implementation of {@link Session} that encrypts a payload of type {@link org.json.JSONObject}.
+   *
+   * @param envelopeEncryption An implementation of {@link EnvelopeEncryption} that uses {@link org.json.JSONObject} as
+   *                           the Data Row Record format.
+   */
   public SessionJsonImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;
   }
