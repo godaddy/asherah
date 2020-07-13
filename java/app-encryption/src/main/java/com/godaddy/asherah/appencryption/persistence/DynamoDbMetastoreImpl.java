@@ -47,6 +47,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
+  /**
+   * Initialize a {@code DynamoDbMetastoreImpl} builder with the given region.
+   *
+   * @param region The preferred region for the DynamoDb. This can be overridden using the {@code withRegion} builder
+   *               step.
+   * @return The current {@code Builder} instance.
+   */
   public static Builder newBuilder(final String region) {
     return new Builder(region);
   }
@@ -180,7 +187,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     private boolean hasKeySuffix = false;
     private boolean hasRegion = false;
 
-    public Builder(final String region) {
+    private Builder(final String region) {
       this.preferredRegion = region;
     }
 
@@ -226,39 +233,45 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface EndPointStep {
     /**
-     * Adds EndPoint config to the AWS DynamoDb client
-     * @param endPoint the service endpoint either with or without the protocol
-     * @param signingRegion the region to use for SigV4 signing of requests (e.g. us-west-1)
-     * @return The current {@code BuildStep} instance
+     * Adds EndPoint config to the AWS DynamoDb client.
+     *
+     * @param endPoint The service endpoint either with or without the protocol.
+     * @param signingRegion The region to use for SigV4 signing of requests (e.g. us-west-1).
+     * @return The current {@code BuildStep} instance with end point configuration.
      */
     BuildStep withEndPointConfiguration(String endPoint, String signingRegion);
   }
 
   public interface RegionStep {
     /**
-     * Specifies the region for the AWS DynamoDb client
-     * @param region The region for the DynamoDb client
-     * @return The current {@code BuildStep} instance
+     * Specifies the region for the AWS DynamoDb client.
+     *
+     * @param region The region for the DynamoDb client.
+     * @return The current {@code BuildStep} instance with a client region. This overrides the region specified as the
+     *         {@code newBuilder} input parameter.
      */
     BuildStep withRegion(String region);
   }
 
   public interface BuildStep {
     /**
-     * Specifies the name of the table
-     * @param tableName The name of the table
+     * Specifies the name of the table.
+     *
+     * @param tableName A custom name for the table.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withTableName(String tableName);
 
     /**
-     * Specifies whether key suffix should be enabled for DynamoDB
+     * Specifies whether key suffix should be enabled for DynamoDB. This needs to be enabled for Global Table support.
+     *
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withKeySuffix();
 
     /**
      * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
+     *
      * @return The fully instantiated {@code DynamoDbMetastoreImpl}.
      */
     DynamoDbMetastoreImpl build();

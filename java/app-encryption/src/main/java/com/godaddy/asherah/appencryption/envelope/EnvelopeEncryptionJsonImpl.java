@@ -433,7 +433,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   }
 
   /**
-   * Decrypts the {@code EnvelopeKeyRecord}'s encrypted key using the provided key.
+   * Decrypts the {@code keyRecord}'s encrypted key using the provided key.
    *
    * @param keyRecord The key to decrypt.
    * @param keyEncryptionKey The encryption key to use for decryption.

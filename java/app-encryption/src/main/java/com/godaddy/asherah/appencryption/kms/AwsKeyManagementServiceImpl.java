@@ -111,6 +111,13 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
                 this.awsKmsClientFactory.createAwsKmsClient(regionToArn.getKey()))));
   }
 
+  /**
+   * Initialize a new builder for {@code AwsKeyManagementServiceImpl}.
+   *
+   * @param regionToArnMap A mapping of region:arn for the AWS KMS keys.
+   * @param region The preferred region for AWS KMS.
+   * @return The current {@code Builder} instance with initialized {@code regionToArnMap} and {@code region}.
+   */
   public static Builder newBuilder(final Map<String, String> regionToArnMap, final String region) {
     return new Builder(regionToArnMap, region);
   }
@@ -201,10 +208,10 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
 
   /**
    * Attempt to generate a KMS datakey using the first successful response using a sorted map of available KMS clients.
-   * @param sortedRegionToArnAndClient A sorted dictionary mapping regions and their arns and kms clients
-   * @return A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key
-   * @exception KmsException Throws a KmsException if we're unable to generate a datakey in any AWS
-   * region
+   *
+   * @param sortedRegionToArnAndClient A sorted dictionary mapping regions and their arns and kms clients.
+   * @return A {@link GenerateDataKeyResult} object that contains the plain text key and the ciphertext for that key.
+   * @exception KmsException Throws a {@link KmsException} if we're unable to generate a datakey in any AWS region.
    */
   GenerateDataKeyResult generateDataKey(final Map<String, AwsKmsArnClient> sortedRegionToArnAndClient) {
     for (Map.Entry<String, AwsKmsArnClient> regionToArnAndClient : sortedRegionToArnAndClient.entrySet()) {
@@ -229,12 +236,6 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
     throw new KmsException("could not successfully generate data key using any regions");
   }
 
-  /**
-   * @param region
-   * @param arn
-   * @param encryptedKeyEncryptionKey
-   * @return
-   */
   private JSONObject buildKmsRegionKeyJson(final String region, final String arn,
       final byte[] encryptedKeyEncryptionKey) {
     Json kmsRegionKeyJson = new Json();
@@ -284,7 +285,8 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
   /**
    * Gets an ordered list of KMS region key json objects to use. Uses preferred region and falls back to others as
    * appropriate.
-   * @param kmsRegionKeyArray A non-prioritized array of KMS region key objects
+   *
+   * @param kmsRegionKeyArray A non-prioritized array of KMS region key objects.
    * @return A list of KMS region key json objects, prioritized by regions.
    */
   List<Json> getPrioritizedKmsRegionKeyJsonList(final JSONArray kmsRegionKeyArray) {
@@ -296,13 +298,6 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
         .collect(Collectors.toList());
   }
 
-  /**
-   * @param awsKmsClient
-   * @param cipherText
-   * @param keyCreated
-   * @param kmsKeyEncryptionKey
-   * @return
-   */
   CryptoKey decryptKmsEncryptedKey(final AWSKMS awsKmsClient, final byte[] cipherText, final Instant keyCreated,
                                    final byte[] kmsKeyEncryptionKey, final boolean revoked) {
     DecryptRequest decryptRequest = new DecryptRequest()
@@ -336,6 +331,11 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
       this.preferredRegion = region;
     }
 
+    /**
+     * Builds the {@link AwsKeyManagementServiceImpl} object.
+     *
+     * @return The fully instantiated {@link AwsKeyManagementServiceImpl} object.
+     */
     public AwsKeyManagementServiceImpl build() {
       return new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, new BouncyAes256GcmCrypto(),
           new AwsKmsClientFactory());
