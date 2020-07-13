@@ -107,9 +107,6 @@ workflows:
       - samples-java-reference-app:
           requires:
             - java-app-encryption
-      - tests-java-test-app:
-          requires:
-            - java-app-encryption
       - csharp-logging
       - csharp-secure-memory:
           requires:
@@ -191,6 +188,12 @@ jobs:
             source ./.circleci/set_env_variables.sh
             cd java/app-encryption
             ./scripts/test.sh
+      - run:
+          name: Integration Tests
+          command: |
+            source ./.circleci/set_env_variables.sh
+            cd java/app-encryption
+            ./scripts/integration_test.sh
       - store_test_results:
           path: java/app-encryption/target/surefire-reports
       - codecov/upload:
@@ -211,19 +214,6 @@ jobs:
           name: Build
           command: |
             cd samples/java/reference-app
-            ./scripts/clean.sh
-            ./scripts/build.sh
-      - save-java-cache
-  tests-java-test-app:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - restore-java-cache
-      - run:
-          name: Build
-          command: |
-            cd tests/java/test-app
             ./scripts/clean.sh
             ./scripts/build.sh
       - save-java-cache
