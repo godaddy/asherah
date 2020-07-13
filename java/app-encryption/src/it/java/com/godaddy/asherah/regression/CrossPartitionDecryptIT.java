@@ -1,10 +1,12 @@
 package com.godaddy.asherah.regression;
 
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
+import com.godaddy.asherah.appencryption.persistence.Metastore;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -21,14 +23,14 @@ public class CrossPartitionDecryptIT {
     String dataRowString;
     String originalPayloadString;
 
-    InMemoryMetastoreImpl<JSONObject> inMemoryMetastore = new InMemoryMetastoreImpl<>();
+    Metastore<JSONObject> metastore = TestSetup.createMetastore();
 
     // Encrypt originalPayloadString with partition "shopper123"
     try (SessionFactory sessionFactory = SessionFactory
       .newBuilder("productId", "test")
-      .withMetastore(inMemoryMetastore)
+      .withMetastore(metastore)
       .withCryptoPolicy(new NeverExpiredCryptoPolicy())
-      .withKeyManagementService(new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting"))
+      .withKeyManagementService(TestSetup.createKeyManagemementService())
       .build()) {
 
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
@@ -42,6 +44,7 @@ public class CrossPartitionDecryptIT {
         // Consider this us "persisting" the DRR
         dataRowString = Base64.getEncoder().encodeToString(dataRowRecordBytes);
       }
+
       // Decrypt dataRowString with partition "shopper12345"
       try (Session<byte[], byte[]> sessionBytes = sessionFactory
         .getSessionBytes("shopper12345")) {
