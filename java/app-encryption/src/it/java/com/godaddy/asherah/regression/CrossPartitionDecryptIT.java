@@ -2,8 +2,6 @@ package com.godaddy.asherah.regression;
 
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
-import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.InMemoryMetastoreImpl;
@@ -19,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class CrossPartitionDecryptIT {
 
   @Test
-  void testCrossPartitionDecryptShouldThrowAnError() {
+  void testCrossPartitionDecryptShouldFail() {
     String dataRowString;
     String originalPayloadString;
 
