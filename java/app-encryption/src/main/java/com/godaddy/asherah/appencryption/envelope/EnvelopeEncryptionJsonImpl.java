@@ -131,7 +131,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     // Get from cache or lookup previously used key
     CryptoKey intermediateKey = intermediateKeyCache.get(intermediateKeyMeta.getCreated());
     if (intermediateKey == null) {
-      intermediateKey = getIntermediateKey(intermediateKeyMeta);
+      intermediateKey = getIntermediateKey(intermediateKeyMeta.getCreated());
 
       // Put the key into our cache if allowed
       if (cryptoPolicy.canCacheIntermediateKeys()) {
@@ -403,12 +403,12 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
    *
-   * @param keyMeta The {@link KeyMeta} of {@code IntermediateKey}.
+   * @param intermediateKeyCreated Creation time of intermediate key.
    * @return The decrypted intermediate key.
    * @throws MetadataMissingException If the intermediate key is not found, or it has missing system key info.
    */
-  CryptoKey getIntermediateKey(final KeyMeta keyMeta) {
-    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(keyMeta.getKeyId(), keyMeta.getCreated());
+  CryptoKey getIntermediateKey(final Instant intermediateKeyCreated) {
+    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(partition.getIntermediateKeyId(), intermediateKeyCreated);
 
     return withExistingSystemKey(
         intermediateKeyRecord.getParentKeyMeta().orElseThrow(
@@ -435,9 +435,9 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Decrypts the {@code EnvelopeKeyRecord}'s encrypted key using the provided key.
    *
-   * @param keyRecord The key to decrypt
-   * @param keyEncryptionKey The encryption key to use for decryption
-   * @return The decrypted key contained in the {@link EnvelopeKeyRecord}
+   * @param keyRecord The key to decrypt.
+   * @param keyEncryptionKey The encryption key to use for decryption.
+   * @return The decrypted key contained in the {@link EnvelopeKeyRecord}.
    */
   CryptoKey decryptKey(final EnvelopeKeyRecord keyRecord, final CryptoKey keyEncryptionKey) {
     return crypto.decryptKey(keyRecord.getEncryptedKey(), keyRecord.getCreated(), keyEncryptionKey,
@@ -447,10 +447,10 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
   /**
    * Gets a specific {@code EnvelopeKeyRecord} or throws a {@code MetadataMissingException} if not found.
    *
-   * @param keyId Key id of the record to load
-   * @param created Created time of the record to load
-   * @return The {@link EnvelopeKeyRecord}, if found
-   * @throws MetadataMissingException if the {@code EnvelopeKeyRecord} is not found
+   * @param keyId Key id of the record to load.
+   * @param created Created time of the record to load.
+   * @return The {@link EnvelopeKeyRecord}, if found.
+   * @throws MetadataMissingException if the {@code EnvelopeKeyRecord} is not found.
    */
   EnvelopeKeyRecord loadKeyRecord(final String keyId, final Instant created) {
     logger.debug("attempting to load key with keyId {} created {}", keyId, created);

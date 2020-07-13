@@ -11,17 +11,17 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
-import com.godaddy.asherah.appencryption.kms.StaticKeyManagementServiceImpl;
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
-import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
+import com.godaddy.asherah.utils.PayloadGenerator;
+import com.godaddy.asherah.utils.SessionFactoryGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,21 +43,21 @@ class DynamoDbGlobalTableIT {
 
     // Setup client pointing to our local dynamodb
     DynamoDB dynamoDbDocumentClient = new DynamoDB(
-        AmazonDynamoDBClientBuilder.standard()
+      AmazonDynamoDBClientBuilder.standard()
         .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
           "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
         .build());
 
     // Create table schema
     dynamoDbDocumentClient.createTable(new CreateTableRequest()
-        .withTableName(TABLE_NAME)
-        .withKeySchema(
-          new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
-          new KeySchemaElement(SORT_KEY, KeyType.RANGE))
-        .withAttributeDefinitions(
-          new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
-          new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
-        .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+      .withTableName(TABLE_NAME)
+      .withKeySchema(
+        new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
+        new KeySchemaElement(SORT_KEY, KeyType.RANGE))
+      .withAttributeDefinitions(
+        new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
+        new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
+      .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
   }
 
   @AfterEach
@@ -67,58 +67,31 @@ class DynamoDbGlobalTableIT {
 
   @Test
   void testRegionSuffixBackwardCompatibility() {
-    String dataRowString;
-    String decryptedPayloadString;
-    String originalPayloadString;
+    byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
+    byte[] decryptedBytes;
+    byte[] dataRowRecordBytes;
 
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
-        .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-        .build();
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder("us-west-2")
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .build();
 
     // Encrypt originalPayloadString with metastore without region suffix
-    try (SessionFactory sessionFactory = SessionFactory
-      .newBuilder("productId", "reference_app")
-      .withMetastore(dynamoDbMetastore)
-      .withCryptoPolicy(new NeverExpiredCryptoPolicy())
-      .withKeyManagementService(new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting"))
-      .build()) {
+    SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(), dynamoDbMetastore);
 
-      try (Session<byte[], byte[]> sessionBytes = sessionFactory
-        .getSessionBytes("shopper12345")) {
-
-        originalPayloadString = "mysupersecretpayload";
-
-        byte[] dataRowRecordBytes =
-          sessionBytes.encrypt(originalPayloadString.getBytes(StandardCharsets.UTF_8));
-
-        // Consider this us "persisting" the DRR
-        dataRowString = Base64.getEncoder().encodeToString(dataRowRecordBytes);
-      }
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
     }
 
-    DynamoDbMetastoreImpl dynamoDbMetastoreWithSuffix = DynamoDbMetastoreImpl.newBuilder()
-        .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-        .withKeySuffix("us-west-2")
-        .build();
+    DynamoDbMetastoreImpl dynamoDbMetastoreWithSuffix = DynamoDbMetastoreImpl.newBuilder("us-west-2")
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .withKeySuffix()
+      .build();
 
     // Decrypt dataRowString with metastore with region suffix
-    try (SessionFactory sessionFactory = SessionFactory
-      .newBuilder("productId", "reference_app")
-      .withMetastore(dynamoDbMetastoreWithSuffix)
-      .withCryptoPolicy(new NeverExpiredCryptoPolicy())
-      .withKeyManagementService(new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting"))
-      .build()) {
-
-      try (Session<byte[], byte[]> sessionBytes = sessionFactory
-        .getSessionBytes("shopper12345")) {
-
-        byte[] newDataRowRecordBytes = Base64.getDecoder().decode(dataRowString);
-
-        // Decrypt the payload
-        decryptedPayloadString = new String(sessionBytes.decrypt(newDataRowRecordBytes),
-          StandardCharsets.UTF_8);
-      }
+    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(), dynamoDbMetastoreWithSuffix);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
     }
-    assertEquals(decryptedPayloadString, originalPayloadString);
+    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
   }
 }

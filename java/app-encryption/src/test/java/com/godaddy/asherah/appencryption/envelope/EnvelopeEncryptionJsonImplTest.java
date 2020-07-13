@@ -1,6 +1,5 @@
 package com.godaddy.asherah.appencryption.envelope;
 
-import com.godaddy.asherah.appencryption.DefaultPartition;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
@@ -55,7 +54,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Mock
   KeyMeta keyMeta;
 
-  Partition partition = new DefaultPartition("shopper_123", "payments", "ecomm");
+  Partition partition = new Partition("shopper_123", "payments", "ecomm");
 
   // Setup Instants truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple
   // level keys
@@ -216,7 +215,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     byte[] actualBytes = envelopeEncryptionJson.withIntermediateKeyForRead(keyMeta, functionWithIntermediateKey);
     assertArrayEquals(expectedBytes, actualBytes);
-    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta);
+    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta.getCreated());
     verify(intermediateKeyCache, never()).putAndGetUsable(any(), any());
     verify(intermediateCryptoKey).close();
   }
@@ -224,7 +223,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Test
   void testWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndNotExpiredShouldLookupAndCache() {
     when(keyMeta.getCreated()).thenReturn(ikInstant);
-    doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).getIntermediateKey(keyMeta);
+    doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).getIntermediateKey(ikInstant);
     when(cryptoPolicy.canCacheIntermediateKeys()).thenReturn(true);
     when(intermediateCryptoKey.getCreated()).thenReturn(ikInstant);
     when(intermediateKeyCache.putAndGetUsable(intermediateCryptoKey.getCreated(), intermediateCryptoKey))
@@ -235,7 +234,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     byte[] actualBytes = envelopeEncryptionJson.withIntermediateKeyForRead(keyMeta, functionWithIntermediateKey);
     assertArrayEquals(expectedBytes, actualBytes);
-    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta);
+    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta.getCreated());
     verify(intermediateKeyCache).putAndGetUsable(intermediateCryptoKey.getCreated(), intermediateCryptoKey);
     verify(intermediateCryptoKey).close();
   }
@@ -252,7 +251,7 @@ class EnvelopeEncryptionJsonImplTest {
 
     assertThrows(AppEncryptionException.class, () ->
       envelopeEncryptionJson.withIntermediateKeyForRead(keyMeta, functionWithIntermediateKey));
-    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta);
+    verify(envelopeEncryptionJson).getIntermediateKey(keyMeta.getCreated());
     verify(intermediateCryptoKey).close();
   }
 
@@ -1044,9 +1043,8 @@ class EnvelopeEncryptionJsonImplTest {
         .when(envelopeEncryptionJson)
         .withExistingSystemKey(eq(keyRecord.getParentKeyMeta().get()), eq(false), any(Function.class));
     doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).decryptKey(keyRecord, systemCryptoKey);
-    doReturn(ikInstant).when(keyMeta).getCreated();
 
-    CryptoKey actualIntermediateKey = envelopeEncryptionJson.getIntermediateKey(keyMeta);
+    CryptoKey actualIntermediateKey = envelopeEncryptionJson.getIntermediateKey(ikInstant);
     assertEquals(intermediateCryptoKey, actualIntermediateKey);
     verify(envelopeEncryptionJson)
         .withExistingSystemKey(eq(keyRecord.getParentKeyMeta().get()), eq(false), any(Function.class));
@@ -1056,9 +1054,8 @@ class EnvelopeEncryptionJsonImplTest {
   void testGetIntermediateKeyWithoutParentKeyMetaShouldFail() {
     EnvelopeKeyRecord keyRecord = new EnvelopeKeyRecord(ikInstant, null, new byte[]{0, 1, 2, 3}, false);
     doReturn(keyRecord).when(envelopeEncryptionJson).loadKeyRecord(any(), eq(ikInstant));
-    doReturn(ikInstant).when(keyMeta).getCreated();
 
-    assertThrows(MetadataMissingException.class, () -> envelopeEncryptionJson.getIntermediateKey(keyMeta));
+    assertThrows(MetadataMissingException.class, () -> envelopeEncryptionJson.getIntermediateKey(ikInstant));
   }
 
   @Test

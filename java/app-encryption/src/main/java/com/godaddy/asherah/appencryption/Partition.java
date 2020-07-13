@@ -5,13 +5,12 @@ package com.godaddy.asherah.appencryption;
  * It uses a {@code partitionId} to uniquely identify a {@link Session}, i.e. every partition id should have its own
  * session.
  */
-public abstract class Partition {
-
+public class Partition {
   private final String partitionId;
   private final String serviceId;
   private final String productId;
 
-  protected Partition(final String partitionId, final String serviceId, final String productId) {
+  public Partition(final String partitionId, final String serviceId, final String productId) {
     this.partitionId = partitionId;
     this.serviceId = serviceId;
     this.productId = productId;
@@ -46,5 +45,11 @@ public abstract class Partition {
    */
   public String getIntermediateKeyId() {
     return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[partitionId=" + partitionId +
+      ", serviceId=" + serviceId + ", productId=" + productId + "]";
   }
 }
