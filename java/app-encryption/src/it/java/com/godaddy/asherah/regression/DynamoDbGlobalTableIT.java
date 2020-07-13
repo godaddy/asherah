@@ -21,6 +21,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DynamoDbGlobalTableIT {
@@ -90,6 +92,6 @@ class DynamoDbGlobalTableIT {
     try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
       decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
     }
-    assertEquals(decryptedBytes, originalBytes);
+    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
   }
 }
