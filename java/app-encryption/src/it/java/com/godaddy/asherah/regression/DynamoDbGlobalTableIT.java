@@ -71,13 +71,13 @@ class DynamoDbGlobalTableIT {
     String decryptedPayloadString;
     String originalPayloadString;
 
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder("us-west-2")
         .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
         .build();
 
     // Encrypt originalPayloadString with metastore without region suffix
     try (SessionFactory sessionFactory = SessionFactory
-      .newBuilder("productId", "reference_app")
+      .newBuilder("productId", "test")
       .withMetastore(dynamoDbMetastore)
       .withCryptoPolicy(new NeverExpiredCryptoPolicy())
       .withKeyManagementService(new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting"))
@@ -96,14 +96,14 @@ class DynamoDbGlobalTableIT {
       }
     }
 
-    DynamoDbMetastoreImpl dynamoDbMetastoreWithSuffix = DynamoDbMetastoreImpl.newBuilder()
+    DynamoDbMetastoreImpl dynamoDbMetastoreWithSuffix = DynamoDbMetastoreImpl.newBuilder("us-west-2")
         .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-        .withKeySuffix("us-west-2")
+        .withKeySuffix()
         .build();
 
     // Decrypt dataRowString with metastore with region suffix
     try (SessionFactory sessionFactory = SessionFactory
-      .newBuilder("productId", "reference_app")
+      .newBuilder("productId", "test")
       .withMetastore(dynamoDbMetastoreWithSuffix)
       .withCryptoPolicy(new NeverExpiredCryptoPolicy())
       .withKeyManagementService(new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting"))

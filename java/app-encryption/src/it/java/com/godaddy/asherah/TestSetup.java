@@ -38,7 +38,7 @@ public class TestSetup {
     }
 
     if (metastoreType.equalsIgnoreCase(METASTORE_DYNAMODB)) {
-      return DynamoDbMetastoreImpl.newBuilder().build();
+      return DynamoDbMetastoreImpl.newBuilder("us-west-2").build();
     }
 
     return new InMemoryMetastoreImpl<>();
