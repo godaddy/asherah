@@ -17,6 +17,6 @@
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
   </ItemGroup>
 </Project>
