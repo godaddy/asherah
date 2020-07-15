@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
         private readonly Partition partition =
-            new DefaultPartition("shopper_123", "payments", "ecomm");
+            new Partition("shopper_123", "payments", "ecomm");
 
         // Setup DateTimeOffsets truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple level keys
         private readonly DateTimeOffset drkDateTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromSeconds(1));
@@ -188,7 +188,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()), Times.Never);
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<DateTimeOffset>()), Times.Never);
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
 
@@ -206,7 +206,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()), Times.Never);
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<DateTimeOffset>()), Times.Never);
 
             // TODO : Add verify for notification not being called once implemented
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
@@ -228,7 +228,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()), Times.Never);
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(It.IsAny<DateTimeOffset>()), Times.Never);
 
             // TODO : Add verify for notification not being called once implemented
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
@@ -238,7 +238,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         private void TestWithIntermediateKeyForReadWithKeyNotCachedAndCannotCacheAndNotExpiredShouldLookup()
         {
             keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
-            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()))
+            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(It.IsAny<DateTimeOffset>()))
                 .Returns(intermediateCryptoKeyMock.Object);
 
             byte[] expectedBytes = { 0, 1, 2, 3 };
@@ -247,7 +247,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object.Created));
             intermediateKeyCacheMock.Verify(x => x.PutAndGetUsable(It.IsAny<DateTimeOffset>(), It.IsAny<CryptoKey>()), Times.Never);
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
@@ -256,7 +256,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         private void TestWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndNotExpiredShouldLookupAndCache()
         {
             keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
-            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(keyMetaMock.Object))
+            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(ikDateTime))
                 .Returns(intermediateCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheIntermediateKeys()).Returns(true);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
@@ -270,7 +270,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object.Created));
             intermediateKeyCacheMock.Verify(x => x.PutAndGetUsable(intermediateCryptoKeyMock.Object.GetCreated(), intermediateCryptoKeyMock.Object));
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
@@ -279,7 +279,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         private void TestWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndCacheUpdateFailsShouldLookupAndFailAndDisposeKey()
         {
             keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
-            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()))
+            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(It.IsAny<DateTimeOffset>()))
                 .Returns(intermediateCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheIntermediateKeys()).Returns(true);
             intermediateKeyCacheMock.Setup(x => x.PutAndGetUsable(It.IsAny<DateTimeOffset>(), It.IsAny<CryptoKey>()))
@@ -290,7 +290,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 
             Assert.Throws<AppEncryptionException>(() => envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
                 keyMetaMock.Object, functionWithIntermediateKey));
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object.Created));
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
 
@@ -1262,8 +1262,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.DecryptKey(keyRecord, systemCryptoKeyMock.Object))
                 .Returns(intermediateCryptoKeyMock.Object);
 
-            keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
-            CryptoKey actualIntermediateKey = envelopeEncryptionJsonImplSpy.Object.GetIntermediateKey(keyMetaMock.Object);
+            CryptoKey actualIntermediateKey = envelopeEncryptionJsonImplSpy.Object.GetIntermediateKey(ikDateTime);
             Assert.Equal(intermediateCryptoKeyMock.Object, actualIntermediateKey);
             envelopeEncryptionJsonImplSpy.Verify(x => x.WithExistingSystemKey(
                 (KeyMeta)keyRecord.ParentKeyMeta, false, It.IsAny<Func<CryptoKey, CryptoKey>>()));
@@ -1280,7 +1279,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadKeyRecord(It.IsAny<string>(), ikDateTime))
                 .Returns(keyRecord);
 
-            Assert.Throws<MetadataMissingException>(() => envelopeEncryptionJsonImplSpy.Object.GetIntermediateKey(keyMetaMock.Object));
+            Assert.Throws<MetadataMissingException>(() => envelopeEncryptionJsonImplSpy.Object.GetIntermediateKey(ikDateTime));
         }
 
         [Fact]

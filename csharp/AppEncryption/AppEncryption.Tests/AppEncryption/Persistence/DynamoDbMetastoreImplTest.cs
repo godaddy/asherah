@@ -18,6 +18,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
     {
         private const string TestKey = "some_key";
         private const string DynamoDbPort = "8000";
+        private const string Region = "us-west-2";
+        private const string TestKeyWithRegionSuffix = TestKey + "_" + Region;
 
         private readonly IAmazonDynamoDB amazonDynamoDbClient;
 
@@ -40,19 +42,28 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            dynamoDbMetastoreImpl = NewBuilder()
+            dynamoDbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
                 .Build();
-            amazonDynamoDbClient = dynamoDbMetastoreImpl.GetClient();
+            amazonDynamoDbClient = dynamoDbMetastoreImpl.DbClient;
 
-            CreateTableSchema(amazonDynamoDbClient, dynamoDbMetastoreImpl.GetTableName());
+            CreateTableSchema(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
 
-            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.GetTableName());
+            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
 
             JObject jObject = JObject.FromObject(keyRecord);
             Document document = new Document
             {
                 [PartitionKey] = TestKey,
+                [SortKey] = created.ToUnixTimeSeconds(),
+                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+            };
+
+            table.PutItemAsync(document).Wait();
+
+            document = new Document
+            {
+                [PartitionKey] = TestKeyWithRegionSuffix,
                 [SortKey] = created.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
             };
@@ -65,7 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             try
             {
                 DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
-                    .DeleteTableAsync(dynamoDbMetastoreImpl.GetTableName())
+                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
                     .Result;
             }
             catch (AggregateException)
@@ -125,6 +136,20 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestLoadLatestWithSingleRecord()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
+
+            Assert.True(actualJsonObject.IsSome);
+            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+        }
+
+        [Fact]
+        private void TestLoadLatestWithSingleRecordAndSuffix()
+        {
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
+                .WithKeySuffix()
+                .Build();
+
+            Option<JObject> actualJsonObject = dbMetastoreImpl.LoadLatest(TestKey);
 
             Assert.True(actualJsonObject.IsSome);
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
@@ -215,6 +240,18 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
+        private void TestStoreWithSuffixSuccess()
+        {
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
+                .WithKeySuffix()
+                .Build();
+            bool actualValue = dbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
+
+            Assert.True(actualValue);
+        }
+
+        [Fact]
         private void TestStoreWithDbErrorShouldThrowException()
         {
             Dispose();
@@ -238,7 +275,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
             AWSConfigs.AWSRegion = "us-west-2";
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -247,8 +284,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithEndPointConfiguration()
         {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
-                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2")
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -257,8 +294,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithRegion()
         {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
-                .WithRegion("us-west-2")
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithRegion("us-west-1")
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -267,11 +304,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithKeySuffix()
         {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
-                .WithKeySuffix("us-west-2")
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithKeySuffix()
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
+            Assert.True(dbMetastoreImpl.HasKeySuffix);
+            Assert.False(dynamoDbMetastoreImpl.HasKeySuffix);
         }
 
         [Fact]
@@ -300,7 +339,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             tempTable.PutItemAsync(document).Wait();
 
             // Create a metastore object using the withTableName step
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder()
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2")
                 .WithTableName(tempTableName)
                 .Build();

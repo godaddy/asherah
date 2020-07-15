@@ -13,6 +13,7 @@ Below we describe the set of functional, regression and cross-language tests tha
 - Simple encrypt/decrypt operation.
 - Encrypt/decrypt operation multiple times in the same session.
 - Encrypt a payload and try to decrypt the same payload in a different session. Ensure that the results match.
+- Encrypt a payload using some partition id. Ensure that it cannot be decrypted using a different partition id.
 - Encrypt two different payloads and verify that both can be decrypted individually.
 - Simple store/load operation.
 - Try to overwrite a payload with the same key, and verify that load still works with the same key and returns the 2nd payload.
