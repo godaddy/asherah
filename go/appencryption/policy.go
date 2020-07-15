@@ -9,6 +9,8 @@ const (
 	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
 	DefaultRevokedCheckInterval = time.Minute * 60
 	DefaultCreateDatePrecision  = time.Minute
+	DefaultSessionCacheSize     = 1000
+	DefaultSessionCacheTTL      = time.Hour * 2
 )
 
 // CryptoPolicy contains options to customize various behaviors in the SDK.
@@ -26,6 +28,13 @@ type CryptoPolicy struct {
 	CacheIntermediateKeys bool
 	// CacheSystemKeys determines whether System Keys will be cached.
 	CacheSystemKeys bool
+	// CacheSessions determines whether sessions will be cached.
+	CacheSessions bool
+	// SessionCacheSize controls the maximum size of the cache if session caching is enabled.
+	SessionCacheSize int
+	// SessionCacheTTL controls the amount of time a session will remain cached without being accessed
+	// if session caching is enabled.
+	SessionCacheTTL time.Duration
 }
 
 // PolicyOption is used to configure a CryptoPolicy
@@ -53,6 +62,29 @@ func WithNoCache() PolicyOption {
 	}
 }
 
+// WithSessionCache enables session caching. When used all sessions for a given partition will share underlying
+// System and Intermediate Key caches.
+func WithSessionCache() PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.CacheSessions = true
+	}
+}
+
+// WithSessionCacheMaxSize specifies the session cache max size to use if session caching is enabled.
+func WithSessionCacheMaxSize(size int) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheSize = size
+	}
+}
+
+// WithSessionCacheTTL specifies the amount of time a session will remain cached without being accessed
+// if session caching is enabled.
+func WithSessionCacheTTL(d time.Duration) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheTTL = d
+	}
+}
+
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
@@ -61,6 +93,9 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CreateDatePrecision:   DefaultCreateDatePrecision,
 		CacheSystemKeys:       true,
 		CacheIntermediateKeys: true,
+		CacheSessions:         false,
+		SessionCacheSize:      DefaultSessionCacheSize,
+		SessionCacheTTL:       DefaultSessionCacheTTL,
 	}
 
 	for _, opt := range opts {
