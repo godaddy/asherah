@@ -137,6 +137,8 @@ workflows:
       - tests-cross-language:
           requires:
             - csharp-app-encryption
+            - go-appencryption
+            - java-app-encryption
             - server-go
             - server-java
 
