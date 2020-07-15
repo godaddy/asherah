@@ -18,6 +18,9 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
+  <ItemGroup Label="Package References">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
+  </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../PlatformNative/PlatformNative.csproj" />
   </ItemGroup>
