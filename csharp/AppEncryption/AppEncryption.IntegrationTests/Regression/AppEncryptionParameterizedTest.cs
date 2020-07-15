@@ -205,7 +205,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             private object[] GenerateMocks(KeyState cacheIK, KeyState metaIK, KeyState cacheSK, KeyState metaSK)
             {
-                Partition partition = new DefaultPartition(
+                Partition partition = new Partition(
                     cacheIK + "CacheIK_" + metaIK + "MetaIK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() +
                     "_" + Random.Next(),
                     cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
