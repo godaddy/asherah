@@ -23,7 +23,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestPartitionId = "test_partition_id";
         private const string TestServiceId = "test_service_id";
         private const string TestProductId = "test_product_id";
-        private const string TestRegionSuffix = "test_region_suffix";
         private const string TestStaticMasterKey = "thisIsAStaticMasterKeyForTesting";
 
         private readonly Mock<IMetastore<JObject>> metastoreMock;
@@ -770,18 +769,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         [Fact]
         private void TestGetPartitionWithPartitionId()
         {
-            Partition partition =
-                sessionFactory.GetPartition(TestPartitionId);
-
-            Assert.Equal(TestPartitionId, partition.PartitionId);
-            Assert.Equal(TestServiceId, partition.ServiceId);
-            Assert.Equal(TestProductId, partition.ProductId);
-        }
-
-        [Fact]
-        private void TestGetPartitionWithSuffixedPartition()
-        {
-            metastoreMock.Setup(x => x.GetKeySuffix()).Returns(TestRegionSuffix);
             Partition partition =
                 sessionFactory.GetPartition(TestPartitionId);
 
