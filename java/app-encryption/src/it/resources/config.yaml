@@ -1,0 +1,5 @@
+metastoreType: "memory"
+metastoreJdbcUrl: ""
+kmsType: "static"
+kmsAwsRegionArnTuples: ""
+kmsAwsPreferredRegion: ""

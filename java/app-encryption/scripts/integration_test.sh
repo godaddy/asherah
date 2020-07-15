@@ -1,0 +1,1 @@
+../../../build/java/integration_test.sh

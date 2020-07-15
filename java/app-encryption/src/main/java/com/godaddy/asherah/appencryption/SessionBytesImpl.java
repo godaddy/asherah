@@ -10,6 +10,13 @@ public class SessionBytesImpl<D> implements Session<byte[], D> {
 
   private final EnvelopeEncryption<D> envelopeEncryption;
 
+  /**
+   * Creates a new {@code SessionBytesImpl} instance using the provided {@link EnvelopeEncryption} object. An
+   * implementation of {@link Session} that encrypts a payload of type byte[].
+   *
+   * @param envelopeEncryption An implementation of {@link EnvelopeEncryption} that uses byte[] as the Data Row
+   *                           Record format.
+   */
   public SessionBytesImpl(final EnvelopeEncryption<D> envelopeEncryption) {
     this.envelopeEncryption = envelopeEncryption;
   }

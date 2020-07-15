@@ -38,6 +38,8 @@ class DynamoDbMetastoreImplTest {
 
   static final String DYNAMO_DB_PORT = "8000";
   static final String TEST_KEY = "some_key";
+  static final String REGION = "us-west-2";
+  static final String TEST_KEY_WITH_SUFFIX = "some_key_" + REGION;
   static DynamoDBProxyServer server;
 
   // Note we need to use BigDecimals here to make the asserts play nice. SDK is always converting numbers to BigDecimal
@@ -70,7 +72,7 @@ class DynamoDbMetastoreImplTest {
 
   @BeforeEach
   void setUp() {
-    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder()
+    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
       .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
       .build();
     dynamoDbDocumentClient = dynamoDbMetastoreImpl.getClient();
@@ -85,6 +87,12 @@ class DynamoDbMetastoreImplTest {
             SORT_KEY, instant.getEpochSecond())
         .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
     table.putItem(item);
+    Item itemWithSuffix = new Item()
+      .withPrimaryKey(
+        PARTITION_KEY, TEST_KEY_WITH_SUFFIX,
+        SORT_KEY, instant.getEpochSecond())
+      .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
+    table.putItem(itemWithSuffix);
   }
 
   public void createTableSchema(final DynamoDB client,final String tableName) {
@@ -129,6 +137,18 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testLoadLatestWithSingleRecord() {
+    Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
+
+    assertTrue(actualJsonObject.isPresent());
+    assertEquals(keyRecord, actualJsonObject.get().toMap());
+  }
+
+  @Test
+  void testLoadLatestWithSingleRecordAndSuffix() {
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .withKeySuffix()
+      .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
 
     assertTrue(actualJsonObject.isPresent());
@@ -193,6 +213,17 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testStoreSuccess() {
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .withKeySuffix()
+      .build();
+    boolean actualValue = dynamoDbMetastoreImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
+
+    assertTrue(actualValue);
+  }
+
+  @Test
+  void testStoreWithSuffixSuccess() {
     boolean actualValue = dynamoDbMetastoreImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
 
     assertTrue(actualValue);
@@ -218,21 +249,22 @@ class DynamoDbMetastoreImplTest {
   void testPrimaryBuilderPath() {
     // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
     System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder().build();
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION).build();
 
     assertNotNull(dynamoDbMetastoreImpl);
   }
 
   @Test
   void testBuilderPathWithRegion() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder().withRegion("us-west-2").build();
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
+      DynamoDbMetastoreImpl.newBuilder(REGION).withRegion("us-west-1").build();
 
     assertNotNull(dynamoDbMetastoreImpl);
   }
 
   @Test
   void testBuilderPathWithEndPointConfiguration() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder()
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
       .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
       .build();
 
@@ -241,12 +273,12 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testBuilderPathWithRegionSuffix() {
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
-      .withKeySuffix("us-west-2")
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withKeySuffix()
       .build();
 
-    assertEquals("", dynamoDbMetastoreImpl.getKeySuffix());
-    assertEquals("us-west-2", dynamoDbMetastore.getKeySuffix());
+    assertFalse(dynamoDbMetastoreImpl.hasKeySuffix());
+    assertTrue(dynamoDbMetastore.hasKeySuffix());
   }
 
   @Test
@@ -271,7 +303,7 @@ class DynamoDbMetastoreImplTest {
     table.putItem(item);
 
     // Create a metastore object using the withTableName step
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
       .withEndPointConfiguration("http://localhost:8000", "us-west-2")
       .withTableName(tableName)
       .build();

@@ -69,10 +69,13 @@ Asherah also supports an in-memory metastore but that ***should only be used for
 
 ### Disaster Recovery
 
-Ensure that you have proper backup procedures and policies to prevent accidental deletion of keys from the metastore. A loss of keys from the metastore can render your data unreadable.
+Ensure that you have proper backup procedures and policies to prevent accidental deletion of keys from the metastore. 
+A loss of keys from the metastore can render your data unreadable.
 
 ### Revoking keys
 
-If there is a need for irregular rotation of keys (e.g. suspected compromise of keys) there is support for marking keys as "revoked".
+If there is a need for irregular rotation of keys (e.g. suspected compromise of keys) there is support for marking keys
+as "revoked".
 
-We have created helper python scripts for the above metastore implementations. Usage details on how to run them can be found [here](https://github.com/godaddy/asherah/scripts).
+We have created helper python scripts for the above metastore implementations. Usage details on how to run them can
+be found [here](../scripts).

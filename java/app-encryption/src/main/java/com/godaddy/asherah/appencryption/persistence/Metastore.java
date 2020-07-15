@@ -29,12 +29,4 @@ public interface Metastore<V> {
    *         e.g., trying to save a duplicate value should return false, not throw an exception.
    */
   boolean store(String keyId, Instant created, V value);
-
-  /**
-   * Returns the key suffix or "" if key suffix option is disabled
-   * @return The key suffix
-   */
-  default String getKeySuffix() {
-    return "";
-  }
 }

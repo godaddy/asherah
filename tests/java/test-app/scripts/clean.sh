@@ -1,1 +1,0 @@
-../../../../build/java/clean.sh

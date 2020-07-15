@@ -32,8 +32,6 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
-github.com/godaddy/asherah/go/appencryption v0.1.1 h1:6DNZrgpVeaY5vzsh426K+tm43h2mtbDLYfS67YB5rLA=
-github.com/godaddy/asherah/go/appencryption v0.1.1/go.mod h1:Sdf/zejO1+FIYnv7OatryRBrVSzaDBpVTvX5vNeLb0E=
 github.com/godaddy/asherah/go/appencryption v0.1.2 h1:/0lAsQmON/MA6JHH2CjOVab7PNhPumpa7qo+/SAI+Og=
 github.com/godaddy/asherah/go/appencryption v0.1.2/go.mod h1:Sdf/zejO1+FIYnv7OatryRBrVSzaDBpVTvX5vNeLb0E=
 github.com/godaddy/asherah/go/securememory v0.1.0 h1:zyJa/rWuc9K6YZdwgbdtk7I6BTshiJDfIQwQkIbxvyk=
