@@ -1,14 +1,10 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Tests;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence;
-using GoDaddy.Asherah.Crypto;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
