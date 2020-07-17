@@ -11,6 +11,7 @@ const (
 	DefaultCreateDatePrecision  = time.Minute
 	DefaultSessionCacheSize     = 1000
 	DefaultSessionCacheTTL      = time.Hour * 2
+	DefaultSessionCacheEngine   = "default"
 )
 
 // CryptoPolicy contains options to customize various behaviors in the SDK.
@@ -35,6 +36,9 @@ type CryptoPolicy struct {
 	// SessionCacheTTL controls the amount of time a session will remain cached without being accessed
 	// if session caching is enabled.
 	SessionCacheTTL time.Duration
+	// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
+	// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+	SessionCacheEngine string
 }
 
 // PolicyOption is used to configure a CryptoPolicy
@@ -85,6 +89,16 @@ func WithSessionCacheTTL(d time.Duration) PolicyOption {
 	}
 }
 
+// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
+// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+//
+// Note this policy option will likely be deprecated once a permanent engine has been identified.
+func WithSessionCacheEngine(engine string) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheEngine = engine
+	}
+}
+
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
@@ -96,6 +110,7 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CacheSessions:         false,
 		SessionCacheSize:      DefaultSessionCacheSize,
 		SessionCacheTTL:       DefaultSessionCacheTTL,
+		SessionCacheEngine:    DefaultSessionCacheEngine,
 	}
 
 	for _, opt := range opts {

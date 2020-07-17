@@ -364,7 +364,10 @@ func TestNewSessionCacheRistretto(t *testing.T) {
 		return &appencryption.Session{}, nil
 	}
 
-	cache := appencryption.NewSessionCacheX(loader, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(loader, policy)
 
 	require.NotNil(t, cache)
 
@@ -378,7 +381,10 @@ func TestSessionCacheRistrettoGetUsesLoader(t *testing.T) {
 		return session, nil
 	}
 
-	cache := appencryption.NewSessionCacheX(loader, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(loader, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -392,7 +398,10 @@ func TestSessionCacheRistrettoCount(t *testing.T) {
 	totalSessions := 10
 	b := newSessionBucket(totalSessions)
 
-	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -409,8 +418,9 @@ func TestSessionCacheRistrettoMaxCount(t *testing.T) {
 
 	policy := appencryption.NewCryptoPolicy()
 	policy.SessionCacheSize = maxSessions
+	policy.SessionCacheEngine = "ristretto"
 
-	cache := appencryption.NewSessionCacheX(b.load, policy)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -427,8 +437,9 @@ func TestSessionCacheRistrettoTTL(t *testing.T) {
 
 	policy := appencryption.NewCryptoPolicy()
 	policy.SessionCacheTTL = ttl
+	policy.SessionCacheEngine = "ristretto"
 
-	cache := appencryption.NewSessionCacheX(b.load, policy)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -446,7 +457,10 @@ func TestSharedSessionRistrettoCloseOnCacheClose(t *testing.T) {
 	totalSessions := 1
 	b := newSessionBucket(totalSessions)
 
-	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	// b.fillAndAssertCacheContents(t, cache)
@@ -467,8 +481,9 @@ func TestSharedSessionRistrettoCloseOnEviction(t *testing.T) {
 
 	policy := appencryption.NewCryptoPolicy()
 	policy.SessionCacheSize = 1
+	policy.SessionCacheEngine = "ristretto"
 
-	cache := appencryption.NewSessionCacheX(b.load, policy)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -494,7 +509,10 @@ func TestSharedSessionRistrettoCloseOnEviction(t *testing.T) {
 func TestSharedSessionRistrettoClose(t *testing.T) {
 	b := newSessionBucket(0)
 
-	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -516,7 +534,10 @@ func TestSharedSessionRistrettoClose(t *testing.T) {
 func TestSharedSessionRistrettoNotClosedWhenInUse(t *testing.T) {
 	b := newSessionBucket(0)
 
-	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithSessionCacheEngine("ristretto"),
+	)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()

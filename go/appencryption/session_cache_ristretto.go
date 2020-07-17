@@ -6,31 +6,6 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-// NewSessionCacheX returns a new SessionCache with the default
-// cache implementation configured using the provided SessionLoaderFunc
-// and CryptoPolicy.
-func NewSessionCacheX(loader SessionLoaderFunc, policy *CryptoPolicy) SessionCache {
-	wrapper := func(id string) (*Session, error) {
-		s, err := loader(id)
-		if err != nil {
-			return nil, err
-		}
-
-		if _, ok := s.encryption.(*SharedEncryption); !ok {
-			orig := s.encryption
-			wrapped := &SharedEncryption{
-				Encryption: orig,
-			}
-
-			SessionInjectEncryption(s, wrapped)
-		}
-
-		return s, nil
-	}
-
-	return newRistrettoCache(wrapper, policy)
-}
-
 // ristrettoCache is a SessionCache implementation based on dgraph-io's
 // Ristretto cache library.
 type ristrettoCache struct {
