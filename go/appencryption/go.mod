@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/aws/aws-sdk-go v1.18.0
+	github.com/dgraph-io/ristretto v0.0.3
 	github.com/docker/go-connections v0.4.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/goburrow/cache v0.1.1-0.20200221222329-5a7015e20557

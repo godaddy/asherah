@@ -64,7 +64,7 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 	}
 
 	if config.Policy.CacheSessions {
-		factory.sessionCache = NewSessionCache(factory.getSession, config.Policy)
+		factory.sessionCache = NewSessionCache(factory.newSession, config.Policy)
 	}
 
 	for _, opt := range opts {
@@ -90,10 +90,10 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 		return f.sessionCache.Get(id)
 	}
 
-	return f.getSession(id)
+	return f.newSession(id)
 }
 
-func (f *SessionFactory) getSession(id string) (*Session, error) {
+func (f *SessionFactory) newSession(id string) (*Session, error) {
 	return &Session{
 		encryption: &envelopeEncryption{
 			partition:        f.newPartition(id),

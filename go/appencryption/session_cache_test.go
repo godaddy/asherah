@@ -13,53 +13,109 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 )
 
+type closeSpy struct {
+	isClosed bool
+	mu       sync.Mutex
+}
+
+func (s *closeSpy) IsClosed() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.isClosed
+}
+
+func (s *closeSpy) SetClosed() {
+	s.mu.Lock()
+	s.isClosed = true
+	s.mu.Unlock()
+}
+
 type sessionBucket struct {
-	sessions map[string]*appencryption.Session
-	loader   func(string) (*appencryption.Session, error)
+	sessions   map[string]*appencryption.Session
+	closeSpies map[string]*closeSpy
+	mu         sync.Mutex
+}
+
+func (b *sessionBucket) newSession(id string) *appencryption.Session {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	spy := &closeSpy{}
+	b.closeSpies[id] = spy
+
+	s, _ := newSessionWithMockEncryption(func(_ mock.Arguments) {
+		spy.SetClosed()
+	})
+
+	b.sessions[id] = s
+
+	return s
+}
+
+func (b *sessionBucket) load(id string) (*appencryption.Session, error) {
+	if s, ok := b.get(id); ok {
+		return s, nil
+	}
+
+	return b.newSession(id), nil
+}
+
+func (b *sessionBucket) get(id string) (s *appencryption.Session, ok bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	s, ok = b.sessions[id]
+
+	return
 }
 
 func (b *sessionBucket) len() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	return len(b.sessions)
+}
+
+func (b *sessionBucket) IsClosed(id string) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if spy, ok := b.closeSpies[id]; ok {
+		return spy.IsClosed()
+	}
+
+	return false
 }
 
 func (b *sessionBucket) fillAndAssertCacheContents(t *testing.T, cache appencryption.SessionCache) {
 	totalSessions := b.len()
 
-	// let's run through the items a few times to make sure our stats-based count is working
+	// run through the items a few times to make sure our metrics-based count is working
 	for i := 0; i < 3; i++ {
 		for k := 0; k < totalSessions; k++ {
 			key := strconv.Itoa(k)
-			expected := b.sessions[key]
+			expected, _ := b.get(key)
 			actual, err := cache.Get(key)
 
 			require.NoError(t, err)
 			assert.Same(t, expected, actual)
+			actual.Close()
 		}
 	}
 }
 
 func newSessionBucket(count int) *sessionBucket {
-	sessions := make(map[string]*appencryption.Session, count)
+	bucket := &sessionBucket{
+		sessions:   make(map[string]*appencryption.Session),
+		closeSpies: make(map[string]*closeSpy),
+	}
 
 	for i := 0; i < count; i++ {
-		s, _ := newSessionWithMockEncryption()
-		sessions[strconv.Itoa(i)] = s
+		bucket.newSession(strconv.Itoa(i))
 	}
 
-	loader := func(id string) (*appencryption.Session, error) {
-		if s, ok := sessions[id]; ok {
-			return s, nil
-		}
-
-		s, _ := newSessionWithMockEncryption()
-
-		return s, nil
-	}
-
-	return &sessionBucket{
-		sessions: sessions,
-		loader:   loader,
-	}
+	return bucket
 }
 
 func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) (*appencryption.Session, *appencryption.MockEncryption) {
@@ -108,7 +164,7 @@ func TestSessionCacheCount(t *testing.T) {
 	totalSessions := 10
 	b := newSessionBucket(totalSessions)
 
-	cache := appencryption.NewSessionCache(b.loader, appencryption.NewCryptoPolicy())
+	cache := appencryption.NewSessionCache(b.load, appencryption.NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -126,7 +182,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	policy := appencryption.NewCryptoPolicy()
 	policy.SessionCacheSize = maxSessions
 
-	cache := appencryption.NewSessionCache(b.loader, policy)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -146,7 +202,7 @@ func TestSessionCacheTTL(t *testing.T) {
 	policy := appencryption.NewCryptoPolicy()
 	policy.SessionCacheTTL = ttl
 
-	cache := appencryption.NewSessionCache(b.loader, policy)
+	cache := appencryption.NewSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -301,4 +357,182 @@ func TestSharedSessionNotClosedWhenInUse(t *testing.T) {
 	m.AssertNotCalled(t, "Close")
 
 	assert.Equal(t, 1, cache.Count())
+}
+
+func TestNewSessionCacheRistretto(t *testing.T) {
+	loader := func(id string) (*appencryption.Session, error) {
+		return &appencryption.Session{}, nil
+	}
+
+	cache := appencryption.NewSessionCacheX(loader, appencryption.NewCryptoPolicy())
+
+	require.NotNil(t, cache)
+
+	cache.Close()
+}
+
+func TestSessionCacheRistrettoGetUsesLoader(t *testing.T) {
+	session, _ := newSessionWithMockEncryption()
+
+	loader := func(id string) (*appencryption.Session, error) {
+		return session, nil
+	}
+
+	cache := appencryption.NewSessionCacheX(loader, appencryption.NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	val, err := cache.Get("some-id")
+	require.NoError(t, err)
+	assert.Same(t, session, val)
+}
+
+func TestSessionCacheRistrettoCount(t *testing.T) {
+	totalSessions := 10
+	b := newSessionBucket(totalSessions)
+
+	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	b.fillAndAssertCacheContents(t, cache)
+
+	assert.Eventually(t, func() bool { return totalSessions == cache.Count() }, time.Second, time.Millisecond*10)
+}
+
+func TestSessionCacheRistrettoMaxCount(t *testing.T) {
+	totalSessions := 20
+	maxSessions := 10
+	b := newSessionBucket(totalSessions)
+
+	policy := appencryption.NewCryptoPolicy()
+	policy.SessionCacheSize = maxSessions
+
+	cache := appencryption.NewSessionCacheX(b.load, policy)
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	b.fillAndAssertCacheContents(t, cache)
+
+	assert.Eventually(t, func() bool { return maxSessions == cache.Count() }, time.Second, time.Millisecond*10)
+}
+
+func TestSessionCacheRistrettoTTL(t *testing.T) {
+	ttl := time.Second
+	totalSessions := 16
+	b := newSessionBucket(totalSessions)
+
+	policy := appencryption.NewCryptoPolicy()
+	policy.SessionCacheTTL = ttl
+
+	cache := appencryption.NewSessionCacheX(b.load, policy)
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	b.fillAndAssertCacheContents(t, cache)
+
+	// ensure the ttl has elapsed
+	time.Sleep(ttl + time.Millisecond*50)
+
+	// At this point all of the original 16 should be gone (or on their way out)
+	assert.Eventually(t, func() bool { return cache.Count() == 0 }, time.Second*10, time.Millisecond*10)
+}
+
+func TestSharedSessionRistrettoCloseOnCacheClose(t *testing.T) {
+	totalSessions := 1
+	b := newSessionBucket(totalSessions)
+
+	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	// b.fillAndAssertCacheContents(t, cache)
+	s, err := cache.Get("0")
+	require.NoError(t, err)
+	require.NotNil(t, s)
+
+	cache.Close()
+
+	assert.Eventually(t, func() bool {
+		return b.IsClosed("0")
+	}, time.Second*10, time.Millisecond*500)
+}
+
+func TestSharedSessionRistrettoCloseOnEviction(t *testing.T) {
+	totalSessions := 1
+	b := newSessionBucket(totalSessions)
+
+	policy := appencryption.NewCryptoPolicy()
+	policy.SessionCacheSize = 1
+
+	cache := appencryption.NewSessionCacheX(b.load, policy)
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	s1, err := cache.Get("0")
+	require.NoError(t, err)
+	require.NotNil(t, s1)
+	assert.Eventually(t, func() bool {
+		return cache.Count() == 1
+	}, time.Second*10, time.Millisecond*500)
+
+	s2, err := cache.Get("1")
+	require.NoError(t, err)
+	require.NotNil(t, s2)
+
+	assert.Eventually(t, func() bool {
+		return b.IsClosed("0")
+	}, time.Second*10, time.Millisecond*500)
+
+	assert.False(t, b.IsClosed("1"))
+}
+
+func TestSharedSessionRistrettoClose(t *testing.T) {
+	b := newSessionBucket(0)
+
+	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	s1, err := cache.Get("my-item")
+	require.NoError(t, err)
+	require.NotNil(t, s1)
+	assert.Eventually(t, func() bool {
+		return cache.Count() == 1
+	}, time.Second*10, time.Millisecond*500)
+
+	s1.Close()
+
+	assert.Eventually(t, func() bool {
+		return b.IsClosed("my-item")
+	}, time.Second*10, time.Millisecond*500)
+}
+
+func TestSharedSessionRistrettoNotClosedWhenInUse(t *testing.T) {
+	b := newSessionBucket(0)
+
+	cache := appencryption.NewSessionCacheX(b.load, appencryption.NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	defer cache.Close()
+
+	s1, err := cache.Get("my-item")
+	require.NoError(t, err)
+	require.NotNil(t, s1)
+	assert.Eventually(t, func() bool {
+		return cache.Count() == 1
+	}, time.Second*10, time.Millisecond*100)
+
+	s2, err := cache.Get("my-item")
+	assert.NoError(t, err)
+	assert.Same(t, s1, s2)
+
+	defer s2.Close()
+
+	assert.False(t, b.IsClosed("my-item"))
 }
