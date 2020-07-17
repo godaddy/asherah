@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// Initializes a new instance of the <see cref="InMemoryMetastoreImpl{T}"/> class, with 3 columns.
         /// <code>
         /// keyId | created | value
-        /// ------------------------
+        /// ----- | ------- | ------
         ///       |         |
         ///       |         |
         /// </code>
