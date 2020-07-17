@@ -16,10 +16,22 @@ type SessionCache interface {
 // mangoCache is a SessionCache implementation based on goburrow's
 // Mango cache (https://github.com/goburrow/cache).
 type mangoCache struct {
-	inner mango.LoadingCache
+	inner  mango.LoadingCache
+	loader SessionLoaderFunc
 }
 
 func (m *mangoCache) Get(id string) (*Session, error) {
+	sess, err := m.get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	incrementSharedSessionUsage(sess)
+
+	return sess, nil
+}
+
+func (m *mangoCache) get(id string) (*Session, error) {
 	val, err := m.inner.Get(id)
 	if err != nil {
 		return nil, err
@@ -27,17 +39,14 @@ func (m *mangoCache) Get(id string) (*Session, error) {
 
 	sess, ok := val.(*Session)
 	if !ok {
-		panic("cached value not type *Session")
+		panic("unexpected value")
 	}
-
-	e, ok := sess.encryption.(*SharedEncryption)
-	if !ok {
-		panic("session.encryption should be wrapped")
-	}
-
-	e.incrementUsage()
 
 	return sess, nil
+}
+
+func incrementSharedSessionUsage(s *Session) {
+	s.encryption.(*SharedEncryption).incrementUsage()
 }
 
 func (m *mangoCache) Count() int {
@@ -53,24 +62,22 @@ func (m *mangoCache) Close() {
 	m.inner.Close()
 }
 
-func (m *mangoCache) removalListener(k mango.Key, v mango.Value) {
-	v.(*Session).Close()
+func mangoRemovalListener(_ mango.Key, v mango.Value) {
+	go v.(*Session).encryption.(*SharedEncryption).Remove()
 }
 
 func newMangoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *mangoCache {
-	loader := func(k mango.Key) (mango.Value, error) {
-		return sessionLoader(k.(string))
+	return &mangoCache{
+		loader: sessionLoader,
+		inner: mango.NewLoadingCache(
+			func(k mango.Key) (mango.Value, error) {
+				return sessionLoader(k.(string))
+			},
+			mango.WithMaximumSize(policy.SessionCacheSize),
+			mango.WithExpireAfterAccess(policy.SessionCacheTTL),
+			mango.WithRemovalListener(mangoRemovalListener),
+		),
 	}
-
-	mc := new(mangoCache)
-	mc.inner = mango.NewLoadingCache(
-		loader,
-		mango.WithMaximumSize(policy.SessionCacheSize),
-		mango.WithExpireAfterAccess(policy.SessionCacheTTL),
-		mango.WithRemovalListener(mc.removalListener),
-	)
-
-	return mc
 }
 
 // SharedEncryption is used to track the number of concurrent users to ensure sessions remain
@@ -79,7 +86,10 @@ type SharedEncryption struct {
 	Encryption
 
 	accessCounter int
-	mu            sync.Mutex
+	mu            *sync.Mutex
+	cond          *sync.Cond
+
+	closed bool
 }
 
 func (s *SharedEncryption) incrementUsage() {
@@ -90,19 +100,28 @@ func (s *SharedEncryption) incrementUsage() {
 }
 
 func (s *SharedEncryption) Close() error {
-	return s.close()
-}
-
-func (s *SharedEncryption) close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	defer s.cond.Broadcast()
 
 	s.accessCounter--
 	if s.accessCounter == 0 {
-		return s.Encryption.Close()
+		s.closed = true
 	}
 
 	return nil
+}
+
+func (s *SharedEncryption) Remove() {
+	s.mu.Lock()
+
+	for !s.closed {
+		s.cond.Wait()
+	}
+
+	s.Encryption.Close()
+
+	s.mu.Unlock()
 }
 
 // SessionLoaderFunc retrieves a Session corresponding to the given partition ID.
@@ -117,10 +136,14 @@ func NewSessionCache(loader SessionLoaderFunc, policy *CryptoPolicy) SessionCach
 			return nil, err
 		}
 
-		if _, ok := s.encryption.(*SharedEncryption); !ok {
+		_, ok := s.encryption.(*SharedEncryption)
+		if !ok {
+			mu := new(sync.Mutex)
 			orig := s.encryption
 			wrapped := &SharedEncryption{
 				Encryption: orig,
+				mu:         mu,
+				cond:       sync.NewCond(mu),
 			}
 
 			SessionInjectEncryption(s, wrapped)

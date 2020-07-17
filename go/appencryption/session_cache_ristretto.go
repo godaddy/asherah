@@ -21,19 +21,13 @@ func (r *ristrettoCache) Get(id string) (*Session, error) {
 		return nil, err
 	}
 
-	e, ok := sess.encryption.(*SharedEncryption)
-	if !ok {
-		panic("session.encryption should be wrapped")
-	}
-
-	e.incrementUsage()
+	incrementSharedSessionUsage(sess)
 
 	return sess, nil
 }
 
 func (r *ristrettoCache) getOrAdd(id string) (*Session, error) {
-	val, found := r.inner.Get(id)
-	if found {
+	if val, found := r.inner.Get(id); found {
 		return val.(*Session), nil
 	}
 
@@ -60,7 +54,7 @@ func (r *ristrettoCache) Close() {
 
 func ristrettoOnEvict(h, c uint64, value interface{}, _ int64) {
 	if s, ok := value.(*Session); ok {
-		s.Close()
+		go s.encryption.(*SharedEncryption).Remove()
 	}
 }
 
