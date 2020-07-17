@@ -2,5 +2,4 @@
 
 set -e
 
-mvn javadoc:javadoc
 mvn -U compile
