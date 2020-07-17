@@ -4,6 +4,7 @@ namespace GoDaddy.Asherah.AppEncryption
     /// An additional layer of abstraction which generates the system key and intermediate key ids.
     /// It uses a <see cref="PartitionId"/> to uniquely identify a <see cref="Session{TP,TD}"/>, i.e. every partition id
     /// should have its own session.
+    /// A payload encrypted using some partition id cannot be decrypted using some other partition id.
     /// </summary>
     public class Partition
     {

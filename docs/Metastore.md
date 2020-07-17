@@ -38,7 +38,7 @@ select id, created, (1 + octet_length(id) + 4 + 2 + octet_length(key_record)) as
 
 #### DynamoDB
 
-**Table Name**: EncryptionKey  
+**Default Table Name**: EncryptionKey  
 **Partition/Hash Key**: Id (string)  
 **Sort/Range Key**: Created (number)
 

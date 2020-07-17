@@ -6,10 +6,26 @@ using LanguageExt;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
+    /// <summary>
+    /// Provides a volatile implementation of <see cref="IMetastore{T}"/> for values using a
+    /// <see cref="System.Data.DataTable"/>. Note that this should NEVER be used in a production environment.
+    /// </summary>
+    ///
+    /// <typeparam name="T">The type of value to store and retrieve.</typeparam>
     public class InMemoryMetastoreImpl<T> : IMetastore<T>
     {
         private readonly DataTable dataTable;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InMemoryMetastoreImpl{T}"/> class, with 3 columns.
+        /// <code>
+        /// keyId | created | value
+        /// ------------------------
+        ///       |         |
+        ///       |         |
+        /// </code>
+        /// Uses 'keyId' and 'created' as the primary key.
+        /// </summary>
         public InMemoryMetastoreImpl()
         {
             dataTable = new DataTable();
@@ -19,6 +35,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             dataTable.PrimaryKey = new[] { dataTable.Columns["keyId"], dataTable.Columns["created"] };
         }
 
+        /// <summary>
+        /// Retrieve the value associated with the keyId and the time it was created.
+        /// </summary>
+        ///
+        /// <param name="keyId">The keyId to lookup.</param>
+        /// <param name="created">The created time to lookup.</param>
+        /// <returns>The value <see cref="T"/> associated with the <paramref name="keyId"/> and
+        /// <paramref name="created"/> tuple.</returns>
         public virtual Option<T> Load(string keyId, DateTimeOffset created)
         {
             lock (dataTable)
@@ -36,6 +60,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
+        /// <summary>
+        /// Obtain the latest value associated with the keyId by ordering the datatable in ascending order.
+        /// </summary>
+        ///
+        /// <param name="keyId">The keyId to lookup.</param>
+        /// <returns>The latest <see cref="T"/> value associated with the keyId, if any based on the creation
+        /// time.</returns>
         public virtual Option<T> LoadLatest(string keyId)
         {
             lock (dataTable)
@@ -55,6 +86,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
+        /// <summary>
+        /// Stores the <see cref="T"/> value using the specified keyId and created time in the datatable.
+        /// </summary>
+        ///
+        /// <param name="keyId">The keyId to store.</param>
+        /// <param name="created">The created time to store.</param>
+        /// <param name="value">The <see cref="T"/> value to store.</param>
+        /// <returns><value>True</value> if the store succeeded, <value>False</value> if not found.</returns>
         public virtual bool Store(string keyId, DateTimeOffset created, T value)
         {
             lock (dataTable)
@@ -71,11 +110,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 dataTable.Rows.Add(keyId, created, value);
                 return true;
             }
-        }
-
-        public string GetKeySuffix()
-        {
-            return string.Empty;
         }
     }
 }
