@@ -50,7 +50,7 @@ public class SessionFactory implements SafeAutoCloseable {
    *
    * @param productId A unique identifier for a product.
    * @param serviceId A unique identifier for a service.
-   * @param metastore A {@link Metastore} implementation used to store system & intermediate keys.
+   * @param metastore A {@link Metastore} implementation used to store system and intermediate keys.
    * @param systemKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
    *                       system keys.
    * @param cryptoPolicy A {@link CryptoPolicy} implementation that dictates the various behaviors of Asherah.
