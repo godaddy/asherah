@@ -24,12 +24,13 @@
     <PackageReference Include="LanguageExt.Core" Version="3.4.13" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="App.Metrics" Version="3.2.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Label="Package References" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.1.1"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
   </ItemGroup>
   <ItemGroup Label="Package References" Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.3"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.3" />
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../Crypto/Crypto.csproj" />

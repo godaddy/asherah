@@ -90,7 +90,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
             if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
             {
-                return DynamoDbMetastoreImpl.NewBuilder().Build();
+                return DynamoDbMetastoreImpl.NewBuilder("us-west-2").Build();
             }
 
             return new InMemoryMetastoreImpl<JObject>();

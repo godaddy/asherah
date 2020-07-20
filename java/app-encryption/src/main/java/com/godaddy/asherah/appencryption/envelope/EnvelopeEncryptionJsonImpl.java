@@ -43,7 +43,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
    * implementation of {@link EnvelopeEncryption} which uses {@link org.json.JSONObject} as the Data Row Record format.
    *
    * @param partition A {@link Partition} object.
-   * @param metastore A {@link Metastore} implementation used to store system & intermediate keys.
+   * @param metastore A {@link Metastore} implementation used to store system and intermediate keys.
    * @param systemKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
    *                       system keys.
    * @param intermediateKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
