@@ -47,7 +47,7 @@ func (b *sessionBucket) load(_ string) (*appencryption.Session, error) {
 func (b *sessionBucket) newSession() *appencryption.Session {
 	spy := &closeSpy{}
 
-	s, _ := newSessionWithMockEncryption(func(_ mock.Arguments) {
+	s := newSessionWithMockEncryption(func(_ mock.Arguments) {
 		b.mu.Lock()
 		defer b.mu.Unlock()
 
@@ -75,7 +75,7 @@ func newSessionBucket() *sessionBucket {
 	}
 }
 
-func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) (*appencryption.Session, *appencryption.MockEncryption) {
+func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) *appencryption.Session {
 	s := new(appencryption.Session)
 	m := new(appencryption.MockEncryption)
 	call := m.On("Close").Return(nil)
@@ -86,7 +86,7 @@ func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) (*appencryp
 
 	appencryption.SessionInjectEncryption(s, m)
 
-	return s, m
+	return s
 }
 
 func TestNewSessionCache(t *testing.T) {
@@ -137,7 +137,7 @@ func TestNewSessionCachePanicsWithUnknownEngine(t *testing.T) {
 
 func TestSessionCacheGetUsesLoader(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
-		session, _ := newSessionWithMockEncryption()
+		session := newSessionWithMockEncryption()
 
 		loader := func(id string) (*appencryption.Session, error) {
 			return session, nil
