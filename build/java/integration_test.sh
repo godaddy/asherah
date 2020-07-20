@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-mvn verify -Dskip.surefire.tests
+mvn failsafe:integration-test -Dskip.surefire.tests

@@ -6,6 +6,13 @@ import java.util.SortedMap;
 
 import com.google.common.collect.TreeBasedTable;
 
+/**
+ * Provides a {@link TreeBasedTable} based implementation of {@link Metastore} to store and retrieve
+ * {@link com.godaddy.asherah.appencryption.utils.Json} values for system and intermediate keys.
+ * NOTE: This is a volatile implementation and should NEVER be used in a production environment.
+ *
+ * @param <T> The type of the value being loaded and stored in the metastore.
+ */
 public class InMemoryMetastoreImpl<T> implements Metastore<T> {
   private final TreeBasedTable<String, Instant, T> table = TreeBasedTable.create();
 

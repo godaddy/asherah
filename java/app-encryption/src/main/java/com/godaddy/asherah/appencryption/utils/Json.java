@@ -56,7 +56,7 @@ public class Json {
   }
 
   /**
-   * Gets the Json associated with a given key.
+   * Gets the {@code Json} associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
    * @return The value associated with the key.
@@ -66,10 +66,10 @@ public class Json {
   }
 
   /**
-   * Gets the Json associated with a given key.
+   * Gets the @code Json} associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
-   * @return An {@code Optional<Json>} value if the key exists, else null
+   * @return An {@link Optional} Json> value if the key exists, else null
    */
   public Optional<Json> getOptionalJson(final String key) {
     return Optional.ofNullable(document.optJSONObject(key)).map(Json::new);
@@ -86,7 +86,7 @@ public class Json {
   }
 
   /**
-   * Gets the bytes value associated with a given key.
+   * Converts the key into a newly-allocated byte array.
    *
    * @param key The key whose value needs to be retrieved.
    * @return The value associated with the key, as a bytes array.
@@ -96,7 +96,8 @@ public class Json {
   }
 
   /**
-   * Gets the long value associated with a given key.
+   * Retrieves the long value associated with a given key and converts it an instance of {@link Instant} using seconds
+   * from the epoch of 1970-01-01T00:00:00Z.
    *
    * @param key The key whose value needs to be retrieved.
    * @return The value time associated with the key.
@@ -116,7 +117,7 @@ public class Json {
   }
 
   /**
-   * Gets the JSONArray associated with a given key.
+   * Gets the {@link JSONArray} associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
    * @return The value associated with the key.

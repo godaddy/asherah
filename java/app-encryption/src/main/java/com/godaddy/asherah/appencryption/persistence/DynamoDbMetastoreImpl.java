@@ -28,6 +28,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Provides an AWS DynamoDB based implementation of {@link Metastore} to store and retrieve
+ * {@link com.godaddy.asherah.appencryption.utils.Json} values for system and intermediate keys. It uses the default
+ * table name "EncryptionKey" but that can be configured using {@link Builder#withTableName(String)} " option.
+ * Creation time is stored in unix time seconds.
+ */
 public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
@@ -50,8 +56,8 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   /**
    * Initialize a {@code DynamoDbMetastoreImpl} builder with the given region.
    *
-   * @param region The preferred region for the DynamoDb. This can be overridden using the {@code withRegion} builder
-   *               step.
+   * @param region The preferred region for the DynamoDb. This can be overridden using the
+   * {@link Builder#withRegion(String)} builder step.
    * @return The current {@code Builder} instance.
    */
   public static Builder newBuilder(final String region) {
@@ -68,7 +74,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   /**
    * Checks if the metastore has key suffixes enabled, and adds a region suffix to the {@code key} if it does.
-   * This is done to enable Global Table support. Adding a suffix to keys prevents multi-region writes from
+   * A key suffix is needed to  enable Global Table support. Adding a suffix to keys prevents multi-region writes from
    * clobbering each other.
    *
    * @param key The keyId part of the lookup key.
@@ -83,12 +89,12 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   @Override
-  public Optional<JSONObject> load(final String key, final Instant created) {
+  public Optional<JSONObject> load(final String keyId, final Instant created) {
     return loadTimer.record(() -> {
       try {
         GetItemOutcome outcome = table.getItemOutcome(new GetItemSpec()
             .withPrimaryKey(
-                PARTITION_KEY, key,
+                PARTITION_KEY, keyId,
                 SORT_KEY, created.getEpochSecond())
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withConsistentRead(true)); // always use strong consistency
@@ -107,12 +113,12 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   @Override
-  public Optional<JSONObject> loadLatest(final String key) {
+  public Optional<JSONObject> loadLatest(final String keyId) {
     return loadLatestTimer.record(() -> {
       try {
         // Have to use query api to use limit and reverse sort order
         ItemCollection<QueryOutcome> itemCollection = table.query(new QuerySpec()
-            .withHashKey(PARTITION_KEY, getHashKey(key))
+            .withHashKey(PARTITION_KEY, getHashKey(keyId))
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withScanIndexForward(false) // sorts descending
             .withMaxResultSize(1) // limit 1
@@ -133,7 +139,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   @Override
-  public boolean store(final String key, final Instant created, final JSONObject value) {
+  public boolean store(final String keyId, final Instant created, final JSONObject value) {
     return storeTimer.record(() -> {
       try {
         // Note conditional expression using attribute_not_exists has special semantics. Can be used on partition OR
@@ -142,7 +148,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         // required.
         Item item = new Item()
             .withPrimaryKey(
-                PARTITION_KEY, getHashKey(key),
+                PARTITION_KEY, getHashKey(keyId),
                 SORT_KEY, created.getEpochSecond())
             .withMap(ATTRIBUTE_KEY_RECORD, value.toMap());
         table.putItem(new PutItemSpec()
@@ -153,7 +159,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       }
       catch (ConditionalCheckFailedException e) {
         // Duplicate key exists
-        logger.info("Attempted to create duplicate key: {} {}", key, created);
+        logger.info("Attempted to create duplicate key: {} {}", keyId, created);
         return false;
       }
       catch (SdkBaseException se) {
@@ -233,7 +239,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface EndPointStep {
     /**
-     * Adds EndPoint config to the AWS DynamoDb client.
+     * Adds Endpoint config to the AWS DynamoDb client.
      *
      * @param endPoint The service endpoint either with or without the protocol.
      * @param signingRegion The region to use for SigV4 signing of requests (e.g. us-west-1).
@@ -263,7 +269,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     BuildStep withTableName(String tableName);
 
     /**
-     * Specifies whether key suffix should be enabled for DynamoDB. This needs to be enabled for Global Table support.
+     * Specifies whether key suffix should be enabled for DynamoDB. This should be enabled for Global Table support.
+     * Adding a suffix to keys prevents multi-region writes from clobbering each other and ensures that no keys are
+     * lost.
      *
      * @return The current {@code BuildStep} instance.
      */
