@@ -8,7 +8,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/godaddy/asherah/go/appencryption v0.0.0-20200318173103-9ec8c9007963
-	github.com/godaddy/asherah/go/securememory v0.0.0-20200318173103-9ec8c9007963
+	github.com/godaddy/asherah/go/securememory v0.1.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20180920040306-f579f869bbfe // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
@@ -18,3 +18,5 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 	google.golang.org/appengine v1.6.5 // indirect
 )
+
+replace github.com/godaddy/asherah/go/appencryption => ../..

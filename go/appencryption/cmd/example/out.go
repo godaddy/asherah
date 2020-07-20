@@ -20,7 +20,7 @@ var (
 	TitleColor = aurora.Cyan
 	Formatter  = colorjson.NewFormatter()
 
-	w = tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+	w = tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
 )
 
 func init() {
@@ -66,7 +66,7 @@ func PrintColoredJSON(msg string, obj interface{}) {
 }
 
 func PrintTitle(name string) {
-	fmt.Println(aurora.Bold(TitleColor(name)))
+	fmt.Fprintln(w, aurora.Bold(TitleColor(name)))
 }
 
 func Print(name string, v1 interface{}) {

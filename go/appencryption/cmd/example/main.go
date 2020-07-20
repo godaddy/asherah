@@ -1,33 +1,33 @@
 package main
 
 import (
-    "encoding/json"
-    "fmt"
-    "log"
-    "net/http"
-    _ "net/http/pprof"
-    "os"
-    "os/signal"
-    "runtime"
-    "runtime/pprof"
-    "strconv"
-    "strings"
-    "sync"
-    "syscall"
-    "time"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"runtime"
+	"runtime/pprof"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
 
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/godaddy/asherah/go/securememory"
-    "github.com/godaddy/asherah/go/securememory/memguard"
-    "github.com/jessevdk/go-flags"
-    "github.com/logrusorgru/aurora"
-    "github.com/pkg/errors"
-    "github.com/rcrowley/go-metrics"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/godaddy/asherah/go/securememory"
+	"github.com/godaddy/asherah/go/securememory/memguard"
+	"github.com/jessevdk/go-flags"
+	"github.com/logrusorgru/aurora"
+	"github.com/pkg/errors"
+	"github.com/rcrowley/go-metrics"
 
-    "github.com/godaddy/asherah/go/appencryption"
-    "github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
-    "github.com/godaddy/asherah/go/appencryption/pkg/kms"
-    "github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption"
+	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
+	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
+	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 )
 
 const (
@@ -38,26 +38,28 @@ const (
 )
 
 type Options struct {
-	Count            int           `short:"c" long:"count" default:"1000" description:"Number of loops to run per session."`
-	Sessions         int           `short:"s" long:"sessions" default:"20" description:"Number of sessions to run concurrently."`
-	EnableLogs       bool          `short:"l" long:"log" description:"Enables logging to stdout"`
-	Results          bool          `short:"r" long:"results" description:"Prints input/output from asherah library"`
-	Metrics          bool          `short:"m" long:"metrics" description:"Dumps metrics to stdout in JSON format"`
-	Duration         time.Duration `short:"d" long:"duration" description:"Time to run tests for. If not provided, the app will run (sessions X count) then exit"`
-	Verbose          bool          `short:"v" long:"verbose" description:"Enables verbose output"`
-	ShowAll          bool          `short:"a" long:"all" description:"Print all metrics even if they were not executed."`
-	Progress         bool          `short:"P" long:"progress" description:"Prints progress messages while running."`
-	Metastore        string        `long:"metastore" description:"Configure what metastore to use"`
-	NoCache          bool          `long:"no-cache" description:"Disables the caching of keys"`
-	KMS              string        `long:"kms" description:"Configure what kms service to use"`
-	Region           string        `long:"region" description:"Describe the preferred region to use"`
-	RegionMap        string        `long:"map" description:"Comma separated list of <region>=<kms_arn> tuples."`
-	Profile          string        `long:"profile" choice:"cpu" choice:"mem" choice:"mutex" choice:"http"`
-	Truncate         bool          `long:"truncate" description:"Deletes all keys present in the database before running."`
-	ExpireAfter      time.Duration `long:"expire" description:"Amount of time before a key is expired"`
-	CheckInterval    time.Duration `long:"check" description:"Interval to check for expired keys"`
-	ConnectionString string        `short:"C" long:"conn" description:"MySQL Connection String"`
-	NoExit           bool          `short:"x" long:"no-exit" description:"Prevent app from closing once tests are completed. Especially useful for profiling."`
+	Count              int           `short:"c" long:"count" default:"1000" description:"Number of loops to run per session."`
+	Iterations         int           `short:"i" long:"iterations" default:"1" description:"Number of times each session loop will run."`
+	Sessions           int           `short:"s" long:"sessions" default:"20" description:"Number of sessions to run concurrently."`
+	EnableLogs         bool          `short:"l" long:"log" description:"Enables logging to stdout"`
+	EnableSessionCache bool          `short:"S" long:"session-cache" description:"Enables the shared session cache."`
+	Results            bool          `short:"r" long:"results" description:"Prints input/output from asherah library"`
+	Metrics            bool          `short:"m" long:"metrics" description:"Dumps metrics to stdout in JSON format"`
+	Duration           time.Duration `short:"d" long:"duration" description:"Time to run tests for. If not provided, the app will run (sessions X count) then exit"`
+	Verbose            bool          `short:"v" long:"verbose" description:"Enables verbose output"`
+	ShowAll            bool          `short:"a" long:"all" description:"Print all metrics even if they were not executed."`
+	Progress           bool          `short:"P" long:"progress" description:"Prints progress messages while running."`
+	Metastore          string        `long:"metastore" description:"Configure what metastore to use"`
+	NoCache            bool          `long:"no-cache" description:"Disables the caching of keys"`
+	KMS                string        `long:"kms" description:"Configure what kms service to use"`
+	Region             string        `long:"region" description:"Describe the preferred region to use"`
+	RegionMap          string        `long:"map" description:"Comma separated list of <region>=<kms_arn> tuples."`
+	Profile            string        `long:"profile" choice:"cpu" choice:"mem" choice:"mutex" choice:"http"`
+	Truncate           bool          `long:"truncate" description:"Deletes all keys present in the database before running."`
+	ExpireAfter        time.Duration `long:"expire" description:"Amount of time before a key is expired"`
+	CheckInterval      time.Duration `long:"check" description:"Interval to check for expired keys"`
+	ConnectionString   string        `short:"C" long:"conn" description:"MySQL Connection String"`
+	NoExit             bool          `short:"x" long:"no-exit" description:"Prevent app from closing once tests are completed. Especially useful for profiling."`
 }
 
 var (
@@ -192,6 +194,14 @@ func main() {
 		return func(*appencryption.CryptoPolicy) { /* noop */ }
 	}
 
+	withSessionCacheOption := func() appencryption.PolicyOption {
+		if opts.EnableSessionCache {
+			return appencryption.WithSessionCache()
+		}
+
+		return func(*appencryption.CryptoPolicy) { /* noop */ }
+	}
+
 	factory := appencryption.NewSessionFactory(
 		&appencryption.Config{
 			Service: "exampleService",
@@ -200,6 +210,7 @@ func main() {
 				appencryption.WithExpireAfterDuration(expireAfter),
 				appencryption.WithRevokeCheckInterval(checkInterval),
 				withCacheOption(),
+				withSessionCacheOption(),
 			),
 		},
 		CreateMetastore(),
@@ -208,11 +219,10 @@ func main() {
 		// optional step(s)
 		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
 		// appencryption.WithSecretFactory(new(protectedmemory.SecretFactory)),
-		appencryption.WithMetrics(false),
+		appencryption.WithMetrics(opts.Metrics),
 	)
 	defer factory.Close()
 
-	var wg sync.WaitGroup
 	done := make(chan bool, 1)
 
 	start := time.Now()
@@ -248,50 +258,10 @@ func main() {
 		}()
 	}
 
-	for i := 0; i < opts.Sessions; i++ {
-		wg.Add(1)
-
-		go func(i int) {
-			defer wg.Done()
-
-			runFunc := func(shopper string) {
-				session, err := factory.GetSession(shopper)
-				if err != nil {
-					panic(err)
-				}
-
-				defer session.Close()
-
-				dr := GenerateData(session, opts.Count)
-
-				for i := 0; i < len(dr); i++ {
-					decryptTimer.Time(func() {
-						Decrypt(session, dr[i])
-					})
-				}
-			}
-
-			if opts.Duration > 0 {
-				log.Printf("Running for %s", opts.Duration)
-
-				for time.Since(start) < opts.Duration {
-					shopper := shopperID + strconv.Itoa(i)
-
-					log.Printf("Starting session with shopper ID: %s", shopper)
-
-					runFunc(shopper)
-				}
-			} else {
-				shopper := shopperID + strconv.Itoa(i)
-
-				log.Printf("Starting session with shopper ID: %s", shopper)
-
-				runFunc(shopper)
-			}
-		}(i)
+	for i := 0; i < opts.Iterations; i++ {
+		RunSessionIteration(start, factory)
 	}
 
-	wg.Wait()
 	done <- true
 	close(done)
 
@@ -299,8 +269,8 @@ func main() {
 	end := time.Since(start)
 
 	if opts.Metrics {
-		fmt.Println("Total time:", end)
-		fmt.Println("Secrets allocated:", securememory.AllocCounter.Count())
+		fmt.Fprintln(w, "Total time:", end)
+		fmt.Fprintln(w, "Secrets allocated:", securememory.AllocCounter.Count())
 		PrintMetrics("encryption", encryptTimer)
 		PrintMetrics("decryption", decryptTimer)
 		PrintColoredJSON("Metrics:", metrics.DefaultRegistry)
@@ -333,6 +303,57 @@ func main() {
 		<-done
 		fmt.Println("Exiting")
 	}
+}
+
+func RunSessionIteration(start time.Time, factory *appencryption.SessionFactory) {
+	var wg sync.WaitGroup
+
+	for i := 0; i < opts.Sessions; i++ {
+		wg.Add(1)
+
+		go func(i int) {
+			defer wg.Done()
+
+			runFunc := func(shopper string) {
+				session, err := factory.GetSession(shopper)
+				if err != nil {
+					panic(err)
+				}
+
+				defer session.Close()
+
+				dr := GenerateData(session, opts.Count)
+
+				for ii := 0; ii < len(dr); ii++ {
+					drr := dr[ii]
+
+					decryptTimer.Time(func() {
+						Decrypt(session, drr)
+					})
+				}
+			}
+
+			if opts.Duration > 0 {
+				log.Printf("Running for %s", opts.Duration)
+
+				for time.Since(start) < opts.Duration {
+					shopper := shopperID + strconv.Itoa(i)
+
+					log.Printf("Starting session with shopper ID: %s", shopper)
+
+					runFunc(shopper)
+				}
+			} else {
+				shopper := shopperID + strconv.Itoa(i)
+
+				log.Printf("Starting session with shopper ID: %s", shopper)
+
+				runFunc(shopper)
+			}
+		}(i)
+	}
+
+	wg.Wait()
 }
 
 func CreateKMS() appencryption.KeyManagementService {
