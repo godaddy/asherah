@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
     /// Provides a volatile implementation of <see cref="IMetastore{T}"/> for values using a
-    /// <see cref="System.Data.DataTable"/>. Note that this should NEVER be used in a production environment.
+    /// <see cref="System.Data.DataTable"/>. NOTE: This should NEVER be used in a production environment.
     /// </summary>
     ///
     /// <typeparam name="T">The type of value to store and retrieve.</typeparam>
@@ -65,8 +65,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// </summary>
         ///
         /// <param name="keyId">The keyId to lookup.</param>
-        /// <returns>The latest <see cref="T"/> value associated with the keyId, if any based on the creation
-        /// time.</returns>
+        /// <returns>The latest <see cref="T"/> value associated with the keyId, if any.</returns>
         public virtual Option<T> LoadLatest(string keyId)
         {
             lock (dataTable)

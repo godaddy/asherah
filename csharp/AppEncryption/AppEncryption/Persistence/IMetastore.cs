@@ -4,7 +4,8 @@ using LanguageExt;
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
-    /// Primary interface for defining metastore operations.
+    /// The Metastore interface provides methods that can be used to load and store system and intermediate keys from a
+    /// supported database.
     /// </summary>
     ///
     /// <typeparam name="T">The type of value to store and retrieve from the metastore.</typeparam>

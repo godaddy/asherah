@@ -15,14 +15,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly Action<string, T> persistenceStore;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AdhocPersistence{T}"/> class. The <paramref name="load"/> and
-        /// <paramref name="store"/> functions need to be implemented separately. This constructor just enables you to
-        /// use them as your preferred <see cref="Persistence{T}"/>.
+        /// Initializes a new instance of the <see cref="AdhocPersistence{T}"/> class.
         /// </summary>
         ///
-        /// <param name="load">A <see cref="Func{TResult}"/> object that loads a result from the persistent store.
+        /// <param name="load">A user-defined <see cref="Func{TResult}"/> object that loads a result from the persistent
+        /// store.
         /// </param>
-        /// <param name="store">A <see cref="Action"/> object that stores a record to the persistent store.</param>
+        /// <param name="store">A user-defined <see cref="Action"/> object that stores a record to the persistent store.
+        /// </param>
         public AdhocPersistence(Func<string, Option<T>> load, Action<string, T> store)
         {
             persistenceLoad = load;

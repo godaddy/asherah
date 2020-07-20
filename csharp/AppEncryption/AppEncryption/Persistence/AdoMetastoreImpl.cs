@@ -16,7 +16,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
     /// Provides an Ado based implementation of <see cref="IMetastore{T}"/> to store and retrieve
-    /// <seealso cref="JObject"/> values. It uses the table name "encryption_key" to perform all RDBMS based operations.
+    /// <seealso cref="JObject"/> values. These values are system keys and intermediate keys used by Asherah to provide
+    /// a hierarchical key structure. It uses the table name "encryption_key" to perform all RDBMS based operations.
     /// Stores the created time in UTC.
     /// </summary>
     public class AdoMetastoreImpl : IMetastore<JObject>
@@ -49,14 +50,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// A Builder method to create new instance of <see cref="AdoMetastoreImpl"/> class using the provided
-        /// parameters.
+        /// Initialize a <see cref="AdoMetastoreImpl"/> builder using the provided parameters.
         /// </summary>
         ///
-        /// <param name="dbProviderFactory">The <seealso cref="dbProviderFactory"/> object which represents a set of
+        /// <param name="dbProviderFactory">The <seealso cref="DbProviderFactory"/> object which represents a set of
         /// methods for creating instances of a provider's implementation of the data source classes.</param>
-        /// <param name="connectionString">The connection string to be used by the <seealso cref="DbConnection"/> in
-        /// <paramref name="dbProviderFactory"/>.</param>
+        /// <param name="connectionString">The connection string to be used by the <seealso cref="DbConnection"/>.
+        /// </param>
         /// <returns>The current <see cref="Builder"/> step.</returns>
         public static Builder NewBuilder(DbProviderFactory dbProviderFactory, string connectionString)
         {
@@ -103,8 +103,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// </summary>
         ///
         /// <param name="keyId">the keyId to lookup.</param>
-        /// <returns>The latest <seealso cref="JObject"/> value associated with the keyId, if any based on the creation
-        /// time.</returns>
+        /// <returns>The latest value associated with the keyId, if any.</returns>
         public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
@@ -230,7 +229,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
 
             /// <summary>
-            /// Calls the actual constructor for <see cref="AdoMetastoreImpl"/>.
+            /// Builds the finalized <see cref="AdoMetastoreImpl"/> object with the parameters specified in the
+            /// <see cref="Builder"/>.
             /// </summary>
             ///
             /// <returns>The fully instantiated <see cref="AdoMetastoreImpl"/> object.</returns>

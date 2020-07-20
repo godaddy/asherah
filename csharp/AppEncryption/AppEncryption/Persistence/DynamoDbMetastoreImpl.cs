@@ -21,7 +21,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
     /// Provides an AWS DynamoDB based implementation of <see cref="IMetastore{T}"/> to store and retrieve
-    /// <see cref="JObject"/> values. It uses the default table name "EncryptionKey" but it can be configured using
+    /// <see cref="JObject"/> values. These values are system keys and intermediate keys used by Asherah to provide a
+    /// hierarchical key structure. It uses the default table name "EncryptionKey" but it can be configured using
     /// <see cref="IBuildStep.WithTableName"/> option. Stores the created time in unix time seconds.
     /// </summary>
     public class DynamoDbMetastoreImpl : IMetastore<JObject>
@@ -48,9 +49,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             Table.TryLoadTable(DbClient, TableName, out table);
         }
 
-        /// <summary>
-        /// Interface to define the steps involved in implementing a DynamoDb implementation.
-        /// </summary>
         public interface IBuildStep
         {
             /// <summary>
@@ -80,7 +78,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private interface IEndPointStep
         {
             /// <summary>
-            /// Adds EndPoint config to the AWS DynamoDb client.
+            /// Adds Endpoint config to the AWS DynamoDb client.
             /// </summary>
             ///
             /// <param name="endPoint">the service endpoint either with or without the protocol.</param>
@@ -118,14 +116,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             return new Builder(region);
         }
 
-        /// <summary>
-        /// Retrieve the value associated with the keyId and the time it was created.
-        /// </summary>
-        ///
-        /// <param name="keyId">The keyId to lookup.</param>
-        /// <param name="created">The created time lookup which is converted to unix time seconds.</param>
-        /// <returns>The <see cref="JObject"/> value associated with the <paramref name="keyId"/> and
-        /// <paramref name="created"/> tuple.</returns>
+        /// <inheritdoc />
         public Option<JObject> Load(string keyId, DateTimeOffset created)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadTimerOptions))
@@ -158,13 +149,12 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Lookup the latest value associated with the keyId. In case of GlobalTables, the key needs to be formed using
-        /// the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region suffix to it.
+        /// Lookup the latest value associated with the keyId. The key needs to be formed using the
+        /// <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region suffix to it.
         /// </summary>
         ///
         /// <param name="keyId">The keyId to lookup.</param>
-        /// <returns>The latest <seealso cref="JObject"/> value associated with the keyId, if any based on the creation
-        /// time.</returns>
+        /// <returns>The latest <seealso cref="JObject"/> value associated with the keyId, if any.</returns>
         public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
@@ -204,9 +194,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Stores the <see cref="JObject"/> value using the specified keyId and created time. In case of GlobalTables,
-        /// the key needs to be formed using the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may
-        /// not add a region suffix to it.
+        /// Stores the <see cref="JObject"/> value using the specified keyId and created time. The key needs to be
+        /// formed using the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region
+        /// suffix to it.
         /// </summary>
         ///
         /// <param name="keyId">The keyId to store.</param>
@@ -351,8 +341,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
 
             /// <summary>
-            /// Setups the <see cref="DbClient"/> with configured options and calls the actual constructor for
-            /// <see cref="DynamoDbMetastoreImpl"/>.
+            /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> object with the parameters specified in the
+            /// <see cref="Builder"/>.
             /// </summary>
             ///
             /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
