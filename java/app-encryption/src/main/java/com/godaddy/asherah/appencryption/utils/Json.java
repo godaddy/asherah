@@ -69,7 +69,7 @@ public class Json {
    * Gets the @code Json} associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
-   * @return An {@link Optional} Json> value if the key exists, else null
+   * @return An {@link Optional} Json value if the key exists, else null
    */
   public Optional<Json> getOptionalJson(final String key) {
     return Optional.ofNullable(document.optJSONObject(key)).map(Json::new);
