@@ -73,8 +73,8 @@ func newMangoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *mango
 			func(k mango.Key) (mango.Value, error) {
 				return sessionLoader(k.(string))
 			},
-			mango.WithMaximumSize(policy.SessionCacheSize),
-			mango.WithExpireAfterAccess(policy.SessionCacheTTL),
+			mango.WithMaximumSize(policy.SessionCacheMaxSize),
+			mango.WithExpireAfterAccess(policy.SessionCacheDuration),
 			mango.WithRemovalListener(mangoRemovalListener),
 		),
 	}

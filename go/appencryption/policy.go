@@ -9,8 +9,8 @@ const (
 	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
 	DefaultRevokedCheckInterval = time.Minute * 60
 	DefaultCreateDatePrecision  = time.Minute
-	DefaultSessionCacheSize     = 1000
-	DefaultSessionCacheTTL      = time.Hour * 2
+	DefaultSessionCacheMaxSize  = 1000
+	DefaultSessionCacheDuration = time.Hour * 2
 	DefaultSessionCacheEngine   = "default"
 )
 
@@ -31,11 +31,11 @@ type CryptoPolicy struct {
 	CacheSystemKeys bool
 	// CacheSessions determines whether sessions will be cached.
 	CacheSessions bool
-	// SessionCacheSize controls the maximum size of the cache if session caching is enabled.
-	SessionCacheSize int
-	// SessionCacheTTL controls the amount of time a session will remain cached without being accessed
+	// SessionCacheMaxSize controls the maximum size of the cache if session caching is enabled.
+	SessionCacheMaxSize int
+	// SessionCacheDuration controls the amount of time a session will remain cached without being accessed
 	// if session caching is enabled.
-	SessionCacheTTL time.Duration
+	SessionCacheDuration time.Duration
 	// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
 	// if session caching is enabled. Supported values are "default", "mango", "ristretto".
 	SessionCacheEngine string
@@ -77,15 +77,15 @@ func WithSessionCache() PolicyOption {
 // WithSessionCacheMaxSize specifies the session cache max size to use if session caching is enabled.
 func WithSessionCacheMaxSize(size int) PolicyOption {
 	return func(policy *CryptoPolicy) {
-		policy.SessionCacheSize = size
+		policy.SessionCacheMaxSize = size
 	}
 }
 
-// WithSessionCacheTTL specifies the amount of time a session will remain cached without being accessed
+// WithSessionCacheDuration specifies the amount of time a session will remain cached without being accessed
 // if session caching is enabled.
-func WithSessionCacheTTL(d time.Duration) PolicyOption {
+func WithSessionCacheDuration(d time.Duration) PolicyOption {
 	return func(policy *CryptoPolicy) {
-		policy.SessionCacheTTL = d
+		policy.SessionCacheDuration = d
 	}
 }
 
@@ -108,8 +108,8 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CacheSystemKeys:       true,
 		CacheIntermediateKeys: true,
 		CacheSessions:         false,
-		SessionCacheSize:      DefaultSessionCacheSize,
-		SessionCacheTTL:       DefaultSessionCacheTTL,
+		SessionCacheMaxSize:   DefaultSessionCacheMaxSize,
+		SessionCacheDuration:  DefaultSessionCacheDuration,
 		SessionCacheEngine:    DefaultSessionCacheEngine,
 	}
 

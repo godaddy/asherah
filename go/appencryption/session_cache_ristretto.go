@@ -59,7 +59,7 @@ func ristrettoOnEvict(h, c uint64, value interface{}, _ int64) {
 }
 
 func newRistrettoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *ristrettoCache {
-	capacity := int64(policy.SessionCacheSize)
+	capacity := int64(policy.SessionCacheMaxSize)
 	conf := &ristretto.Config{
 		NumCounters: 10 * capacity,
 		MaxCost:     capacity,
@@ -76,7 +76,7 @@ func newRistrettoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *r
 	return &ristrettoCache{
 		inner:   inner,
 		loader:  sessionLoader,
-		ttl:     policy.SessionCacheTTL,
+		ttl:     policy.SessionCacheDuration,
 		maxSize: capacity,
 	}
 }

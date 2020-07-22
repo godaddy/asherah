@@ -195,7 +195,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 		maxSessions := 10
 		b := newSessionBucket()
 
-		policy.SessionCacheSize = maxSessions
+		policy.SessionCacheMaxSize = maxSessions
 
 		cache := appencryption.NewSessionCache(b.load, policy)
 		require.NotNil(t, cache)
@@ -231,7 +231,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	})
 }
 
-func TestSessionCacheTTL(t *testing.T) {
+func TestSessionCacheDuration(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
 		ttl := time.Millisecond * 100
 
@@ -240,7 +240,7 @@ func TestSessionCacheTTL(t *testing.T) {
 		totalSessions := 16
 		b := newSessionBucket()
 
-		policy.SessionCacheTTL = ttl
+		policy.SessionCacheDuration = ttl
 
 		cache := appencryption.NewSessionCache(b.load, policy)
 		require.NotNil(t, cache)
@@ -293,7 +293,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
 		b := newSessionBucket()
 
-		policy.SessionCacheSize = 1
+		policy.SessionCacheMaxSize = 1
 
 		cache := appencryption.NewSessionCache(b.load, policy)
 		require.NotNil(t, cache)
