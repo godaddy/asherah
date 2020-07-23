@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.ReferenceApp
         public string DynamodbTableName { get; set; }
 
         [Option('s', "key-suffix", Required = false, HelpText = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")]
-        public string KeySuffix { get; set; }
+        public bool KeySuffix { get; set; }
 
         [Option('a', "ado-connection-string", Required = false, HelpText = "ADO connection string to use for an ADO metastore. Required for ADO metastore.")]
         public string AdoConnectionString { get; set; }
