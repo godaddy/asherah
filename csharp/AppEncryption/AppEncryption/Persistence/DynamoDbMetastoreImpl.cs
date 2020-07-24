@@ -19,6 +19,12 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
+    /// <summary>
+    /// Provides an AWS DynamoDB based implementation of <see cref="IMetastore{T}"/> to store and retrieve system keys
+    /// and intermediate keys as <see cref="JObject"/> valyes. These are used by Asherah to provide a hierarchical key
+    /// structure. It uses the default table name "EncryptionKey" but it can be configured using
+    /// <see cref="IBuildStep.WithTableName"/> option. Stores the created time in unix time seconds.
+    /// </summary>
     public class DynamoDbMetastoreImpl : IMetastore<JObject>
     {
         internal const string PartitionKey = "Id";
@@ -49,41 +55,47 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// Specifies whether key suffix should be enabled for DynamoDB.
             /// </summary>
             ///
-            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithKeySuffix();
 
             /// <summary>
-            /// Specifies the name of the table.
+            /// Used to define a custom table name in DynamoDB. The default name is
+            /// <see cref="Builder.DefaultTableName"/>.
             /// </summary>
-            /// <param name="tableName">The name of the table.</param>
-            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            ///
+            /// <param name="tableName">The custom table name to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithTableName(string tableName);
 
             /// <summary>
-            /// Builds the finalized <code>DynamoDbMetastoreImpl</code> with the parameters specified in the builder.
+            /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> with the parameters specified in the builder.
             /// </summary>
-            /// <returns>The fully instantiated <code>DynamoDbMetastoreImpl</code>.</returns>
+            ///
+            /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
             DynamoDbMetastoreImpl Build();
         }
 
         private interface IEndPointStep
         {
             /// <summary>
-            /// Adds EndPoint config to the AWS DynamoDb client.
+            /// Adds Endpoint config to the AWS DynamoDb client.
             /// </summary>
+            ///
             /// <param name="endPoint">the service endpoint either with or without the protocol.</param>
             /// <param name="signingRegion">the region to use for SigV4 signing of requests (e.g. us-west-1).</param>
-            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithEndPointConfiguration(string endPoint, string signingRegion);
         }
 
         private interface IRegionStep
         {
             /// <summary>
-            /// Specifies the region for the AWS DynamoDb client.
+            /// Specifies the region for the AWS DynamoDb client. If this is not specified, then the region from
+            /// <see cref="DynamoDbMetastoreImpl.NewBuilder"/> is used.
             /// </summary>
+            ///
             /// <param name="region">The region for the DynamoDb client.</param>
-            /// <returns>The current <code>IBuildStep</code> instance.</returns>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithRegion(string region);
         }
 
@@ -93,11 +105,18 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         internal bool HasKeySuffix { get; }
 
+        /// <summary>
+        /// Builder method to initialize a <see cref="DynamoDbMetastoreImpl"/> instance.
+        /// </summary>
+        ///
+        /// <param name="region">AWS region to use with the DynamoDB implementation.</param>
+        /// <returns>The current <see cref="Builder"/> instance.</returns>
         public static Builder NewBuilder(string region)
         {
             return new Builder(region);
         }
 
+        /// <inheritdoc />
         public Option<JObject> Load(string keyId, DateTimeOffset created)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadTimerOptions))
@@ -129,6 +148,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
+        /// <summary>
+        /// Lookup the latest value associated with the keyId. The DynamoDB partition key is formed using the
+        /// <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region suffix to it.
+        /// </summary>
+        ///
+        /// <param name="keyId">The keyId to lookup.</param>
+        /// <returns>The latest <seealso cref="JObject"/> value associated with the keyId, if any.</returns>
         public Option<JObject> LoadLatest(string keyId)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
@@ -167,6 +193,19 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
+        /// <summary>
+        /// Stores the <see cref="JObject"/> value using the specified keyId and created time. The DynamoDB partition
+        /// key is formed using the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a
+        /// region suffix to it.
+        /// </summary>
+        ///
+        /// <param name="keyId">The keyId to store.</param>
+        /// <param name="created">The created time to store.</param>
+        /// <param name="value">The <see cref="JObject"/> value to store.</param>
+        /// <returns><value>True</value> if the store succeeded, <value>False</value> if the store failed for a known
+        /// condition like duplicate key.</returns>
+        /// <exception cref="AppEncryptionException">Raise an exception in case of any other metastore errors.
+        /// </exception>
         public bool Store(string keyId, DateTimeOffset created, JObject value)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(StoreTimerOptions))
@@ -223,7 +262,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// from clobbering each other.
         /// </summary>
         ///
-        /// <param name="key">The key id part of the lookup key.</param>
+        /// <param name="key">The keyId part of the lookup key.</param>
         /// <returns>The region-suffixed key, if the metastore has that enabled, else returns the same input
         /// <paramref name="key"/>.</returns>
         private string GetHashKey(string key)
@@ -236,6 +275,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             return key;
         }
 
+        /// <summary>
+        /// Builder class to create an instance of the <see cref="DynamoDbMetastoreImpl"/> class.
+        /// </summary>
         public class Builder : IBuildStep, IEndPointStep, IRegionStep
         {
             #pragma warning disable SA1401
@@ -250,23 +292,30 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             private bool hasEndPoint;
             private bool hasRegion;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Builder"/> class.
+            /// </summary>
+            /// <param name="region">The region to use with AWS DynamoDB.</param>
             public Builder(string region)
             {
                 PreferredRegion = region;
             }
 
+            /// <inheritdoc/>
             public IBuildStep WithKeySuffix()
             {
                 HasKeySuffix = true;
                 return this;
             }
 
+            /// <inheritdoc/>
             public IBuildStep WithTableName(string tableName)
             {
                 TableName = tableName;
                 return this;
             }
 
+            /// <inheritdoc/>
             public IBuildStep WithEndPointConfiguration(string endPoint, string signingRegion)
             {
                 if (!hasRegion)
@@ -279,6 +328,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 return this;
             }
 
+            /// <inheritdoc/>
             public IBuildStep WithRegion(string region)
             {
                 if (!hasEndPoint)
@@ -290,6 +340,12 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 return this;
             }
 
+            /// <summary>
+            /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> object with the parameters specified in the
+            /// <see cref="Builder"/>.
+            /// </summary>
+            ///
+            /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
             public DynamoDbMetastoreImpl Build()
             {
                 if (!hasEndPoint && !hasRegion)

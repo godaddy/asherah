@@ -14,30 +14,24 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// Lookup the key and return its associated value, if any.
         /// </summary>
         ///
-        /// <returns>
-        /// The value associated with the key, if any.
-        /// </returns>
-        ///
-        /// <param name="key">the key to lookup</param>
+        /// <param name="key">The key to lookup.</param>
+        /// <returns>The value associated with the key, if any.</returns>
         public abstract Option<T> Load(string key);
 
         /// <summary>
         /// Stores the value using the specified key.
         /// </summary>
         ///
-        /// <param name="key">the key used to store the value</param>
-        /// <param name="value">the value to be stored</param>
+        /// <param name="key">The key used to store the value.</param>
+        /// <param name="value">The value to be stored.</param>
         public abstract void Store(string key, T value);
 
         /// <summary>
         /// Stores the value and returns its associated generated key for future lookup (e.g. UUID, etc.).
         /// </summary>
         ///
-        /// <returns>
-        /// The generated key that can be used for looking up this value.
-        /// </returns>
-        ///
-        /// <param name="value">the value to store</param>
+        /// <param name="value">The value to store.</param>
+        /// <returns>The generated key that can be used for looking up this value.</returns>
         public virtual string Store(T value)
         {
             string persistenceKey = GenerateKey(value);
@@ -46,15 +40,12 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Generates a persistence key, possibly based on value or type, for use with store calls with no predefined key. Defaults to
-        /// a random UUID.
+        /// Generates a persistence key, possibly based on value or type, for use with store calls with no predefined
+        /// key. Defaults to a random UUID.
         /// </summary>
         ///
-        /// <returns>
-        /// The key that was generated.
-        /// </returns>
-        ///
-        /// <param name="value">the value based on which persistence key should be generated</param>
+        /// <param name="value">The value based on which persistence key should be generated.</param>
+        /// <returns>The key that was generated.</returns>
         public virtual string GenerateKey(T value)
         {
             return Guid.NewGuid().ToString();
