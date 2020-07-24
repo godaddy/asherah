@@ -35,14 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             dataTable.PrimaryKey = new[] { dataTable.Columns["keyId"], dataTable.Columns["created"] };
         }
 
-        /// <summary>
-        /// Retrieve the value associated with the keyId and the time it was created.
-        /// </summary>
-        ///
-        /// <param name="keyId">The keyId to lookup.</param>
-        /// <param name="created">The created time to lookup.</param>
-        /// <returns>The value <see cref="T"/> associated with the <paramref name="keyId"/> and
-        /// <paramref name="created"/> tuple.</returns>
+        /// <inheritdoc />
         public virtual Option<T> Load(string keyId, DateTimeOffset created)
         {
             lock (dataTable)
@@ -85,14 +78,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
         }
 
-        /// <summary>
-        /// Stores the <see cref="T"/> value using the specified keyId and created time in the datatable.
-        /// </summary>
-        ///
-        /// <param name="keyId">The keyId to store.</param>
-        /// <param name="created">The created time to store.</param>
-        /// <param name="value">The <see cref="T"/> value to store.</param>
-        /// <returns><value>True</value> if the store succeeded, <value>False</value> if not found.</returns>
+        /// <inheritdoc />
         public virtual bool Store(string keyId, DateTimeOffset created, T value)
         {
             lock (dataTable)

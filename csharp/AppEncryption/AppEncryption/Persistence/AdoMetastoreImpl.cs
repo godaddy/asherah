@@ -15,8 +15,8 @@ using Newtonsoft.Json.Linq;
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
-    /// Provides an Ado based implementation of <see cref="IMetastore{T}"/> to store and retrieve
-    /// <seealso cref="JObject"/> values. These values are system keys and intermediate keys used by Asherah to provide
+    /// Provides an Ado based implementation of <see cref="IMetastore{T}"/> to store and retrieve system keys and
+    /// intermediate keys as <see cref="JObject"/> values. These keys are used by Asherah to provide
     /// a hierarchical key structure. It uses the table name "encryption_key" to perform all RDBMS based operations.
     /// Stores the created time in UTC.
     /// </summary>
@@ -50,7 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Initialize a <see cref="AdoMetastoreImpl"/> builder using the provided parameters.
+        /// Initializes a <see cref="AdoMetastoreImpl"/> builder using the provided parameters.
         /// </summary>
         ///
         /// <param name="dbProviderFactory">The <seealso cref="DbProviderFactory"/> object which represents a set of

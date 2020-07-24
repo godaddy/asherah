@@ -20,9 +20,9 @@ using Newtonsoft.Json.Linq;
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
     /// <summary>
-    /// Provides an AWS DynamoDB based implementation of <see cref="IMetastore{T}"/> to store and retrieve
-    /// <see cref="JObject"/> values. These values are system keys and intermediate keys used by Asherah to provide a
-    /// hierarchical key structure. It uses the default table name "EncryptionKey" but it can be configured using
+    /// Provides an AWS DynamoDB based implementation of <see cref="IMetastore{T}"/> to store and retrieve system keys
+    /// and intermediate keys as <see cref="JObject"/> valyes. These are used by Asherah to provide a hierarchical key
+    /// structure. It uses the default table name "EncryptionKey" but it can be configured using
     /// <see cref="IBuildStep.WithTableName"/> option. Stores the created time in unix time seconds.
     /// </summary>
     public class DynamoDbMetastoreImpl : IMetastore<JObject>
@@ -149,7 +149,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Lookup the latest value associated with the keyId. The key needs to be formed using the
+        /// Lookup the latest value associated with the keyId. The DynamoDB partition key is formed using the
         /// <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region suffix to it.
         /// </summary>
         ///
@@ -194,9 +194,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         }
 
         /// <summary>
-        /// Stores the <see cref="JObject"/> value using the specified keyId and created time. The key needs to be
-        /// formed using the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a region
-        /// suffix to it.
+        /// Stores the <see cref="JObject"/> value using the specified keyId and created time. The DynamoDB partition
+        /// key is formed using the <see cref="DynamoDbMetastoreImpl.GetHashKey"/> method, which may or may not add a
+        /// region suffix to it.
         /// </summary>
         ///
         /// <param name="keyId">The keyId to store.</param>
