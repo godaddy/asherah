@@ -104,7 +104,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 {
                     if (options.DynamodbTableName.Length == 0)
                     {
-                        logger.LogError("KeySuffix cannot be blank");
+                        logger.LogError("Table name cannot be blank");
                         Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                         return;
                     }
@@ -112,7 +112,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                     builder.WithTableName(options.DynamodbTableName);
                 }
 
-                if (options.KeySuffix)
+                if (options.EnableKeySuffix)
                 {
                     builder.WithKeySuffix();
                 }
