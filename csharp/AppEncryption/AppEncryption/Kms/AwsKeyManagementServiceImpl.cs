@@ -27,7 +27,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
 {
     /// <summary>
     /// Uses the AWS Key Management Service to provide an implementation of <see cref="KeyManagementService"/>. It
-    /// provides a multi-region support, i.e. you can encrypt data in one region and decrypt it using the keys from
+    /// provides multi-region support, i.e. you can encrypt data in one region and decrypt it using the keys from
     /// another region.
     /// The message format is:
     /// <code>
@@ -105,10 +105,11 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         internal OrderedDictionary RegionToArnAndClientDictionary { get; }
 
         /// <summary>
-        /// Initialized a new builder for <see cref="AwsKeyManagementServiceImpl"/> using the provided parameters.
+        /// Initializes a new builder for <see cref="AwsKeyManagementServiceImpl"/> using the provided parameters.
         /// </summary>
         ///
-        /// <param name="regionToArnDictionary">A dictionary with region and arn's as the key value pairs.</param>
+        /// <param name="regionToArnDictionary">A dictionary with region and arn of the KMS key(s) as key value pairs.
+        /// </param>
         /// <param name="region">Preferred region to use.</param>
         /// <returns></returns>
         public static Builder NewBuilder(Dictionary<string, string> regionToArnDictionary, string region)
@@ -351,7 +352,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             /// Initializes the builder for <see cref="AwsKeyManagementServiceImpl"/> class with the specified options.
             /// </summary>
             ///
-            /// <param name="regionToArnDictionary">A dictionary with region and arn's as key value pairs.</param>
+            /// <param name="regionToArnDictionary">A dictionary with region and arn of the KMS key(s) as key value
+            /// pairs.</param>
             /// <param name="region">The preferred region to choose.</param>
             public Builder(Dictionary<string, string> regionToArnDictionary, string region)
             {
@@ -360,7 +362,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
 
             /// <summary>
-            /// Builds the <see cref="AwsKeyManagementServiceImpl"/> object with the configured options.
+            /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> object with the parameters specified in
+            /// the <see cref="Builder"/>.
             /// </summary>
             ///
             /// <returns>The fully instantiated <see cref="AwsKeyManagementServiceImpl"/> object.</returns>

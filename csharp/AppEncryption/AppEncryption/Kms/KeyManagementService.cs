@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     public abstract class KeyManagementService
     {
         /// <summary>
-        /// Encrypts a crypto key using the implemented key management service.
+        /// Encrypts a <see cref="CryptoKey"/> using the implemented key management service.
         /// </summary>
         ///
         /// <param name="key">The key to encrypt.</param>
