@@ -1,4 +1,4 @@
-package appencryption_test
+package appencryption
 
 import (
 	"fmt"
@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/godaddy/asherah/go/appencryption"
 )
 
 type closeSpy struct {
@@ -33,18 +31,18 @@ func (s *closeSpy) SetClosed() {
 }
 
 type sessionBucket struct {
-	closeSpies map[*appencryption.Session]*closeSpy
+	closeSpies map[*Session]*closeSpy
 	mu         sync.Mutex
 }
 
-func (b *sessionBucket) load(_ string) (*appencryption.Session, error) {
+func (b *sessionBucket) load(_ string) (*Session, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	return b.newSession(), nil
 }
 
-func (b *sessionBucket) newSession() *appencryption.Session {
+func (b *sessionBucket) newSession() *Session {
 	spy := &closeSpy{}
 
 	s := newSessionWithMockEncryption(func(_ mock.Arguments) {
@@ -58,7 +56,7 @@ func (b *sessionBucket) newSession() *appencryption.Session {
 	return s
 }
 
-func (b *sessionBucket) IsClosed(s *appencryption.Session) bool {
+func (b *sessionBucket) IsClosed(s *Session) bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -71,38 +69,38 @@ func (b *sessionBucket) IsClosed(s *appencryption.Session) bool {
 
 func newSessionBucket() *sessionBucket {
 	return &sessionBucket{
-		closeSpies: make(map[*appencryption.Session]*closeSpy),
+		closeSpies: make(map[*Session]*closeSpy),
 	}
 }
 
-func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) *appencryption.Session {
-	s := new(appencryption.Session)
-	m := new(appencryption.MockEncryption)
+func newSessionWithMockEncryption(callbacks ...func(mock.Arguments)) *Session {
+	s := new(Session)
+	m := new(MockEncryption)
 	call := m.On("Close").Return(nil)
 
 	for i := range callbacks {
 		call = call.Run(callbacks[i])
 	}
 
-	appencryption.SessionInjectEncryption(s, m)
+	sessionInjectEncryption(s, m)
 
 	return s
 }
 
 func TestNewSessionCache(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
-		loader := func(id string) (*appencryption.Session, error) {
-			return &appencryption.Session{}, nil
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
+		loader := func(id string) (*Session, error) {
+			return &Session{}, nil
 		}
 
-		cache := appencryption.NewSessionCache(loader, policy)
+		cache := newSessionCache(loader, policy)
 		defer cache.Close()
 
 		require.NotNil(t, cache)
 	})
 }
 
-func withEachEngine(t *testing.T, testFunc func(*testing.T, *appencryption.CryptoPolicy)) {
+func withEachEngine(t *testing.T, testFunc func(*testing.T, *CryptoPolicy)) {
 	var engines = [...]string{
 		"mango",
 		"ristretto",
@@ -110,8 +108,8 @@ func withEachEngine(t *testing.T, testFunc func(*testing.T, *appencryption.Crypt
 
 	for i := range engines {
 		engine := engines[i]
-		policy := appencryption.NewCryptoPolicy(
-			appencryption.WithSessionCacheEngine(engine),
+		policy := NewCryptoPolicy(
+			WithSessionCacheEngine(engine),
 		)
 
 		t.Run(fmt.Sprintf("WithEngine %s", engine), func(t *testing.T) {
@@ -121,29 +119,29 @@ func withEachEngine(t *testing.T, testFunc func(*testing.T, *appencryption.Crypt
 }
 
 func TestNewSessionCachePanicsWithUnknownEngine(t *testing.T) {
-	loader := func(id string) (*appencryption.Session, error) {
-		return &appencryption.Session{}, nil
+	loader := func(id string) (*Session, error) {
+		return &Session{}, nil
 	}
 
 	engine := "bogus"
-	policy := appencryption.NewCryptoPolicy(
-		appencryption.WithSessionCacheEngine(engine),
+	policy := NewCryptoPolicy(
+		WithSessionCacheEngine(engine),
 	)
 
 	assert.PanicsWithValue(t, "invalid session cache engine: "+engine, func() {
-		appencryption.NewSessionCache(loader, policy)
+		newSessionCache(loader, policy)
 	})
 }
 
 func TestSessionCacheGetUsesLoader(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		session := newSessionWithMockEncryption()
 
-		loader := func(id string) (*appencryption.Session, error) {
+		loader := func(id string) (*Session, error) {
 			return session, nil
 		}
 
-		cache := appencryption.NewSessionCache(loader, policy)
+		cache := newSessionCache(loader, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
@@ -155,12 +153,12 @@ func TestSessionCacheGetUsesLoader(t *testing.T) {
 }
 
 func TestSessionCacheGetReturnLoaderError(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
-		loader := func(id string) (*appencryption.Session, error) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
+		loader := func(id string) (*Session, error) {
 			return nil, assert.AnError
 		}
 
-		cache := appencryption.NewSessionCache(loader, policy)
+		cache := newSessionCache(loader, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
@@ -172,11 +170,11 @@ func TestSessionCacheGetReturnLoaderError(t *testing.T) {
 }
 
 func TestSessionCacheCount(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		totalSessions := 10
 		b := newSessionBucket()
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
@@ -190,19 +188,19 @@ func TestSessionCacheCount(t *testing.T) {
 }
 
 func TestSessionCacheMaxCount(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		totalSessions := 20
 		maxSessions := 10
 		b := newSessionBucket()
 
 		policy.SessionCacheMaxSize = maxSessions
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
 
-		sessions := make([]*appencryption.Session, totalSessions)
+		sessions := make([]*Session, totalSessions)
 		for i := 0; i < totalSessions; i++ {
 			s, err := cache.Get(strconv.Itoa(i))
 
@@ -232,7 +230,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 }
 
 func TestSessionCacheDuration(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		ttl := time.Millisecond * 100
 
 		// can't use more than 16 sessions here as that is the max drain
@@ -242,7 +240,7 @@ func TestSessionCacheDuration(t *testing.T) {
 
 		policy.SessionCacheDuration = ttl
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
@@ -270,10 +268,10 @@ func TestSessionCacheDuration(t *testing.T) {
 }
 
 func TestSharedSessionCloseOnCacheClose(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		b := newSessionBucket()
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		s, err := cache.Get("my-item")
@@ -290,12 +288,12 @@ func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 }
 
 func TestSharedSessionCloseOnEviction(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		b := newSessionBucket()
 
 		policy.SessionCacheMaxSize = 1
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
@@ -321,10 +319,10 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 }
 
 func TestSharedSessionCloseDoesNotCloseUnderlyingSession(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		b := newSessionBucket()
 
-		cache := appencryption.NewSessionCache(b.load, policy)
+		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()

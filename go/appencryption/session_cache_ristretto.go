@@ -10,7 +10,7 @@ import (
 // Ristretto cache library.
 type ristrettoCache struct {
 	inner   *ristretto.Cache
-	loader  SessionLoaderFunc
+	loader  sessionLoaderFunc
 	ttl     time.Duration
 	maxSize int64
 }
@@ -54,11 +54,11 @@ func (r *ristrettoCache) Close() {
 
 func ristrettoOnEvict(h, c uint64, value interface{}, _ int64) {
 	if s, ok := value.(*Session); ok {
-		go s.encryption.(*SharedEncryption).Remove()
+		go s.encryption.(*sharedEncryption).Remove()
 	}
 }
 
-func newRistrettoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *ristrettoCache {
+func newRistrettoCache(sessionLoader sessionLoaderFunc, policy *CryptoPolicy) *ristrettoCache {
 	capacity := int64(policy.SessionCacheMaxSize)
 	conf := &ristretto.Config{
 		NumCounters: 10 * capacity,

@@ -7,17 +7,17 @@ import (
 	mango "github.com/goburrow/cache"
 )
 
-type SessionCache interface {
+type sessionCache interface {
 	Get(id string) (*Session, error)
 	Count() int
 	Close()
 }
 
-// mangoCache is a SessionCache implementation based on goburrow's
+// mangoCache is a sessionCache implementation based on goburrow's
 // Mango cache (https://github.com/goburrow/cache).
 type mangoCache struct {
 	inner  mango.LoadingCache
-	loader SessionLoaderFunc
+	loader sessionLoaderFunc
 }
 
 func (m *mangoCache) Get(id string) (*Session, error) {
@@ -46,7 +46,7 @@ func (m *mangoCache) get(id string) (*Session, error) {
 }
 
 func incrementSharedSessionUsage(s *Session) {
-	s.encryption.(*SharedEncryption).incrementUsage()
+	s.encryption.(*sharedEncryption).incrementUsage()
 }
 
 func (m *mangoCache) Count() int {
@@ -63,10 +63,10 @@ func (m *mangoCache) Close() {
 }
 
 func mangoRemovalListener(_ mango.Key, v mango.Value) {
-	go v.(*Session).encryption.(*SharedEncryption).Remove()
+	go v.(*Session).encryption.(*sharedEncryption).Remove()
 }
 
-func newMangoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *mangoCache {
+func newMangoCache(sessionLoader sessionLoaderFunc, policy *CryptoPolicy) *mangoCache {
 	return &mangoCache{
 		loader: sessionLoader,
 		inner: mango.NewLoadingCache(
@@ -80,9 +80,9 @@ func newMangoCache(sessionLoader SessionLoaderFunc, policy *CryptoPolicy) *mango
 	}
 }
 
-// SharedEncryption is used to track the number of concurrent users to ensure sessions remain
+// sharedEncryption is used to track the number of concurrent users to ensure sessions remain
 // cached while in use.
-type SharedEncryption struct {
+type sharedEncryption struct {
 	Encryption
 
 	accessCounter int
@@ -92,14 +92,14 @@ type SharedEncryption struct {
 	closed bool
 }
 
-func (s *SharedEncryption) incrementUsage() {
+func (s *sharedEncryption) incrementUsage() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.accessCounter++
 }
 
-func (s *SharedEncryption) Close() error {
+func (s *sharedEncryption) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	defer s.cond.Broadcast()
@@ -112,7 +112,7 @@ func (s *SharedEncryption) Close() error {
 	return nil
 }
 
-func (s *SharedEncryption) Remove() {
+func (s *sharedEncryption) Remove() {
 	s.mu.Lock()
 
 	for !s.closed {
@@ -124,29 +124,29 @@ func (s *SharedEncryption) Remove() {
 	s.mu.Unlock()
 }
 
-// SessionLoaderFunc retrieves a Session corresponding to the given partition ID.
-type SessionLoaderFunc func(id string) (*Session, error)
+// sessionLoaderFunc retrieves a Session corresponding to the given partition ID.
+type sessionLoaderFunc func(id string) (*Session, error)
 
-// NewSessionCache returns a new SessionCache with the configured cache implementation
+// newSessionCache returns a new SessionCache with the configured cache implementation
 // using the provided SessionLoaderFunc and CryptoPolicy.
-func NewSessionCache(loader SessionLoaderFunc, policy *CryptoPolicy) SessionCache {
+func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCache {
 	wrapper := func(id string) (*Session, error) {
 		s, err := loader(id)
 		if err != nil {
 			return nil, err
 		}
 
-		_, ok := s.encryption.(*SharedEncryption)
+		_, ok := s.encryption.(*sharedEncryption)
 		if !ok {
 			mu := new(sync.Mutex)
 			orig := s.encryption
-			wrapped := &SharedEncryption{
+			wrapped := &sharedEncryption{
 				Encryption: orig,
 				mu:         mu,
 				cond:       sync.NewCond(mu),
 			}
 
-			SessionInjectEncryption(s, wrapped)
+			sessionInjectEncryption(s, wrapped)
 		}
 
 		return s, nil
@@ -162,7 +162,7 @@ func NewSessionCache(loader SessionLoaderFunc, policy *CryptoPolicy) SessionCach
 	}
 }
 
-// SessionInjectEncryption is used to inject e into s and is primarily used for testing.
-func SessionInjectEncryption(s *Session, e Encryption) {
+// sessionInjectEncryption is used to inject e into s and is primarily used for testing.
+func sessionInjectEncryption(s *Session, e Encryption) {
 	s.encryption = e
 }

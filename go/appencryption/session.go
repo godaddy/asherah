@@ -13,7 +13,7 @@ import (
 // SessionFactory is used to create new encryption sessions and manage
 // the lifetime of the intermediate keys.
 type SessionFactory struct {
-	sessionCache  SessionCache
+	sessionCache  sessionCache
 	systemKeys    cache
 	Config        *Config
 	Metastore     Metastore
@@ -64,7 +64,7 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 	}
 
 	if config.Policy.CacheSessions {
-		factory.sessionCache = NewSessionCache(factory.newSession, config.Policy)
+		factory.sessionCache = newSessionCache(factory.newSession, config.Policy)
 	}
 
 	for _, opt := range opts {
