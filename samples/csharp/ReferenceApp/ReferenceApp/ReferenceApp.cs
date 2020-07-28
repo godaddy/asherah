@@ -81,7 +81,7 @@ namespace GoDaddy.Asherah.ReferenceApp
             {
                 logger.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
-                DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder();
+                DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder("us-west-2");
 
                 if (!string.IsNullOrEmpty(options.DynamodbEndpoint))
                 {
@@ -104,7 +104,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 {
                     if (options.DynamodbTableName.Length == 0)
                     {
-                        logger.LogError("KeySuffix cannot be blank");
+                        logger.LogError("Table name cannot be blank");
                         Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                         return;
                     }
@@ -112,16 +112,9 @@ namespace GoDaddy.Asherah.ReferenceApp
                     builder.WithTableName(options.DynamodbTableName);
                 }
 
-                if (options.KeySuffix != null)
+                if (options.EnableKeySuffix)
                 {
-                    if (options.KeySuffix.Length == 0)
-                    {
-                        logger.LogError("KeySuffix cannot be blank");
-                        Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
-                        return;
-                    }
-
-                    builder.WithKeySuffix(options.KeySuffix);
+                    builder.WithKeySuffix();
                 }
 
                 metastore = builder.Build();
