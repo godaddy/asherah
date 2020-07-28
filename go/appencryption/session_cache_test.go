@@ -320,34 +320,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	})
 }
 
-func TestSharedSessionClose(t *testing.T) {
-	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
-		b := newSessionBucket()
-
-		cache := appencryption.NewSessionCache(b.load, policy)
-		require.NotNil(t, cache)
-
-		defer cache.Close()
-
-		for i := 0; i < 2; i++ {
-			s1, err := cache.Get("my-item")
-			require.NoError(t, err)
-			require.NotNil(t, s1)
-			s1.Close()
-
-			assert.Eventually(t, func() bool {
-				return cache.Count() == 1
-			}, time.Second*10, time.Millisecond*100)
-
-			time.Sleep(time.Millisecond * 200)
-
-			// shared sessions arent' actually closed until evicted from the cache
-			assert.False(t, b.IsClosed(s1))
-		}
-	})
-}
-
-func TestSharedSessionNotClosedWhenInUse(t *testing.T) {
+func TestSharedSessionCloseDoesNotCloseUnderlyingSession(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *appencryption.CryptoPolicy) {
 		b := newSessionBucket()
 
@@ -359,18 +332,17 @@ func TestSharedSessionNotClosedWhenInUse(t *testing.T) {
 		s1, err := cache.Get("my-item")
 		require.NoError(t, err)
 		require.NotNil(t, s1)
+
+		// close the session
+		s1.Close()
+
 		assert.Eventually(t, func() bool {
 			return cache.Count() == 1
 		}, time.Second*10, time.Millisecond*100)
 
-		s2, err := cache.Get("my-item")
-		assert.NoError(t, err)
-		assert.Same(t, s1, s2)
+		time.Sleep(time.Millisecond * 200)
 
-		defer s2.Close()
-
-		assert.Eventually(t, func() bool {
-			return cache.Count() == 1 && !b.IsClosed(s1)
-		}, time.Second*10, time.Millisecond*100)
+		// shared sessions aren't actually closed until evicted from the cache
+		assert.False(t, b.IsClosed(s1))
 	})
 }
