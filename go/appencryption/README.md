@@ -197,7 +197,7 @@ cryptoPolicy := appencryption.NewCryptoPolicy(
     appencryption.WithRevokeCheckInterval(30 * time.Minute),
     appencryption.WithSessionCache(),
     appencryption.SessionCacheMaxSize(200),
-    appencryption.WithSessionCacheTTL(5 * time.Minute),
+    appencryption.WithSessionCacheDuration(5 * time.Minute),
 )
 ```
 
