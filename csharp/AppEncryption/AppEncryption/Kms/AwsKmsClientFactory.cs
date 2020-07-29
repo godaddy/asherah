@@ -3,6 +3,9 @@ using Amazon.KeyManagementService;
 
 namespace GoDaddy.Asherah.AppEncryption.Kms
 {
+    /// <summary>
+    /// A class to create AwsKms client based on the region provided.
+    /// </summary>
     public class AwsKmsClientFactory
     {
         internal virtual IAmazonKeyManagementService CreateAwsKmsClient(string region)
