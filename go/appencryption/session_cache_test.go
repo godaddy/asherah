@@ -152,6 +152,39 @@ func TestSessionCacheGetUsesLoader(t *testing.T) {
 	})
 }
 
+func TestSessionCacheGetDoesNotUseLoaderOnHit(t *testing.T) {
+	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
+		calls := 0
+		session := newSessionWithMockEncryption()
+
+		loader := func(id string) (*Session, error) {
+			calls++
+
+			return session, nil
+		}
+
+		cache := newSessionCache(loader, policy)
+		require.NotNil(t, cache)
+
+		defer cache.Close()
+
+		val, err := cache.Get("some-id")
+		require.NoError(t, err)
+		assert.Same(t, session, val)
+		assert.Equal(t, 1, calls, "loader expected to be called once, but it was called %d times", calls)
+
+		// ensure the first item made it into the cache
+		assert.Eventually(t, func() bool {
+			return cache.Count() == 1
+		}, time.Second*10, time.Millisecond*10)
+
+		val2, err := cache.Get("some-id")
+		require.NoError(t, err)
+		assert.Same(t, val, val2)
+		assert.Equal(t, 1, calls, "loader expected to be called once, but it was called %d times", calls)
+	})
+}
+
 func TestSessionCacheGetReturnLoaderError(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		loader := func(id string) (*Session, error) {
