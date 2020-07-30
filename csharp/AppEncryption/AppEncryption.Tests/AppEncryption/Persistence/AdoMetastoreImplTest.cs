@@ -2,7 +2,6 @@ using System;
 using System.Data;
 using System.Data.Common;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
 using Moq;
 using MySql.Data.MySqlClient;
@@ -206,9 +205,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestLoadWithSqlException()
         {
-            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
-                dbProviderFactory,
-                fakeDbConnectionStringBuilder.ConnectionString);
+            AdoMetastoreImpl adoMetastoreImpl =
+                NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
             Option<JObject> actualJsonObject = adoMetastoreImpl.Load(keyId, created.UtcDateTime);
             Assert.Equal(Option<JObject>.None, actualJsonObject);
@@ -226,9 +224,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestLoadLatestWithSqlException()
         {
-            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
-                dbProviderFactory,
-                fakeDbConnectionStringBuilder.ConnectionString);
+            AdoMetastoreImpl adoMetastoreImpl =
+                NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
             Option<JObject> actualJsonObject = adoMetastoreImpl.LoadLatest(keyId);
             Assert.Equal(Option<JObject>.None, actualJsonObject);
@@ -248,9 +245,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestStoreWithSqlExceptionShouldReturnFalse()
         {
-            AdoMetastoreImpl adoMetastoreImpl = new AdoMetastoreImpl(
-                dbProviderFactory,
-                fakeDbConnectionStringBuilder.ConnectionString);
+            AdoMetastoreImpl adoMetastoreImpl =
+                NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
             bool actualValue = adoMetastoreImpl.Store(keyId, DateTimeOffset.UtcNow, new JObject());
             Assert.False(actualValue);
@@ -338,12 +334,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             // Verify that DbConnection is closed at the end of the function call
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
-        }
-
-        [Fact]
-        private void TestKeySuffixShouldReturnEmpty()
-        {
-            Assert.Equal(string.Empty, adoMetastoreImplSpy.Object.GetKeySuffix());
         }
     }
 }
