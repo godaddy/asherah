@@ -3,7 +3,7 @@ package com.godaddy.asherah.appencryption;
 /**
  * An additional layer of abstraction which generates the system key and intermediate key ids.
  * It uses a {@code partitionId} to uniquely identify a {@link Session}, i.e. every partition id should have its own
- * session.
+ * session. A payload encrypted using some partition id, cannot be decrypted using a different one.
  */
 public class Partition {
   private final String partitionId;

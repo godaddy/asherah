@@ -12,6 +12,7 @@ import com.godaddy.asherah.crypto.keys.CryptoKey;
  * cloud agnostic if using a hosted key management service.</p>
  */
 public interface KeyManagementService {
+
   /**
    * Encrypts a key using the current {@code KeyManagementService}.
    *
