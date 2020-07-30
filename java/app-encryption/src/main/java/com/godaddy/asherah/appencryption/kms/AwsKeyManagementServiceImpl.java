@@ -47,14 +47,13 @@ import java.util.stream.StreamSupport;
  * Uses the AWS Key Management Service to provide an implementation of {@link KeyManagementService}. It provides
  * multi-region support, i.e. you can encrypt data in one region and decrypt it using the keys from another region.
  * The message format is:
- *
- *  {
- *    "encryptedKey": "<base64_encoded_bytes>",
+ *   {
+ *    "encryptedKey": "&lt;base64_encoded_bytes&gt;",
  *    "kmsKeks": [
  *      {
- *        "region": "<aws_region>",
- *        "arn": "<arn>",
- *        "encryptedKek": "<base64_encoded_bytes>"
+ *        "region": "&lt;aws_region&gt;",
+ *        "arn": "&lt;arn&gt;",
+ *        "encryptedKek": "&lt;base64_encoded_bytes&gt;"
  *      },
  *      ...
  *    ]
