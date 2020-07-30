@@ -112,6 +112,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Lookup the latest value associated with the keyId. The DynamoDB partition key is formed using the
+   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @return The latest value associated with the keyId, if any.
+   */
   @Override
   public Optional<JSONObject> loadLatest(final String keyId) {
     return loadLatestTimer.record(() -> {
@@ -138,6 +145,16 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Stores the value using the specified keyId and created time. The DynamoDB partition key is formed using the
+   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @param created The created time part of the lookup key.
+   * @param value The value to store.
+   * @return {@code true} if the store succeeded, false if the store failed for a known condition
+   *         e.g., trying to save a duplicate value should return false, not throw an exception.
+   */
   @Override
   public boolean store(final String keyId, final Instant created, final JSONObject value) {
     return storeTimer.record(() -> {

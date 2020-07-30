@@ -43,24 +43,26 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * Uses the AWS Key Management Service to provide an implementation of {@link KeyManagementService}. It provides
+ * multi-region support, i.e. you can encrypt data in one region and decrypt it using the keys from another region.
+ * The message format is:
+ *
+ *  {
+ *    "encryptedKey": "<base64_encoded_bytes>",
+ *    "kmsKeks": [
+ *      {
+ *        "region": "<aws_region>",
+ *        "arn": "<arn>",
+ *        "encryptedKek": "<base64_encoded_bytes>"
+ *      },
+ *      ...
+ *    ]
+ *  }
+ */
 public class AwsKeyManagementServiceImpl implements KeyManagementService {
   private static final Logger logger = LoggerFactory.getLogger(AwsKeyManagementServiceImpl.class);
 
-  /*
-   *  message format is:
-   *
-   *  {
-   *    "encryptedKey": "<base64_encoded_bytes>",
-   *    "kmsKeks": [
-   *      {
-   *        "region": "<aws_region>",
-   *        "arn": "<arn>",
-   *        "encryptedKek": "<base64_encoded_bytes>"
-   *      },
-   *      ...
-   *    ]
-   *  }
-   */
   static final String ENCRYPTED_KEY = "encryptedKey";
   static final String KMS_KEKS_KEY = "kmsKeks";
 

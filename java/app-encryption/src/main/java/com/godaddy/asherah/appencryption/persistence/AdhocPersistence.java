@@ -19,8 +19,10 @@ public class AdhocPersistence<T> implements Persistence<T> {
    * Creates a new {@code AdhocPersistence} instance. The {@code load} and {@code store} functions need to be
    * implemented separately.
    *
-   * @param load A {@link java.util.function.Function} object that loads a record from the persistent store.
-   * @param store a {@link java.util.function.BiConsumer} object that stores a record to the persistent store.
+   * @param load A user-defined {@link java.util.function.Function} object that loads a record from the persistent
+   *             store.
+   * @param store A user-defined {@link java.util.function.BiConsumer} object that stores a record to the persistent
+   *              store.
    */
   public AdhocPersistence(final Function<String, Optional<T>> load, final BiConsumer<String, T> store) {
     this.persistenceLoad = load;

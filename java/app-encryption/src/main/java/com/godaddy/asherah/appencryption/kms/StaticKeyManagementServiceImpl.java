@@ -8,6 +8,10 @@ import com.godaddy.asherah.crypto.keys.SecretCryptoKey;
 import com.godaddy.asherah.securememory.Secret;
 import com.godaddy.asherah.securememory.TransientSecretFactory;
 
+/**
+ * An implementation of {@link KeyManagementService} that uses {@link BouncyAes256GcmCrypto} to encrypt/decrypt keys.
+ * Note: This should NEVER be used in production.
+ */
 public class StaticKeyManagementServiceImpl implements KeyManagementService {
   private final CryptoKey encryptionKey;
   private final BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
