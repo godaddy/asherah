@@ -133,7 +133,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is an {@link java.time.Instant} object.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param instant The value associated with the key.
    */
   public void put(final String key, final Instant instant) {
@@ -143,7 +143,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is an {@link java.lang.String}.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param string The value associated with the key.
    */
   public void put(final String key, final String string) {
@@ -153,7 +153,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is a {@code byte[]}.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param bytes The value associated with the key.
    */
   public void put(final String key, final byte[] bytes) {
@@ -163,7 +163,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is a boolean.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param bool The value associated with the key.
    */
   public void put(final String key, final boolean bool) {
@@ -173,7 +173,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is a {@link org.json.JSONObject} object.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param json The value associated with the key.
    */
   public void put(final String key, final JSONObject json) {
@@ -183,7 +183,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is a {@code Json} object.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param json The value associated with the key.
    */
   public void put(final String key, final Json json) {
@@ -193,7 +193,7 @@ public class Json {
   /**
    * Adds a new entry to the {@code Json} object where the value is a {@link java.util.List}.
    *
-   * @param key The key to add to the {@code Json object}.
+   * @param key The key to add to the {@code Json} object.
    * @param jsonList The value associated with the key.
    */
   public void put(final String key, final List<?> jsonList) {
@@ -201,7 +201,7 @@ public class Json {
   }
 
   /**
-   * Converts the {@code Json} object  to a string.
+   * Converts the {@code Json} object to a string.
    *
    * @return The json document as a string.
    */
@@ -210,7 +210,7 @@ public class Json {
   }
 
   /**
-   * Converts the {@code Json} object  to a byte array.
+   * Converts the {@code Json} object to a byte array.
    *
    * @return The json document as a byte array.
    */
@@ -219,7 +219,7 @@ public class Json {
   }
 
   /**
-   * Converts the {@code Json} object  to a {@link org.json.JSONObject} object.
+   * Converts the {@code Json} object to a {@link org.json.JSONObject} object.
    *
    * @return The json document a {@link org.json.JSONObject} object.
    */
