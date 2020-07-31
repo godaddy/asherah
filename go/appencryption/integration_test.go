@@ -110,7 +110,7 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibilit
 	verify := assert.New(suite.T())
 
 	testContext := persistencetest.NewDynamoDBTestContext(instant)
-	defer testContext.TearDown()
+	defer testContext.CleanDB()
 
 	testContext.SeedDB()
 
@@ -169,7 +169,7 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 	verify := assert.New(suite.T())
 
 	testContext := persistencetest.NewDynamoDBTestContext(instant)
-	defer testContext.TearDown()
+	defer testContext.CleanDB()
 
 	testContext.SeedDB()
 
