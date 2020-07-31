@@ -73,7 +73,7 @@ public class Json {
    * Gets the {@code Json} associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
-   * @return An {@link Optional} Json value if the key exists, else null
+   * @return An {@link Optional} Json value which is empty, if the key does not exist.
    */
   public Optional<Json> getOptionalJson(final String key) {
     return Optional.ofNullable(document.optJSONObject(key)).map(Json::new);
@@ -93,7 +93,7 @@ public class Json {
    * Converts the key into a newly-allocated byte array.
    *
    * @param key The key whose value needs to be retrieved.
-   * @return The value associated with the key, as a bytes array.
+   * @return The value associated with the key, as a byte array.
    */
   public byte[] getBytes(final String key) {
     return Base64.getDecoder().decode(document.getString(key));
@@ -114,7 +114,7 @@ public class Json {
    * Gets the boolean value associated with a given key.
    *
    * @param key The key whose value needs to be retrieved.
-   * @return An {@code Optional<Boolean>} if it exists, else null.
+   * @return An {@code Optional<Boolean>} value which is empty, if the key does not exist.
    */
   public Optional<Boolean> getOptionalBoolean(final String key) {
     return Optional.ofNullable(document.optBoolean(key));
@@ -141,7 +141,7 @@ public class Json {
   }
 
   /**
-   * Adds a new entry to the {@code Json} object where the value is an {@link java.lang.String}.
+   * Adds a new entry to the {@code Json} object where the value is a {@link java.lang.String}.
    *
    * @param key The key to add to the {@code Json} object.
    * @param string The value associated with the key.
@@ -221,7 +221,7 @@ public class Json {
   /**
    * Converts the {@code Json} object to a {@link org.json.JSONObject} object.
    *
-   * @return The json document a {@link org.json.JSONObject} object.
+   * @return The json document as a {@link org.json.JSONObject} object.
    */
   public JSONObject toJsonObject() {
     return document;
