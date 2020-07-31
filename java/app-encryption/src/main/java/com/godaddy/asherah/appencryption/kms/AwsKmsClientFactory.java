@@ -4,7 +4,7 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 
 /**
- * A class to create AwsKms client based on the region provided.
+ * A factory to create an AWS KMS client based on the region provided
  */
 class AwsKmsClientFactory {
   AWSKMS createAwsKmsClient(final String region) {

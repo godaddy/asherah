@@ -6,10 +6,10 @@ import java.util.function.BiFunction;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 
 /**
- * <p> The {@code KeyManagementService} interface provides methods that
+ * The {@code KeyManagementService} interface provides methods that
  * can be used to encrypt and decrypt system keys. It enables
  * the user to use an HSM for providing the Master Key or staying
- * cloud agnostic if using a hosted key management service.</p>
+ * cloud agnostic if using a hosted key management service.
  */
 public interface KeyManagementService {
 

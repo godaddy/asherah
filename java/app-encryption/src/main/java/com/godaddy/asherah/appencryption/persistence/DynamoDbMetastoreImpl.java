@@ -74,7 +74,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   /**
    * Checks if the metastore has key suffixes enabled, and adds a region suffix to the {@code key} if it does.
-   * A key suffix is needed to  enable Global Table support. Adding a suffix to keys prevents multi-region writes from
+   * A key suffix is needed to enable Global Table support. Adding a suffix to keys prevents multi-region writes from
    * clobbering each other.
    *
    * @param key The keyId part of the lookup key.
