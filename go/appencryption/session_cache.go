@@ -21,7 +21,7 @@ type mangoCache struct {
 }
 
 func (m *mangoCache) Get(id string) (*Session, error) {
-	sess, err := m.get(id)
+	sess, err := m.getOrAdd(id)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,8 @@ func (m *mangoCache) Get(id string) (*Session, error) {
 	return sess, nil
 }
 
-func (m *mangoCache) get(id string) (*Session, error) {
+func (m *mangoCache) getOrAdd(id string) (*Session, error) {
+	// m.inner.Get will add a new item via the loader on cache miss
 	val, err := m.inner.Get(id)
 	if err != nil {
 		return nil, err
@@ -88,8 +89,6 @@ type sharedEncryption struct {
 	accessCounter int
 	mu            *sync.Mutex
 	cond          *sync.Cond
-
-	closed bool
 }
 
 func (s *sharedEncryption) incrementUsage() {
@@ -105,9 +104,6 @@ func (s *sharedEncryption) Close() error {
 	defer s.cond.Broadcast()
 
 	s.accessCounter--
-	if s.accessCounter == 0 {
-		s.closed = true
-	}
 
 	return nil
 }
@@ -115,7 +111,7 @@ func (s *sharedEncryption) Close() error {
 func (s *sharedEncryption) Remove() {
 	s.mu.Lock()
 
-	for !s.closed {
+	for s.accessCounter != 0 {
 		s.cond.Wait()
 	}
 
