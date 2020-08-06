@@ -28,6 +28,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Provides an AWS DynamoDB based implementation of {@link Metastore} to store and retrieve
+ * {@link com.godaddy.asherah.appencryption.utils.Json} values for system and intermediate keys. It uses the default
+ * table name "EncryptionKey" but that can be configured using {@link Builder#withTableName(String)} " option.
+ * Creation time is stored in unix time seconds.
+ */
 public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
@@ -47,6 +53,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   // Table instance can be cached since thread-safe and no state other than description, which we don't use
   private final Table table;
 
+  /**
+   * Initialize a {@code DynamoDbMetastoreImpl} builder with the given region.
+   *
+   * @param region The preferred region for the DynamoDb. This can be overridden using the
+   * {@link Builder#withRegion(String)} builder step.
+   * @return The current {@code Builder} instance.
+   */
   public static Builder newBuilder(final String region) {
     return new Builder(region);
   }
@@ -61,7 +74,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   /**
    * Checks if the metastore has key suffixes enabled, and adds a region suffix to the {@code key} if it does.
-   * This is done to enable Global Table support. Adding a suffix to keys prevents multi-region writes from
+   * A key suffix is needed to enable Global Table support. Adding a suffix to keys prevents multi-region writes from
    * clobbering each other.
    *
    * @param key The keyId part of the lookup key.
@@ -76,12 +89,12 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   @Override
-  public Optional<JSONObject> load(final String key, final Instant created) {
+  public Optional<JSONObject> load(final String keyId, final Instant created) {
     return loadTimer.record(() -> {
       try {
         GetItemOutcome outcome = table.getItemOutcome(new GetItemSpec()
             .withPrimaryKey(
-                PARTITION_KEY, key,
+                PARTITION_KEY, keyId,
                 SORT_KEY, created.getEpochSecond())
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withConsistentRead(true)); // always use strong consistency
@@ -99,13 +112,20 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Lookup the latest value associated with the keyId. The DynamoDB partition key is formed using the
+   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @return The latest value associated with the keyId, if any.
+   */
   @Override
-  public Optional<JSONObject> loadLatest(final String key) {
+  public Optional<JSONObject> loadLatest(final String keyId) {
     return loadLatestTimer.record(() -> {
       try {
         // Have to use query api to use limit and reverse sort order
         ItemCollection<QueryOutcome> itemCollection = table.query(new QuerySpec()
-            .withHashKey(PARTITION_KEY, getHashKey(key))
+            .withHashKey(PARTITION_KEY, getHashKey(keyId))
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withScanIndexForward(false) // sorts descending
             .withMaxResultSize(1) // limit 1
@@ -125,8 +145,18 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Stores the value using the specified keyId and created time. The DynamoDB partition key is formed using the
+   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @param created The created time part of the lookup key.
+   * @param value The value to store.
+   * @return {@code true} if the store succeeded, false if the store failed for a known condition
+   *         e.g., trying to save a duplicate value should return false, not throw an exception.
+   */
   @Override
-  public boolean store(final String key, final Instant created, final JSONObject value) {
+  public boolean store(final String keyId, final Instant created, final JSONObject value) {
     return storeTimer.record(() -> {
       try {
         // Note conditional expression using attribute_not_exists has special semantics. Can be used on partition OR
@@ -135,7 +165,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         // required.
         Item item = new Item()
             .withPrimaryKey(
-                PARTITION_KEY, getHashKey(key),
+                PARTITION_KEY, getHashKey(keyId),
                 SORT_KEY, created.getEpochSecond())
             .withMap(ATTRIBUTE_KEY_RECORD, value.toMap());
         table.putItem(new PutItemSpec()
@@ -146,7 +176,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       }
       catch (ConditionalCheckFailedException e) {
         // Duplicate key exists
-        logger.info("Attempted to create duplicate key: {} {}", key, created);
+        logger.info("Attempted to create duplicate key: {} {}", keyId, created);
         return false;
       }
       catch (SdkBaseException se) {
@@ -180,7 +210,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     private boolean hasKeySuffix = false;
     private boolean hasRegion = false;
 
-    public Builder(final String region) {
+    private Builder(final String region) {
       this.preferredRegion = region;
     }
 
@@ -226,39 +256,47 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   public interface EndPointStep {
     /**
-     * Adds EndPoint config to the AWS DynamoDb client
-     * @param endPoint the service endpoint either with or without the protocol
-     * @param signingRegion the region to use for SigV4 signing of requests (e.g. us-west-1)
-     * @return The current {@code BuildStep} instance
+     * Adds Endpoint config to the AWS DynamoDb client.
+     *
+     * @param endPoint The service endpoint either with or without the protocol.
+     * @param signingRegion The region to use for SigV4 signing of requests (e.g. us-west-1).
+     * @return The current {@code BuildStep} instance with end point configuration.
      */
     BuildStep withEndPointConfiguration(String endPoint, String signingRegion);
   }
 
   public interface RegionStep {
     /**
-     * Specifies the region for the AWS DynamoDb client
-     * @param region The region for the DynamoDb client
-     * @return The current {@code BuildStep} instance
+     * Specifies the region for the AWS DynamoDb client.
+     *
+     * @param region The region for the DynamoDb client.
+     * @return The current {@code BuildStep} instance with a client region. This overrides the region specified as the
+     *         {@code newBuilder} input parameter.
      */
     BuildStep withRegion(String region);
   }
 
   public interface BuildStep {
     /**
-     * Specifies the name of the table
-     * @param tableName The name of the table
+     * Specifies the name of the table.
+     *
+     * @param tableName A custom name for the table.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withTableName(String tableName);
 
     /**
-     * Specifies whether key suffix should be enabled for DynamoDB
+     * Specifies whether key suffix should be enabled for DynamoDB. This should be enabled for Global Table support.
+     * Adding a suffix to keys prevents multi-region writes from clobbering each other and ensures that no keys are
+     * lost.
+     *
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withKeySuffix();
 
     /**
      * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
+     *
      * @return The fully instantiated {@code DynamoDbMetastoreImpl}.
      */
     DynamoDbMetastoreImpl build();

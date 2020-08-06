@@ -11,21 +11,24 @@ import java.util.UUID;
 public interface Persistence<T> {
   /**
    * Lookup the key and return its associated value, if any.
-   * @param key the key to lookup
+   *
+   * @param key The key to lookup.
    * @return The value associated with the key, if any.
    */
   Optional<T> load(String key);
 
   /**
    * Stores the value using the specified key.
-   * @param key the key to associate with
-   * @param value the value to store
+   *
+   * @param key The key to associate with.
+   * @param value The value to store.
    */
   void store(String key, T value);
 
   /**
    * Stores the value and returns its associated generated key for future lookup (e.g. UUID, etc.).
-   * @param value the value to store
+   *
+   * @param value The value to store.
    * @return The generated key that can be used for looking up this value.
    */
   default String store(final T value) {
@@ -37,7 +40,8 @@ public interface Persistence<T> {
   /**
    * Generates a persistence key, possibly based on value or type, for use with store calls with no predefined key.
    * Defaults to a random UUID.
-   * @param value the value which the generated key may be based off
+   *
+   * @param value The value which the generated key may be based off.
    * @return The key that was generated.
    */
   default String generateKey(T value) {
