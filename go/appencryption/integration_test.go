@@ -63,6 +63,10 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 }
 
 func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
+	if testing.Short() {
+		suite.T().Skip("too slow for testing.Short")
+	}
+
 	instant := time.Now().Add(-24 * time.Hour).Unix()
 	verify := assert.New(suite.T())
 

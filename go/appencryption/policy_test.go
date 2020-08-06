@@ -17,19 +17,37 @@ func Test_NewCryptoPolicy_WithDefaults(t *testing.T) {
 	assert.Equal(t, DefaultCreateDatePrecision, p.CreateDatePrecision)
 	assert.True(t, p.CacheSystemKeys)
 	assert.True(t, p.CacheIntermediateKeys)
+	assert.False(t, p.CacheSessions)
+	assert.Equal(t, DefaultSessionCacheMaxSize, p.SessionCacheMaxSize)
+	assert.Equal(t, DefaultSessionCacheDuration, p.SessionCacheDuration)
+	assert.Equal(t, DefaultSessionCacheEngine, p.SessionCacheEngine)
 }
 
 func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
+	revokeCheckInterval := time.Second * 156
+	expireAfterDuration := time.Second * 100
+	sessionCacheMaxSize := 42
+	sessionCacheDuration := time.Second * 42
+	sessionCacheEngine := "ristretto"
+
 	policy := NewCryptoPolicy(
-		WithRevokeCheckInterval(time.Second*156),
-		WithExpireAfterDuration(time.Second*100),
+		WithRevokeCheckInterval(revokeCheckInterval),
+		WithExpireAfterDuration(expireAfterDuration),
 		WithNoCache(),
+		WithSessionCache(),
+		WithSessionCacheMaxSize(sessionCacheMaxSize),
+		WithSessionCacheDuration(sessionCacheDuration),
+		WithSessionCacheEngine(sessionCacheEngine),
 	)
 
-	assert.Equal(t, time.Second*156, policy.RevokeCheckInterval)
-	assert.Equal(t, time.Second*100, policy.ExpireKeyAfter)
+	assert.Equal(t, revokeCheckInterval, policy.RevokeCheckInterval)
+	assert.Equal(t, expireAfterDuration, policy.ExpireKeyAfter)
 	assert.False(t, policy.CacheSystemKeys)
 	assert.False(t, policy.CacheIntermediateKeys)
+	assert.True(t, policy.CacheSessions)
+	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
+	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
+	assert.Equal(t, sessionCacheEngine, policy.SessionCacheEngine)
 }
 
 func Test_IsKeyExpired(t *testing.T) {

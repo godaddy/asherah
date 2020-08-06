@@ -8,9 +8,11 @@ Usage:
 
 Application Options:
   -c, --count=                  Number of loops to run per session. (default: 1000)
+  -i, --iterations=             Number of times each session loop will run. (default: 1)
   -s, --sessions=               Number of sessions to run concurrently. (default: 20)
   -p, --perf                    Print performance metrics
   -l, --log                     Enables logging to stdout
+  -S, --session-cache           Enables the shared session cache.
   -r, --results                 Prints input/output from encryption library
   -m, --metrics                 Dumps metrics to stdout in JSON format
   -d, --duration=               Time to run tests for. If not provided, the app will run (sessions X count) then exit

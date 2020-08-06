@@ -160,7 +160,7 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 | AWS KMS Support            | Yes  | Yes  | Yes |
 | RDBMS Metastore            | Yes  | Yes  | Yes |
 | DynamoDB Metastore         | Yes  | Yes  | Yes |
-| Session caching            | Yes  | Yes  | No  |
+| Session caching            | Yes  | Yes  | Yes |
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
 | Store/Load pattern.        | Yes  | Yes  | No  |
 

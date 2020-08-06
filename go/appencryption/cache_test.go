@@ -445,6 +445,10 @@ func (suite *CacheTestSuite) TestNeverCache_Close() {
 }
 
 func (suite *CacheTestSuite) TestSharedKeyCache_GetOrLoad() {
+	if testing.Short() {
+		suite.T().Skip("too slow for testing.Short")
+	}
+
 	var (
 		cache   = newKeyCache(NewCryptoPolicy())
 		i       = 0

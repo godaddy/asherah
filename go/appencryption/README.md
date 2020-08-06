@@ -8,6 +8,7 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
     * [Define the Metastore](#define-the-metastore)
     * [Define the Key Management Service](#define-the-key-management-service)
     * [Define the Crypto Policy](#define-the-crypto-policy)
+      * [(Optional) Enable Session Caching](#optional-enable-session-caching)
     * [(Optional) Enable Metrics](#optional-enable-metrics)
     * [Build a Session Factory](#build-a-session-factory)
     * [Performing Cryptographic Operations](#performing-cryptographic-operations)
@@ -181,6 +182,23 @@ functional options.
 cryptoPolicy := appencryption.NewCryptoPolicy(
     appencryption.WithExpireAfterDuration(24 * time.Hour),
     appencryption.WithRevokeCheckInterval(30 * time.Minute))
+```
+
+#### (Optional) Enable Session Caching
+
+Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and
+the shared session can't be used by the calling app.
+
+To enable session caching, simply use the `WithSessionCache` option when creating the crypto policy.
+
+```go
+cryptoPolicy := appencryption.NewCryptoPolicy(
+    appencryption.WithExpireAfterDuration(24 * time.Hour),
+    appencryption.WithRevokeCheckInterval(30 * time.Minute),
+    appencryption.WithSessionCache(),
+    appencryption.SessionCacheMaxSize(200),
+    appencryption.WithSessionCacheDuration(5 * time.Minute),
+)
 ```
 
 ### (Optional) Enable Metrics

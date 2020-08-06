@@ -13,6 +13,7 @@ import (
 // SessionFactory is used to create new encryption sessions and manage
 // the lifetime of the intermediate keys.
 type SessionFactory struct {
+	sessionCache  sessionCache
 	systemKeys    cache
 	Config        *Config
 	Metastore     Metastore
@@ -62,6 +63,10 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 		SecretFactory: new(memguard.SecretFactory),
 	}
 
+	if config.Policy.CacheSessions {
+		factory.sessionCache = newSessionCache(factory.newSession, config.Policy)
+	}
+
 	for _, opt := range opts {
 		opt(factory)
 	}
@@ -81,31 +86,41 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 		return nil, errors.New("partition id cannot be empty")
 	}
 
-	var ikCache cache
-	if f.Config.Policy.CacheIntermediateKeys {
-		ikCache = newKeyCache(f.Config.Policy)
-	} else {
-		ikCache = new(neverCache)
+	if f.Config.Policy.CacheSessions {
+		return f.sessionCache.Get(id)
 	}
 
-	var p partition
-	if v, ok := f.Metastore.(interface{ GetRegionSuffix() string }); ok && len(v.GetRegionSuffix()) > 0 {
-		p = newSuffixedPartition(id, f.Config.Service, f.Config.Product, v.GetRegionSuffix())
-	} else {
-		p = newPartition(id, f.Config.Service, f.Config.Product)
-	}
+	return f.newSession(id)
+}
 
+func (f *SessionFactory) newSession(id string) (*Session, error) {
 	return &Session{
 		encryption: &envelopeEncryption{
-			partition:        p,
+			partition:        f.newPartition(id),
 			Metastore:        f.Metastore,
 			KMS:              f.KMS,
 			Policy:           f.Config.Policy,
 			Crypto:           f.Crypto,
 			SecretFactory:    f.SecretFactory,
 			systemKeys:       f.systemKeys,
-			intermediateKeys: ikCache,
+			intermediateKeys: f.newIKCache(),
 		}}, nil
+}
+
+func (f *SessionFactory) newPartition(id string) partition {
+	if v, ok := f.Metastore.(interface{ GetRegionSuffix() string }); ok && len(v.GetRegionSuffix()) > 0 {
+		return newSuffixedPartition(id, f.Config.Service, f.Config.Product, v.GetRegionSuffix())
+	}
+
+	return newPartition(id, f.Config.Service, f.Config.Product)
+}
+
+func (f *SessionFactory) newIKCache() cache {
+	if f.Config.Policy.CacheIntermediateKeys {
+		return newKeyCache(f.Config.Policy)
+	}
+
+	return new(neverCache)
 }
 
 // Session is used to encrypt and decrypt data related to a specific partition ID.

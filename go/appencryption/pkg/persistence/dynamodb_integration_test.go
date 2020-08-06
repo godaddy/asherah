@@ -168,5 +168,9 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 }
 
 func TestDynamoSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("too slow for testing.Short")
+	}
+
 	suite.Run(t, new(DynamoDBSuite))
 }

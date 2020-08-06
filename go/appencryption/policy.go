@@ -9,6 +9,9 @@ const (
 	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
 	DefaultRevokedCheckInterval = time.Minute * 60
 	DefaultCreateDatePrecision  = time.Minute
+	DefaultSessionCacheMaxSize  = 1000
+	DefaultSessionCacheDuration = time.Hour * 2
+	DefaultSessionCacheEngine   = "default"
 )
 
 // CryptoPolicy contains options to customize various behaviors in the SDK.
@@ -26,6 +29,16 @@ type CryptoPolicy struct {
 	CacheIntermediateKeys bool
 	// CacheSystemKeys determines whether System Keys will be cached.
 	CacheSystemKeys bool
+	// CacheSessions determines whether sessions will be cached.
+	CacheSessions bool
+	// SessionCacheMaxSize controls the maximum size of the cache if session caching is enabled.
+	SessionCacheMaxSize int
+	// SessionCacheDuration controls the amount of time a session will remain cached without being accessed
+	// if session caching is enabled.
+	SessionCacheDuration time.Duration
+	// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
+	// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+	SessionCacheEngine string
 }
 
 // PolicyOption is used to configure a CryptoPolicy
@@ -53,6 +66,39 @@ func WithNoCache() PolicyOption {
 	}
 }
 
+// WithSessionCache enables session caching. When used all sessions for a given partition will share underlying
+// System and Intermediate Key caches.
+func WithSessionCache() PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.CacheSessions = true
+	}
+}
+
+// WithSessionCacheMaxSize specifies the session cache max size to use if session caching is enabled.
+func WithSessionCacheMaxSize(size int) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheMaxSize = size
+	}
+}
+
+// WithSessionCacheDuration specifies the amount of time a session will remain cached without being accessed
+// if session caching is enabled.
+func WithSessionCacheDuration(d time.Duration) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheDuration = d
+	}
+}
+
+// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
+// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+//
+// Note this policy option will likely be deprecated once a permanent engine has been identified.
+func WithSessionCacheEngine(engine string) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SessionCacheEngine = engine
+	}
+}
+
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
@@ -61,6 +107,10 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CreateDatePrecision:   DefaultCreateDatePrecision,
 		CacheSystemKeys:       true,
 		CacheIntermediateKeys: true,
+		CacheSessions:         false,
+		SessionCacheMaxSize:   DefaultSessionCacheMaxSize,
+		SessionCacheDuration:  DefaultSessionCacheDuration,
+		SessionCacheEngine:    DefaultSessionCacheEngine,
 	}
 
 	for _, opt := range opts {
