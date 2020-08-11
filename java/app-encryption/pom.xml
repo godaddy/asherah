@@ -49,7 +49,7 @@
     <testcontainers.version>1.11.2</testcontainers.version>
     <jacoco.version>0.8.2</jacoco.version>
     <amazonaws.version>1.11.477</amazonaws.version>
-    <jackson.version>2.6.7</jackson.version>
+    <jackson.version>2.11.2</jackson.version>
     <apache.commons.version>1.8</apache.commons.version>
     <zaxxer.version>2.6.1</zaxxer.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
@@ -259,7 +259,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.59</version>
+      <version>1.64</version>
     </dependency>
 
     <dependency>
