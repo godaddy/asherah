@@ -93,7 +93,7 @@ namespace GoDaddy.Asherah.AppEncryption.Util
 
         /// <summary>
         /// Retrieves the long value associated with a given key and converts it to an instance of
-        /// <see cref="DateTimeOffset"/> using seconds from the epoch of 1970-01-01T00:00:00Z.
+        /// <see cref="DateTimeOffset"/> as the number of seconds that have elapsed since 1970-01-01T00:00:00Z.
         /// </summary>
         ///
         /// <param name="key">The key whose value needs to be retrieved.</param>
