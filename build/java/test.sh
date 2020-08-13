@@ -2,4 +2,4 @@
 
 set -e
 
-mvn surefire:test jacoco:report
+mvn test jacoco:report
