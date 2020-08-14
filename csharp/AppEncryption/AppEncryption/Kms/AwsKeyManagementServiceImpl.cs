@@ -35,9 +35,9 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     ///   "encryptedKey": base64_encoded_bytes,
     ///   "kmsKeks": [
     ///     {
-    ///       "region": aws_region,
-    ///       "arn": arn,
-    ///       "encryptedKek": base64_encoded_bytes
+    ///       "region": "aws_region",
+    ///       "arn": "arn",
+    ///       "encryptedKek": "base64_encoded_bytes"
     ///     },
     ///     ...
     ///   ]
