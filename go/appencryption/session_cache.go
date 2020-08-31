@@ -1,7 +1,6 @@
 package appencryption
 
 import (
-	"fmt"
 	"sync"
 
 	mango "github.com/goburrow/cache"
@@ -53,8 +52,6 @@ func incrementSharedSessionUsage(s *Session) {
 func (m *mangoCache) Count() int {
 	s := &mango.Stats{}
 	m.inner.Stats(s)
-
-	fmt.Printf("%+v\n", s)
 
 	return int(s.LoadSuccessCount - s.EvictionCount)
 }
