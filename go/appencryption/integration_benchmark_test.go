@@ -31,6 +31,10 @@ var (
 		Service: service,
 	}
 	metastore = persistence.NewMemoryMetastore()
+	caches    = [...]string{
+		// "mango", // Disabled until data race is resolved upstream (https://github.com/goburrow/cache/issues/21)
+		"ristretto",
+	}
 )
 
 func BenchmarkSession_Encrypt(b *testing.B) {
@@ -165,13 +169,9 @@ func newZipf(v float64, n uint64) func() uint64 {
 
 func Benchmark_EncryptDecrypt_SameFactoryUniquePartition_WithSessionCache(b *testing.B) {
 	capacity := appencryption.DefaultSessionCacheMaxSize
-	engines := [...]string{
-		"mango",
-		"ristretto",
-	}
 
-	for i := range engines {
-		engine := engines[i]
+	for i := range caches {
+		engine := caches[i]
 
 		subtest := fmt.Sprintf("WithEngine %s", engine)
 		b.Run(subtest, func(bb *testing.B) {
@@ -251,13 +251,8 @@ func Benchmark_EncryptDecrypt_SameFactorySamePartition(b *testing.B) {
 }
 
 func Benchmark_EncryptDecrypt_SameFactorySamePartition_WithSessionCache(b *testing.B) {
-	engines := [...]string{
-		"mango",
-		"ristretto",
-	}
-
-	for i := range engines {
-		engine := engines[i]
+	for i := range caches {
+		engine := caches[i]
 
 		b.Run(fmt.Sprintf("WithEngine %s", engine), func(bb *testing.B) {
 			km, err := kms.NewStatic(staticKey, c)

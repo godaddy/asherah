@@ -146,10 +146,10 @@ func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCach
 	}
 
 	switch eng := policy.SessionCacheEngine; eng {
-	case "", "default", "mango":
-		return newMangoCache(wrapper, policy)
-	case "ristretto":
+	case "", "default", "ristretto":
 		return newRistrettoCache(wrapper, policy)
+	case "mango":
+		return newMangoCache(wrapper, policy)
 	default:
 		panic("invalid session cache engine: " + eng)
 	}
