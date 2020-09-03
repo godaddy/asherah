@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption"
@@ -62,12 +63,54 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
+func (suite *IntegrationTestSuite) TestCrossPartitionDecryptShouldFail() {
+	metastore := persistence.NewMemoryMetastore()
+	verify := assert.New(suite.T())
+	must := require.New(suite.T())
+
+	factory := appencryption.NewSessionFactory(
+		&suite.config,
+		metastore,
+		suite.kms,
+		suite.c,
+	)
+	defer factory.Close()
+
+	session, err := factory.GetSession(partitionID)
+	must.NoError(err)
+
+	defer session.Close()
+
+	dr, err := session.Encrypt([]byte(original))
+	must.NoError(err)
+	must.NotNil(dr)
+
+	after, err := session.Decrypt(*dr)
+	must.NoError(err)
+	verify.Equal(original, string(after), "decrypted value does not match the original")
+
+	// Now create a new session using a different partition ID and veriry
+	// the new session is unable to decrypt the other session's DRR.
+	altPartition := partitionID + "alt"
+	altSession, err := factory.GetSession(altPartition)
+	must.NoError(err)
+
+	defer altSession.Close()
+
+	_, err = altSession.Decrypt(*dr)
+	must.Error(err, "decrypt expected to return error")
+}
+
+func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibility() {
+	if testing.Short() {
+		suite.T().Skip("too slow for testing.Short")
+	}
+
 	instant := time.Now().Add(-24 * time.Hour).Unix()
 	verify := assert.New(suite.T())
 
 	testContext := persistencetest.NewDynamoDBTestContext(instant)
-	defer testContext.TearDown()
+	defer testContext.CleanDB()
 
 	testContext.SeedDB()
 
@@ -107,6 +150,58 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 	)
 	defer factory.Close()
 
+	session, err := factory.GetSession(partitionID)
+	verify.NoError(err)
+
+	defer session.Close()
+
+	if after, err := session.Decrypt(*drr); verify.NoError(err) {
+		verify.Equal(original, string(after))
+	}
+}
+
+func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
+	if testing.Short() {
+		suite.T().Skip("too slow for testing.Short")
+	}
+
+	instant := time.Now().Add(-24 * time.Hour).Unix()
+	verify := assert.New(suite.T())
+
+	testContext := persistencetest.NewDynamoDBTestContext(instant)
+	defer testContext.CleanDB()
+
+	testContext.SeedDB()
+
+	var drr *appencryption.DataRowRecord
+
+	// build a new metastore with regional suffixing enabled
+	metastore := testContext.NewMetastore(persistence.WithDynamoDBRegionSuffix(true))
+
+	factory := appencryption.NewSessionFactory(
+		&suite.config,
+		metastore,
+		suite.kms,
+		suite.c,
+	)
+	defer factory.Close()
+
+	// encrypt and decrypt the DRR with a session and dispose of it asap
+	func() {
+		session, err := factory.GetSession(partitionID)
+		verify.NoError(err)
+
+		defer session.Close()
+
+		drr, err = session.Encrypt([]byte(original))
+		if verify.NoError(err) && verify.NotNil(drr) {
+			if after, err := session.Decrypt(*drr); verify.NoError(err) {
+				verify.Equal(original, string(after))
+			}
+		}
+	}()
+
+	// now decrypt the DRR with a new session using the same (suffixed) partition
 	session, err := factory.GetSession(partitionID)
 	verify.NoError(err)
 

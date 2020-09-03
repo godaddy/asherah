@@ -18,8 +18,8 @@ namespace GoDaddy.Asherah.ReferenceApp
         [Option('t', "dynamodb-table-name", Required = false, HelpText = "The table name for DynamoDb (only supported by DYNAMODB)")]
         public string DynamodbTableName { get; set; }
 
-        [Option('s', "key-suffix", Required = false, HelpText = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")]
-        public string KeySuffix { get; set; }
+        [Option('s', "enable-key-suffix", Required = false, HelpText = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")]
+        public bool EnableKeySuffix { get; set; }
 
         [Option('a', "ado-connection-string", Required = false, HelpText = "ADO connection string to use for an ADO metastore. Required for ADO metastore.")]
         public string AdoConnectionString { get; set; }

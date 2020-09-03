@@ -8,6 +8,7 @@ import (
 	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
 )
@@ -112,9 +113,22 @@ func (c *MockCache) Close() error {
 
 func TestNewSessionFactory(t *testing.T) {
 	factory := NewSessionFactory(new(Config), nil, nil, nil)
-	assert.NotNil(t, factory)
+	require.NotNil(t, factory)
 	assert.IsType(t, new(keyCache), factory.systemKeys)
 	assert.IsType(t, new(memguard.SecretFactory), factory.SecretFactory)
+	assert.Nil(t, factory.sessionCache)
+}
+
+func TestNewSessionFactory_WithSessionCache(t *testing.T) {
+	policy := &CryptoPolicy{
+		CacheSessions: true,
+	}
+	factory := NewSessionFactory(&Config{
+		Policy: policy,
+	}, nil, nil, nil)
+
+	require.NotNil(t, factory)
+	assert.NotNil(t, factory.sessionCache)
 }
 
 func TestNewSessionFactory_NoSKCache(t *testing.T) {
@@ -323,4 +337,67 @@ func TestSessionFactory_GetSession_Blank_GetSuffix_DefaultPartition(t *testing.T
 	e := sess.encryption.(*envelopeEncryption)
 	_, ok := e.partition.(defaultPartition)
 	assert.True(t, ok, "expected type defaultPartition")
+}
+
+type mockSessionCache struct {
+	mock.Mock
+}
+
+func (m *mockSessionCache) Get(id string) (*Session, error) {
+	ret := m.Called(id)
+	if s := ret.Get(0); s != nil {
+		return s.(*Session), ret.Error(1)
+	}
+
+	return nil, ret.Error(1)
+}
+
+func (m *mockSessionCache) Count() int {
+	ret := m.Called()
+
+	return ret.Int(0)
+}
+
+func (m *mockSessionCache) Close() {
+	m.Called()
+}
+
+func TestSessionFactory_GetSession_NoSessionCache(t *testing.T) {
+	policy := NewCryptoPolicy()
+	policy.CacheSessions = false
+
+	sessionFactory := NewSessionFactory(&Config{
+		Policy: policy,
+	}, nil, nil, nil)
+
+	cache := new(mockSessionCache)
+	sessionFactory.sessionCache = cache
+
+	sess, err := sessionFactory.GetSession("testing")
+	require.NoError(t, err)
+
+	assert.NotNil(t, sess)
+	cache.AssertNotCalled(t, "Get", "testing")
+}
+
+func TestSessionFactory_GetSession_SessionCache(t *testing.T) {
+	policy := NewCryptoPolicy()
+	policy.CacheSessions = true
+
+	sessionFactory := NewSessionFactory(&Config{
+		Policy: policy,
+	}, nil, nil, nil)
+
+	id := "testing"
+
+	cache := new(mockSessionCache)
+	cache.On("Get", id).Return(new(Session), nil)
+
+	sessionFactory.sessionCache = cache
+
+	sess, err := sessionFactory.GetSession(id)
+	require.NoError(t, err)
+
+	assert.NotNil(t, sess)
+	cache.AssertCalled(t, "Get", "testing")
 }

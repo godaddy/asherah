@@ -22,6 +22,11 @@ import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 
 import javax.sql.DataSource;
 
+/**
+ * Provides a JDBC based implementation of {@link Metastore} to store and retrieve
+ * {@link com.godaddy.asherah.appencryption.utils.Json} values for system and intermediate keys.It uses the table name
+ * "encryption_key". Creation time is stored in UTC.
+ */
 public class JdbcMetastoreImpl implements Metastore<JSONObject> {
   private static final Logger logger = LoggerFactory.getLogger(JdbcMetastoreImpl.class);
 
@@ -38,6 +43,12 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
 
   private final DataSource dataSource;
 
+  /**
+   * Initialize a {@code JdbcMetastoreImpl} builder using the provided parameter.
+   *
+   * @param dataSource The {@link javax.sql.DataSource} object used to connect to the database.
+   * @return The current {@link Builder} step.
+   */
   public static Builder newBuilder(final DataSource dataSource) {
     return new Builder(dataSource);
   }
@@ -71,13 +82,21 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
     return Optional.empty();
   }
 
+  /**
+   * Uses the {@link JdbcMetastoreImpl#LOAD_QUERY} to retrieve the value associated with the keyId and time it was
+   * created.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @param created The created time part of the lookup key.
+   * @return The value associated with the keyId and created tuple, if any.
+   */
   @Override
-  public Optional<JSONObject> load(final String key, final Instant created) {
+  public Optional<JSONObject> load(final String keyId, final Instant created) {
     return loadTimer.record(() -> {
       try (Connection connection = getConnection();
            PreparedStatement preparedStatement = connection.prepareStatement(LOAD_QUERY)) {
 
-        preparedStatement.setString(1, key);
+        preparedStatement.setString(1, keyId);
         preparedStatement.setTimestamp(2, Timestamp.from(created));
 
         return executeQueryAndLoadJsonObjectFromKey(preparedStatement);
@@ -89,13 +108,19 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Uses the {@link JdbcMetastoreImpl#LOAD_LATEST_QUERY} to retrieve the latest value associated with the keyId.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @return The latest value associated with the keyId, if any.
+   */
   @Override
-  public Optional<JSONObject> loadLatest(final String key) {
+  public Optional<JSONObject> loadLatest(final String keyId) {
     return loadLatestTimer.record(() -> {
       try (Connection connection = getConnection();
            PreparedStatement preparedStatement = connection.prepareStatement(LOAD_LATEST_QUERY)) {
 
-        preparedStatement.setString(1, key);
+        preparedStatement.setString(1, keyId);
 
         return executeQueryAndLoadJsonObjectFromKey(preparedStatement);
       }
@@ -106,13 +131,22 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  /**
+   * Uses the {@link JdbcMetastoreImpl#STORE_QUERY} to store the value using the specified keyId and created time.
+   *
+   * @param keyId The keyId part of the lookup key.
+   * @param created The created time part of the lookup key.
+   * @param value The value to store.
+   * @return {@code true} if the store succeeded, false if the store failed for a known condition
+   *         e.g., trying to save a duplicate value should return false, not throw an exception.
+   */
   @Override
-  public boolean store(final String key, final Instant created, final JSONObject value) {
+  public boolean store(final String keyId, final Instant created, final JSONObject value) {
     return storeTimer.record(() -> {
       try (Connection connection = getConnection();
            PreparedStatement preparedStatement = connection.prepareStatement(STORE_QUERY)) {
         int i = 1;
-        preparedStatement.setString(i++, key);
+        preparedStatement.setString(i++, keyId);
         preparedStatement.setTimestamp(i++, Timestamp.from(created));
         preparedStatement.setString(i++, value.toString());
 
@@ -120,7 +154,7 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
       }
       catch (SQLIntegrityConstraintViolationException iv) {
         // Duplicate key exists
-        logger.info("Attempted to create duplicate key: {} {}", key, created);
+        logger.info("Attempted to create duplicate key: {} {}", keyId, created);
         return false;
       }
       catch (SQLException se) {
@@ -134,10 +168,15 @@ public class JdbcMetastoreImpl implements Metastore<JSONObject> {
 
     private final DataSource dataSource;
 
-    Builder(final DataSource dataSource) {
+    private Builder(final DataSource dataSource) {
       this.dataSource = dataSource;
     }
 
+    /**
+     * Builds the {@code JdbcMetastoreImpl} object.
+     *
+     * @return The fully instantiated {@code JdbcMetastoreImpl} object.
+     */
     public JdbcMetastoreImpl build() {
       return new JdbcMetastoreImpl(dataSource);
     }

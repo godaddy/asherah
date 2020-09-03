@@ -25,23 +25,27 @@ using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Kms
 {
+    /// <summary>
+    /// Uses the AWS Key Management Service to provide an implementation of <see cref="KeyManagementService"/>. It
+    /// provides multi-region support, i.e. you can encrypt data in one region and decrypt it using the keys from
+    /// another region.
+    /// The message format is:
+    /// <code>
+    /// {
+    ///   "encryptedKey": base64_encoded_bytes,
+    ///   "kmsKeks": [
+    ///     {
+    ///       "region": "aws_region",
+    ///       "arn": "arn",
+    ///       "encryptedKek": "base64_encoded_bytes"
+    ///     },
+    ///     ...
+    ///   ]
+    /// }
+    /// </code>
+    /// </summary>
     public class AwsKeyManagementServiceImpl : KeyManagementService
     {
-        /*
-         *  message format is:
-         *
-         *  {
-         *    "encryptedKey": "<base64_encoded_bytes>",
-         *    "kmsKeks": [
-         *      {
-         *        "region": "<aws_region>",
-         *        "arn": "<arn>",
-         *        "encryptedKek": "<base64_encoded_bytes>"
-         *      },
-         *      ...
-         *    ]
-         *  }
-         */
         internal const string EncryptedKey = "encryptedKey";
         internal const string KmsKeksKey = "kmsKeks";
         internal const string RegionKey = "region";
@@ -100,11 +104,20 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
 
         internal OrderedDictionary RegionToArnAndClientDictionary { get; }
 
+        /// <summary>
+        /// Initializes a new builder for <see cref="AwsKeyManagementServiceImpl"/> using the provided parameters.
+        /// </summary>
+        ///
+        /// <param name="regionToArnDictionary">A dictionary with region and arn of the KMS key(s) as key value pairs.
+        /// </param>
+        /// <param name="region">Preferred region to use.</param>
+        /// <returns></returns>
         public static Builder NewBuilder(Dictionary<string, string> regionToArnDictionary, string region)
         {
             return new Builder(regionToArnDictionary, region);
         }
 
+        /// <inheritdoc />
         public override byte[] EncryptKey(CryptoKey key)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptkeyTimerOptions))
@@ -162,6 +175,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
         }
 
+        /// <inheritdoc />
         public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(DecryptkeyTimerOptions))
@@ -240,12 +254,17 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         }
 
         /// <summary>
-        /// Attempt to generate a KMS datakey using the first successful response using a sorted dictionary of available KMS clients.
+        /// Attempt to generate a KMS datakey using the first successful response using a sorted dictionary of available
+        /// KMS clients.
         /// </summary>
-        /// <param name="sortedRegionToArnAndClientDictionary"> A sorted dictionary mapping regions and their arns and kms clients</param>
+        ///
+        /// <param name="sortedRegionToArnAndClientDictionary">A sorted dictionary mapping regions and their arns and
+        /// kms clients.</param>
         /// <param name="dateKeyKeyId">The KMS arn used to generate the data key</param>
-        /// <returns>A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key</returns>
-        /// <exception cref="KmsException">Throw an exception if we're unable to generate a datakey in any AWS region</exception>
+        /// <returns>A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key.
+        /// </returns>
+        /// <exception cref="KmsException">Throw an exception if we're unable to generate a datakey in any AWS region.
+        /// </exception>
         internal virtual GenerateDataKeyResult GenerateDataKey(OrderedDictionary sortedRegionToArnAndClientDictionary, out string dateKeyKeyId)
         {
             foreach (DictionaryEntry regionToArnAndClient in sortedRegionToArnAndClientDictionary)
@@ -280,9 +299,11 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         }
 
         /// <summary>
-        /// Gets an ordered list of KMS region key json objects to use. Uses preferred region and falls back to others as appropriate.
+        /// Gets an ordered list of KMS region key json objects to use. Uses preferred region and falls back to others
+        /// as appropriate.
         /// </summary>
-        /// <param name="kmsRegionKeyArray">A non-prioritized array of KMS region key objects </param>
+        ///
+        /// <param name="kmsRegionKeyArray">A non-prioritized array of KMS region key objects.</param>
         /// <returns>A list of KMS region key json objects, prioritized by regions.</returns>
         internal List<Json> GetPrioritizedKmsRegionKeyJsonList(JArray kmsRegionKeyArray)
         {
@@ -327,12 +348,25 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             private readonly Dictionary<string, string> regionToArnDictionary;
             private readonly string preferredRegion;
 
+            /// <summary>
+            /// Initializes the builder for <see cref="AwsKeyManagementServiceImpl"/> class with the specified options.
+            /// </summary>
+            ///
+            /// <param name="regionToArnDictionary">A dictionary with region and arn of the KMS key(s) as key value
+            /// pairs.</param>
+            /// <param name="region">The preferred region to choose.</param>
             public Builder(Dictionary<string, string> regionToArnDictionary, string region)
             {
                 this.regionToArnDictionary = regionToArnDictionary;
                 preferredRegion = region;
             }
 
+            /// <summary>
+            /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> object with the parameters specified in
+            /// the <see cref="Builder"/>.
+            /// </summary>
+            ///
+            /// <returns>The fully instantiated <see cref="AwsKeyManagementServiceImpl"/> object.</returns>
             public AwsKeyManagementServiceImpl Build()
             {
                 return new AwsKeyManagementServiceImpl(

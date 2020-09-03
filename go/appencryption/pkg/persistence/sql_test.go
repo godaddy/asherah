@@ -281,5 +281,9 @@ func (suite *SQLSuite) TestSQLMetastore_Store_WithDuplicateShouldReturnFalse() {
 }
 
 func TestMySqlSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("too slow for testing.Short")
+	}
+
 	suite.Run(t, new(SQLSuite))
 }

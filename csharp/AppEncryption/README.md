@@ -23,7 +23,7 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.1" />
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.1.5" />
 </ItemGroup>
 ```
 
@@ -87,7 +87,7 @@ For simplicity, the DynamoDB implementation uses the builder pattern to enable c
 
 To obtain an instance of the builder, use the static factory method `NewBuilder`. 
 ```c#
-DynamoDbMetastoreImpl.NewBuilder();
+DynamoDbMetastoreImpl.NewBuilder("<preferred-aws-region>");
 ```
 Once you have a builder, you can either use the `WithXXX` setter methods to configure the metastore properties or simply
 build the metastore by calling the `Build` method.
@@ -105,9 +105,8 @@ Below is an example of a DynamoDB metastore that uses a Global Table named `Test
 AWSConfigs.AWSRegion = "us-west-2";
 
 // Build the DynamoDB Metastore.
-Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder()
-IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder().Build();
-      .WithKeySuffix("us-west-2")
+IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
+      .WithKeySuffix()
       .WithTableName("TestTable")
       .Build();
 ```

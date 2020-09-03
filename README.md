@@ -77,7 +77,8 @@ Use the factory to create a session.
 Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper123");
 ```
 
-The scope of a session is limited to a partition id, i.e. every partition id should have its own session.
+The scope of a session is limited to a partition id, i.e. every partition id should have its own session. Also note
+that a payload encrypted using some partition id, cannot be decrypted using a different one.
 
 ### Step 3: Use the session to accomplish the cryptographic task
 
@@ -159,7 +160,7 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 | AWS KMS Support            | Yes  | Yes  | Yes |
 | RDBMS Metastore            | Yes  | Yes  | Yes |
 | DynamoDB Metastore         | Yes  | Yes  | Yes |
-| Session caching            | Yes  | Yes  | No  |
+| Session caching            | Yes  | Yes  | Yes |
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
 | Store/Load pattern.        | Yes  | Yes  | No  |
 

@@ -117,7 +117,7 @@ local DynamoDB endpoint.
 ```console
 [user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \
   --metastore-type DYNAMODB \
-  --key-suffix us-west-2 \
+  --enable-key-suffix \
   --dynamodb-endpoint http://localhost:8000 \
   --dynamodb-signing-region us-west-2 \
   --dynamodb-table-name MyGlobalTable

@@ -508,6 +508,10 @@ func (e *envelopeEncryption) DecryptDataRowRecord(ctx context.Context, drr DataR
 		return nil, errors.New("parent key cannot be empty")
 	}
 
+	if !e.partition.IsValidIntermediateKeyID(drr.Key.ParentKeyMeta.ID) {
+		return nil, errors.New("unable to decrypt record")
+	}
+
 	loader := keyLoaderFunc(func() (*internal.CryptoKey, error) {
 		return e.loadIntermediateKey(ctx, *drr.Key.ParentKeyMeta)
 	})
