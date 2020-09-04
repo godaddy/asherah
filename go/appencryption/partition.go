@@ -1,6 +1,8 @@
 package appencryption
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func newPartition(partition, service, product string) defaultPartition {
 	return defaultPartition{
@@ -15,6 +17,7 @@ func newPartition(partition, service, product string) defaultPartition {
 type partition interface {
 	SystemKeyID() string
 	IntermediateKeyID() string
+	IsValidIntermediateKeyID(id string) bool
 }
 
 // defaultPartition is the default implementation for partition naming.
@@ -32,6 +35,11 @@ func (p defaultPartition) SystemKeyID() string {
 // IntermediateKeyID returns the intermediate key name for the product/service.
 func (p defaultPartition) IntermediateKeyID() string {
 	return fmt.Sprintf("_IK_%s_%s_%s", p.id, p.service, p.product)
+}
+
+// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition
+func (p defaultPartition) IsValidIntermediateKeyID(id string) bool {
+	return id == p.IntermediateKeyID()
 }
 
 func newSuffixedPartition(partition, service, product, suffix string) suffixedPartition {
@@ -58,4 +66,9 @@ func (p suffixedPartition) SystemKeyID() string {
 // IntermediateKeyID returns the intermediate key name for the product/service.
 func (p suffixedPartition) IntermediateKeyID() string {
 	return fmt.Sprintf("_IK_%s_%s_%s_%s", p.id, p.service, p.product, p.suffix)
+}
+
+// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition
+func (p suffixedPartition) IsValidIntermediateKeyID(id string) bool {
+	return id == p.IntermediateKeyID() || p.defaultPartition.IsValidIntermediateKeyID(id)
 }

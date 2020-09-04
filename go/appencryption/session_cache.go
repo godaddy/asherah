@@ -1,7 +1,6 @@
 package appencryption
 
 import (
-	"fmt"
 	"sync"
 
 	mango "github.com/goburrow/cache"
@@ -53,8 +52,6 @@ func incrementSharedSessionUsage(s *Session) {
 func (m *mangoCache) Count() int {
 	s := &mango.Stats{}
 	m.inner.Stats(s)
-
-	fmt.Printf("%+v\n", s)
 
 	return int(s.LoadSuccessCount - s.EvictionCount)
 }
@@ -149,10 +146,10 @@ func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCach
 	}
 
 	switch eng := policy.SessionCacheEngine; eng {
-	case "", "default", "mango":
-		return newMangoCache(wrapper, policy)
-	case "ristretto":
+	case "", "default", "ristretto":
 		return newRistrettoCache(wrapper, policy)
+	case "mango":
+		return newMangoCache(wrapper, policy)
 	default:
 		panic("invalid session cache engine: " + eng)
 	}

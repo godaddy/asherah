@@ -31,7 +31,7 @@ type EnvelopeSuite struct {
 	crypto        AEAD
 	ikCache       cache
 	skCache       cache
-	partition     defaultPartition
+	partition     partition
 	e             envelopeEncryption
 	metastore     Metastore
 	kms           KeyManagementService
@@ -40,14 +40,11 @@ type EnvelopeSuite struct {
 	newSecret     securememory.Secret
 }
 
-func (suite *EnvelopeSuite) SetupSuite() {
+func (suite *EnvelopeSuite) SetupTest() {
 	suite.partition = defaultPartition{
 		service: "service",
 		product: "product",
 	}
-}
-
-func (suite *EnvelopeSuite) SetupTest() {
 	suite.metastore = new(MockMetastore)
 	suite.kms = new(MockKMS)
 	suite.crypto = new(MockCrypto)
@@ -694,7 +691,7 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_EncryptPayload_ReturnsErrorIf
 
 func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord() {
 	meta := &KeyMeta{
-		ID: someID,
+		ID: suite.partition.IntermediateKeyID(),
 	}
 	drr := &DataRowRecord{
 		Key: &EnvelopeKeyRecord{
@@ -703,6 +700,12 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord() {
 		},
 		Data: encryptedBytes,
 	}
+
+	suite.assertCanDecrypt(drr)
+}
+
+func (suite *EnvelopeSuite) assertCanDecrypt(drr *DataRowRecord) {
+	meta := drr.Key.ParentKeyMeta
 
 	ik, err := internal.GenerateKey(secretFactory, someTimestamp, keySize)
 	if assert.NoError(suite.T(), err) {
@@ -719,10 +722,49 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord() {
 	}
 }
 
+func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_WithSuffixedPartitionAndNonSuffixedKey() {
+	// Note that this DRR's parent key ID is not suffixed
+	drr := &DataRowRecord{
+		Key: &EnvelopeKeyRecord{
+			EncryptedKey: someBytes,
+			ParentKeyMeta: &KeyMeta{
+				ID: suite.partition.IntermediateKeyID(),
+			},
+		},
+		Data: encryptedBytes,
+	}
+
+	// Now swap out the envelopeEncryption.partition with a suffixedPartition
+	suite.e.partition = suffixedPartition{
+		defaultPartition: suite.e.partition.(defaultPartition),
+		suffix:           "some-suffix",
+	}
+
+	suite.assertCanDecrypt(drr)
+}
+
 func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_WithoutParentKeyMetaShouldFail() {
 	drr := DataRowRecord{
 		Key:  new(EnvelopeKeyRecord),
 		Data: someBytes,
+	}
+
+	drrBytes, err := suite.e.DecryptDataRowRecord(context.Background(), drr)
+
+	assert.Error(suite.T(), err)
+	assert.Nil(suite.T(), drrBytes)
+}
+
+func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_WithDifferentPartitionShouldFail() {
+	meta := &KeyMeta{
+		ID: someID, // someID != suite.partition.IntermediateKeyID()
+	}
+	drr := DataRowRecord{
+		Key: &EnvelopeKeyRecord{
+			EncryptedKey:  someBytes,
+			ParentKeyMeta: meta,
+		},
+		Data: encryptedBytes,
 	}
 
 	drrBytes, err := suite.e.DecryptDataRowRecord(context.Background(), drr)
@@ -740,7 +782,7 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_ReturnsE
 
 func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_ClosesKeyIfCachingNotAllowedByPolicy() {
 	meta := &KeyMeta{
-		ID: someID,
+		ID: suite.partition.IntermediateKeyID(),
 	}
 	drr := &DataRowRecord{
 		Key: &EnvelopeKeyRecord{
@@ -768,7 +810,7 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_ClosesKe
 
 func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_ReturnsErrorIfGetOrLoadFromCacheFails() {
 	meta := &KeyMeta{
-		ID: someID,
+		ID: suite.partition.IntermediateKeyID(),
 	}
 	drr := DataRowRecord{
 		Key: &EnvelopeKeyRecord{

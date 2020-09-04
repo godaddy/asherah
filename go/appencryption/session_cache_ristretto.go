@@ -1,6 +1,7 @@
 package appencryption
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dgraph-io/ristretto"
@@ -59,7 +60,11 @@ func ristrettoOnEvict(h, c uint64, value interface{}, _ int64) {
 }
 
 func newRistrettoCache(sessionLoader sessionLoaderFunc, policy *CryptoPolicy) *ristrettoCache {
-	capacity := int64(policy.SessionCacheMaxSize)
+	capacity := int64(DefaultSessionCacheMaxSize)
+	if policy.SessionCacheMaxSize > 0 {
+		capacity = int64(policy.SessionCacheMaxSize)
+	}
+
 	conf := &ristretto.Config{
 		NumCounters: 10 * capacity,
 		MaxCost:     capacity,
@@ -70,7 +75,7 @@ func newRistrettoCache(sessionLoader sessionLoaderFunc, policy *CryptoPolicy) *r
 
 	inner, err := ristretto.NewCache(conf)
 	if err != nil {
-		panic("unable to initialize cache")
+		panic(fmt.Sprintf("unable to initialize cache: %s", err))
 	}
 
 	return &ristrettoCache{
