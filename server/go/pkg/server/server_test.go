@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -115,29 +116,6 @@ func Test_AppEncryption_Session(t *testing.T) {
 
 	if assert.NoError(t, ae.Session(stream)) {
 		mock.AssertExpectationsForObjects(t, stream, sf)
-	}
-}
-
-func Test_Streamer_NewHandler(t *testing.T) {
-	optCombos := []*Options{
-		{KMS: "aws", Metastore: "rdbms"},
-		{KMS: "aws", Metastore: "dynamodb"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBTableName: "CustomTableName"},
-		{KMS: "static", Metastore: "rdbms"},
-		{KMS: "static", Metastore: "memory"},
-	}
-
-	for _, opts := range optCombos {
-		opts := opts
-		name := opts.KMS + ":" + opts.Metastore
-		t.Run(name, func(tt *testing.T) {
-			s := &streamer{options: opts}
-			h := s.NewHandler()
-
-			assert.IsType(tt, (*defaultHandler)(nil), h)
-		})
 	}
 }
 
@@ -363,10 +341,63 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 }
 
 func Test_NewAppEncryption(t *testing.T) {
-	opts := new(Options)
-	ae := NewAppEncryption(opts)
+	// A simple smoke test that consturcts new handlers
+	// using a variety of configuration options.
+	optCombos := []*Options{
+		{KMS: "aws", Metastore: "rdbms"},
+		{KMS: "aws", Metastore: "dynamodb"},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1"},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000"},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBTableName: "CustomTableName"},
+		{KMS: "static", Metastore: "rdbms"},
+		{KMS: "static", Metastore: "memory"},
+	}
 
-	assert.Equal(t, opts, ae.NewStreamer().options)
+	for _, opts := range optCombos {
+		opts := opts
+		name := opts.KMS + ":" + opts.Metastore
+		t.Run(name, func(tt *testing.T) {
+			ae := NewAppEncryption(opts)
+			s := ae.NewStreamer()
+			h := s.NewHandler()
+
+			assert.IsType(tt, (*defaultHandler)(nil), h)
+		})
+	}
+}
+
+func Test_NewCryptoPolicy(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	opts := &Options{
+		ExpireAfter:   time.Minute * time.Duration(r.Intn(10)),
+		CheckInterval: time.Second * time.Duration(r.Intn(10)),
+	}
+
+	expected := appencryption.NewCryptoPolicy()
+	expected.ExpireKeyAfter = opts.ExpireAfter
+	expected.RevokeCheckInterval = opts.CheckInterval
+
+	assert.Equal(t, expected, NewCryptoPolicy(opts))
+}
+
+func Test_NewCryptoPolicy_WithSessionCache(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	opts := &Options{
+		ExpireAfter:          time.Minute * time.Duration(r.Intn(10)),
+		CheckInterval:        time.Second * time.Duration(r.Intn(10)),
+		EnableSessionCaching: true,
+		SessionCacheMaxSize:  r.Intn(1000),
+		SessionCacheDuration: time.Minute * time.Duration(r.Intn(5)),
+	}
+
+	expected := appencryption.NewCryptoPolicy()
+	expected.ExpireKeyAfter = opts.ExpireAfter
+	expected.RevokeCheckInterval = opts.CheckInterval
+	expected.CacheSessions = opts.EnableSessionCaching
+	expected.SessionCacheMaxSize = opts.SessionCacheMaxSize
+	expected.SessionCacheDuration = opts.SessionCacheDuration
+
+	assert.Equal(t, expected, NewCryptoPolicy(opts))
 }
 
 type mockSessionFactory struct {

@@ -59,8 +59,8 @@ func (a *AppEncryption) Session(stream pb.AppEncryption_SessionServer) error {
 
 type streamer struct {
 	handlerFactory
-	handler requestHandler
-	options *Options
+	handler        requestHandler
+	sessionFactory sessionFactory
 }
 
 type handlerFactory interface {
@@ -72,26 +72,8 @@ func (s *streamer) NewHandler() requestHandler {
 		return s.handlerFactory.NewHandler()
 	}
 
-	crypto := aead.NewAES256GCM()
-
-	sf := appencryption.NewSessionFactory(
-		&appencryption.Config{
-			Service: s.options.ServiceName,
-			Product: s.options.ProductID,
-			Policy: appencryption.NewCryptoPolicy(
-				appencryption.WithExpireAfterDuration(s.options.ExpireAfter),
-				appencryption.WithRevokeCheckInterval(s.options.CheckInterval),
-			),
-		},
-		NewMetastore(s.options),
-		NewKMS(s.options, crypto),
-		crypto,
-		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
-		appencryption.WithMetrics(false),
-	)
-
 	return &defaultHandler{
-		sessionFactory: sf,
+		sessionFactory: s.sessionFactory,
 	}
 }
 
@@ -300,9 +282,41 @@ func (h *defaultHandler) Close() error {
 }
 
 func NewAppEncryption(options *Options) *AppEncryption {
+	crypto := aead.NewAES256GCM()
+
+	sf := appencryption.NewSessionFactory(
+		&appencryption.Config{
+			Service: options.ServiceName,
+			Product: options.ProductID,
+			Policy:  NewCryptoPolicy(options),
+		},
+		NewMetastore(options),
+		NewKMS(options, crypto),
+		crypto,
+		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
+		appencryption.WithMetrics(false),
+	)
+
 	return &AppEncryption{
 		streamerFactory: streamerFactoryFunc(func() *streamer {
-			return &streamer{options: options}
+			return &streamer{sessionFactory: sf}
 		}),
 	}
+}
+
+func NewCryptoPolicy(options *Options) *appencryption.CryptoPolicy {
+	policyOpts := []appencryption.PolicyOption{
+		appencryption.WithExpireAfterDuration(options.ExpireAfter),
+		appencryption.WithRevokeCheckInterval(options.CheckInterval),
+	}
+
+	if options.EnableSessionCaching {
+		policyOpts = append(policyOpts,
+			appencryption.WithSessionCache(),
+			appencryption.WithSessionCacheMaxSize(options.SessionCacheMaxSize),
+			appencryption.WithSessionCacheDuration(options.SessionCacheDuration),
+		)
+	}
+
+	return appencryption.NewCryptoPolicy(policyOpts...)
 }
