@@ -32,7 +32,7 @@ var (
 	}
 	metastore = persistence.NewMemoryMetastore()
 	caches    = [...]string{
-		// "mango", // Disabled until data race is resolved upstream (https://github.com/goburrow/cache/issues/21)
+		"mango",
 		"ristretto",
 	}
 )
