@@ -51,6 +51,7 @@ func (b *sessionBucket) newSession() *Session {
 
 		spy.SetClosed()
 	})
+
 	b.closeSpies[s] = spy
 
 	return s
@@ -310,8 +311,14 @@ func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 		s, err := cache.Get("my-item")
 		require.NoError(t, err)
 		require.NotNil(t, s)
-
 		s.Close()
+
+		assert.Eventually(t, func() bool {
+			return cache.Count() == 1
+		}, time.Second*10, time.Millisecond*100)
+
+		assert.False(t, b.IsClosed(s))
+
 		cache.Close()
 
 		assert.Eventually(t, func() bool {
@@ -324,27 +331,44 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	withEachEngine(t, func(t *testing.T, policy *CryptoPolicy) {
 		b := newSessionBucket()
 
-		policy.SessionCacheMaxSize = 1
+		const max = 10
+		policy.SessionCacheMaxSize = max
+		var firstBatch [max]*Session
 
 		cache := newSessionCache(b.load, policy)
 		require.NotNil(t, cache)
 
 		defer cache.Close()
 
-		s1, err := cache.Get("0")
-		require.NoError(t, err)
-		require.NotNil(t, s1)
-		assert.Eventually(t, func() bool {
-			return cache.Count() == 1
-		}, time.Second*10, time.Millisecond*100)
-		s1.Close()
+		for i := 0; i < max; i++ {
+			s, err := cache.Get(strconv.Itoa(i))
+			require.NoError(t, err)
+			require.NotNil(t, s)
+			s.Close()
 
-		s2, err := cache.Get("1")
+			firstBatch[i] = s
+		}
+
+		assert.Eventually(t, func() bool {
+			return cache.Count() == max
+		}, time.Second*10, time.Millisecond*100)
+
+		s2, err := cache.Get(strconv.Itoa(max + 1))
 		require.NoError(t, err)
 		require.NotNil(t, s2)
+		s2.Close()
 
 		assert.Eventually(t, func() bool {
-			return b.IsClosed(s1)
+			count := 0
+
+			// One--and only one--of the first batch items should be closed
+			for _, f := range firstBatch {
+				if b.IsClosed(f) {
+					count++
+				}
+			}
+
+			return count == 1
 		}, time.Second*10, time.Millisecond*100)
 
 		assert.False(t, b.IsClosed(s2))
