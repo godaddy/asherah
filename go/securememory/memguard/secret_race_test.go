@@ -66,7 +66,7 @@ func runRaceTest(b *testing.B, secretBytes []byte, testFunc func(s securememory.
 					return
 				}
 
-				if count >= runtime.NumCPU()/2 {
+				if count >= runtime.GOMAXPROCS(0)/2 {
 					assert.NoError(b, s.Close())
 				}
 			}
