@@ -39,13 +39,16 @@ func main() {
 	}
 
 	if err := validateOptions(opts); err != nil {
-		fmt.Println("Missing or invalid options:", err.Error())
+		fmt.Println("missing or invalid options:", err.Error())
 		fmt.Println()
 
 		parser.WriteHelp(os.Stdout)
 
 		return
 	}
+
+	log.Println("configuration options parsed successfully")
+	printOptions(parser)
 
 	l, err := net.Listen("unix", string(opts.SocketFile))
 	if err != nil {
@@ -92,4 +95,36 @@ func validateOptions(opts *Options) error {
 	}
 
 	return nil
+}
+
+func printOptions(parser *flags.Parser) {
+	printOptionGroups(parser.Groups())
+}
+
+func printOptionGroups(groups []*flags.Group) {
+	for _, g := range groups {
+		if g.ShortDescription == "Help Options" {
+			continue
+		}
+
+		for _, o := range g.Options() {
+			printOption(o)
+		}
+
+		printOptionGroups(g.Groups())
+	}
+}
+
+func printOption(opt *flags.Option) {
+	mask := len(opt.DefaultMask) > 0
+	_, isEnv := os.LookupEnv(opt.EnvDefaultKey)
+
+	switch {
+	case opt.IsSet() && mask:
+		log.Printf("--%s=**REDACTED**", opt.LongName)
+	case !opt.IsSet() || (opt.IsSetDefault() && !isEnv):
+		log.Printf("--%s=", opt.LongName)
+	default:
+		log.Printf("--%s=%v", opt.LongName, opt.Value())
+	}
 }
