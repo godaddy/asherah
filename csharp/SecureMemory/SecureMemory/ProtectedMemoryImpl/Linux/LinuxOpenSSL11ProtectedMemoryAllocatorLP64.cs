@@ -10,23 +10,35 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
-    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator
+    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator, IDisposable
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         private readonly LinuxOpenSSL11LP64 openSSL11;
+        private bool disposedValue;
 
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
             : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
+            CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
         }
 
-        // Implementation order of preference:
-        // memset_s (standards)
-        // explicit_bzero (BSD)
-        // SecureZeroMemory (Windows)
-        // bzero (Linux, same guarantees as explicit_bzero)
+        ~LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
+        {
+            Dispose(disposing: false);
+        }
+
+        public static bool IsAvailable()
+        {
+            return LinuxOpenSSL11LP64.IsAvailable();
+        }
+
+        public override void ZeroMemory(IntPtr pointer, ulong length)
+        {
+            // CRYPTO_secure_clear_free includes ZeroMemory functionality
+        }
+
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
@@ -73,6 +85,21 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public override void Free(IntPtr pointer, ulong length)
         {
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                disposedValue = true;
+            }
         }
     }
 }

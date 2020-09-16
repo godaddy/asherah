@@ -147,6 +147,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             }
         }
 
+        internal virtual void CheckResult(int result, int expected, string methodName)
+        {
+            if (result != expected)
+            {
+                // NOTE: Even though this references Win32 it actually returns
+                // the last errno on non-Windows platforms.
+                var errno = Marshal.GetLastWin32Error();
+                throw new LibcOperationFailedException(methodName, result, errno);
+            }
+        }
+
         internal void CheckZero(int result, string methodName, Exception exceptionInProgress)
         {
             if (result != 0)

@@ -14,7 +14,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
     public class LinuxOpenSSL11LP64 : LinuxLibcLP64
     {
-        public bool IsAvailable()
+        public static bool IsAvailable()
         {
             try
             {
@@ -50,7 +50,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_malloc_initialized", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_initialized();
 
-        public int CRYPTO_secure_malloc_initialized()
+        public static int CRYPTO_secure_malloc_initialized()
         {
             // CRYPTO_secure_malloc_initialized() returns 1 if the secure heap is available (that is, if CRYPTO_secure_malloc_init() has been called, but CRYPTO_secure_malloc_done() has not been called or failed) or 0 if not.
             return _CRYPTO_secure_malloc_initialized();
