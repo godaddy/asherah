@@ -8,7 +8,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
+namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
     internal class OpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator
     {
