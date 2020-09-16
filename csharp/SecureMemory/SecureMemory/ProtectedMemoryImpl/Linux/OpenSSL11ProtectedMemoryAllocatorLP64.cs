@@ -16,8 +16,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
         private readonly LinuxOpenSSL11LP64 openSSL11;
 
-        private bool globallyDisabledCoreDumps = false;
-
         protected OpenSSL11ProtectedMemoryAllocatorLP64(LinuxOpenSSL11LP64 openSSL11)
         {
             this.openSSL11 = openSSL11;
@@ -30,17 +28,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // bzero (Linux, same guarantees as explicit_bzero)
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
-            //Per page-protections aren't possible with the OpenSSL secure heap implementation
+            // Per page-protections aren't possible with the OpenSSL secure heap implementation
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
         {
-            //Per page-protections aren't possible with the OpenSSL secure heap implementation
+            // Per page-protections aren't possible with the OpenSSL secure heap implementation
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            //Per page-protections aren't possible with the OpenSSL secure heap implementation
+            // Per page-protections aren't possible with the OpenSSL secure heap implementation
         }
 
         // ************************************
