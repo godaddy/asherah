@@ -15,6 +15,9 @@ public class BouncyAes256GcmCrypto extends BouncyAeadCrypto {
   private static final int MacSizeBits = 128;
   private static final int KeySizeBits = 256;
 
+  /**
+   * Creates a new {@link com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAeadCrypto} instance.
+   */
   public BouncyAes256GcmCrypto() {
     super();
   }
