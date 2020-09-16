@@ -26,17 +26,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // explicit_bzero (BSD)
         // SecureZeroMemory (Windows)
         // bzero (Linux, same guarantees as explicit_bzero)
-        public void SetNoAccess(IntPtr pointer, ulong length)
+        public virtual void SetNoAccess(IntPtr pointer, ulong length)
         {
             CheckZero(libc.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
         }
 
-        public void SetReadAccess(IntPtr pointer, ulong length)
+        public virtual void SetReadAccess(IntPtr pointer, ulong length)
         {
             CheckZero(libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
         }
 
-        public void SetReadWriteAccess(IntPtr pointer, ulong length)
+        public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             CheckZero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
         }
