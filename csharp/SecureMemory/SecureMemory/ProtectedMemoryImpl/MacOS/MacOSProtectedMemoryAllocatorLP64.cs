@@ -29,6 +29,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             DisableCoreDumpGlobally();
         }
 
+        public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc)
+            : base(libc)
+        {
+            this.libc = libc;
+        }
+
         public override void ZeroMemory(IntPtr pointer, ulong length)
         {
             // This differs on different platforms

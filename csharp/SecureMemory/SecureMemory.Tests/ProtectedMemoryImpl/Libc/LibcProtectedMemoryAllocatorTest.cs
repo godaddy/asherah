@@ -17,7 +17,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
     /// Pure tests have been promoted to ProtectedMemoryAllocatorTest.cs
     /// </summary>
     [Collection("Logger Fixture collection")]
-    public class LibcProtectedMemoryAllocatorTest
+    public class LibcProtectedMemoryAllocatorTest : IDisposable
     {
         private readonly LibcLP64 libc;
         private readonly LibcProtectedMemoryAllocatorLP64 libcProtectedMemoryAllocator;
@@ -29,13 +29,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 libc = new LinuxLibcLP64();
-                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
+                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64((LinuxLibcLP64)libc);
                 linuxProtectedMemoryAllocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 libc = new MacOSLibcLP64();
-                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64();
+                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64((MacOSLibcLP64)libc);
                 macOsProtectedMemoryAllocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else
@@ -44,6 +44,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 libcProtectedMemoryAllocator = null;
                 macOsProtectedMemoryAllocatorMock = null;
             }
+        }
+
+        public void Dispose()
+        {
+            libcProtectedMemoryAllocator?.Dispose();
         }
 
         [Fact]

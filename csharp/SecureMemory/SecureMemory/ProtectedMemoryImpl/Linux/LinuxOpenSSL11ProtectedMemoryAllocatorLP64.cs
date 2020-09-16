@@ -14,18 +14,28 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        private readonly LinuxOpenSSL11LP64 openSSL11;
-        private bool disposedValue;
+        private static LinuxOpenSSL11LP64 openSSL11;
+        private static int refCount = 0;
+        private static object openSSL11Lock = new object();
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
             : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
         {
-            openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
-            CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+            lock (openSSL11Lock)
+            {
+                if (openSSL11 == null)
+                {
+                    refCount++;
+                    openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
+                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
+                    CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+                }
+            }
         }
 
         ~LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
         {
+            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Finalizer");
             Dispose(disposing: false);
         }
 
@@ -59,19 +69,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
-            openSSL11.getrlimit(GetMemLockLimit(), out var rlim);
-            if (rlim.rlim_max != rlimit.UNLIMITED && rlim.rlim_max < length)
-            {
-                throw new MemoryLimitException(
-                    $"Requested MemLock length exceeds resource limit max of {rlim.rlim_max}");
-            }
-
+            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
 
             CheckIntPtr(protectedMemory, "CRYPTO_secure_malloc");
+            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
-                SetNoDump(protectedMemory, length);
+                // SetNoDump(protectedMemory, length);
             }
             catch (Exception)
             {
@@ -84,10 +89,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         public override void Free(IntPtr pointer, ulong length)
         {
+            CheckIntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
+
+            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
@@ -95,10 +103,22 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!disposing)
             {
-                CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
-                disposedValue = true;
+                throw new Exception("FATAL: Reached finalizer for LinuxOpenSSL11ProtectedMemoryAllocator (missing Dispose())");
+            }
+
+            lock (openSSL11Lock)
+            {
+                if (openSSL11 != null)
+                {
+                    refCount--;
+                    if (refCount == 0)
+                    {
+                        Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
+                        CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                    }
+                }
             }
         }
     }

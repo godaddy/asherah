@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 {
     [Collection("Logger Fixture collection")]
-    public class LinuxOpenSSL11ProtectedMemoryAllocatorTest
+    public class LinuxOpenSSL11ProtectedMemoryAllocatorTest : IDisposable
     {
         private LinuxOpenSSL11ProtectedMemoryAllocatorLP64 linuxOpenSSL11ProtectedMemoryAllocatorLP64;
 
@@ -14,50 +14,28 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 64);
+                Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 128);
             }
+        }
+
+        public void Dispose()
+        {
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
+            Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorTest Dispose\n");
         }
 
         [Fact]
         private void TestGetResourceCore()
         {
+            Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore");
             if (linuxOpenSSL11ProtectedMemoryAllocatorLP64 == null)
             {
                 return;
             }
 
             Assert.Equal(4, linuxOpenSSL11ProtectedMemoryAllocatorLP64.GetRlimitCoreResource());
-        }
-
-        [Fact]
-        private void TestZeroMemory()
-        {
-            if (linuxOpenSSL11ProtectedMemoryAllocatorLP64 == null)
-            {
-                return;
-            }
-
-            byte[] origValue = { 1, 2, 3, 4 };
-            ulong length = (ulong)origValue.Length;
-
-            IntPtr pointer = linuxOpenSSL11ProtectedMemoryAllocatorLP64.Alloc(length);
-
-            try
-            {
-                Marshal.Copy(origValue, 0, pointer, (int)length);
-
-                byte[] retValue = new byte[length];
-                Marshal.Copy(pointer, retValue, 0, (int)length);
-                Assert.Equal(origValue, retValue);
-
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64.ZeroMemory(pointer, length);
-                Marshal.Copy(pointer, retValue, 0, (int)length);
-                Assert.Equal(new byte[] { 0, 0, 0, 0 }, retValue);
-            }
-            finally
-            {
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64.Free(pointer, length);
-            }
+            Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore End");
         }
     }
 }

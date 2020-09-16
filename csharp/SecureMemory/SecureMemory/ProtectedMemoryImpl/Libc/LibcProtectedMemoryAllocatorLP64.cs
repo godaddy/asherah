@@ -109,6 +109,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             }
         }
 
+        public virtual void Dispose()
+        {
+        }
+
         internal abstract int GetRlimitCoreResource();
 
         // ************************************

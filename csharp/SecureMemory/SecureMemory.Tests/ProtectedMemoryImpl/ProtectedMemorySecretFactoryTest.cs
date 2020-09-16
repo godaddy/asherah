@@ -1,16 +1,22 @@
+using System;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemorySecretFactoryTest
+    public class ProtectedMemorySecretFactoryTest : IDisposable
     {
         private readonly ProtectedMemorySecretFactory protectedMemorySecretFactory;
 
         public ProtectedMemorySecretFactoryTest()
         {
             protectedMemorySecretFactory = new ProtectedMemorySecretFactory();
+        }
+
+        public void Dispose()
+        {
+            protectedMemorySecretFactory.Dispose();
         }
 
         // TODO Mocking static methods is not yet possible in Moq framework.
@@ -33,14 +39,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestCreateSecretByteArray()
         {
-            Secret secret = protectedMemorySecretFactory.CreateSecret(new byte[] { 0, 1 });
+            using Secret secret = protectedMemorySecretFactory.CreateSecret(new byte[] { 0, 1 });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
         }
 
         [Fact]
         private void TestCreateSecretCharArray()
         {
-            Secret secret = protectedMemorySecretFactory.CreateSecret(new[] { 'a', 'b' });
+            using Secret secret = protectedMemorySecretFactory.CreateSecret(new[] { 'a', 'b' });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
         }
     }

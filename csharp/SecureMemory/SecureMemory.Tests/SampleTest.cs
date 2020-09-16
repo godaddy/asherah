@@ -9,9 +9,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void EndToEndTest()
         {
-            ISecretFactory secretFactory = new ProtectedMemorySecretFactory();
+            using ISecretFactory secretFactory = new ProtectedMemorySecretFactory();
             var secretBytes = new byte[] { 0, 1, 2, 3 };
-            var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]);
+            using var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]);
             secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
         }
     }

@@ -10,7 +10,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemoryAllocatorTest
+    public class ProtectedMemoryAllocatorTest : IDisposable
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
@@ -34,6 +34,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 throw new NotSupportedException("Cannot determine platform for testing");
             }
+        }
+
+        public void Dispose()
+        {
+            protectedMemoryAllocator.Dispose();
         }
 
         private static void CheckIntPtr(IntPtr intPointer, string methodName)

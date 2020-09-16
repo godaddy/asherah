@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 {
     [Collection("Logger Fixture collection")]
-    public class LinuxProtectedMemoryAllocatorTest
+    public class LinuxProtectedMemoryAllocatorTest : IDisposable
     {
         private LinuxProtectedMemoryAllocatorLP64 linuxProtectedMemoryAllocator;
 
@@ -16,6 +16,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             {
                 linuxProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
             }
+        }
+
+        public void Dispose()
+        {
+            linuxProtectedMemoryAllocator?.Dispose();
         }
 
         [Fact]

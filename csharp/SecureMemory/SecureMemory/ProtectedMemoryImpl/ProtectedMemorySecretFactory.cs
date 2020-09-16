@@ -11,11 +11,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
     {
         // Detect methods should throw if they know for sure what the OS/platform is, but it isn't supported
         // Detect methods should return null if they don't know for sure what the OS/platform is
-        private readonly IProtectedMemoryAllocator allocator;
+        private static IProtectedMemoryAllocator allocator;
+        private static int refCount = 0;
+        private static object allocatorLock = new object();
 
         public ProtectedMemorySecretFactory()
         {
-            allocator = GetAllocator();
+            GetAllocator();
         }
 
         public Secret CreateSecret(byte[] secretData)
@@ -28,18 +30,54 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return ProtectedMemorySecret.FromCharArray(secretData, allocator);
         }
 
+        public void Dispose()
+        {
+            Console.WriteLine("ProtectedMemorySecretFactory: Dispose");
+            lock (allocatorLock)
+            {
+                if (allocator != null)
+                {
+                    Console.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
+                    refCount--;
+                    if (refCount == 0)
+                    {
+                        Console.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
+                        allocator.Dispose();
+                        Console.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
+                        allocator = null;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
+                    }
+                }
+            }
+        }
+
         internal static IProtectedMemoryAllocator GetAllocator()
         {
-            var allocator = DetectViaRuntimeInformation()
+            lock (allocatorLock)
+            {
+                if (allocator != null)
+                {
+                    refCount++;
+                    Console.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
+                    return allocator;
+                }
+
+                allocator = DetectViaRuntimeInformation()
                          ?? DetectViaOsVersionPlatform()
                          ?? DetectOsDescription();
 
-            if (allocator == null)
-            {
-                throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
-            }
+                if (allocator == null)
+                {
+                    throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
+                }
 
-            return allocator;
+                refCount++;
+                Console.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
+                return allocator;
+            }
         }
 
         [ExcludeFromCodeCoverage]
@@ -79,8 +117,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                         {
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
                         }
+
                         if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 64);
+                        {
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 128);
+                        }
+
                         return new LinuxProtectedMemoryAllocatorLP64();
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture Linux X86");

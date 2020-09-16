@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
 {
     [Collection("Logger Fixture collection")]
-    public class WindowsProtectedMemoryAllocatorTest
+    public class WindowsProtectedMemoryAllocatorTest : IDisposable
     {
         private WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
 
@@ -16,6 +16,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             {
                 windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
             }
+        }
+
+        public void Dispose()
+        {
+            windowsProtectedMemoryAllocator?.Dispose();
         }
 
         [Fact]
