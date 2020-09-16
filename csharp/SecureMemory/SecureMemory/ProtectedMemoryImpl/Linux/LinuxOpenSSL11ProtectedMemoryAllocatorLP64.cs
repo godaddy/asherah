@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
-using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL11;
+using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -10,15 +10,16 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
-    internal class OpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator
+    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         private readonly LinuxOpenSSL11LP64 openSSL11;
 
-        protected OpenSSL11ProtectedMemoryAllocatorLP64(LinuxOpenSSL11LP64 openSSL11)
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
+            : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
         {
-            this.openSSL11 = openSSL11;
+            openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
         }
 
         // Implementation order of preference:

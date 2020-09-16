@@ -24,7 +24,4 @@
   <ItemGroup Label="Project References">
     <ProjectReference Include="../PlatformNative/PlatformNative.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ProtectedMemoryImpl\OpenSSL11\" />
-  </ItemGroup>
 </Project>

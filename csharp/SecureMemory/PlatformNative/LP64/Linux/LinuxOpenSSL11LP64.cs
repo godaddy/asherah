@@ -7,12 +7,12 @@ using System.Text;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using size_t = System.UInt64;
 
-namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL11
+namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
-    public class LinuxOpenSSL11LP64 : LibcLP64
+    public class LinuxOpenSSL11LP64 : LinuxLibcLP64
     {
         public bool IsAvailable()
         {

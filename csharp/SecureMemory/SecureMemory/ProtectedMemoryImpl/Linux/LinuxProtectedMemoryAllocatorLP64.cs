@@ -28,6 +28,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             libc = (LinuxLibcLP64)GetLibc();
         }
 
+        public LinuxProtectedMemoryAllocatorLP64(LinuxLibcLP64 libc)
+            : base(libc)
+        {
+            this.libc = libc;
+        }
+
         // Platform specific zero memory
         public override void ZeroMemory(IntPtr pointer, ulong length)
         {

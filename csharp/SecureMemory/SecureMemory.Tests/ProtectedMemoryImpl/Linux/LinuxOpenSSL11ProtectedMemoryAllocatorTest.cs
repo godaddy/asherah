@@ -6,33 +6,33 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 {
     [Collection("Logger Fixture collection")]
-    public class OpenSSL11LinuxProtectedMemoryAllocatorTest
+    public class LinuxOpenSSL11ProtectedMemoryAllocatorTest
     {
-        private OpenSSL11LinuxProtectedMemoryAllocatorLP64 openSSL11linuxProtectedMemoryAllocator;
+        private LinuxOpenSSL11ProtectedMemoryAllocatorLP64 linuxOpenSSL11ProtectedMemoryAllocatorLP64;
 
-        public OpenSSL11LinuxProtectedMemoryAllocatorTest()
+        public LinuxOpenSSL11ProtectedMemoryAllocatorTest()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                openSSL11linuxProtectedMemoryAllocator = new OpenSSL11LinuxProtectedMemoryAllocatorLP64();
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64();
             }
         }
 
         [Fact]
         private void TestGetResourceCore()
         {
-            if (linuxProtectedMemoryAllocator == null)
+            if (linuxOpenSSL11ProtectedMemoryAllocatorLP64 == null)
             {
                 return;
             }
 
-            Assert.Equal(4, openSSL11linuxProtectedMemoryAllocator.GetRlimitCoreResource());
+            Assert.Equal(4, linuxOpenSSL11ProtectedMemoryAllocatorLP64.GetRlimitCoreResource());
         }
 
         [Fact]
         private void TestZeroMemory()
         {
-            if (openSSL11linuxProtectedMemoryAllocator == null)
+            if (linuxOpenSSL11ProtectedMemoryAllocatorLP64 == null)
             {
                 return;
             }
@@ -40,7 +40,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             byte[] origValue = { 1, 2, 3, 4 };
             ulong length = (ulong)origValue.Length;
 
-            IntPtr pointer = openSSL11linuxProtectedMemoryAllocator.Alloc(length);
+            IntPtr pointer = linuxOpenSSL11ProtectedMemoryAllocatorLP64.Alloc(length);
 
             try
             {
@@ -50,13 +50,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
                 Marshal.Copy(pointer, retValue, 0, (int)length);
                 Assert.Equal(origValue, retValue);
 
-                openSSL11linuxProtectedMemoryAllocator.ZeroMemory(pointer, length);
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.ZeroMemory(pointer, length);
                 Marshal.Copy(pointer, retValue, 0, (int)length);
                 Assert.Equal(new byte[] { 0, 0, 0, 0 }, retValue);
             }
             finally
             {
-                openSSL11linuxProtectedMemoryAllocator.Free(pointer, length);
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.Free(pointer, length);
             }
         }
     }
