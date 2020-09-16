@@ -17,7 +17,5 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         void SetReadAccess(IntPtr pointer, ulong length);
 
         void SetNoAccess(IntPtr pointer, ulong length);
-
-        void ZeroMemory(IntPtr pointer, ulong length);
     }
 }

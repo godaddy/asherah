@@ -173,8 +173,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 try
                 {
                     pm.SetReadWriteAccess(oldPtr, len);
-
-                    pm.ZeroMemory(oldPtr, len);
                 }
                 finally
                 {
