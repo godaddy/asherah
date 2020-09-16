@@ -80,7 +80,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
                         }
                         if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(524288, 128);
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 64);
                         return new LinuxProtectedMemoryAllocatorLP64();
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture Linux X86");
