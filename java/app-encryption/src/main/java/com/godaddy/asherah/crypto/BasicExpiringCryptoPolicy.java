@@ -30,6 +30,10 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   private final boolean notifyExpiredIntermediateKeyOnRead;
 
 
+  /**
+   * Initialize a {@link BasicExpiringCryptoPolicy} builder.
+   * @return The current {@code KeyExpirationDaysStep} object.
+   */
   public static KeyExpirationDaysStep newBuilder() {
     return new Builder();
   }
@@ -190,38 +194,48 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
   }
 
   public interface KeyExpirationDaysStep {
+    /**
+     * Specifies the number of days after which the keys expire.
+     * @param days The expiration limit of keys.
+     * @return The current {@code RevokeCheckMinutesStep} instance.
+     */
     RevokeCheckMinutesStep withKeyExpirationDays(int days);
   }
 
   public interface RevokeCheckMinutesStep {
+    /**
+     * Specifies the revoke check limit (in minutes) for keys.
+     * @param minutes The revoke check limit (in minutes) for keys.
+     * @return The current {@code BuildStep} instance.
+     */
     BuildStep withRevokeCheckMinutes(int minutes);
   }
 
   public interface BuildStep {
     /**
      * Specifies the key rotation strategy to use. Defaults to {@link KeyRotationStrategy#INLINE}.
-     * @param rotationStrategy the strategy to use
+     * @param rotationStrategy the strategy to use.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withRotationStrategy(KeyRotationStrategy rotationStrategy);
 
     /**
      * Specifies whether to cache system keys. Defaults to {@value Builder#DEFAULT_CAN_CACHE_SYSTEM_KEYS}.
-     * @param cacheSystemKeys whether to cache system keys
+     * @param cacheSystemKeys whether to cache system keys.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withCanCacheSystemKeys(boolean cacheSystemKeys);
 
     /**
      * Specifies whether to cache intermediate keys. Defaults to {@value Builder#DEFAULT_CAN_CACHE_INTERMEDIATE_KEYS}.
-     * @param cacheIntermediateKeys whether to cache intermediate keys
+     * @param cacheIntermediateKeys whether to cache intermediate keys.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withCanCacheIntermediateKeys(boolean cacheIntermediateKeys);
 
     /**
      * Specifies whether to cache sessions. Defaults to {@value Builder#DEFAULT_CAN_CACHE_SESSIONS}.
-     * @param cacheSessions whether to cache sessions
+     * @param cacheSessions whether to cache sessions.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withCanCacheSessions(boolean cacheSessions);
@@ -229,7 +243,7 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     /**
      * Specifies the session cache max size to use if session caching is enabled. Defaults to
      * {@value Builder#DEFAULT_SESSION_CACHE_SIZE}.
-     * @param sessionCacheMaxSize the session cache max size to use
+     * @param sessionCacheMaxSize the session cache max size to use.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withSessionCacheMaxSize(long sessionCacheMaxSize);
@@ -237,7 +251,7 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     /**
      * Specifies the session cache expiration in minutes if session caching is enabled. Defaults to
      * {@value Builder#DEFAULT_SESSION_CACHE_EXPIRY_MINUTES}.
-     * @param sessionCacheExpireMinutes the session cache expiration to use, in minutes
+     * @param sessionCacheExpireMinutes the session cache expiration to use, in minutes.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withSessionCacheExpireMinutes(int sessionCacheExpireMinutes);
@@ -245,7 +259,7 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     /**
      * Specifies whether to notify when expired system keys are read. Defaults to
      * {@value Builder#DEFAULT_NOTIFY_EXPIRED_SYSTEM_KEY_ON_READ}. NOTE: not currently implemented.
-     * @param notify whether to notify
+     * @param notify whether to notify.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withNotifyExpiredSystemKeyOnRead(boolean notify);
@@ -253,7 +267,7 @@ public class BasicExpiringCryptoPolicy implements CryptoPolicy {
     /**
      * Specifies whether to notify when expired intermediate keys are read. Defaults to
      * {@value Builder#DEFAULT_NOTIFY_EXPIRED_INTERMEDIATE_KEY_ON_READ}. NOTE: not currently implemented.
-     * @param notify whether to notify
+     * @param notify whether to notify.
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withNotifyExpiredIntermediateKeyOnRead(boolean notify);
