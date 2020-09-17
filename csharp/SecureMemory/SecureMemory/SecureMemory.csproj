@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <PackageId>GoDaddy.Asherah.SecureMemory</PackageId>
     <Title>SecureMemory</Title>
@@ -6,23 +7,24 @@
     <Company>GoDaddy</Company>
     <Description>Provides a secure area of memory to store sensitive data</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.SecureMemory</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
     <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
-  <ItemGroup Label="Package References">
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
+
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup Label="Project References">
-    <ProjectReference Include="../PlatformNative/PlatformNative.csproj" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlatformNative\PlatformNative.csproj" />
   </ItemGroup>
+
 </Project>

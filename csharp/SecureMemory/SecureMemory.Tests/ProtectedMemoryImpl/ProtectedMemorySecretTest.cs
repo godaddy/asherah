@@ -7,7 +7,6 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
-using GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux;
 using Moq;
 using Xunit;
 

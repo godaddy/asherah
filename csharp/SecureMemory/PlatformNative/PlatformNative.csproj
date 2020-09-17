@@ -1,25 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.PlatformNative</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!-- NOTE: Version controlled via Directory.Build.props  -->
-    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.PlatformNative</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
     <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/SecureMemory/PlatformNative</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
-  <ItemGroup Label="Package References">
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
-    <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+
 </Project>
