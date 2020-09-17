@@ -76,7 +76,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
-                // SetNoDump(protectedMemory, length);
+                SetNoDump(protectedMemory, length);
             }
             catch (Exception)
             {

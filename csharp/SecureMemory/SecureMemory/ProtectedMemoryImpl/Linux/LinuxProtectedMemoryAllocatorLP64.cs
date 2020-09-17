@@ -49,8 +49,23 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         internal override void SetNoDump(IntPtr protectedMemory, ulong length)
         {
+            CheckIntPtr(protectedMemory, "SetNoDump");
+            if (length == 0)
+            {
+                throw new Exception("SetNoDump: Invalid length");
+            }
+
+            // Calculate the 4KB page aligned pointer for madvise
+            long addr = protectedMemory.ToInt64();
+            if (addr % 4096 != 0)
+            {
+                addr -= addr % 4096;
+            }
+
+            IntPtr pagePointer = new IntPtr(addr);
+
             // Enable selective core dump avoidance
-            CheckZero(libc.madvise(protectedMemory, length, (int)Madvice.MADV_DONTDUMP), "madvise(MADV_DONTDUMP)");
+            CheckZero(libc.madvise(pagePointer, length, (int)Madvice.MADV_DONTDUMP), $"madvise({protectedMemory}, {length}, MADV_DONTDUMP)");
         }
 
         // These flags are platform specific in their integer values
