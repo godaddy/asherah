@@ -56,10 +56,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
                 byte[] retValue = new byte[length];
                 Marshal.Copy(pointer, retValue, 0, (int)length);
                 Assert.Equal(origValue, retValue);
-
-                linuxProtectedMemoryAllocator.ZeroMemory(pointer, length);
-                Marshal.Copy(pointer, retValue, 0, (int)length);
-                Assert.Equal(new byte[] { 0, 0, 0, 0 }, retValue);
             }
             finally
             {

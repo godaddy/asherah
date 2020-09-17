@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         }
 
         // Platform specific zero memory
-        public override void ZeroMemory(IntPtr pointer, ulong length)
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
         {
             CheckIntPtr(pointer, "ZeroMemory");
             if (length < 1)

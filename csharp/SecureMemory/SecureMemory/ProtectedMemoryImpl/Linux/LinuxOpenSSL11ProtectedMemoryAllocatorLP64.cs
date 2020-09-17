@@ -68,7 +68,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             return LinuxOpenSSL11LP64.IsAvailable();
         }
 
-        public override void ZeroMemory(IntPtr pointer, ulong length)
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
         {
             // CRYPTO_secure_clear_free includes ZeroMemory functionality
         }

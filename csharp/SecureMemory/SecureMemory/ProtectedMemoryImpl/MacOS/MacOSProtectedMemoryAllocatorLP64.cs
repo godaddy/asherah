@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             this.libc = libc;
         }
 
-        public override void ZeroMemory(IntPtr pointer, ulong length)
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
         {
             // This differs on different platforms
             // MacOS has memset_s which is standardized and secure
