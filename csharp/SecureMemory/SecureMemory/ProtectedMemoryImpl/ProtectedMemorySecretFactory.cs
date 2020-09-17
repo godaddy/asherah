@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
@@ -16,7 +17,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private static int refCount = 0;
         private static object allocatorLock = new object();
 
-        public ProtectedMemorySecretFactory()
+        public ProtectedMemorySecretFactory(IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)
@@ -28,9 +29,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     return;
                 }
 
-                allocator = DetectViaRuntimeInformation()
-                         ?? DetectViaOsVersionPlatform()
-                         ?? DetectOsDescription();
+                allocator = DetectViaRuntimeInformation(configuration)
+                         ?? DetectViaOsVersionPlatform(configuration)
+                         ?? DetectOsDescription(configuration);
 
                 if (allocator == null)
                 {
@@ -80,7 +81,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform()
+        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -104,7 +105,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaRuntimeInformation()
+        private static IProtectedMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -117,9 +118,18 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
                         }
 
-                        if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                        if (string.Compare(configuration["secureHeapEngine"], "openssl11", true) == 0)
                         {
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+                            if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                            {
+                                ulong heapSize = ulong.Parse(configuration["heapSize"]);
+                                int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
+                                return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+                            }
+                            else
+                            {
+                                throw new PlatformNotSupportedException("OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                            }
                         }
 
                         return new LinuxProtectedMemoryAllocatorLP64();
@@ -163,7 +173,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectOsDescription()
+        private static IProtectedMemoryAllocator DetectOsDescription(IConfiguration configuration)
         {
             var desc = RuntimeInformation.OSDescription;
             if (desc.IndexOf("Linux", StringComparison.OrdinalIgnoreCase) != -1)

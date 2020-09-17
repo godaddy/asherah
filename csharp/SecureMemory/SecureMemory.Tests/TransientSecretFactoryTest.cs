@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
@@ -16,8 +17,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection()
+                .Build();
+
             Debug.WriteLine("\nTransientSecretFactoryTest: New TransientSecretFactory");
-            transientSecretFactory = new TransientSecretFactory();
+            transientSecretFactory = new TransientSecretFactory(configuration);
         }
 
         public void Dispose()

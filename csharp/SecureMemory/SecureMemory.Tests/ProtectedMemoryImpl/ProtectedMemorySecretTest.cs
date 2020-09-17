@@ -8,6 +8,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -20,12 +21,17 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             new Mock<IProtectedMemoryAllocator>();
 
         private readonly IProtectedMemoryAllocator protectedMemoryAllocatorController;
+        private readonly IConfiguration configuration;
 
         public ProtectedMemorySecretTest()
         {
             Trace.Listeners.RemoveAt(0);
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
+
+            configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection()
+                .Build();
 
             Debug.WriteLine("\nProtectedMemorySecretTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -209,7 +215,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestWithSecretBytesMultiThreadedAccess()
         {
             Debug.WriteLine("TestWithSecretBytesMultiThreadedAccess start");
-            using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory())
+            using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
             {
                 byte[] secretBytes = { 0, 1, 2, 3 };
                 Debug.WriteLine("Creating secret");

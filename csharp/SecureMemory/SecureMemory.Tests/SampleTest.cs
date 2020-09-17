@@ -1,4 +1,5 @@
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics;
 using Xunit;
@@ -15,10 +16,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection()
+                .Build();
+
             try
             {
                 Debug.WriteLine("SampleTest.EndToEndTest");
-                using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory())
+                using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
                 {
                     var secretBytes = new byte[] { 0, 1, 2, 3 };
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
