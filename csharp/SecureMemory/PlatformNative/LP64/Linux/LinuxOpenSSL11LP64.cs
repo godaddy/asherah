@@ -33,15 +33,9 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 
         public int CRYPTO_secure_malloc_init(size_t size, int minsize)
         {
-            if ((size & (size - 1)) != 0)
-            {
-                throw new Exception("size must be power of 2");
-            }
-
-            if ((minsize & (minsize - 1)) != 0)
-            {
-                throw new Exception("minsize must be power of 2");
-            }
+            // Round values up to nearest power of 2 as required by CRYPTO_secure_malloc_init
+            size = (size_t)Math.Pow(2, (size_t)Math.Log(size - 1, 2) + 1);
+            minsize = (int)Math.Pow(2, (int)Math.Log(minsize - 1, 2) + 1);
 
             if (CRYPTO_secure_malloc_initialized() == 1)
             {
