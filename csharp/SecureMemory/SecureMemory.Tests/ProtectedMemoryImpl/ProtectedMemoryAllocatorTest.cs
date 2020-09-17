@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
@@ -18,7 +19,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public ProtectedMemoryAllocatorTest()
         {
-            Console.WriteLine("ProtectedMemoryAllocatorTest ctor");
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 protectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
@@ -39,7 +44,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public void Dispose()
         {
-            Console.WriteLine("ProtectedMemoryAllocatorTest.Dispose");
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.Dispose");
             protectedMemoryAllocator.Dispose();
         }
 
@@ -64,7 +69,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestSetReadWriteAccess()
         {
-            Console.WriteLine("ProtectedMemoryAllocatorTest.TestSetReadWriteAccess");
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestSetReadWriteAccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
 
             try
@@ -85,7 +90,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestAllocSuccess()
         {
-            Console.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
             CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
 

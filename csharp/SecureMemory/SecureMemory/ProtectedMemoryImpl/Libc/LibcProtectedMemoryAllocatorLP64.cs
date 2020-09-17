@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
@@ -148,7 +149,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
-                Console.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
+                Debug.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -160,7 +161,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
-                Console.WriteLine($"CheckResult failed for {methodName} result: {result} expected: {expected} errno: {errno}");
+                Debug.WriteLine($"CheckResult failed for {methodName} result: {result} expected: {expected} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -170,7 +171,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             if (result != 0)
             {
                 var errno = Marshal.GetLastWin32Error();
-                Console.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
+                Debug.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, exceptionInProgress);
             }
         }

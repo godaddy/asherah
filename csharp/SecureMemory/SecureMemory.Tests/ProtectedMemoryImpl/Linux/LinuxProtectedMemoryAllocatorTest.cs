@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Xunit;
@@ -12,7 +13,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public LinuxProtectedMemoryAllocatorTest()
         {
-            Console.WriteLine("LinuxProtectedMemoryAllocatorTest ctor");
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("LinuxProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 linuxProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
@@ -21,7 +26,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public void Dispose()
         {
-            Console.WriteLine("LinuxProtectedMemoryAllocatorTest.Dispose");
+            Debug.WriteLine("LinuxProtectedMemoryAllocatorTest.Dispose");
             linuxProtectedMemoryAllocator?.Dispose();
         }
 

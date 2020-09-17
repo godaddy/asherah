@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
@@ -31,12 +32,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                         throw new Exception("GetLibc returned null object for openSSL11");
                     }
 
-                    Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
+                    Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
                 }
 
                 if (refCount == 0)
                 {
-                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
+                    Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
                     try
                     {
                         CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
@@ -49,17 +50,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 }
                 else
                 {
-                    Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: refCount is > 0, not calling CRYPTO_secure_malloc_init");
+                    Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: refCount is > 0, not calling CRYPTO_secure_malloc_init");
                 }
 
                 refCount++;
-                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: ctor New refCount is {refCount}");
+                Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: ctor New refCount is {refCount}");
             }
         }
 
         ~LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
         {
-            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Finalizer");
+            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Finalizer");
             Dispose(disposing: false);
         }
 
@@ -88,11 +89,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
-            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
+            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
 
             CheckIntPtr(protectedMemory, "CRYPTO_secure_malloc");
-            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
+            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
                 SetNoDump(protectedMemory, length);
@@ -110,13 +111,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             CheckIntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
-            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
+            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
         }
 
         public override void Dispose()
         {
-            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Dispose");
+            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Dispose");
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
@@ -135,17 +136,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     throw new Exception("LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose: openSSL11 is null!");
                 }
 
-                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 refCount is {refCount}");
+                Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 refCount is {refCount}");
                 refCount--;
-                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 new refCount is {refCount}");
+                Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 new refCount is {refCount}");
                 if (refCount == 0)
                 {
-                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
+                    Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
                     CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
                 }
                 else
                 {
-                    Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 Skipping CRYPTO_secure_malloc_done due to refCount {refCount}");
+                    Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 Skipping CRYPTO_secure_malloc_done due to refCount {refCount}");
                 }
             }
         }

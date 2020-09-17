@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Moq;
 using Xunit;
 
@@ -11,19 +12,23 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public SecretTest()
         {
-            Console.WriteLine("\nSecretTest ctor");
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("\nSecretTest ctor");
             secretMock = new Mock<Secret>();
         }
 
         public void Dispose()
         {
-            Console.WriteLine("SecretTest Dispose\n");
+            Debug.WriteLine("SecretTest Dispose\n");
         }
 
         [Fact]
         private void TestWithSecretBytesActionOfByte()
         {
-            Console.WriteLine("\nTestWithSecretBytesActionOfByte: Start");
+            Debug.WriteLine("\nTestWithSecretBytesActionOfByte: Start");
             byte[] secretBytes = { 0, 1 };
             Action<byte[]> actionWithSecret = actualBytes =>
             {
@@ -34,13 +39,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             secretMock.Setup(x => x.WithSecretBytes(It.IsAny<Func<byte[], bool>>()))
                 .Returns<Func<byte[], bool>>(action => action(secretBytes));
             secretMock.Object.WithSecretBytes(actionWithSecret);
-            Console.WriteLine("TestWithSecretBytesActionOfByte: Finish\n");
+            Debug.WriteLine("TestWithSecretBytesActionOfByte: Finish\n");
         }
 
         [Fact]
         private void TestWithSecretUtf8CharsActionOfChar()
         {
-            Console.WriteLine("\nTestWithSecretUtf8CharsActionOfChar: Start");
+            Debug.WriteLine("\nTestWithSecretUtf8CharsActionOfChar: Start");
             char[] secretChars = { (char)0, (char)1 };
             Action<char[]> actionWithSecret = actualChars =>
             {
@@ -51,7 +56,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             secretMock.Setup(x => x.WithSecretUtf8Chars(It.IsAny<Func<char[], bool>>()))
                 .Returns<Func<char[], bool>>(action => action(secretChars));
             secretMock.Object.WithSecretUtf8Chars(actionWithSecret);
-            Console.WriteLine("TestWithSecretUtf8CharsActionOfChar: Finish\n");
+            Debug.WriteLine("TestWithSecretUtf8CharsActionOfChar: Finish\n");
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Xunit;
@@ -12,9 +13,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorTest()
         {
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+                Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
             }
         }
@@ -22,20 +27,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         public void Dispose()
         {
             linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
-            Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorTest Dispose\n");
+            Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorTest Dispose\n");
         }
 
         [Fact]
         private void TestGetResourceCore()
         {
-            Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore");
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore");
             if (linuxOpenSSL11ProtectedMemoryAllocatorLP64 == null)
             {
                 return;
             }
 
             Assert.Equal(4, linuxOpenSSL11ProtectedMemoryAllocatorLP64.GetRlimitCoreResource());
-            Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore End");
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore End");
         }
     }
 }

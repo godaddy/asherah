@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Xunit;
 
@@ -11,32 +12,36 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public TransientSecretFactoryTest()
         {
-            Console.WriteLine("\nTransientSecretFactoryTest: New TransientSecretFactory");
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("\nTransientSecretFactoryTest: New TransientSecretFactory");
             transientSecretFactory = new TransientSecretFactory();
         }
 
         public void Dispose()
         {
             transientSecretFactory.Dispose();
-            Console.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
+            Debug.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
         }
 
         [Fact]
         private void TestCreateSecretByteArray()
         {
-            Console.WriteLine("\nTestCreateSecretByteArray: Start");
+            Debug.WriteLine("\nTestCreateSecretByteArray: Start");
             using Secret secret = transientSecretFactory.CreateSecret(new byte[] { 0, 1 });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
-            Console.WriteLine("TestCreateSecretByteArray: Finish\n");
+            Debug.WriteLine("TestCreateSecretByteArray: Finish\n");
         }
 
         [Fact]
         private void TestCreateSecretCharArray()
         {
-            Console.WriteLine("\nTestCreateSecretCharArray: Start");
+            Debug.WriteLine("\nTestCreateSecretCharArray: Start");
             using Secret secret = transientSecretFactory.CreateSecret(new[] { 'a', 'b' });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
-            Console.WriteLine("TestCreateSecretCharArray: Finish\n");
+            Debug.WriteLine("TestCreateSecretCharArray: Finish\n");
         }
     }
 }

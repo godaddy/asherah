@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 
 namespace GoDaddy.Asherah.SecureMemory
@@ -9,13 +10,13 @@ namespace GoDaddy.Asherah.SecureMemory
 
         public TransientSecretFactory()
         {
-            Console.WriteLine("TransientSecretFactory: New");
+            Debug.WriteLine("TransientSecretFactory: New");
             secretFactory = new ProtectedMemorySecretFactory();
         }
 
         public void Dispose()
         {
-            Console.WriteLine("TransientSecretFactory: Dispose");
+            Debug.WriteLine("TransientSecretFactory: Dispose");
             secretFactory.Dispose();
         }
 

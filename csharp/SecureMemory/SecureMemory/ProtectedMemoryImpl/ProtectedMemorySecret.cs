@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -22,7 +23,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator)
         {
-            Console.WriteLine("ProtectedMemorySecret ctor");
+            Debug.WriteLine("ProtectedMemorySecret ctor");
             this.allocator = allocator;
 
             length = (ulong)sourceBytes.Length;
@@ -57,7 +58,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         ~ProtectedMemorySecret()
         {
-            Console.WriteLine($"ProtectedMemorySecret: Finalizer");
+            Debug.WriteLine($"ProtectedMemorySecret: Finalizer");
             Dispose(disposing: false);
         }
 
@@ -112,20 +113,20 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override Secret CopySecret()
         {
-            Console.WriteLine("ProtectedMemorySecret.CopySecret");
+            Debug.WriteLine("ProtectedMemorySecret.CopySecret");
             return WithSecretBytes(bytes => new ProtectedMemorySecret(bytes, allocator));
         }
 
         public override void Close()
         {
-            Console.WriteLine("ProtectedMemorySecret.Close");
+            Debug.WriteLine("ProtectedMemorySecret.Close");
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         public override void Dispose()
         {
-            Console.WriteLine("ProtectedMemorySecret.Dispose");
+            Debug.WriteLine("ProtectedMemorySecret.Dispose");
             Dispose(true);
             GC.SuppressFinalize(this);
         }

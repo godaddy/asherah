@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
@@ -17,13 +18,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public ProtectedMemorySecretFactory()
         {
-            Console.WriteLine("ProtectedMemorySecretFactory ctor");
+            Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)
             {
                 if (allocator != null)
                 {
                     refCount++;
-                    Console.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
+                    Debug.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
                     return;
                 }
 
@@ -36,9 +37,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
                 }
 
-                Console.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
+                Debug.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
                 refCount++;
-                Console.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
+                Debug.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
             }
         }
 
@@ -54,7 +55,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public void Dispose()
         {
-            Console.WriteLine("ProtectedMemorySecretFactory: Dispose");
+            Debug.WriteLine("ProtectedMemorySecretFactory: Dispose");
             lock (allocatorLock)
             {
                 if (allocator == null)
@@ -62,18 +63,18 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     throw new Exception("ProtectedMemorySecretFactory.Dispose: Allocator is null!");
                 }
 
-                Console.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
+                Debug.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
                 refCount--;
                 if (refCount == 0)
                 {
-                    Console.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
+                    Debug.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
                     allocator.Dispose();
-                    Console.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
+                    Debug.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
                     allocator = null;
                 }
                 else
                 {
-                    Console.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
+                    Debug.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
                 }
             }
         }
