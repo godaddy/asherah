@@ -17,7 +17,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private static int refCount = 0;
         private static object allocatorLock = new object();
 
-        public ProtectedMemorySecretFactory(IConfiguration configuration)
+        public ProtectedMemorySecretFactory(IConfiguration configuration = null)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)
@@ -118,17 +118,20 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
                         }
 
-                        if (string.Compare(configuration["secureHeapEngine"], "openssl11", true) == 0)
+                        if (configuration != null)
                         {
-                            if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                            if (string.Compare(configuration["secureHeapEngine"], "openssl11", true) == 0)
                             {
-                                ulong heapSize = ulong.Parse(configuration["heapSize"]);
-                                int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
-                                return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
-                            }
-                            else
-                            {
-                                throw new PlatformNotSupportedException("OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                                if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                                {
+                                    ulong heapSize = ulong.Parse(configuration["heapSize"]);
+                                    int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
+                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+                                }
+                                else
+                                {
+                                    throw new PlatformNotSupportedException("OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                                }
                             }
                         }
 

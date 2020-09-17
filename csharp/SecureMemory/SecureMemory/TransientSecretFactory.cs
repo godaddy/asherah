@@ -9,7 +9,7 @@ namespace GoDaddy.Asherah.SecureMemory
     {
         private readonly ISecretFactory secretFactory;
 
-        public TransientSecretFactory(IConfiguration configuration)
+        public TransientSecretFactory(IConfiguration configuration = null)
         {
             Debug.WriteLine("TransientSecretFactory: New");
             secretFactory = new ProtectedMemorySecretFactory(configuration);
