@@ -37,6 +37,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // Platform specific zero memory
         public override void ZeroMemory(IntPtr pointer, ulong length)
         {
+            CheckIntPtr(pointer, "ZeroMemory");
+            if (length < 1)
+            {
+                throw new Exception("ZeroMemory: Invalid length");
+            }
+
             // Glibc bzero doesn't seem to be vulnerable to being optimized away
             // Glibc doesn't seem to have explicit_bzero, memset_s, or memset_explicit
             libc.bzero(pointer, length);
