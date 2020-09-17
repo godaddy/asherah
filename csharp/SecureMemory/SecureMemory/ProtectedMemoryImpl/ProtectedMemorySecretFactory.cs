@@ -126,7 +126,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                                 {
                                     ulong heapSize = ulong.Parse(configuration["heapSize"]);
                                     int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
-                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(heapSize, minimumAllocationSize);
                                 }
                                 else
                                 {
