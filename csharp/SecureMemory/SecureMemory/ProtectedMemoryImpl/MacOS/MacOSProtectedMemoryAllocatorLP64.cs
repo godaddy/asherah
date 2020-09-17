@@ -42,6 +42,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             libc.memset_s(pointer, length, 0, length);
         }
 
+        public override void Dispose()
+        {
+        }
+
         internal override int GetRlimitCoreResource()
         {
             return (int)RlimitResource.RLIMIT_CORE;

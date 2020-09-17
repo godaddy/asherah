@@ -31,7 +31,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                 {
-                    protectedMemoryAllocatorController = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 128);
+                    protectedMemoryAllocatorController = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
                 }
                 else
                 {
@@ -46,6 +46,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public void Dispose()
         {
+            Console.WriteLine("ProtectedMemorySecretTest.Dispose");
             protectedMemoryAllocatorController?.Dispose();
             Console.WriteLine("ProtectedMemorySecretTest End\n");
         }

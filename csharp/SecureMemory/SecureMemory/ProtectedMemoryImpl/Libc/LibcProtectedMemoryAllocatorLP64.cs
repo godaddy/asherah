@@ -18,6 +18,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
         protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc)
         {
+            if (libc == null)
+            {
+                throw new ArgumentNullException(nameof(libc));
+            }
+
             this.libc = libc;
         }
 
@@ -109,9 +114,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             }
         }
 
-        public virtual void Dispose()
-        {
-        }
+        public abstract void Dispose();
 
         internal abstract int GetRlimitCoreResource();
 
@@ -147,6 +150,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
+                Console.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -158,6 +162,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
+                Console.WriteLine($"CheckResult failed for {methodName} result: {result} expected: {expected} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -166,6 +171,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         {
             if (result != 0)
             {
+                var errno = Marshal.GetLastWin32Error();
+                Console.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, exceptionInProgress);
             }
         }

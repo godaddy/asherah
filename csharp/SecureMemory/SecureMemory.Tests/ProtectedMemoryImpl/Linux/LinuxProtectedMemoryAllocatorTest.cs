@@ -12,6 +12,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public LinuxProtectedMemoryAllocatorTest()
         {
+            Console.WriteLine("LinuxProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 linuxProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
@@ -20,6 +21,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public void Dispose()
         {
+            Console.WriteLine("LinuxProtectedMemoryAllocatorTest.Dispose");
             linuxProtectedMemoryAllocator?.Dispose();
         }
 

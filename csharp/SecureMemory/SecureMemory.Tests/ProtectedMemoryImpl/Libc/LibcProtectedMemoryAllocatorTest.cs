@@ -26,6 +26,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
         public LibcProtectedMemoryAllocatorTest()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 libc = new LinuxLibcLP64();
@@ -48,12 +49,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
         public void Dispose()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.Dispose");
             libcProtectedMemoryAllocator?.Dispose();
         }
 
         [Fact]
         private void TestDisableCoreDumpGlobally()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestDisableCoreDumpGlobally");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -82,6 +85,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -111,6 +115,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestAllocWithCheckZeroErrorShouldFail()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithCheckZeroErrorShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -140,6 +145,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -160,6 +166,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -175,6 +182,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -190,6 +198,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckZeroWithZeroResult()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -202,6 +211,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckZeroWithNonZeroResult()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -214,6 +224,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -226,6 +237,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
+            Console.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {

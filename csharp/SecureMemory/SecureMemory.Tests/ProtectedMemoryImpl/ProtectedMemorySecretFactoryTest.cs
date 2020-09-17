@@ -11,11 +11,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public ProtectedMemorySecretFactoryTest()
         {
+            Console.WriteLine("ProtectedMemorySecretFactoryTest ctor");
             protectedMemorySecretFactory = new ProtectedMemorySecretFactory();
         }
 
         public void Dispose()
         {
+            Console.WriteLine("ProtectedMemorySecretFactoryTest.Dispose");
             protectedMemorySecretFactory.Dispose();
         }
 
@@ -39,6 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestCreateSecretByteArray()
         {
+            Console.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretByteArray");
             using Secret secret = protectedMemorySecretFactory.CreateSecret(new byte[] { 0, 1 });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
         }
@@ -46,6 +49,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestCreateSecretCharArray()
         {
+            Console.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretCharArray");
             using Secret secret = protectedMemorySecretFactory.CreateSecret(new[] { 'a', 'b' });
             Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
         }

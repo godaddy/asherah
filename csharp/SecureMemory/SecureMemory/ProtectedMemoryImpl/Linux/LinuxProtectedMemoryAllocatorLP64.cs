@@ -48,6 +48,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             libc.bzero(pointer, length);
         }
 
+        public override void Dispose()
+        {
+        }
+
         internal override int GetRlimitCoreResource()
         {
             return (int)RlimitResource.RLIMIT_CORE;

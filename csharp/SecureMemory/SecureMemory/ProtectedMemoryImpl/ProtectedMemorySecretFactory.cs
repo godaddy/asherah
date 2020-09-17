@@ -17,7 +17,29 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public ProtectedMemorySecretFactory()
         {
-            GetAllocator();
+            Console.WriteLine("ProtectedMemorySecretFactory ctor");
+            lock (allocatorLock)
+            {
+                if (allocator != null)
+                {
+                    refCount++;
+                    Console.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
+                    return;
+                }
+
+                allocator = DetectViaRuntimeInformation()
+                         ?? DetectViaOsVersionPlatform()
+                         ?? DetectOsDescription();
+
+                if (allocator == null)
+                {
+                    throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
+                }
+
+                Console.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
+                refCount++;
+                Console.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
+            }
         }
 
         public Secret CreateSecret(byte[] secretData)
@@ -35,48 +57,24 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             Console.WriteLine("ProtectedMemorySecretFactory: Dispose");
             lock (allocatorLock)
             {
-                if (allocator != null)
-                {
-                    Console.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
-                    refCount--;
-                    if (refCount == 0)
-                    {
-                        Console.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
-                        allocator.Dispose();
-                        Console.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
-                        allocator = null;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
-                    }
-                }
-            }
-        }
-
-        internal static IProtectedMemoryAllocator GetAllocator()
-        {
-            lock (allocatorLock)
-            {
-                if (allocator != null)
-                {
-                    refCount++;
-                    Console.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
-                    return allocator;
-                }
-
-                allocator = DetectViaRuntimeInformation()
-                         ?? DetectViaOsVersionPlatform()
-                         ?? DetectOsDescription();
-
                 if (allocator == null)
                 {
-                    throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
+                    throw new Exception("ProtectedMemorySecretFactory.Dispose: Allocator is null!");
                 }
 
-                refCount++;
-                Console.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
-                return allocator;
+                Console.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
+                refCount--;
+                if (refCount == 0)
+                {
+                    Console.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
+                    allocator.Dispose();
+                    Console.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
+                    allocator = null;
+                }
+                else
+                {
+                    Console.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
+                }
             }
         }
 
@@ -120,7 +118,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                         if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                         {
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 128);
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
                         }
 
                         return new LinuxProtectedMemoryAllocatorLP64();

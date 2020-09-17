@@ -25,11 +25,35 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             {
                 if (openSSL11 == null)
                 {
-                    refCount++;
                     openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
-                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
-                    CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+                    if (openSSL11 == null)
+                    {
+                        throw new Exception("GetLibc returned null object for openSSL11");
+                    }
+
+                    Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
                 }
+
+                if (refCount == 0)
+                {
+                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
+                    try
+                    {
+                        CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+                    }
+                    catch (Exception)
+                    {
+                        CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                        throw;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: refCount is > 0, not calling CRYPTO_secure_malloc_init");
+                }
+
+                refCount++;
+                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: ctor New refCount is {refCount}");
             }
         }
 
@@ -97,6 +121,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         public override void Dispose()
         {
+            Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Dispose");
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
@@ -110,14 +135,22 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             lock (openSSL11Lock)
             {
-                if (openSSL11 != null)
+                if (openSSL11 == null)
                 {
-                    refCount--;
-                    if (refCount == 0)
-                    {
-                        Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
-                        CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
-                    }
+                    throw new Exception("LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose: openSSL11 is null!");
+                }
+
+                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 refCount is {refCount}");
+                refCount--;
+                Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 new refCount is {refCount}");
+                if (refCount == 0)
+                {
+                    Console.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
+                    CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                }
+                else
+                {
+                    Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 Skipping CRYPTO_secure_malloc_done due to refCount {refCount}");
                 }
             }
         }

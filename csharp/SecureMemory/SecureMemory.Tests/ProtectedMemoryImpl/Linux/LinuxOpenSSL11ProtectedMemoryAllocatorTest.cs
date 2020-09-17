@@ -15,7 +15,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Console.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(8388608, 128);
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
             }
         }
 
