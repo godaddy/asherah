@@ -68,11 +68,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             return LinuxOpenSSL11LP64.IsAvailable();
         }
 
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // CRYPTO_secure_clear_free includes ZeroMemory functionality
-        }
-
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
@@ -153,6 +148,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     Console.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 Skipping CRYPTO_secure_malloc_done due to refCount {refCount}");
                 }
             }
+        }
+
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
+        {
+            // CRYPTO_secure_clear_free includes ZeroMemory functionality
         }
     }
 }

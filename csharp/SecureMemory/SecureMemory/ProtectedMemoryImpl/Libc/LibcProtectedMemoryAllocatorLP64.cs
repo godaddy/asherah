@@ -46,8 +46,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             CheckZero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
         }
 
-        protected abstract void ZeroMemory(IntPtr pointer, ulong length);
-
         // ************************************
         // alloc / free
         // ************************************
@@ -176,6 +174,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 throw new LibcOperationFailedException(methodName, result, exceptionInProgress);
             }
         }
+
+        protected abstract void ZeroMemory(IntPtr pointer, ulong length);
 
         protected LibcLP64 GetLibc()
         {

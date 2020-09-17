@@ -34,20 +34,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             this.libc = libc;
         }
 
-        // Platform specific zero memory
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            CheckIntPtr(pointer, "ZeroMemory");
-            if (length < 1)
-            {
-                throw new Exception("ZeroMemory: Invalid length");
-            }
-
-            // Glibc bzero doesn't seem to be vulnerable to being optimized away
-            // Glibc doesn't seem to have explicit_bzero, memset_s, or memset_explicit
-            libc.bzero(pointer, length);
-        }
-
         public override void Dispose()
         {
         }
@@ -76,6 +62,20 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             // Enable selective core dump avoidance
             CheckZero(libc.madvise(pagePointer, length, (int)Madvice.MADV_DONTDUMP), $"madvise({protectedMemory}, {length}, MADV_DONTDUMP)");
+        }
+
+        // Platform specific zero memory
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
+        {
+            CheckIntPtr(pointer, "ZeroMemory");
+            if (length < 1)
+            {
+                throw new Exception("ZeroMemory: Invalid length");
+            }
+
+            // Glibc bzero doesn't seem to be vulnerable to being optimized away
+            // Glibc doesn't seem to have explicit_bzero, memset_s, or memset_explicit
+            libc.bzero(pointer, length);
         }
 
         // These flags are platform specific in their integer values

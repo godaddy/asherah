@@ -35,13 +35,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             this.libc = libc;
         }
 
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // This differs on different platforms
-            // MacOS has memset_s which is standardized and secure
-            libc.memset_s(pointer, length, 0, length);
-        }
-
         public override void Dispose()
         {
         }
@@ -63,6 +56,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
                     throw new SystemException("Failed to disable core dumps");
                 }
             }
+        }
+
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
+        {
+            // This differs on different platforms
+            // MacOS has memset_s which is standardized and secure
+            libc.memset_s(pointer, length, 0, length);
         }
 
         // These flags are platform specific in their integer values
