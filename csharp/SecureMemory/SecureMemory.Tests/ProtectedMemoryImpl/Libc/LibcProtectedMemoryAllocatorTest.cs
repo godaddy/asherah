@@ -100,7 +100,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 macOsProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new LibcOperationFailedException("blah", 1));
+                    .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
                 Assert.Throws<LibcOperationFailedException>(() =>
                 {
                     macOsProtectedMemoryAllocatorMock.Object.Alloc(1);
@@ -109,7 +109,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 linuxProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new LibcOperationFailedException("blah", 1));
+                    .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
                 Assert.Throws<LibcOperationFailedException>(() =>
                 {
                     linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
@@ -160,7 +160,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(pointer, "blah");
+                libcProtectedMemoryAllocator.CheckIntPtr(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
             }
             finally
             {
@@ -180,7 +180,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(IntPtr.Zero, "blah");
+                libcProtectedMemoryAllocator.CheckIntPtr(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
@@ -196,7 +196,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(new IntPtr(-1), "blah");
+                libcProtectedMemoryAllocator.CheckIntPtr(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
@@ -210,7 +210,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "blah");
+            libcProtectedMemoryAllocator.CheckZero(0, "TestCheckZeroWithZeroResult");
         }
 
         [Fact]
@@ -223,7 +223,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            Assert.Throws<LibcOperationFailedException>(() => { libcProtectedMemoryAllocator.CheckZero(1, "blah"); });
+            Assert.Throws<LibcOperationFailedException>(() => { libcProtectedMemoryAllocator.CheckZero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
         [Fact]
@@ -236,7 +236,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "blah", new InvalidOperationException());
+            libcProtectedMemoryAllocator.CheckZero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
         [Fact]
@@ -251,7 +251,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckZero(1, "blah", new InvalidOperationException());
+                libcProtectedMemoryAllocator.CheckZero(1, "IGNORE_INTENTIONAL_ERROR", new InvalidOperationException());
             });
         }
     }
