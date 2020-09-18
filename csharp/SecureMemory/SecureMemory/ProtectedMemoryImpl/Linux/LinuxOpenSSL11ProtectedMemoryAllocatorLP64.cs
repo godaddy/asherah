@@ -155,8 +155,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 new refCount is {refCount}");
                 if (refCount == 0)
                 {
-                    // Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
-                    // Check.Result(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                    Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
+                    int result = openSSL11.CRYPTO_secure_malloc_done();
+                    Debug.WriteLine("Best effort call to CRYPTO_secure_malloc_done returned " + result);
                 }
                 else
                 {
