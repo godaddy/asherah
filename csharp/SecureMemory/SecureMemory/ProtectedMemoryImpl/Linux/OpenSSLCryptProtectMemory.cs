@@ -40,13 +40,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             blockSize = openSSLCrypto.EVP_CIPHER_block_size(evpCipher);
             Debug.WriteLine("Block size: " + blockSize);
 
-            // BUG: EVP_CIPHER_block_size returns 1
-            if (blockSize == 1)
-            {
-                blockSize = OpenSSLCrypto.EVP_MAX_BLOCK_LENGTH;
-                Debug.WriteLine("BUG: Adjusted block size: " + blockSize);
-            }
-
             int keySize = openSSLCrypto.EVP_CIPHER_key_length(evpCipher);
             Debug.WriteLine("Key length: " + keySize);
 
@@ -177,6 +170,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     Marshal.FreeHGlobal(tmpBuffer);
                 }
             }
+        }
+
+        public int GetBlockSize()
+        {
+            return blockSize;
         }
 
         protected virtual void Dispose(bool disposing)

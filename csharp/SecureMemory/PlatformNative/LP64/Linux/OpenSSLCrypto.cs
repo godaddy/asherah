@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -144,7 +145,16 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 
         public int EVP_CIPHER_block_size(IntPtr e)
         {
-            return (int)_EVP_CIPHER_block_size(e);
+            int blockSize = (int)_EVP_CIPHER_block_size(e);
+
+            // BUG: EVP_CIPHER_block_size returns 1
+            if (blockSize == 1)
+            {
+                blockSize = OpenSSLCrypto.EVP_MAX_BLOCK_LENGTH;
+                Debug.WriteLine("BUG: Adjusted block size: " + blockSize);
+            }
+
+            return blockSize;
         }
 
         [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_key_length", SetLastError = true)]

@@ -21,6 +21,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private static int refCount = 0;
         private static object openSSL11Lock = new object();
 
+        private readonly ulong blockSize;
         private OpenSSLCryptProtectMemory cryptProtectMemory;
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
@@ -61,6 +62,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: ctor New refCount is {refCount}");
 
                 cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", this);
+                blockSize = (ulong)cryptProtectMemory.GetBlockSize();
             }
         }
 
@@ -101,7 +103,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
-            // TODO: Round up allocation size to nearest AES-256 block size
+            // Round up allocation size to nearest AES-256 block size
+            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
 
@@ -122,7 +126,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         public override void Free(IntPtr pointer, ulong length)
         {
-            // TODO: Round up allocation size to nearest AES-256 block size
+            // Round up allocation size to nearest AES-256 block size
+            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+
             Check.IntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
