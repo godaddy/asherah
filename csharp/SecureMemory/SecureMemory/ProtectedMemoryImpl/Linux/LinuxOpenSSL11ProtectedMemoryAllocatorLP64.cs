@@ -78,18 +78,21 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            Debug.WriteLine("CryptProtectMemory");
             cryptProtectMemory.CryptProtectMemory(pointer, (int)length);
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            Debug.WriteLine("CryptUnprotectMemory");
             cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            Debug.WriteLine("CryptUnprotectMemory");
             cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 

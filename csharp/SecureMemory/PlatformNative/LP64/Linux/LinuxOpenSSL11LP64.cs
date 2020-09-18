@@ -40,7 +40,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 
             if (CRYPTO_secure_malloc_initialized() == 1)
             {
-                throw new Exception("CRYPTO_secure_malloc_init called when already initialized!");
+                return 1;
             }
 
             // CRYPTO_secure_malloc_init() returns 0 on failure, 1 if successful, and 2 if successful but the heap could not be protected by memory mapping.

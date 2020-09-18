@@ -15,6 +15,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         {
             if (intPointer == System.IntPtr.Zero || intPointer == InvalidPointer)
             {
+                var errno = Marshal.GetLastWin32Error();
+                Debug.WriteLine($"****************** Check.IntPtr failed for {methodName} result: {intPointer} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, intPointer.ToInt64());
             }
         }
@@ -26,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"Check.Zero failed for {methodName} result: {result} errno: {errno}");
+                Debug.WriteLine($"****************** Check.Zero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -38,7 +40,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 // NOTE: Even though this references Win32 it actually returns
                 // the last errno on non-Windows platforms.
                 var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"Check.Result failed for {methodName} result: {result} expected: {expected} errno: {errno}");
+                Debug.WriteLine($"****************** Check.Result failed for {methodName} result: {result} expected: {expected} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, errno);
             }
         }
@@ -48,7 +50,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             if (result != 0)
             {
                 var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"Check.Zero failed for {methodName} result: {result} errno: {errno}");
+                Debug.WriteLine($"****************** Check.Zero failed for {methodName} result: {result} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, result, exceptionInProgress);
             }
         }
