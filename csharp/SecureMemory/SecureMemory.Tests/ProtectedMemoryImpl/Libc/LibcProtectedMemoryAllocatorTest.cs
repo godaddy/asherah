@@ -119,36 +119,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
         [Fact]
-        private void TestAllocWithCheckZeroErrorShouldFail()
-        {
-            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithCheckZeroErrorShouldFail");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                macOsProtectedMemoryAllocatorMock.Setup(x => Check.Zero(It.IsAny<int>(), It.IsAny<string>()))
-                    .Throws(new TargetInvocationException(new Exception()));
-                Assert.Throws<TargetInvocationException>(() =>
-                {
-                    macOsProtectedMemoryAllocatorMock.Object.Alloc(1);
-                });
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                linuxProtectedMemoryAllocatorMock.Setup(x => Check.Zero(It.IsAny<int>(), It.IsAny<string>()))
-                    .Throws(new TargetInvocationException(new Exception()));
-                Assert.Throws<TargetInvocationException>(() =>
-                {
-                    linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
-                });
-            }
-        }
-
-        [Fact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
