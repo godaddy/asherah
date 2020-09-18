@@ -33,10 +33,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             blockSize = openSSLCrypto.EVP_CIPHER_block_size(evpCipher);
             Debug.WriteLine("Block size: " + blockSize);
 
-            // For some reason this returns 1 instead of 16 in my testing???
-            if (blockSize < 16)
+            // BUG: EVP_CIPHER_block_size returns 1
+            if (blockSize == 1)
             {
-                blockSize = 16;
+                blockSize = OpenSSLCrypto.EVP_MAX_BLOCK_LENGTH;
                 Debug.WriteLine("BUG: Adjusted block size: " + blockSize);
             }
 

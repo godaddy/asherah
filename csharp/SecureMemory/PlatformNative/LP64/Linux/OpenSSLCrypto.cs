@@ -11,8 +11,13 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Matching native conventions")]
     public class OpenSSLCrypto
     {
+        public const int EVP_MAX_BLOCK_LENGTH = 32;
+        public const int EVP_MAX_KEY_LENGTH = 64;
+        public const int EVP_MAX_IV_LENGTH = 16;
+
         // (inl + cipher_block_size - 1)
         // EVP_EncryptUpdate() encrypts inl bytes from the buffer in and writes the encrypted version to out. This function can be called multiple times to encrypt successive blocks of data. The amount of data written depends on the block alignment of the encrypted data: as a result the amount of data written may be anything from zero bytes to (inl + cipher_block_size - 1) so out should contain sufficient room. The actual number of bytes written is placed in outl.
         [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_CTX_new", SetLastError = true)]
