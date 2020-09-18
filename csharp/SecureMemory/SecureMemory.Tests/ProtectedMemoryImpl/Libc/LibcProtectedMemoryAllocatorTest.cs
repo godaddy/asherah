@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
@@ -129,7 +130,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                macOsProtectedMemoryAllocatorMock.Setup(x => x.CheckZero(It.IsAny<int>(), It.IsAny<string>()))
+                macOsProtectedMemoryAllocatorMock.Setup(x => Check.Zero(It.IsAny<int>(), It.IsAny<string>()))
                     .Throws(new TargetInvocationException(new Exception()));
                 Assert.Throws<TargetInvocationException>(() =>
                 {
@@ -138,7 +139,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                linuxProtectedMemoryAllocatorMock.Setup(x => x.CheckZero(It.IsAny<int>(), It.IsAny<string>()))
+                linuxProtectedMemoryAllocatorMock.Setup(x => Check.Zero(It.IsAny<int>(), It.IsAny<string>()))
                     .Throws(new TargetInvocationException(new Exception()));
                 Assert.Throws<TargetInvocationException>(() =>
                 {
@@ -160,7 +161,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
+                Check.IntPtr(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
             }
             finally
             {
@@ -180,7 +181,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
+                Check.IntPtr(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
@@ -196,7 +197,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
+                Check.IntPtr(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
@@ -210,7 +211,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "TestCheckZeroWithZeroResult");
+            Check.Zero(0, "TestCheckZeroWithZeroResult");
         }
 
         [Fact]
@@ -223,7 +224,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            Assert.Throws<LibcOperationFailedException>(() => { libcProtectedMemoryAllocator.CheckZero(1, "IGNORE_INTENTIONAL_ERROR"); });
+            Assert.Throws<LibcOperationFailedException>(() => { Check.Zero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
         [Fact]
@@ -236,7 +237,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
+            Check.Zero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
         [Fact]
@@ -251,7 +252,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckZero(1, "IGNORE_INTENTIONAL_ERROR", new InvalidOperationException());
+                Check.Zero(1, "IGNORE_INTENTIONAL_ERROR", new InvalidOperationException());
             });
         }
     }

@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Xml.Schema;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
@@ -18,6 +20,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private static LinuxOpenSSL11LP64 openSSL11;
         private static int refCount = 0;
         private static object openSSL11Lock = new object();
+
+        private OpenSSLCryptProtectMemory cryptProtectMemory;
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
             : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
@@ -40,11 +44,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
                     try
                     {
-                        CheckResult(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+                        Check.Result(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
                     }
                     catch (Exception)
                     {
-                        CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                        // Check.Result(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
                         throw;
                     }
                 }
@@ -55,6 +59,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
                 refCount++;
                 Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: ctor New refCount is {refCount}");
+
+                cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", this);
             }
         }
 
@@ -72,16 +78,19 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            cryptProtectMemory.CryptProtectMemory(pointer, (int)length);
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
+            cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 
         // ************************************
@@ -89,10 +98,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
+            // TODO: Round up allocation size to nearest AES-256 block size
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
 
-            CheckIntPtr(protectedMemory, "CRYPTO_secure_malloc");
+            Check.IntPtr(protectedMemory, "CRYPTO_secure_malloc");
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
@@ -109,7 +119,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         public override void Free(IntPtr pointer, ulong length)
         {
-            CheckIntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
+            // TODO: Round up allocation size to nearest AES-256 block size
+            Check.IntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
@@ -141,8 +152,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64 new refCount is {refCount}");
                 if (refCount == 0)
                 {
-                    Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
-                    CheckResult(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
+                    // Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_done ***");
+                    // Check.Result(openSSL11.CRYPTO_secure_malloc_done(), 1, "CRYPTO_secure_malloc_done");
                 }
                 else
                 {

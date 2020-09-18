@@ -34,17 +34,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // bzero (Linux, same guarantees as explicit_bzero)
         public virtual void SetNoAccess(IntPtr pointer, ulong length)
         {
-            CheckZero(libc.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
+            Check.Zero(libc.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
         }
 
         public virtual void SetReadAccess(IntPtr pointer, ulong length)
         {
-            CheckZero(libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
+            Check.Zero(libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
         }
 
         public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            CheckZero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
+            Check.Zero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
         }
 
         // ************************************
@@ -63,10 +63,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             IntPtr protectedMemory = libc.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-            CheckIntPtr(protectedMemory, "mmap");
+            Check.IntPtr(protectedMemory, "mmap");
             try
             {
-                CheckZero(libc.mlock(protectedMemory, length), "mlock");
+                Check.Zero(libc.mlock(protectedMemory, length), "mlock");
 
                 try
                 {
@@ -74,13 +74,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 }
                 catch (Exception e)
                 {
-                    CheckZero(libc.munlock(protectedMemory, length), "munlock", e);
+                    Check.Zero(libc.munlock(protectedMemory, length), "munlock", e);
                     throw;
                 }
             }
             catch (Exception e)
             {
-                CheckZero(libc.munmap(protectedMemory, length), "munmap", e);
+                Check.Zero(libc.munmap(protectedMemory, length), "munmap", e);
                 throw;
             }
 
@@ -101,14 +101,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                     // Regardless of whether or not we successfully wipe, unlock
 
                     // Unlock the protected memory
-                    CheckZero(libc.munlock(pointer, length), "munlock");
+                    Check.Zero(libc.munlock(pointer, length), "munlock");
                 }
                 finally
                 {
                     // Regardless of whether or not we successfully unlock, unmap
 
                     // Free (unmap) the protected memory
-                    CheckZero(libc.munmap(pointer, length), "munmap");
+                    Check.Zero(libc.munmap(pointer, length), "munmap");
                 }
             }
         }
@@ -129,52 +129,23 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
         internal void DisableCoreDumpGlobally()
         {
-            CheckZero(libc.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
+            Check.Zero(libc.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
 
             globallyDisabledCoreDumps = true;
         }
 
-        internal void CheckIntPtr(IntPtr intPointer, string methodName)
-        {
-            if (intPointer == IntPtr.Zero || intPointer == InvalidPointer)
-            {
-                throw new LibcOperationFailedException(methodName, intPointer.ToInt64());
-            }
-        }
+        // ************************************
+        // Memory protection
+        // ************************************
+        internal abstract int GetProtRead();
 
-        internal virtual void CheckZero(int result, string methodName)
-        {
-            if (result != 0)
-            {
-                // NOTE: Even though this references Win32 it actually returns
-                // the last errno on non-Windows platforms.
-                var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
-                throw new LibcOperationFailedException(methodName, result, errno);
-            }
-        }
+        internal abstract int GetProtReadWrite();
 
-        internal virtual void CheckResult(int result, int expected, string methodName)
-        {
-            if (result != expected)
-            {
-                // NOTE: Even though this references Win32 it actually returns
-                // the last errno on non-Windows platforms.
-                var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"CheckResult failed for {methodName} result: {result} expected: {expected} errno: {errno}");
-                throw new LibcOperationFailedException(methodName, result, errno);
-            }
-        }
+        internal abstract int GetProtNoAccess();
 
-        internal void CheckZero(int result, string methodName, Exception exceptionInProgress)
-        {
-            if (result != 0)
-            {
-                var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"CheckZero failed for {methodName} result: {result} errno: {errno}");
-                throw new LibcOperationFailedException(methodName, result, exceptionInProgress);
-            }
-        }
+        internal abstract int GetPrivateAnonymousFlags();
+
+        internal abstract int GetMemLockLimit();
 
         protected abstract void ZeroMemory(IntPtr pointer, ulong length);
 
@@ -182,18 +153,5 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         {
             return libc;
         }
-
-        // ************************************
-        // Memory protection
-        // ************************************
-        protected abstract int GetProtRead();
-
-        protected abstract int GetProtReadWrite();
-
-        protected abstract int GetProtNoAccess();
-
-        protected abstract int GetPrivateAnonymousFlags();
-
-        protected abstract int GetMemLockLimit();
     }
 }

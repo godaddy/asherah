@@ -58,37 +58,37 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             }
         }
 
+        // These flags are platform specific in their integer values
+        internal override int GetProtRead()
+        {
+            return (int)MmapProts.PROT_READ;
+        }
+
+        internal override int GetProtReadWrite()
+        {
+            return (int)(MmapProts.PROT_READ | MmapProts.PROT_WRITE);
+        }
+
+        internal override int GetProtNoAccess()
+        {
+            return (int)MmapProts.PROT_NONE;
+        }
+
+        internal override int GetPrivateAnonymousFlags()
+        {
+            return (int)(MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANON);
+        }
+
+        internal override int GetMemLockLimit()
+        {
+            return (int)RlimitResource.RLIMIT_MEMLOCK;
+        }
+
         protected override void ZeroMemory(IntPtr pointer, ulong length)
         {
             // This differs on different platforms
             // MacOS has memset_s which is standardized and secure
             libc.memset_s(pointer, length, 0, length);
-        }
-
-        // These flags are platform specific in their integer values
-        protected override int GetProtRead()
-        {
-            return (int)MmapProts.PROT_READ;
-        }
-
-        protected override int GetProtReadWrite()
-        {
-            return (int)(MmapProts.PROT_READ | MmapProts.PROT_WRITE);
-        }
-
-        protected override int GetProtNoAccess()
-        {
-            return (int)MmapProts.PROT_NONE;
-        }
-
-        protected override int GetPrivateAnonymousFlags()
-        {
-            return (int)(MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANON);
-        }
-
-        protected override int GetMemLockLimit()
-        {
-            return (int)RlimitResource.RLIMIT_MEMLOCK;
         }
     }
 }
