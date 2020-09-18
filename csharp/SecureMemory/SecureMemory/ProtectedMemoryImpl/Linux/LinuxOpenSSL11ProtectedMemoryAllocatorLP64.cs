@@ -145,6 +145,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             lock (openSSL11Lock)
             {
+                cryptProtectMemory.Dispose();
+
                 if (openSSL11 == null)
                 {
                     throw new Exception("LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose: openSSL11 is null!");
