@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
+using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
@@ -51,6 +52,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             int result = openSSL11.mlock(key, PageSize);
             Check.Result(result, 0, "mlock");
+
+            result = openSSL11.madvise(key, PageSize, (int)Madvice.MADV_DONTDUMP);
+            Check.Result(result, 0, "madvise");
 
             iv = IntPtr.Add(key, keySize);
 
