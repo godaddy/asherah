@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         }
 
         [Fact]
-        private void TestZeroMemory()
+        private void TestAllocFree()
         {
             if (linuxProtectedMemoryAllocator == null)
             {
