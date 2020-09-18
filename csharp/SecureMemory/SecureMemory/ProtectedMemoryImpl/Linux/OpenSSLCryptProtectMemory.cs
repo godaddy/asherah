@@ -20,11 +20,18 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private bool disposedValue;
         private LinuxOpenSSL11LP64 openSSL11;
         private object cryptProtectLock = new object();
+        private int protNone;
+        private int protRead;
+        private int protReadWrite;
 
         internal OpenSSLCryptProtectMemory(string cipher, LinuxProtectedMemoryAllocatorLP64 allocator)
         {
             openSSL11 = new LinuxOpenSSL11LP64();
             openSSLCrypto = new OpenSSLCrypto();
+
+            protNone = allocator.GetProtNoAccess();
+            protRead = allocator.GetProtRead();
+            protReadWrite = allocator.GetProtReadWrite();
 
             evpCipher = openSSLCrypto.EVP_get_cipherbyname(cipher);
             Check.IntPtr(evpCipher, "EVP_get_cipherbyname");
@@ -88,6 +95,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
                 try
                 {
+                    openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
+
+                    openSSL11.mprotect(key, PageSize, protRead);
+
                     Debug.WriteLine("EVP_EncryptInit_ex");
                     Check.IntPtr(encryptCtx, "CryptProtectMemory encryptCtx");
                     Check.IntPtr(key, "CryptProtectMemory key");
@@ -111,6 +122,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     finalOutputLength += outputLength;
                     Debug.WriteLine($"EVP_EncryptFinal_ex outputLength = {finalOutputLength}");
 
+                    openSSL11.mprotect(key, PageSize, protNone);
+
                     openSSL11.memcpy(memory, tmpBuffer, (ulong)finalOutputLength);
                 }
                 finally
@@ -129,6 +142,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
                 try
                 {
+                    openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
+
+                    openSSL11.mprotect(key, PageSize, protRead);
+
                     Debug.WriteLine("EVP_DecryptInit_ex");
                     Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx");
                     Check.IntPtr(key, "CryptUnprotectMemory key");
@@ -148,6 +165,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     result = openSSLCrypto.EVP_DecryptFinal_ex(decryptCtx, finalDecrypted, out finalDecryptedLength);
                     finalDecryptedLength += decryptedLength;
                     Debug.WriteLine($"EVP_DecryptFinal_ex finalDecryptedLength = {finalDecryptedLength}");
+
+                    openSSL11.mprotect(key, PageSize, protNone);
 
                     Debug.WriteLine("memcpy");
                     openSSL11.memcpy(memory, tmpBuffer, (ulong)finalDecryptedLength);
