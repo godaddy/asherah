@@ -8,7 +8,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests
 {
     [Collection("Logger Fixture collection")]
-    public class SampleTest
+    public class EndToEndTests
     {
         [Fact]
         private void EndToEndTest()
