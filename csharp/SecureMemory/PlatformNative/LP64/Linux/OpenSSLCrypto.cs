@@ -14,11 +14,12 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Matching native conventions")]
     public class OpenSSLCrypto
     {
+        public const string LibraryName = "libcrypto.so.1.1";
         public const int EVP_MAX_BLOCK_LENGTH = 32;
         public const int EVP_MAX_KEY_LENGTH = 64;
         public const int EVP_MAX_IV_LENGTH = 16;
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_CTX_new", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_new", SetLastError = true)]
         private static extern IntPtr _EVP_CIPHER_CTX_new();
 
         public IntPtr EVP_CIPHER_CTX_new()
@@ -26,7 +27,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_CIPHER_CTX_new();
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_CTX_reset", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_reset", SetLastError = true)]
         private static extern int _EVP_CIPHER_CTX_reset(IntPtr ctx);
 
         public int EVP_CIPHER_CTX_reset(IntPtr ctx)
@@ -34,7 +35,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_CIPHER_CTX_reset(ctx);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_CTX_free", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_free", SetLastError = true)]
         private static extern void _EVP_CIPHER_CTX_free(IntPtr ctx);
 
         public void EVP_CIPHER_CTX_free(IntPtr ctx)
@@ -42,7 +43,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             _EVP_CIPHER_CTX_free(ctx);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_get_cipherbyname", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_get_cipherbyname", SetLastError = true)]
         private static extern IntPtr _EVP_get_cipherbyname([MarshalAs(UnmanagedType.LPStr)] string name);
 
         public IntPtr EVP_get_cipherbyname(string name)
@@ -50,7 +51,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_get_cipherbyname(name);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_EncryptInit_ex", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_EncryptInit_ex", SetLastError = true)]
         private static extern int _EVP_EncryptInit_ex(IntPtr ctx, IntPtr type, IntPtr impl, IntPtr key, IntPtr iv);
 
         public int EVP_EncryptInit_ex(IntPtr ctx, IntPtr type, IntPtr impl, IntPtr key, IntPtr iv)
@@ -58,7 +59,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_EncryptInit_ex(ctx, type, impl, key, iv);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_EncryptUpdate", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_EncryptUpdate", SetLastError = true)]
         private static extern int _EVP_EncryptUpdate(IntPtr ctx, IntPtr outPtr, [MarshalAs(UnmanagedType.LPArray)] byte[] outLength, IntPtr inptr, int inLength);
 
         public int EVP_EncryptUpdate(IntPtr ctx, IntPtr outPtr, out int outLength, IntPtr inPtr, int inLength)
@@ -72,7 +73,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return result;
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_EncryptFinal_ex", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_EncryptFinal_ex", SetLastError = true)]
         private static extern int _EVP_EncryptFinal_ex(IntPtr ctx, IntPtr outPtr, [MarshalAs(UnmanagedType.LPArray)] byte[] outlength);
 
         public int EVP_EncryptFinal_ex(IntPtr ctx, IntPtr outPtr, out int outLength)
@@ -86,7 +87,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return result;
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_DecryptInit_ex", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_DecryptInit_ex", SetLastError = true)]
         private static extern int _EVP_DecryptInit_ex(IntPtr ctx, IntPtr type, IntPtr impl, IntPtr key, IntPtr iv);
 
         public int EVP_DecryptInit_ex(IntPtr ctx, IntPtr type, IntPtr impl, IntPtr key, IntPtr iv)
@@ -94,7 +95,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_DecryptInit_ex(ctx, type, impl, key, iv);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_DecryptUpdate", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_DecryptUpdate", SetLastError = true)]
         private static extern int _EVP_DecryptUpdate(IntPtr ctx, IntPtr outptr, [MarshalAs(UnmanagedType.LPArray)] byte[] outlength, IntPtr inptr, int inlength);
 
         public int EVP_DecryptUpdate(IntPtr ctx, IntPtr outptr, out int outlength, IntPtr inptr, int inlength)
@@ -108,7 +109,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return result;
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_DecryptFinal_ex", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_DecryptFinal_ex", SetLastError = true)]
         private static extern int _EVP_DecryptFinal_ex(IntPtr ctx, IntPtr outPtr, [MarshalAs(UnmanagedType.LPArray)] byte[] outlength);
 
         public int EVP_DecryptFinal_ex(IntPtr ctx, IntPtr outPtr, out int outLength)
@@ -122,7 +123,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return result;
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "RAND_bytes", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "RAND_bytes", SetLastError = true)]
         private static extern int _RAND_bytes(IntPtr buf, int num);
 
         public int RAND_bytes(IntPtr buf, int num)
@@ -130,7 +131,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _RAND_bytes(buf, num);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_CTX_block_size", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_block_size", SetLastError = true)]
         private static extern int _EVP_CIPHER_CTX_block_size(IntPtr e);
 
         public int EVP_CIPHER_CTX_block_size(IntPtr e)
@@ -138,7 +139,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_CIPHER_CTX_block_size(e);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_block_size", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_block_size", SetLastError = true)]
         private static extern int _EVP_CIPHER_block_size(IntPtr e);
 
         public int EVP_CIPHER_block_size(IntPtr e)
@@ -146,7 +147,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return (int)_EVP_CIPHER_block_size(e);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_key_length", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_key_length", SetLastError = true)]
         private static extern int _EVP_CIPHER_key_length(IntPtr e);
 
         public int EVP_CIPHER_key_length(IntPtr e)
@@ -154,7 +155,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_CIPHER_key_length(e);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "EVP_CIPHER_iv_length", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_iv_length", SetLastError = true)]
         private static extern int _EVP_CIPHER_iv_length(IntPtr e);
 
         public int EVP_CIPHER_iv_length(IntPtr e)
