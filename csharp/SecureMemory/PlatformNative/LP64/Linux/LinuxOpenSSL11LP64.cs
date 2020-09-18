@@ -15,6 +15,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
     public class LinuxOpenSSL11LP64 : LinuxLibcLP64
     {
+        public const string LibraryName = "libcrypto.so.1.1";
+
         public static bool IsAvailable()
         {
             try
@@ -29,7 +31,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return true;
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_malloc_init", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_init", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_init(size_t size, int minsize);
 
         public int CRYPTO_secure_malloc_init(size_t size, int minsize)
@@ -47,7 +49,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _CRYPTO_secure_malloc_init(size, minsize);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_malloc_initialized", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_initialized", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_initialized();
 
         public static int CRYPTO_secure_malloc_initialized()
@@ -56,7 +58,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _CRYPTO_secure_malloc_initialized();
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_malloc_done", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_done", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_done();
 
         public int CRYPTO_secure_malloc_done()
@@ -65,7 +67,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _CRYPTO_secure_malloc_done();
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_malloc", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc", SetLastError = true)]
         private static extern IntPtr _CRYPTO_secure_malloc(size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         public IntPtr CRYPTO_secure_malloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
@@ -74,7 +76,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _CRYPTO_secure_malloc(num, file, line);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_zalloc", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_zalloc", SetLastError = true)]
         private static extern IntPtr _CRYPTO_secure_zalloc(size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         public IntPtr CRYPTO_secure_zalloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
@@ -83,7 +85,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _CRYPTO_secure_zalloc(num, file, line);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_free", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_free", SetLastError = true)]
         private static extern void _CRYPTO_secure_free(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         public void CRYPTO_secure_free(IntPtr ptr, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
@@ -92,7 +94,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             _CRYPTO_secure_free(ptr, file, line);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_clear_free", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_clear_free", SetLastError = true)]
         private static extern void _CRYPTO_secure_clear_free(IntPtr ptr, size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         public void CRYPTO_secure_clear_free(IntPtr ptr, size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
@@ -101,7 +103,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             _CRYPTO_secure_clear_free(ptr, num, file, line);
         }
 
-        [DllImport("libcrypto.so.1.1", EntryPoint = "CRYPTO_secure_used", SetLastError = true)]
+        [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_used", SetLastError = true)]
         private static extern size_t _CRYPTO_secure_used();
 
         public size_t CRYPTO_secure_used()
