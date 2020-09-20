@@ -20,6 +20,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
     // ReSharper disable once InconsistentNaming
     internal class LinuxProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
     {
+        private readonly int pageSize = Environment.SystemPageSize;
         private readonly LinuxLibcLP64 libc;
 
         public LinuxProtectedMemoryAllocatorLP64()
@@ -53,9 +54,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             // Calculate the 4KB page aligned pointer for madvise
             long addr = protectedMemory.ToInt64();
-            if (addr % 4096 != 0)
+            if (addr % pageSize != 0)
             {
-                addr -= addr % 4096;
+                addr -= addr % pageSize;
             }
 
             IntPtr pagePointer = new IntPtr(addr);
