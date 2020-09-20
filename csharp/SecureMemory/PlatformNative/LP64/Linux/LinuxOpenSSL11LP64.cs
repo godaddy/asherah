@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using size_t = System.UInt64;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
