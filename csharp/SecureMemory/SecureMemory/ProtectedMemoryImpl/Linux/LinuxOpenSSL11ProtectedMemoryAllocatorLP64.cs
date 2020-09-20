@@ -72,21 +72,31 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            Debug.WriteLine("CryptProtectMemory");
+            // NOTE: No rounding for encrypt!
+            Debug.WriteLine($"SetNoAccess: Length {length}");
+
             cryptProtectMemory.CryptProtectMemory(pointer, (int)length);
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            Debug.WriteLine("CryptUnprotectMemory");
+            // Round up allocation size to nearest block size
+            Debug.WriteLine($"SetReadAccess: Rounding length {length} to nearest blocksize");
+            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            Debug.WriteLine($"SetReadAccess: New length {length}");
+
             cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            Debug.WriteLine("CryptUnprotectMemory");
+            // Round up allocation size to nearest block size
+            Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
+            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            Debug.WriteLine($"SetReadWriteAccess: New length {length}");
+
             cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
         }
 
@@ -95,7 +105,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
-            // Round up allocation size to nearest AES-256 block size
+            // Round up allocation size to nearest block size
+            Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
             length = (length + (blockSize - 1)) & ~(blockSize - 1);
 
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
@@ -118,7 +129,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         public override void Free(IntPtr pointer, ulong length)
         {
-            // Round up allocation size to nearest AES-256 block size
+            // Round up allocation size to nearest block size
             length = (length + (blockSize - 1)) & ~(blockSize - 1);
 
             Check.IntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
