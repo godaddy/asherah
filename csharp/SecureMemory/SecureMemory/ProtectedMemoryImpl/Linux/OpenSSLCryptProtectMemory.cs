@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
 
@@ -201,26 +202,37 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             if (!disposedValue)
             {
                 LinuxOpenSSL11LP64 openSSL11ref = null;
-                if (disposing)
+                try
                 {
-                    openSSL11ref = openSSL11;
+                    if (disposing)
+                    {
+                        openSSL11ref = openSSL11;
+                        Monitor.Enter(cryptProtectLock);
+                    }
+                    else
+                    {
+                        openSSL11ref = new LinuxOpenSSL11LP64();
+                    }
+
+                    Debug.WriteLine("EVP_CIPHER_CTX_free encryptCtx");
+                    openSSLCrypto.EVP_CIPHER_CTX_free(encryptCtx);
+                    encryptCtx = IntPtr.Zero;
+
+                    Debug.WriteLine("EVP_CIPHER_CTX_free decryptCtx");
+                    openSSLCrypto.EVP_CIPHER_CTX_free(decryptCtx);
+                    decryptCtx = IntPtr.Zero;
+
+                    Debug.WriteLine($"munmap({key}, {pageSize})");
+                    openSSL11ref.munmap(key, pageSize);
+                    key = IntPtr.Zero;
                 }
-                else
+                finally
                 {
-                    openSSL11ref = new LinuxOpenSSL11LP64();
+                    if (disposing)
+                    {
+                        Monitor.Exit(cryptProtectLock);
+                    }
                 }
-
-                Debug.WriteLine("EVP_CIPHER_CTX_free encryptCtx");
-                openSSLCrypto.EVP_CIPHER_CTX_free(encryptCtx);
-                encryptCtx = IntPtr.Zero;
-
-                Debug.WriteLine("EVP_CIPHER_CTX_free decryptCtx");
-                openSSLCrypto.EVP_CIPHER_CTX_free(decryptCtx);
-                decryptCtx = IntPtr.Zero;
-
-                Debug.WriteLine($"munmap({key}, {pageSize})");
-                openSSL11ref.munmap(key, pageSize);
-                key = IntPtr.Zero;
 
                 disposedValue = true;
             }
