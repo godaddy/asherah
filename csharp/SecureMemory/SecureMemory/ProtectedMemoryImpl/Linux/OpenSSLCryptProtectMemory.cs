@@ -24,7 +24,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private object cryptProtectLock = new object();
         private int protNone;
         private int protRead;
-        private int protReadWrite;
 
         internal OpenSSLCryptProtectMemory(string cipher, LinuxProtectedMemoryAllocatorLP64 allocator)
         {
@@ -33,7 +32,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             protNone = allocator.GetProtNoAccess();
             protRead = allocator.GetProtRead();
-            protReadWrite = allocator.GetProtReadWrite();
 
             evpCipher = openSSLCrypto.EVP_get_cipherbyname(cipher);
             Check.IntPtr(evpCipher, "EVP_get_cipherbyname");
