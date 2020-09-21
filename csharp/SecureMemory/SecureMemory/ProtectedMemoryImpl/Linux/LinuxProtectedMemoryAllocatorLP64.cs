@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
@@ -26,6 +27,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public LinuxProtectedMemoryAllocatorLP64()
             : base(new LinuxLibcLP64())
         {
+            Debug.WriteLine("LinuxProtectedMemoryAllocatorLP64 ctor");
             libc = (LinuxLibcLP64)GetLibc();
         }
 

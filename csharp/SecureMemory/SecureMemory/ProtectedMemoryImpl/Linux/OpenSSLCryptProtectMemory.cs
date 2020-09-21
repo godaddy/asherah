@@ -87,6 +87,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             Debug.WriteLine($"CryptProtectMemory({memory}, {length}");
 
+            if (disposedValue)
+            {
+                throw new Exception("Called CryptProtectMemory on disposed OpenSSLCryptProtectMemory object");
+            }
+
             Debug.WriteLine("AllocHGlobal for tmpBuffer: " + length + blockSize);
             IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
@@ -142,6 +147,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             Debug.WriteLine($"CryptUnprotectMemory({memory}, {length})");
 
+            if (disposedValue)
+            {
+                throw new Exception("Called CryptUnprotectMemory on disposed OpenSSLCryptProtectMemory object");
+            }
+
             Debug.WriteLine("AllocHGlobal for tmpBuffer: " + length + blockSize);
             IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
@@ -156,9 +166,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     try
                     {
                         Debug.WriteLine("EVP_DecryptInit_ex");
-                        Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx");
-                        Check.IntPtr(key, "CryptUnprotectMemory key");
-                        Check.IntPtr(iv, "CryptUnprotectMemory iv");
+                        Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
+                        Check.IntPtr(key, "CryptUnprotectMemory key is invalid");
+                        Check.IntPtr(iv, "CryptUnprotectMemory iv is invalid");
                         int result = openSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
                         Check.Result(result, 1, "EVP_DecryptInit_ex");
 
