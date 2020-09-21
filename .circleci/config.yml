@@ -117,7 +117,6 @@ commands:
               echo "WhiteSource scans will only run in the original repository"
             fi
 
-
 workflows:
   version: 2
   build-test-and-maybe-deploy:
@@ -166,7 +165,7 @@ workflows:
   run-wss-scans:
     triggers:
       - schedule:
-          cron: "0 11 * * 1" # Run at 11:00 on Monday
+          cron: "0 19 * * 1" # Run at 12:00 PST on Monday
           filters:
             branches:
               only: master
