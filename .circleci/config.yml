@@ -166,7 +166,7 @@ workflows:
   run-wss-scans:
     triggers:
       - schedule:
-          cron: "0 0 * * 1" # Run at 00:00 on Monday
+          cron: "0 11 * * 1" # Run at 11:00 on Monday
           filters:
             branches:
               only: master
