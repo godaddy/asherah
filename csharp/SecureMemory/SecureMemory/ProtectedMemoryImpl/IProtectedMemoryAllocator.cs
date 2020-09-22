@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
-    public interface IProtectedMemoryAllocator : IDisposable
+    internal interface IProtectedMemoryAllocator : IDisposable
     {
         IntPtr Alloc(ulong length);
 
