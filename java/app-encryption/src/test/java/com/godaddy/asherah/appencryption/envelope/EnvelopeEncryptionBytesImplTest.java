@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableMap;
 class EnvelopeEncryptionBytesImplTest {
   @Mock
   EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
-  
+
   @InjectMocks
   EnvelopeEncryptionBytesImpl envelopeEncryptionBytesImpl;
 
@@ -45,7 +45,7 @@ class EnvelopeEncryptionBytesImplTest {
   @Test
   void testCloseSuccess() {
     envelopeEncryptionBytesImpl.close();
-    
+
     // Verify proper resources are closed
     verify(envelopeEncryptionJsonImpl).close();
   }
@@ -54,7 +54,7 @@ class EnvelopeEncryptionBytesImplTest {
   void testCloseWithCloseFailShouldReturn() {
     doThrow(RuntimeException.class).when(envelopeEncryptionJsonImpl).close();
     envelopeEncryptionBytesImpl.close();
-    
+
     verify(envelopeEncryptionJsonImpl).close();
   }
 

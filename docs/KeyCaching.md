@@ -3,15 +3,15 @@
 Asherah supports caching of Intermediate and System Keys to minimize calls against external resource and reducing
 latency. This is especially important for minimizing calls to the configured
 [Key Management Service](KeyManagementService.md) as that is often the most expensive and latent interaction of the
-resources involved. The cache is built on top of the Secure Memory implementation. 
+resources involved. The cache is built on top of the Secure Memory implementation.
 For stateless workloads, when the calling app can't make use of the shared session, Asherah also provides the option
 of caching Sessions. This further helps in reducing the latency by minimizing the number of API calls to the metastore
-as the SDK makes use of the cached session instead of creating a new one. 
+as the SDK makes use of the cached session instead of creating a new one.
 
 ## Crypto Policy Configuration
 
 The [Crypto Policy](CryptoPolicy.md) can be used to enable or disable the caching of the keys and session. Since keys
-can be flagged as "revoked" before their expiration period (i.e. irregular key rotation), the status of a cached key 
+can be flagged as "revoked" before their expiration period (i.e. irregular key rotation), the status of a cached key
 is periodically retrieved from the Metastore. This "Revoke Check" period is configured using the
 [Crypto Policy](CryptoPolicy.md)'s `revokeCheckPeriodMillis`. The
 [Basic Expiring Crypto Policy](CryptoPolicy.md#basic-expiring-crypto-policy) provided by the library simplifies this to

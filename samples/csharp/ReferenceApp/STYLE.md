@@ -39,4 +39,3 @@ Avoid leaving unused imports in files.
 
 ### JetBrains Rider
 In order to get full integration with Rider, either reload the solution or restart Rider completely.
-

@@ -73,7 +73,7 @@ CREATE TABLE encryption_key (
 
 ```
 **NOTE**: The above schema is known to work properly with MySQL. Adjust the schema data types for other database vendors
-accordingly. As we officially integrate with teams using other database vendors, we will add more vendor-specific 
+accordingly. As we officially integrate with teams using other database vendors, we will add more vendor-specific
 schemas as needed.
 
 ### Using a DynamoDB Metastore
@@ -141,4 +141,4 @@ Help Options:
   -h, --help                  Show this help message
 ```
 
-TODO: Add link to Sceptre template example  
+TODO: Add link to Sceptre template example

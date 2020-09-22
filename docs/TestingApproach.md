@@ -35,7 +35,7 @@ Based on permutation of these states, we can have a total of 81 (3 ^ 4) combinat
 | RETIRED  | RETIRED  | VALID  | RETIRED  |
 ... and so on.
 
-For each state combination we encrypt and decrypt a payload, verifying that it runs successfully. Each state combination leads to a set of conditions and resulting interactions with the metastore. 
+For each state combination we encrypt and decrypt a payload, verifying that it runs successfully. Each state combination leads to a set of conditions and resulting interactions with the metastore.
 
 For the encrypt path:
 
@@ -68,7 +68,7 @@ For the decrypt path:
 Ensure that all keys and data row records are created as expected.
 
 ## Cross-language Testing Framework (CLTF)
-A cross-language testing framework has been implemented using [Gherkin/Cucumber](https://cucumber.io/docs/gherkin/). 
+A cross-language testing framework has been implemented using [Gherkin/Cucumber](https://cucumber.io/docs/gherkin/).
 The CLTF validates inter-language operability between all supported languages by running the following features.
 
 - Encrypt operation in all languages

@@ -47,4 +47,3 @@ public class SessionJsonImpl<D> implements Session<JSONObject, D> {
     }
   }
 }
-

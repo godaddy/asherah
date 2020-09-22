@@ -27,7 +27,7 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 </ItemGroup>
 ```
 
-`GoDaddy.Asherah.AppEncryption` targets NetStandard 2.0 and NetStandard 2.1. See the 
+`GoDaddy.Asherah.AppEncryption` targets NetStandard 2.0 and NetStandard 2.1. See the
 [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
 [Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
 for more information.
@@ -57,7 +57,7 @@ using (SessionFactory sessionFactory = SessionFactory
 }
 ```
 
-A more extensive example is the [Reference Application](../../samples/csharp/ReferenceApp/), which will evolve along 
+A more extensive example is the [Reference Application](../../samples/csharp/ReferenceApp/), which will evolve along
 with the SDK.
 
 ## How to Use Asherah
@@ -85,7 +85,7 @@ IMetastore<JObject> adoMetastore = AdoMetastoreImpl.NewBuilder(dbProviderFactory
 #### DynamoDB Metastore
 For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
 
-To obtain an instance of the builder, use the static factory method `NewBuilder`. 
+To obtain an instance of the builder, use the static factory method `NewBuilder`.
 ```c#
 DynamoDbMetastoreImpl.NewBuilder("<preferred-aws-region>");
 ```
@@ -142,7 +142,7 @@ KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("
 ```
 
 ### Define the Crypto Policy
-Detailed information on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect 
+Detailed information on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect
 on key caching is explained [here](../../docs/KeyCaching.md).
 
 #### Basic Expiring Crypto Policy
@@ -156,7 +156,7 @@ CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
 
 #### (Optional) Enable Session Caching
 
-Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the 
+Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the
 shared session can't be used by the calling app.
 
 To enable session caching, simply use the optional builder step `WithCanCacheSessions(true)` when building a crypto policy.
@@ -179,7 +179,7 @@ CryptoPolicy neverExpiredCryptoPolicy = new NeverExpiredCryptoPolicy();
 
 ### (Optional) Enable Metrics
 Asherah's C# implementation uses [App.Metrics](https://www.app-metrics.io/) for metrics, which are disabled by default.
-If metrics are left disabled, we simply create and use an `IMetrics`instance whose 
+If metrics are left disabled, we simply create and use an `IMetrics`instance whose
 [Enabled flag](https://www.app-metrics.io/getting-started/fundamentals/configuration/) is disabled.
 
 To enable metrics generation, simply pass in an existing `IMetrics`
@@ -233,7 +233,7 @@ The different usage styles are explained below.
 **NOTE:** Remember to close the session after all cryptographic operations to dispose of associated resources.
 
 #### Plain Encrypt/Decrypt Style
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is
 completely up to the calling application for storage responsibility.
 
 ```c#
@@ -247,8 +247,8 @@ string decryptedPayloadString = Encoding.UTF8.GetString(dataRowRecordBytes.Decry
 ```
 
 #### Custom Persistence via Store/Load methods
-Asherah supports a key-value/document storage model. An [AppEncryption](AppEncryption/AppEncryption.cs) instance can 
-accept a [Persistence](AppEncryption/Persistence/Persistence.cs) implementation and hook into its `Load` and `Store` 
+Asherah supports a key-value/document storage model. An [AppEncryption](AppEncryption/AppEncryption.cs) instance can
+accept a [Persistence](AppEncryption/Persistence/Persistence.cs) implementation and hook into its `Load` and `Store`
 calls.
 
 An example `Dictionary`-backed `Persistence` implementation:
@@ -284,7 +284,7 @@ Option<JObject> payload = sessionJson.Load(persistenceKey, dictionaryPersistence
 
 ### Handling read-only Docker containers
 
-Dotnet enables debugging and profiling by default causing filesystem writes. Disabling them ensures that the 
+Dotnet enables debugging and profiling by default causing filesystem writes. Disabling them ensures that the
 SDK can be used in a read-only container.
 
 To do so, simply set the environment variable `COMPlus_EnableDiagnostics` to 0
@@ -293,7 +293,7 @@ To do so, simply set the environment variable `COMPlus_EnableDiagnostics` to 0
 ENV COMPlus_EnableDiagnostics=0
 ```
 
-Our [sample application's](../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for 
+Our [sample application's](../../samples/csharp/ReferenceApp/images/runtime/Dockerfile) Dockerfile can be used for
 reference.
 
 ## Development Notes
