@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
                 {
                     var secretBytes = new byte[] { 0, 1, 2, 3 };
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
-                    { 
+                    {
                         secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
                     }
                 }

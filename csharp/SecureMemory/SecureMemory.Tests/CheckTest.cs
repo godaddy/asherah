@@ -65,7 +65,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 Check.Zero(10, "CheckBadZero");
-            });            
+            });
         }
     }
 }
