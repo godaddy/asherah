@@ -11,14 +11,14 @@ public interface CryptoPolicy {
 
   /**
    * Checks if the key is expired.
-   * @param keyCreationDate the key creation date as an {@link java.time.Instant} object.
+   * @param keyCreationDate The key creation date as an {@link java.time.Instant} object.
    * @return {@code true} if the key is expired, else {@code false}.
    */
   boolean isKeyExpired(Instant keyCreationDate);
 
   /**
    * Gets the key revoke check time in milliseconds.
-   * @return the key revoke check time in milliseconds.
+   * @return The key revoke check time in milliseconds.
    */
   long getRevokeCheckPeriodMillis();
 
@@ -49,7 +49,7 @@ public interface CryptoPolicy {
 
   /**
    * Gets the session cache expiry time limit in milliseconds.
-   * @return the session cache expiry time limit in milliseconds.
+   * @return The session cache expiry time limit in milliseconds.
    */
   long getSessionCacheExpireMillis();
 
@@ -67,7 +67,7 @@ public interface CryptoPolicy {
 
   /**
    * Get the key rotation strategy.
-   * @return a {@link CryptoPolicy.KeyRotationStrategy} object.
+   * @return A {@link CryptoPolicy.KeyRotationStrategy} object.
    */
   KeyRotationStrategy keyRotationStrategy();
 
@@ -89,8 +89,8 @@ public interface CryptoPolicy {
 
   /**
    * Truncate the SystemKey created time to the nearest minute.
-   * @param instant a {@link java.time.Instant} object.
-   * @return a {@link java.time.Instant} object.
+   * @param instant A {@link java.time.Instant} object.
+   * @return A {@link java.time.Instant} object truncated to the nearest minute.
    */
   default Instant truncateToSystemKeyPrecision(Instant instant) {
     return instant.truncatedTo(ChronoUnit.MINUTES);
@@ -98,8 +98,8 @@ public interface CryptoPolicy {
 
   /**
    Truncate the IntermediateKey created time to the nearest minute.
-   * @param instant a {@link java.time.Instant} object.
-   * @return a {@link java.time.Instant} object truncated to the nearest minute.
+   * @param instant A {@link java.time.Instant} object.
+   * @return A {@link java.time.Instant} object truncated to the nearest minute.
    */
   default Instant truncateToIntermediateKeyPrecision(Instant instant) {
     return instant.truncatedTo(ChronoUnit.MINUTES);

@@ -7,10 +7,9 @@ public final class ManagedBufferUtils {
 
   /**
    * Clears the byte array.
-   * @param sensitiveData an array of {@code byte} objects that needs to be cleared.
+   * @param sensitiveData An array of {@code byte} objects that needs to be cleared.
    */
   public static void wipeByteArray(final byte[] sensitiveData) {
     Arrays.clear(sensitiveData);
   }
-
 }
