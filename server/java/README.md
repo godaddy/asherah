@@ -8,10 +8,10 @@ Table of Contents
   * [Configuring the server](#configuring-the-server)
 
 ## Running the server
-The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and 
+The following makes use of the `JDBC` metastore implementation and assumes mysql is running on localhost and
 a preexisting Asherah database. See [metastore documentation](/docs/Metastore.md) for more.
 
-#### Prerequisites: 
+#### Prerequisites:
 * Make sure you have JAVA 1.8
 * Some unit tests will use the AWS SDK, If you don’t already have a local
 [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
@@ -65,7 +65,7 @@ java -jar <jar-path> --uds='/tmp/appencryption.sock'
 
 ### Using the provided docker image
 > **NOTE**: This docker image would not work as is with the [Amazon ECS example](../README.md#amazon-ecs).
-> This is because the configuration options supported by the Java server slightly differ from those expected by the 
+> This is because the configuration options supported by the Java server slightly differ from those expected by the
 > alternative [Go server](../go).
 
 ```console
@@ -84,7 +84,7 @@ Step 11/11 : ENTRYPOINT ["java", "-Djna.nounpack=true", "-jar", "app.jar"]
 Removing intermediate container 9651fa614533
  ---> e9cb70abb481
 Successfully built e9cb70abb481
-[user@machine java]$ docker run -it e9cb70abb481 
+[user@machine java]$ docker run -it e9cb70abb481
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using static KMS...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using in-memory metastore...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - key expiration days set to = 90 days

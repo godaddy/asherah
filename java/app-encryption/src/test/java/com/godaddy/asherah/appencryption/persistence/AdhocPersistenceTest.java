@@ -32,7 +32,7 @@ class AdhocPersistenceTest {
   void testLoad() {
     String expectedValue = "some_value";
     when(persistenceLoad.apply(anyString())).thenReturn(Optional.of(expectedValue));
-    
+
     String key = "some_key";
     Optional<String> actualValue = adhocPersistence.load(key);
     assertTrue(actualValue.isPresent());

@@ -509,4 +509,3 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     }
   }
 }
-

@@ -1,6 +1,6 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformNative", "PlatformNative\PlatformNative.csproj", "{3068749D-B99D-4F52-8A6E-95DA59735A52}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureMemory", "SecureMemory\SecureMemory.csproj", "{22812802-51F9-4D8F-B866-AE4F3F0E8566}"

@@ -70,4 +70,3 @@ public interface Session<P, D> extends SafeAutoCloseable {
    */
   D encrypt(P payload);
 }
-

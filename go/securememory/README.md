@@ -31,7 +31,7 @@ package main
 
 import (
     "fmt"
-    
+
     "github.com/godaddy/asherah/go/securememory"
     "github.com/godaddy/asherah/go/securememory/protectedmemory"
 )
@@ -75,7 +75,7 @@ package main
 
 import (
     "fmt"
-    
+
     "github.com/godaddy/asherah/go/securememory"
     "github.com/godaddy/asherah/go/securememory/memguard"
 )

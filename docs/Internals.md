@@ -2,7 +2,7 @@
 
 ## Envelope Encryption Algorithm
 
-### Encrypt 
+### Encrypt
 
 Depending on policy, we will either continue to encrypt if a key in the tree has expired or rotate/generate keys inline.
 
@@ -126,10 +126,10 @@ Once it does:
 
 ```
 Read message from FIFO SK_IK key rotation queue
-If SK message meta = current SK meta in metastore 
-    Load SK EKR from metastore 
+If SK message meta = current SK meta in metastore
+    Load SK EKR from metastore
     Use MK in HSM to create and encrypt a new SK
-    Create and write new SK EKR in metastore 
+    Create and write new SK EKR in metastore
 Delete message
 ```
 
@@ -138,17 +138,17 @@ Delete message
 ```
 Read message from FIFO SK_IK key rotation queue
 If IK meta in message = current IK in metastore
-    If SK EKR DOES NOT exist in metastore 
+    If SK EKR DOES NOT exist in metastore
         THROW ERROR: no SK exists
     Load current SK EKR from metastore
     Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
         Queue IK for rotation
-    Else 
+    Else
         Create new IK from crypto library (e.g. openssl)
         Use SK to encrypt IK
-        Create and write new IK EKR in metastore 
+        Create and write new IK EKR in metastore
 Delete message
 ```
 
@@ -157,10 +157,10 @@ Delete message
 ```
 Read message from standard DRK key rotation queue
 Load DRK EKR from message
-If IK is not cached 
-    Load current IK from metastore 
+If IK is not cached
+    Load current IK from metastore
     If SK in IK EKR is not cached
-        Load current SK from metastore 
+        Load current SK from metastore
         Use MK in HSM to decrypt SK
     If SK is expired
         Queue SK for rotation
@@ -177,7 +177,7 @@ Use IK to encrypt DRK
 Load DRR from data persistence AGAIN
 If DRK EKR matches DRR EKR
     #Warning potential race condition starts here
-    Update existing DRR in data persistence 
+    Update existing DRR in data persistence
     #We could have just overwritten a user's write
 Delete Message
 ```
@@ -187,8 +187,8 @@ Delete Message
 ### Current Implementation
 
 Secure Memory is implemented using well known native calls that ensure various protections of a secret value in memory.
-Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the 
-calls will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this 
+Below we describe the pseudocode a Secure Memory implementation needs to perform to properly protect memory. Note the
+calls will refer to `libc`-specific implementation. In the future, if we add support for Windows we'll update this
 page with corresponding calls appropriately.
 
 #### Create a Secret
