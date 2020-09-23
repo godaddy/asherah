@@ -23,4 +23,3 @@ class DecryptMetastoreInteractions {
     return false;
   }
 }
-

@@ -3,4 +3,3 @@
     <MSBuild Projects="@(ProjectReference)" Targets="VSTestIfTestProject" />
   </Target>
 </Project>
-

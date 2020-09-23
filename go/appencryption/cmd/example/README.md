@@ -39,7 +39,7 @@ Help Options:
 ```go
 go run . -s 1 -c 1 -r
 ```
-- Run performance timers for X duration and disable progress 
+- Run performance timers for X duration and disable progress
 ```go
 go run . -d 10s -p -P
 ```

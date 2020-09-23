@@ -31,7 +31,7 @@ Example showing CLI options:
 Example run using defaults (in-memory metastore, static KMS, console metrics only):
 
 ```console
-[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar 
+[user@machine reference-app]$ java -jar target/referenceapp-1.0.0-SNAPSHOT-jar-with-dependencies.jar
  ```
 
 Example run using MySQL metastore, AWS KMS, CloudWatch metrics and 100 iterations:
@@ -106,7 +106,7 @@ local DynamoDB endpoint.
 --dynamodb-endpoint http://localhost:8000 \
 --dynamodb-region us-west-2 \
 --dynamodb-table-name MyGlobalTable
-``` 
+```
 
 ## Configuring the Reference App
 Configuration options are provided via command-line arguments. Supported options are as
@@ -135,4 +135,4 @@ follows:
                      Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 ```
 
-TODO: Add link to Sceptre template example  
+TODO: Add link to Sceptre template example

@@ -41,4 +41,3 @@ final class CryptoKeyHolder {
     return intermediateKey;
   }
 }
-
