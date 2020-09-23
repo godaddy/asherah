@@ -33,8 +33,8 @@ public abstract class CryptoKey implements SafeAutoCloseable {
   /**
    * Applies a function to the key.
    * @param action The function to execute
-   * @param <T> the type used to store the result of the function.
-   * @return the result of the function.
+   * @param <T> The type used to store the result of the function.
+   * @return The result of the function.
    */
   public abstract <T> T withKey(Function<byte[], T> action);
 }

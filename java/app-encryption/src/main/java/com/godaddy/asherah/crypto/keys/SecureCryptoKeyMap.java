@@ -22,7 +22,7 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
   /**
    * Retrieves the provided key from the cache.
    * @param key The key to retrieve.
-   * @return a {@link CryptoKey} object.
+   * @return A {@link CryptoKey} object.
    * @throws IllegalStateException if a closed key is accessed.
    */
   public CryptoKey get(final K key) {
@@ -46,7 +46,7 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
 
   /**
    * Retrieves the last key from the cache.
-   * @return a {@link CryptoKey} object.
+   * @return A {@link CryptoKey} object.
    * @throws IllegalStateException if a closed key is accessed
    */
   public CryptoKey getLast() {
@@ -89,9 +89,9 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
    * key.close();
    * }</pre>
    *
-   * @param key the key to store the cryptoKey.
-   * @param cryptoKey the cryptoKey to store.
-   * @return the CryptoKey which should be used and subsequently closed after use.
+   * @param key The key to store the cryptoKey.
+   * @param cryptoKey The cryptoKey to store.
+   * @return The {@link CryptoKey} which should be used and subsequently closed after use.
    */
   public CryptoKey putAndGetUsable(final K key, final CryptoKey cryptoKey) {
     if (!isClosed.get()) {

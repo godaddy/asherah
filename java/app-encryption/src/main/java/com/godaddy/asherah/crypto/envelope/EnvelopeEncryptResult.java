@@ -7,7 +7,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Getter for the field {@code cipherText}.
-   * @return the cipher text/encrypted payload in the DRR.
+   * @return The cipher text/encrypted payload in the DRR.
    */
   public byte[] getCipherText() {
     return cipherText;
@@ -15,7 +15,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Setter for the field {@code cipherText}.
-   * @param cipherText the cipher text/encrypted payload.
+   * @param cipherText The cipher text/encrypted payload.
    */
   public void setCipherText(final byte[] cipherText) {
     this.cipherText = cipherText;
@@ -23,7 +23,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Getter for the field {@code encryptedKey}.
-   * @return the encrypted key in the DRR.
+   * @return The encrypted key in the DRR.
    */
   public byte[] getEncryptedKey() {
     return encryptedKey;
@@ -31,7 +31,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Setter for the field {@code encryptedKey}.
-   * @param key the encrypted key.
+   * @param key The encrypted key.
    */
   public void setEncryptedKey(final byte[] key) {
     encryptedKey = key;
@@ -39,7 +39,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Getter for the field {@code userState}.
-   * @return the {@link com.godaddy.asherah.appencryption.envelope.KeyMeta} in the DRR.
+   * @return The {@link com.godaddy.asherah.appencryption.envelope.KeyMeta} in the DRR.
    */
   public Object getUserState() {
     return userState;
@@ -47,7 +47,7 @@ public class EnvelopeEncryptResult {
 
   /**
    * Setter for the field {@code userState}.
-   * @param state the @link com.godaddy.asherah.appencryption.envelope.KeyMeta}.
+   * @param state The @link com.godaddy.asherah.appencryption.envelope.KeyMeta}.
    */
   public void setUserState(final Object state) {
     userState = state;

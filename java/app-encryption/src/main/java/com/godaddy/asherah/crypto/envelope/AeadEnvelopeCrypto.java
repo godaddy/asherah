@@ -55,9 +55,9 @@ public abstract class AeadEnvelopeCrypto extends AeadCrypto {
 
   /**
    * Encrypts the payload and the key to create the data row record.
-   * @param plainText the payload to be encrypted.
-   * @param keyEncryptionKey the key encryption key.
-   * @return a {@link EnvelopeEncryptResult} object/data row record (DRR).
+   * @param plainText The payload to be encrypted.
+   * @param keyEncryptionKey The key encryption key.
+   * @return An {@link EnvelopeEncryptResult} object/data row record (DRR).
    */
   public EnvelopeEncryptResult envelopeEncrypt(final byte[] plainText, final CryptoKey keyEncryptionKey) {
     return envelopeEncrypt(plainText, keyEncryptionKey, null);
@@ -66,10 +66,10 @@ public abstract class AeadEnvelopeCrypto extends AeadCrypto {
 
   /**
    * Encrypts the payload and the key to create the data row record.
-   * @param plainText the payload to be encrypted.
-   * @param keyEncryptionKey the key encryption key.
-   * @param userState the KeyMeta for the {@code keyEncryptionKey}.
-   * @return a {@link EnvelopeEncryptResult} object/data row record (DRR).
+   * @param plainText The payload to be encrypted.
+   * @param keyEncryptionKey The key encryption key.
+   * @param userState The KeyMeta for the {@code keyEncryptionKey}.
+   * @return An {@link EnvelopeEncryptResult} object/data row record (DRR).
    */
   public EnvelopeEncryptResult envelopeEncrypt(final byte[] plainText, final CryptoKey keyEncryptionKey,
       final Object userState) {
@@ -84,11 +84,11 @@ public abstract class AeadEnvelopeCrypto extends AeadCrypto {
 
   /**
    * Decrypts the encryptedKey and then uses the decrypted key to decrypt the encrypted payload in the data row record.
-   * @param cipherText the encrypted payload.
-   * @param encryptedKey the encrypted key.
-   * @param keyCreated the creation time of the data row record.
-   * @param keyEncryptionKey the key encryption key.
-   * @return the decrypted payload.
+   * @param cipherText The encrypted payload.
+   * @param encryptedKey The encrypted key.
+   * @param keyCreated The creation time of the data row record.
+   * @param keyEncryptionKey The key encryption key.
+   * @return The decrypted payload.
    */
   public byte[] envelopeDecrypt(final byte[] cipherText, final byte[] encryptedKey,
       final Instant keyCreated, final CryptoKey keyEncryptionKey) {

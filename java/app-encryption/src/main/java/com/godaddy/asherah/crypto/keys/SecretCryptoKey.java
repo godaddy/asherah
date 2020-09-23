@@ -21,7 +21,7 @@ public class SecretCryptoKey extends CryptoKey {
 
   /**
    * Creates a new {@code SecretCryptoKey}.
-   * @param secret a {@link Secret} object.
+   * @param secret A {@link Secret} object.
    * @param created The creation time of the key.
    * @param revoked Indicates if the key is revoked.
    */
@@ -64,5 +64,4 @@ public class SecretCryptoKey extends CryptoKey {
   Secret getSecret() {
     return secret;
   }
-
 }
