@@ -352,7 +352,7 @@ Navigate to the `server` directory and run the following:
 [user@machine server]$ mkdir -p java/target/generated-sources/protobuf/java
 [user@machine server]$ protoc --java_out=java/target/generated-sources/protobuf/java protos/appencryption.proto
 [user@machine server]$ protoc \
-    --plugin=protoc-gen-grpc-java=<dowloaded_proto_plugin> \ 
+    --plugin=protoc-gen-grpc-java=<dowloaded_proto_plugin> \
     --grpc-java_out=java/target/generated-sources/protobuf/grpc-java \
-    --proto_path=protos appencryption.proto 
+    --proto_path=protos appencryption.proto
 ```

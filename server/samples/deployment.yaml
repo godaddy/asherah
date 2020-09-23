@@ -14,7 +14,7 @@ spec:
       containers:
       - name: sidecar
         image: asherah-server
-        imagePullPolicy: Never        
+        imagePullPolicy: Never
         args: ["--socket-file", "/tmp/appencryption.sock"]
         env:
         - name: ASHERAH_SERVICE_NAME

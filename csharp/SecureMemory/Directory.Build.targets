@@ -3,4 +3,3 @@
     <CallTarget Targets="VSTest" Condition="'$(IsTestProject)' == 'true'" />
   </Target>
 </Project>
-

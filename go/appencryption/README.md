@@ -66,7 +66,7 @@ func main() {
 }
 ```
 
-A more extensive example is the [Reference Application](../../samples/go/referenceapp/), which will evolve along 
+A more extensive example is the [Reference Application](../../samples/go/referenceapp/), which will evolve along
 with the SDK.
 
 ## How to Use Asherah
@@ -116,7 +116,7 @@ if err != nil {
 }
 
 // To configure an endpoint
-awsConfig.Endpoint = aws.String("http://localhost:8000"), 
+awsConfig.Endpoint = aws.String("http://localhost:8000"),
 ```
 You can also either use the `WithXXX` functional options to configure the metastore properties.
 
@@ -166,7 +166,7 @@ keyManagementService := kms.NewStatic("thisIsAStaticMasterKeyForTesting", crypto
 ```
 
 ### Define the Crypto Policy
-Detailed information on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect 
+Detailed information on Crypto Policy can be found [here](../../docs/CryptoPolicy.md). The Crypto Policy's effect
 on key caching is explained [here](../../docs/KeyCaching.md).
 
 #### Basic Expiring Crypto Policy
@@ -175,7 +175,7 @@ on key caching is explained [here](../../docs/KeyCaching.md).
 cryptoPolicy := appencryption.NewCryptoPolicy()
 ```
 
-The default key expiration limit is 90 days and revoke check interval is 60 minutes. These can be changed using 
+The default key expiration limit is 90 days and revoke check interval is 60 minutes. These can be changed using
 functional options.
 
 ```go
@@ -202,8 +202,8 @@ cryptoPolicy := appencryption.NewCryptoPolicy(
 ```
 
 ### (Optional) Enable Metrics
-Asherah's Go implementation uses [go-metrics](https://github.com/rcrowley/go-metrics) for metrics, which are enabled by 
-default. If metrics are to be disabled, we simply use the `WithMetrics` functional option while creating the 
+Asherah's Go implementation uses [go-metrics](https://github.com/rcrowley/go-metrics) for metrics, which are enabled by
+default. If metrics are to be disabled, we simply use the `WithMetrics` functional option while creating the
 `SessionFactory`.
 
 ```go
@@ -217,9 +217,9 @@ The following metrics are available:
 - *ael.kms.aws.decryptkey:* Total time spend in decrypting the key which would include the region-specific decrypt calls
 in case of transient failures.
 - *ael.kms.aws.encrypt.\<region\>:* Time spent on data key plain text encryption for each region.
-- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific 
+- *ael.kms.aws.encryptkey:* Total time spent in encrypting the key which would include the region-specific
 generatedDataKey and parallel encrypt calls.
-- *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in 
+- *ael.kms.aws.generatedatakey.\<region\>:* Time spent to generate the first data key which is then encrypted in
 remaining regions.
 - *ael.metastore.sql.load:* Time spent to load a record from sql metastore.
 - *ael.metastore.sql.loadlatest:* Time spent to get the latest record from sql metastore.
@@ -245,9 +245,9 @@ sessionFactory := appencryption.NewSessionFactory(
 )
 ```
 
-**NOTE:** We recommend that every service have its own session factory, preferably as a singleton instance within the 
-service. This will allow you to leverage caching and minimize resource usage. Always remember to close the session 
-factory before exiting the service to ensure that all resources held by the factory, including the cache, are disposed 
+**NOTE:** We recommend that every service have its own session factory, preferably as a singleton instance within the
+service. This will allow you to leverage caching and minimize resource usage. Always remember to close the session
+factory before exiting the service to ensure that all resources held by the factory, including the cache, are disposed
 of properly.
 
 ### Performing Cryptographic Operations
@@ -260,13 +260,13 @@ if err != nil {
     panic(err)
 }
 // Close frees the memory held by the intermediate keys used in this session
-defer sess.Close() 
+defer sess.Close()
 ```
 
 **NOTE:** Remember to close the session after all cryptographic operations to dispose of associated resources.
 
 #### Encrypt/Decrypt
-This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is 
+This usage style is similar to common encryption utilities where payloads are simply encrypted and decrypted, and it is
 completely up to the calling application for storage responsibility.
 
 ```go
@@ -304,4 +304,3 @@ aws_secret_access_key = barfoo
 ```
 
 Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
-

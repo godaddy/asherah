@@ -35,7 +35,7 @@ a Github issue in that project. All dependencies should be open source software
 and can be found on Github.
 
 Submit a ticket for your issue, assuming one does not already exist:
-  - Create it on our [Issue Tracker][issues].   
+  - Create it on our [Issue Tracker][issues].
   - Clearly describe the issue by following the template layout.
     - Make sure to include steps to reproduce the bug.
     - A reproducible (unit) test could be helpful in solving the bug.
@@ -48,14 +48,14 @@ it to the smallest amount of code possible. Reasoning about a sample or unit
 test that reproduces a bug in just a few lines of code is easier than reasoning
 about a longer sample.
 
-From a practical perspective, contributions are as simple as: 
-  - [Forking](https://help.github.com/en/articles/fork-a-repo) the repository on GitHub. 
-  - Making changes to your forked repository. 
-  - When committing, reference your issue (if present) and include a note about the fix. 
-  - If possible, and if applicable, please also add/update unit tests for your changes. 
-  - Push the changes to your fork and submit a pull request to the 'master' branch of the project's repository. 
+From a practical perspective, contributions are as simple as:
+  - [Forking](https://help.github.com/en/articles/fork-a-repo) the repository on GitHub.
+  - Making changes to your forked repository.
+  - When committing, reference your issue (if present) and include a note about the fix.
+  - If possible, and if applicable, please also add/update unit tests for your changes.
+  - Push the changes to your fork and submit a pull request to the 'master' branch of the project's repository.
 
-If you are new to this process, consider taking a look at the whole flow overview 
+If you are new to this process, consider taking a look at the whole flow overview
 [here](https://guides.github.com/activities/forking/).
 
 If you are interested in making a large change and feel unsure about its overall
@@ -77,11 +77,11 @@ larger features. Here are some accepted ways to speed up review times for your
 patches:
 
 - Review other people’s changes. If you help out, others will more likely be
-willing to do the same for you. 
-- Split your change into multiple smaller changes. The smaller your change, 
-the higher the probability that somebody will take a quick look at it. 
-- Mention the change on [Slack][slack]. If it is urgent, provide reasons why it 
-is important to get this change landed. Remember that you are asking for valuable 
+willing to do the same for you.
+- Split your change into multiple smaller changes. The smaller your change,
+the higher the probability that somebody will take a quick look at it.
+- Mention the change on [Slack][slack]. If it is urgent, provide reasons why it
+is important to get this change landed. Remember that you are asking for valuable
 time from other professional developers.
 
 **Note that anyone is welcome to review and give feedback on a change, but only
@@ -101,7 +101,7 @@ guide with respect to patterns, naming, documentation and testing.
 
 # Additional Resources
 
-- [General GitHub Documentation](https://help.github.com/) 
+- [General GitHub Documentation](https://help.github.com/)
 - [GitHub Pull Request documentation](https://help.github.com/send-pull-requests/)
 
 [issues]: https://github.com/godaddy/asherah/issues

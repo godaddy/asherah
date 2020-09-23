@@ -41,4 +41,3 @@ public class SessionBytesImpl<D> implements Session<byte[], D> {
     }
   }
 }
-
