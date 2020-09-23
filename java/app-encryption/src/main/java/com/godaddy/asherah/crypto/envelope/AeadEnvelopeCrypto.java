@@ -13,7 +13,7 @@ public abstract class AeadEnvelopeCrypto extends AeadCrypto {
    * Encrypts a {@link CryptoKey} with another {@link CryptoKey}.
    * @param key The key to encrypt.
    * @param keyEncryptionKey The key encryption key.
-   * @return The encrypted key bytes
+   * @return The encrypted key bytes.
    */
   public byte[] encryptKey(final CryptoKey key, final CryptoKey keyEncryptionKey) {
     return key.withKey(keyBytes -> {
