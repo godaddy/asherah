@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
@@ -11,11 +13,35 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
     {
         // Detect methods should throw if they know for sure what the OS/platform is, but it isn't supported
         // Detect methods should return null if they don't know for sure what the OS/platform is
-        private readonly IProtectedMemoryAllocator allocator;
+        private static IProtectedMemoryAllocator allocator;
+        private static int refCount = 0;
+        private static object allocatorLock = new object();
 
-        public ProtectedMemorySecretFactory()
+        public ProtectedMemorySecretFactory(IConfiguration configuration = null)
         {
-            allocator = GetAllocator();
+            Debug.WriteLine("ProtectedMemorySecretFactory ctor");
+            lock (allocatorLock)
+            {
+                if (allocator != null)
+                {
+                    refCount++;
+                    Debug.WriteLine($"ProtectedMemorySecretFactory: Using existing allocator refCount: {refCount}");
+                    return;
+                }
+
+                allocator = DetectViaRuntimeInformation(configuration)
+                         ?? DetectViaOsVersionPlatform(configuration)
+                         ?? DetectOsDescription(configuration);
+
+                if (allocator == null)
+                {
+                    throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
+                }
+
+                Debug.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
+                refCount++;
+                Debug.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
+            }
         }
 
         public Secret CreateSecret(byte[] secretData)
@@ -28,22 +54,34 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return ProtectedMemorySecret.FromCharArray(secretData, allocator);
         }
 
-        internal static IProtectedMemoryAllocator GetAllocator()
+        public void Dispose()
         {
-            var allocator = DetectViaRuntimeInformation()
-                         ?? DetectViaOsVersionPlatform()
-                         ?? DetectOsDescription();
-
-            if (allocator == null)
+            Debug.WriteLine("ProtectedMemorySecretFactory: Dispose");
+            lock (allocatorLock)
             {
-                throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
-            }
+                if (allocator == null)
+                {
+                    throw new Exception("ProtectedMemorySecretFactory.Dispose: Allocator is null!");
+                }
 
-            return allocator;
+                Debug.WriteLine("ProtectedMemorySecretFactory: Allocator is not null");
+                refCount--;
+                if (refCount == 0)
+                {
+                    Debug.WriteLine("ProtectedMemorySecretFactory: refCount is zero, disposing");
+                    allocator.Dispose();
+                    Debug.WriteLine("ProtectedMemorySecretFactory: Setting allocator to null");
+                    allocator = null;
+                }
+                else
+                {
+                    Debug.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
+                }
+            }
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform()
+        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -67,7 +105,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaRuntimeInformation()
+        private static IProtectedMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -78,6 +116,23 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                         if (Environment.Is64BitProcess == false)
                         {
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
+                        }
+
+                        if (configuration != null)
+                        {
+                            if (string.Compare(configuration["secureHeapEngine"], "openssl11", true) == 0)
+                            {
+                                if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                                {
+                                    ulong heapSize = ulong.Parse(configuration["heapSize"]);
+                                    int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
+                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(heapSize, minimumAllocationSize);
+                                }
+                                else
+                                {
+                                    throw new PlatformNotSupportedException("OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                                }
+                            }
                         }
 
                         return new LinuxProtectedMemoryAllocatorLP64();
@@ -121,7 +176,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectOsDescription()
+        private static IProtectedMemoryAllocator DetectOsDescription(IConfiguration configuration)
         {
             var desc = RuntimeInformation.OSDescription;
             if (desc.IndexOf("Linux", StringComparison.OrdinalIgnoreCase) != -1)

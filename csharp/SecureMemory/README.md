@@ -9,9 +9,9 @@ This class provides a way for applications to keep secret information (like cryp
   * [Goals](#goals)
   * [Guarantees](#guarantees)
   * [Protected Memory Implementation](#protected-memory-implementation)
-  
+
 ## Installation
-You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.SecureMemory/): 
+You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.SecureMemory/):
 ```xml
 <ItemGroup>
     <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.1" />
@@ -35,7 +35,7 @@ using (Secret secretKey = secretFactory.CreateSecret(secretBytes))
         DoSomethingWithSecretBytes(bytes);
     });
 }
-```   
+```
 
 ## Goals
 * Provide an interface which allows safe patterns of secrets usage

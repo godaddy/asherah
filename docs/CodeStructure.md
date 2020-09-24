@@ -22,7 +22,7 @@ for an example of how the code should be structured:
 
 Below are the primary public-facing interfaces of Asherah.
 
-**NOTE:** The interfaces below are from the Java implementation of the SDK, which also serves as the reference 
+**NOTE:** The interfaces below are from the Java implementation of the SDK, which also serves as the reference
 implementation
 
 ### Primary SDK Interfaces
@@ -32,15 +32,15 @@ The below interfaces implement the session factory using the step builder patter
 ```java
 class SessionFactory {
   static MetastoreStep newBuilder(String productId, String serviceId);
-  
+
   Session<JSONObject, byte[]> getSessionJson(String partitionId);
   Session<byte[], byte[]> getSessionBytes(String partitionId);
   Session<JSONObject, JSONObject> getSessionJsonAsJson(String partitionId);
   Session<byte[], JSONObject> getSessionBytesAsJson(String partitionId);
-  
+
   void close();
 }
- 
+
 interface MetastoreStep {
   CryptoPolicyStep withMetastore(Metastore<JSONObject> metastore);
 }
@@ -57,7 +57,7 @@ interface KeyManagementServiceStep {
 interface BuildStep {
   BuildStep withMetricsEnabled();
   // Additional optional steps can be added here
-  
+
   SessionFactory build();
 }
 ```
@@ -78,7 +78,7 @@ interface Session<P, D> {
   void close();
 }
 ```
-  
+
 For the [store/load](../README.md#store--load) usage model, we also need to implement the `Persistence` interface
 
 ```java
@@ -107,7 +107,7 @@ interface CryptoPolicy {
 
   boolean canCacheSystemKeys();
   boolean canCacheIntermediateKeys();
-  
+
   boolean canCacheSessions();
   long getSessionCacheMaxSize();
   long getSessionCacheExpireMillis();
@@ -117,7 +117,7 @@ interface CryptoPolicy {
 }
 ```
 
-Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md) 
+Detailed information about the CryptoPolicy can be found [here](CryptoPolicy.md)
 
 ### Metastore
 
@@ -131,7 +131,7 @@ interface Metastore<V> {
 }
 ```
 
-Detailed information about the Metastore can be found [here](Metastore.md) 
+Detailed information about the Metastore can be found [here](Metastore.md)
 
 
 ### Key Management Service
@@ -148,4 +148,3 @@ interface KeyManagementService {
 ```
 
 Detailed information about the  Key Management Service can be found [here](KeyManagementService.md)
-

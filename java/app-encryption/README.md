@@ -85,7 +85,7 @@ Metastore jdbcMetastore = JdbcMetastoreImpl.newBuilder(dataSource).build();
 
 For simplicity, the DynamoDB implementation uses the builder pattern to enable configuration changes.
 
-To obtain an instance of the builder, use the static factory method `newBuilder`. 
+To obtain an instance of the builder, use the static factory method `newBuilder`.
 ```java
 DynamoDbMetastoreImpl.newBuilder();
 ```
@@ -152,7 +152,7 @@ CryptoPolicy basicExpiringCryptoPolicy = BasicExpiringCryptoPolicy.newBuilder()
 
 #### (Optional) Enable Session Caching
 
-Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the 
+Session caching is disabled by default. Enabling it is primarily useful if you are working with stateless workloads and the
 shared session can't be used by the calling app.
 
 To enable session caching, simply use the optional builder step `withCanCacheSessions(true)` when building a crypto policy.
@@ -245,7 +245,7 @@ String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordByt
 
 #### Custom Persistence via Store/Load methods
 
-Asherah supports a key-value/document storage model. A [Session](src/main/java/com/godaddy/asherah/appencryption/Session.java) 
+Asherah supports a key-value/document storage model. A [Session](src/main/java/com/godaddy/asherah/appencryption/Session.java)
 can accept a [Persistence](src/main/java/com/godaddy/asherah/appencryption/persistence/Persistence.java)
 implementation and hook into its `store` and `load` calls.
 
@@ -325,4 +325,3 @@ aws_secret_access_key = barfoo
 ```
 
 Alternately, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
-

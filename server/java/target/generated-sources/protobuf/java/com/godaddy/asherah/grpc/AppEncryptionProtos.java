@@ -834,7 +834,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder>
           getEncryptFieldBuilder() {
         if (encryptBuilder_ == null) {
           if (!(requestCase_ == 1)) {
@@ -972,7 +972,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder>
           getDecryptFieldBuilder() {
         if (decryptBuilder_ == null) {
           if (!(requestCase_ == 2)) {
@@ -1110,7 +1110,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.GetSession get_session = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder>
           getGetSessionFieldBuilder() {
         if (getSessionBuilder_ == null) {
           if (!(requestCase_ == 3)) {
@@ -1602,7 +1602,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         data_ = value;
         onChanged();
         return this;
@@ -1612,7 +1612,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-        
+
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -2204,7 +2204,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder getDataRowRecordBuilder() {
-        
+
         onChanged();
         return getDataRowRecordFieldBuilder().getBuilder();
       }
@@ -2223,7 +2223,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder>
           getDataRowRecordFieldBuilder() {
         if (dataRowRecordBuilder_ == null) {
           dataRowRecordBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2871,7 +2871,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder getKeyBuilder() {
-        
+
         onChanged();
         return getKeyFieldBuilder().getBuilder();
       }
@@ -2890,7 +2890,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecordOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecordOrBuilder>
           getKeyFieldBuilder() {
         if (keyBuilder_ == null) {
           keyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2920,7 +2920,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         data_ = value;
         onChanged();
         return this;
@@ -2930,7 +2930,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-        
+
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -3527,7 +3527,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder setCreated(long value) {
-        
+
         created_ = value;
         onChanged();
         return this;
@@ -3537,7 +3537,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearCreated() {
-        
+
         created_ = 0L;
         onChanged();
         return this;
@@ -3560,7 +3560,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         key_ = value;
         onChanged();
         return this;
@@ -3570,7 +3570,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearKey() {
-        
+
         key_ = getDefaultInstance().getKey();
         onChanged();
         return this;
@@ -3663,7 +3663,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder getParentKeyMetaBuilder() {
-        
+
         onChanged();
         return getParentKeyMetaFieldBuilder().getBuilder();
       }
@@ -3682,7 +3682,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMetaOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMetaOrBuilder>
           getParentKeyMetaFieldBuilder() {
         if (parentKeyMetaBuilder_ == null) {
           parentKeyMetaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3879,7 +3879,7 @@ public final class AppEncryptionProtos {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         keyId_ = s;
@@ -3894,7 +3894,7 @@ public final class AppEncryptionProtos {
         getKeyIdBytes() {
       java.lang.Object ref = keyId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         keyId_ = b;
@@ -4238,7 +4238,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder setCreated(long value) {
-        
+
         created_ = value;
         onChanged();
         return this;
@@ -4248,7 +4248,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearCreated() {
-        
+
         created_ = 0L;
         onChanged();
         return this;
@@ -4279,7 +4279,7 @@ public final class AppEncryptionProtos {
           getKeyIdBytes() {
         java.lang.Object ref = keyId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           keyId_ = b;
@@ -4298,7 +4298,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         keyId_ = value;
         onChanged();
         return this;
@@ -4308,7 +4308,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearKeyId() {
-        
+
         keyId_ = getDefaultInstance().getKeyId();
         onChanged();
         return this;
@@ -4324,7 +4324,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         keyId_ = value;
         onChanged();
         return this;
@@ -4493,7 +4493,7 @@ public final class AppEncryptionProtos {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         partitionId_ = s;
@@ -4508,7 +4508,7 @@ public final class AppEncryptionProtos {
         getPartitionIdBytes() {
       java.lang.Object ref = partitionId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         partitionId_ = b;
@@ -4845,7 +4845,7 @@ public final class AppEncryptionProtos {
           getPartitionIdBytes() {
         java.lang.Object ref = partitionId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           partitionId_ = b;
@@ -4864,7 +4864,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         partitionId_ = value;
         onChanged();
         return this;
@@ -4874,7 +4874,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearPartitionId() {
-        
+
         partitionId_ = getDefaultInstance().getPartitionId();
         onChanged();
         return this;
@@ -4890,7 +4890,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         partitionId_ = value;
         onChanged();
         return this;
@@ -5059,7 +5059,7 @@ public final class AppEncryptionProtos {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         message_ = s;
@@ -5074,7 +5074,7 @@ public final class AppEncryptionProtos {
         getMessageBytes() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         message_ = b;
@@ -5411,7 +5411,7 @@ public final class AppEncryptionProtos {
           getMessageBytes() {
         java.lang.Object ref = message_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           message_ = b;
@@ -5430,7 +5430,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         message_ = value;
         onChanged();
         return this;
@@ -5440,7 +5440,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearMessage() {
-        
+
         message_ = getDefaultInstance().getMessage();
         onChanged();
         return this;
@@ -5456,7 +5456,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         message_ = value;
         onChanged();
         return this;
@@ -6048,7 +6048,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder getDataRowRecordBuilder() {
-        
+
         onChanged();
         return getDataRowRecordFieldBuilder().getBuilder();
       }
@@ -6067,7 +6067,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder>
           getDataRowRecordFieldBuilder() {
         if (dataRowRecordBuilder_ == null) {
           dataRowRecordBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6554,7 +6554,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         data_ = value;
         onChanged();
         return this;
@@ -6564,7 +6564,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-        
+
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -7434,7 +7434,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder>
           getEncryptResponseFieldBuilder() {
         if (encryptResponseBuilder_ == null) {
           if (!(responseCase_ == 1)) {
@@ -7572,7 +7572,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder>
           getDecryptResponseFieldBuilder() {
         if (decryptResponseBuilder_ == null) {
           if (!(responseCase_ == 2)) {
@@ -7710,7 +7710,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder> 
+          com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder>
           getErrorResponseFieldBuilder() {
         if (errorResponseBuilder_ == null) {
           if (!(responseCase_ == 3)) {
@@ -7782,57 +7782,57 @@ public final class AppEncryptionProtos {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_SessionRequest_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_SessionRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_Encrypt_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_Encrypt_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_Decrypt_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_Decrypt_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_DataRowRecord_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_DataRowRecord_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_EnvelopeKeyRecord_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_EnvelopeKeyRecord_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_KeyMeta_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_KeyMeta_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_GetSession_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_GetSession_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_ErrorResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_ErrorResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_EncryptResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_EncryptResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_DecryptResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_DecryptResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_SessionResponse_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_SessionResponse_fieldAccessorTable;
 

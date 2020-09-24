@@ -67,4 +67,3 @@ final class MetastoreMock {
     return metastoreSpy;
   }
 }
-

@@ -32,14 +32,14 @@ The row data size estimates were calculated by using the below query against act
 select id, created, (1 + octet_length(id) + 4 + 2 + octet_length(key_record)) as row_data_size from encryption_key;
 ```
 
-**IntermediateKey**: 253 bytes  
+**IntermediateKey**: 253 bytes
 **SystemKey**: 1227 bytes (assumes AWS KMS with 2 regions. each additional region adds ~494 bytes)
 
 
 #### DynamoDB
 
-**Default Table Name**: EncryptionKey  
-**Partition/Hash Key**: Id (string)  
+**Default Table Name**: EncryptionKey
+**Partition/Hash Key**: Id (string)
 **Sort/Range Key**: Created (number)
 
 AWS CLI Example:
@@ -61,7 +61,7 @@ The estimates provided are based on examples using product id, system id, and pa
 
 The item data size estimates were calculated by using https://zaccharles.github.io/dynamodb-calculator/ (client-side calculation, no network calls observed).
 
-**IntermediateKey**: 240 bytes  
+**IntermediateKey**: 240 bytes
 **SystemKey**: 1227 bytes (assumes AWS KMS with 2 regions. each additional region adds ~494 bytes)
 
 #### In-memory (FOR TESTING ONLY)
@@ -69,7 +69,7 @@ Asherah also supports an in-memory metastore but that ***should only be used for
 
 ### Disaster Recovery
 
-Ensure that you have proper backup procedures and policies to prevent accidental deletion of keys from the metastore. 
+Ensure that you have proper backup procedures and policies to prevent accidental deletion of keys from the metastore.
 A loss of keys from the metastore can render your data unreadable.
 
 ### Revoking keys

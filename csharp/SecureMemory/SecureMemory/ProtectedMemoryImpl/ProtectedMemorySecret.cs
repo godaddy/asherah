@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -22,6 +23,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator)
         {
+            Debug.WriteLine("ProtectedMemorySecret ctor");
             this.allocator = allocator;
 
             length = (ulong)sourceBytes.Length;
@@ -56,9 +58,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         ~ProtectedMemorySecret()
         {
-            // We have to create a new allocator here, because in the finalizer our managed objects are wiped out
-            IProtectedMemoryAllocator protectedMemoryAllocator = ProtectedMemorySecretFactory.GetAllocator();
-            Release(protectedMemoryAllocator, ref pointer, length);
+            Debug.WriteLine($"ProtectedMemorySecret: Finalizer");
+            Dispose(disposing: false);
         }
 
         public override TResult WithSecretBytes<TResult>(Func<byte[], TResult> funcWithSecret)
@@ -112,17 +113,21 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override Secret CopySecret()
         {
+            Debug.WriteLine("ProtectedMemorySecret.CopySecret");
             return WithSecretBytes(bytes => new ProtectedMemorySecret(bytes, allocator));
         }
 
         public override void Close()
         {
-            Dispose();
+            Debug.WriteLine("ProtectedMemorySecret.Close");
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public override void Dispose()
         {
-            Release(allocator, ref pointer, length);
+            Debug.WriteLine("ProtectedMemorySecret.Dispose");
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -136,6 +141,21 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             finally
             {
                 SecureZeroMemory(sourceBytes);
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (pointer != IntPtr.Zero)
+            {
+                if (!disposing)
+                {
+                    throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())");
+                }
+                else
+                {
+                    Release(allocator, ref pointer, length);
+                }
             }
         }
 
@@ -173,8 +193,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 try
                 {
                     pm.SetReadWriteAccess(oldPtr, len);
-
-                    pm.ZeroMemory(oldPtr, len);
                 }
                 finally
                 {

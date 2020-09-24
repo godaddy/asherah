@@ -37,7 +37,7 @@ Example run using defaults (in-memory metastore, static KMS, console metrics onl
 Example run using ADO persistence and AWS KMS and 100 iterations:
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \ 
+[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \
   --metastore-type ADO \
   --ado-connection-string <AdoConnectionString> \
   --kms-type AWS \
@@ -45,7 +45,7 @@ Example run using ADO persistence and AWS KMS and 100 iterations:
   --region-arn-tuples <region1=arn_of_kms_key_for_region1,region2=arn_of_kms_key_for_region2, ...> \
   --iterations 100
  ```
- 
+
 ### Using a Docker read-only container
 
 The ReferenceApp can be tested/used in a docker container having only the dotnetcore runtime environment.
@@ -121,7 +121,7 @@ local DynamoDB endpoint.
   --dynamodb-endpoint http://localhost:8000 \
   --dynamodb-signing-region us-west-2 \
   --dynamodb-table-name MyGlobalTable
-``` 
+```
 
 ## Configuring the Reference App
 Configuration options are provided via command-line arguments. Supported options are as
@@ -157,4 +157,4 @@ follows:
   --version                      Display version information.
 ```
 
-TODO: Add link to Sceptre template example  
+TODO: Add link to Sceptre template example
