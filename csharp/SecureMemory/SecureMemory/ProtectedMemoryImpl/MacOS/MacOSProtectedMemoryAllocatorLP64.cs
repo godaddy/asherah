@@ -29,11 +29,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
             DisableCoreDumpGlobally();
         }
 
-        public override void ZeroMemory(IntPtr pointer, ulong length)
+        public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc)
+            : base(libc)
         {
-            // This differs on different platforms
-            // MacOS has memset_s which is standardized and secure
-            libc.memset_s(pointer, length, 0, length);
+            this.libc = libc;
+        }
+
+        public override void Dispose()
+        {
         }
 
         internal override int GetRlimitCoreResource()
@@ -56,29 +59,36 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
         }
 
         // These flags are platform specific in their integer values
-        protected override int GetProtRead()
+        internal override int GetProtRead()
         {
             return (int)MmapProts.PROT_READ;
         }
 
-        protected override int GetProtReadWrite()
+        internal override int GetProtReadWrite()
         {
             return (int)(MmapProts.PROT_READ | MmapProts.PROT_WRITE);
         }
 
-        protected override int GetProtNoAccess()
+        internal override int GetProtNoAccess()
         {
             return (int)MmapProts.PROT_NONE;
         }
 
-        protected override int GetPrivateAnonymousFlags()
+        internal override int GetPrivateAnonymousFlags()
         {
             return (int)(MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANON);
         }
 
-        protected override int GetMemLockLimit()
+        internal override int GetMemLockLimit()
         {
             return (int)RlimitResource.RLIMIT_MEMLOCK;
+        }
+
+        protected override void ZeroMemory(IntPtr pointer, ulong length)
+        {
+            // This differs on different platforms
+            // MacOS has memset_s which is standardized and secure
+            libc.memset_s(pointer, length, 0, length);
         }
     }
 }

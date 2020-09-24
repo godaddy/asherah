@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Xunit;
@@ -6,16 +7,25 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
 {
     [Collection("Logger Fixture collection")]
-    public class WindowsProtectedMemoryAllocatorTest
+    public class WindowsProtectedMemoryAllocatorTest : IDisposable
     {
         private WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
 
         public WindowsProtectedMemoryAllocatorTest()
         {
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
             }
+        }
+
+        public void Dispose()
+        {
+            windowsProtectedMemoryAllocator?.Dispose();
         }
 
         [Fact]

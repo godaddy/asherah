@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
@@ -10,7 +11,7 @@ using Xunit;
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemoryAllocatorTest
+    public class ProtectedMemoryAllocatorTest : IDisposable
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
@@ -18,6 +19,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public ProtectedMemoryAllocatorTest()
         {
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 protectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
@@ -34,6 +40,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 throw new NotSupportedException("Cannot determine platform for testing");
             }
+        }
+
+        public void Dispose()
+        {
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.Dispose");
+            protectedMemoryAllocator.Dispose();
         }
 
         private static void CheckIntPtr(IntPtr intPointer, string methodName)
@@ -57,6 +69,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestSetReadWriteAccess()
         {
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestSetReadWriteAccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
 
             try
@@ -77,6 +90,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestAllocSuccess()
         {
+            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
             CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
 

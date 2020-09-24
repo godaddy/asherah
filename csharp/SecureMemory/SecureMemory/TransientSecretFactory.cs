@@ -1,4 +1,7 @@
+using System;
+using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
@@ -6,9 +9,16 @@ namespace GoDaddy.Asherah.SecureMemory
     {
         private readonly ISecretFactory secretFactory;
 
-        public TransientSecretFactory()
+        public TransientSecretFactory(IConfiguration configuration = null)
         {
-            secretFactory = new ProtectedMemorySecretFactory();
+            Debug.WriteLine("TransientSecretFactory: New");
+            secretFactory = new ProtectedMemorySecretFactory(configuration);
+        }
+
+        public void Dispose()
+        {
+            Debug.WriteLine("TransientSecretFactory: Dispose");
+            secretFactory.Dispose();
         }
 
         public Secret CreateSecret(byte[] secretData)
