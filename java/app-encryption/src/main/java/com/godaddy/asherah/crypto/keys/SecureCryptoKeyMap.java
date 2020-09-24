@@ -47,7 +47,7 @@ public class SecureCryptoKeyMap<K> implements SafeAutoCloseable {
   /**
    * Retrieves the last key from the cache.
    * @return A {@link CryptoKey} object.
-   * @throws IllegalStateException if a closed key is accessed
+   * @throws IllegalStateException if a closed key is accessed.
    */
   public CryptoKey getLast() {
     if (!isClosed.get()) {
