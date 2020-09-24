@@ -19,6 +19,12 @@ public class SecretCryptoKey extends CryptoKey {
     this.revoked = otherKey.isRevoked();
   }
 
+  /**
+   * Creates a new {@code SecretCryptoKey}.
+   * @param secret A {@link Secret} object.
+   * @param created The creation time of the key.
+   * @param revoked Indicates if the key is revoked.
+   */
   public SecretCryptoKey(final Secret secret, final Instant created, final boolean revoked) {
     this.secret = secret;
     this.created = created;
@@ -58,5 +64,4 @@ public class SecretCryptoKey extends CryptoKey {
   Secret getSecret() {
     return secret;
   }
-
 }
