@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
@@ -17,7 +19,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
     /// Pure tests have been promoted to ProtectedMemoryAllocatorTest.cs
     /// </summary>
     [Collection("Logger Fixture collection")]
-    public class LibcProtectedMemoryAllocatorTest
+    public class LibcProtectedMemoryAllocatorTest : IDisposable
     {
         private readonly LibcLP64 libc;
         private readonly LibcProtectedMemoryAllocatorLP64 libcProtectedMemoryAllocator;
@@ -26,16 +28,21 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
         public LibcProtectedMemoryAllocatorTest()
         {
+            Trace.Listeners.RemoveAt(0);
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 libc = new LinuxLibcLP64();
-                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
+                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64((LinuxLibcLP64)libc);
                 linuxProtectedMemoryAllocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 libc = new MacOSLibcLP64();
-                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64();
+                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64((MacOSLibcLP64)libc);
                 macOsProtectedMemoryAllocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else
@@ -46,9 +53,16 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
+        public void Dispose()
+        {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.Dispose");
+            libcProtectedMemoryAllocator?.Dispose();
+        }
+
         [Fact]
         private void TestDisableCoreDumpGlobally()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestDisableCoreDumpGlobally");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -77,6 +91,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -86,7 +101,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 macOsProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new LibcOperationFailedException("blah", 1));
+                    .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
                 Assert.Throws<LibcOperationFailedException>(() =>
                 {
                     macOsProtectedMemoryAllocatorMock.Object.Alloc(1);
@@ -95,37 +110,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 linuxProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new LibcOperationFailedException("blah", 1));
+                    .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
                 Assert.Throws<LibcOperationFailedException>(() =>
-                {
-                    linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
-                });
-            }
-        }
-
-        [Fact]
-        private void TestAllocWithCheckZeroErrorShouldFail()
-        {
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                macOsProtectedMemoryAllocatorMock.Setup(x => x.CheckZero(It.IsAny<int>(), It.IsAny<string>()))
-                    .Throws(new TargetInvocationException(new Exception()));
-                Assert.Throws<TargetInvocationException>(() =>
-                {
-                    macOsProtectedMemoryAllocatorMock.Object.Alloc(1);
-                });
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                linuxProtectedMemoryAllocatorMock.Setup(x => x.CheckZero(It.IsAny<int>(), It.IsAny<string>()))
-                    .Throws(new TargetInvocationException(new Exception()));
-                Assert.Throws<TargetInvocationException>(() =>
                 {
                     linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
                 });
@@ -135,6 +121,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -144,7 +131,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(pointer, "blah");
+                Check.IntPtr(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
             }
             finally
             {
@@ -155,6 +142,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [Fact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -163,13 +151,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(IntPtr.Zero, "blah");
+                Check.IntPtr(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
         [Fact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -178,49 +167,53 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckIntPtr(new IntPtr(-1), "blah");
+                Check.IntPtr(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
         [Fact]
         private void TestCheckZeroWithZeroResult()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "blah");
+            Check.Zero(0, "TestCheckZeroWithZeroResult");
         }
 
         [Fact]
         private void TestCheckZeroWithNonZeroResult()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
                 return;
             }
 
-            Assert.Throws<LibcOperationFailedException>(() => { libcProtectedMemoryAllocator.CheckZero(1, "blah"); });
+            Assert.Throws<LibcOperationFailedException>(() => { Check.Zero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
         [Fact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
                 return;
             }
 
-            libcProtectedMemoryAllocator.CheckZero(0, "blah", new InvalidOperationException());
+            Check.Zero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
         [Fact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
             // Don't run libc tests on platforms that don't match libc/posix behaviors
             if (libc == null)
             {
@@ -229,7 +222,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                libcProtectedMemoryAllocator.CheckZero(1, "blah", new InvalidOperationException());
+                Check.Zero(1, "IGNORE_INTENTIONAL_ERROR", new InvalidOperationException());
             });
         }
     }

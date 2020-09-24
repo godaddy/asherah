@@ -1,6 +1,8 @@
+using System;
+
 namespace GoDaddy.Asherah.SecureMemory
 {
-    public interface ISecretFactory
+    public interface ISecretFactory : IDisposable
     {
         Secret CreateSecret(byte[] secretData);
 

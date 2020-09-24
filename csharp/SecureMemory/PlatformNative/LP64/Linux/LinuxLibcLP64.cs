@@ -29,5 +29,13 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             // NOTE: there was a note in the java repo that glibc didn't have explicit_bzero?
             _bzero(start, len);
         }
+
+        [DllImport("libc", EntryPoint = "memcpy", SetLastError = true)]
+        private static extern IntPtr _memcpy(IntPtr dest, IntPtr src, size_t len);
+
+        public IntPtr memcpy(IntPtr dest, IntPtr src, size_t len)
+        {
+            return _memcpy(dest, src, len);
+        }
     }
 }

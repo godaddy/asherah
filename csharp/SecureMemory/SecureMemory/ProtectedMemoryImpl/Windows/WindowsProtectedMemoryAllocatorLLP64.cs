@@ -58,6 +58,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
         }
 
+        public void Dispose()
+        {
+        }
+
         protected void LockMemory(IntPtr pointer, ulong length)
         {
             if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
