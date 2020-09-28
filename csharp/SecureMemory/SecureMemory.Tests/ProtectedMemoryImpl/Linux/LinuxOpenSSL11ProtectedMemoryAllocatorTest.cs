@@ -69,5 +69,105 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.Free(pointer, length);
             }
         }
+
+        [Fact]
+        private void TestSetNoAccessAfterDispose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return;
+            }
+
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
+
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetNoAccess(new IntPtr(-1), 0);
+            });
+            Assert.Equal("Called SetNoAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
+        }
+
+        [Fact]
+        private void TestReadAccessAfterDispose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return;
+            }
+
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
+
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetReadAccess(new IntPtr(-1), 0);
+            });
+            Assert.Equal("Called SetReadAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
+        }
+
+        [Fact]
+        private void TestReadWriteAccessAfterDispose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return;
+            }
+
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
+
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetReadWriteAccess(new IntPtr(-1), 0);
+            });
+            Assert.Equal("Called SetReadWriteAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
+        }
+
+        [Fact]
+        private void TestAllocAfterDispose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return;
+            }
+
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
+
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.Alloc(0);
+            });
+            Assert.Equal("Called Alloc on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
+        }
+
+        [Fact]
+        private void TestFreeAfterDispose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return;
+            }
+
+            Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128);
+
+            linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
+
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64.Free(new IntPtr(-1), 0);
+            });
+            Assert.Equal("Called Free on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
+        }
     }
 }
