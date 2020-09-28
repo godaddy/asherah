@@ -57,6 +57,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_done", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_done();
 
+        [ExcludeFromCodeCoverage]
         public int CRYPTO_secure_malloc_done()
         {
             // CRYPTO_secure_malloc_done() returns 1 if the secure memory area is released, or 0 if not.
@@ -75,6 +76,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_zalloc", SetLastError = true)]
         private static extern IntPtr _CRYPTO_secure_zalloc(size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
+        [ExcludeFromCodeCoverage]
         public IntPtr CRYPTO_secure_zalloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap of the requested size, or NULL if memory could not be allocated.
@@ -102,6 +104,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_used", SetLastError = true)]
         private static extern size_t _CRYPTO_secure_used();
 
+        [ExcludeFromCodeCoverage]
         public size_t CRYPTO_secure_used()
         {
             // CRYPTO_secure_used() returns the number of bytes allocated in the secure heap.
