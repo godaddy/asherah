@@ -38,16 +38,16 @@
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <slf4j.version>1.7.25</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <guava.version>29.0-jre</guava.version>
     <aws.sdk.version>1.11.838</aws.sdk.version>
     <micrometer.version>1.1.1</micrometer.version>
     <caffeine.version>2.8.0</caffeine.version>
-    <junit.jupiter.version>5.1.1</junit.jupiter.version>
-    <junit.platform.version>1.1.1</junit.platform.version>
-    <mockito.core.version>2.22.0</mockito.core.version>
+    <junit.jupiter.version>5.7.0</junit.jupiter.version>
+    <junit.platform.version>1.7.0</junit.platform.version>
+    <mockito.core.version>3.5.13</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
-    <jacoco.version>0.8.2</jacoco.version>
+    <jacoco.version>0.8.6</jacoco.version>
     <amazonaws.version>1.11.477</amazonaws.version>
     <jackson.version>2.11.2</jackson.version>
     <apache.commons.version>1.8</apache.commons.version>
@@ -61,7 +61,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.1.1</version>
         <executions>
           <execution>
             <id>validate</id>
@@ -82,16 +82,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
+        <version>3.8.1</version>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
+          <release>8</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -104,7 +103,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -142,7 +141,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-scm-plugin</artifactId>
-        <version>1.10.0</version>
+        <version>1.11.2</version>
         <configuration>
           <connectionType>developerConnection</connectionType>
         </configuration>
@@ -192,7 +191,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
+        <version>3.1.2</version>
         <executions>
           <execution>
             <id>copy</id>
