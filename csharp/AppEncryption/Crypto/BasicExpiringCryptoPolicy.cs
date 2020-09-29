@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.Crypto
 {
@@ -28,18 +29,19 @@ namespace GoDaddy.Asherah.Crypto
         private readonly bool notifyExpiredSystemKeyOnRead;
         private readonly bool notifyExpiredIntermediateKeyOnRead;
 
-        private BasicExpiringCryptoPolicy(Builder builder)
+        private BasicExpiringCryptoPolicy(ExpiringCryptoPolicyConfig policyConfig, IConfiguration configuration)
+            : base(configuration)
         {
-            keyExpirationMillis = (long)TimeSpan.FromDays(builder.KeyExpirationDays).TotalMilliseconds;
-            revokeCheckMillis = (long)TimeSpan.FromMinutes(builder.RevokeCheckMinutes).TotalMilliseconds;
-            keyRotationStrategy = builder.KeyRotationStrategy;
-            canCacheSystemKeys = builder.CanCacheSystemKeys;
-            canCacheIntermediateKeys = builder.CanCacheIntermediateKeys;
-            canCacheSessions = builder.CanCacheSessions;
-            sessionCacheMaxSize = builder.SessionCacheMaxSize;
-            sessionCacheExpireMillis = builder.SessionCacheExpireMillis;
-            notifyExpiredSystemKeyOnRead = builder.NotifyExpiredSystemKeyOnRead;
-            notifyExpiredIntermediateKeyOnRead = builder.NotifyExpiredIntermediateKeyOnRead;
+            keyExpirationMillis = (long)TimeSpan.FromDays(policyConfig.KeyExpirationDays).TotalMilliseconds;
+            revokeCheckMillis = (long)TimeSpan.FromMinutes(policyConfig.RevokeCheckMinutes).TotalMilliseconds;
+            keyRotationStrategy = policyConfig.KeyRotationStrategy;
+            canCacheSystemKeys = policyConfig.CanCacheSystemKeys;
+            canCacheIntermediateKeys = policyConfig.CanCacheIntermediateKeys;
+            canCacheSessions = policyConfig.CanCacheSessions;
+            sessionCacheMaxSize = policyConfig.SessionCacheMaxSize;
+            sessionCacheExpireMillis = policyConfig.SessionCacheExpireMillis;
+            notifyExpiredSystemKeyOnRead = policyConfig.NotifyExpiredSystemKeyOnRead;
+            notifyExpiredIntermediateKeyOnRead = policyConfig.NotifyExpiredIntermediateKeyOnRead;
         }
 
         public interface IKeyExpirationDaysStep
@@ -114,6 +116,8 @@ namespace GoDaddy.Asherah.Crypto
             /// <returns>The current <code>IBuildStep</code> instance.</returns>
             IBuildStep WithNotifyExpiredIntermediateKeyOnRead(bool notify);
 
+            IBuildStep WithConfiguration(IConfiguration configuration);
+
             /// <summary>
             /// Builds the finalized <code>BasicExpiringCryptoPolicy</code> with the parameters specified in the builder.
             /// </summary>
@@ -124,6 +128,11 @@ namespace GoDaddy.Asherah.Crypto
         public static IKeyExpirationDaysStep NewBuilder()
         {
             return new Builder();
+        }
+
+        public static BasicExpiringCryptoPolicy BuildWithConfiguration(IConfiguration configuration)
+        {
+            return new BasicExpiringCryptoPolicy(new ExpiringCryptoPolicyConfig(configuration), configuration);
         }
 
         public override bool IsKeyExpired(DateTimeOffset keyCreationDate)
@@ -178,13 +187,12 @@ namespace GoDaddy.Asherah.Crypto
             return keyRotationStrategy;
         }
 
-        private class Builder : IKeyExpirationDaysStep, IRevokeCheckMinutesStep, IBuildStep
+        internal class ExpiringCryptoPolicyConfig
         {
-            #pragma warning disable SA1401
+            #pragma warning disable SA1401 // Fields should be private
             internal int KeyExpirationDays;
             internal int RevokeCheckMinutes;
 
-            // Set some reasonable defaults since these aren't required by the builder steps
             internal KeyRotationStrategy KeyRotationStrategy = DefaultKeyRotationStrategy;
             internal bool CanCacheSystemKeys = DefaultCanCacheSystemKeys;
             internal bool CanCacheIntermediateKeys = DefaultCanCacheIntermediateKeys;
@@ -193,7 +201,7 @@ namespace GoDaddy.Asherah.Crypto
             internal long SessionCacheExpireMillis = DefaultSessionCacheExpiryMillis;
             internal bool NotifyExpiredSystemKeyOnRead = DefaultNotifyExpiredSystemKeyOnRead;
             internal bool NotifyExpiredIntermediateKeyOnRead = DefaultNotifyExpiredIntermediateKeyOnRead;
-            #pragma warning restore SA1401
+            #pragma warning restore SA1401 // Fields should be private
 
             private const KeyRotationStrategy DefaultKeyRotationStrategy = KeyRotationStrategy.Inline;
             private const bool DefaultCanCacheSystemKeys = true;
@@ -203,6 +211,103 @@ namespace GoDaddy.Asherah.Crypto
             private const long DefaultSessionCacheExpiryMillis = 120000;
             private const bool DefaultNotifyExpiredSystemKeyOnRead = false;
             private const bool DefaultNotifyExpiredIntermediateKeyOnRead = false;
+
+            private IConfiguration configuration;
+
+            internal ExpiringCryptoPolicyConfig()
+            {
+            }
+
+            internal ExpiringCryptoPolicyConfig(IConfiguration configuration)
+            {
+                if (configuration == null)
+                {
+                    throw new ArgumentNullException(nameof(configuration), "Cannot create expiring crypto policy with null configuration");
+                }
+
+                this.configuration = configuration;
+
+                KeyExpirationDays = RequiredInt("keyExpirationDays");
+                RevokeCheckMinutes = RequiredInt("revokeCheckMinutes");
+
+                var strategy = OptionalString("keyRotationStrategy", "inline");
+                switch (strategy)
+                {
+                    case "inline":
+                        KeyRotationStrategy = KeyRotationStrategy.Inline;
+                        break;
+                    case "queued":
+                        KeyRotationStrategy = KeyRotationStrategy.Queued;
+                        break;
+                    default:
+                        throw new Exception($"Unknown key rotation strategy {strategy}");
+                }
+
+                CanCacheSystemKeys = OptionalBool("canCacheSystemKeys", DefaultCanCacheSystemKeys);
+                CanCacheIntermediateKeys = OptionalBool("canCacheIntermediateKeys", DefaultCanCacheIntermediateKeys);
+                CanCacheSessions = OptionalBool("canCacheSessions", DefaultCanCacheSessions);
+                SessionCacheMaxSize = OptionalLong("sessionCacheMaxSize", DefaultSessionCacheSize);
+                SessionCacheExpireMillis = OptionalLong("sessionCacheExpireMillis", DefaultSessionCacheExpiryMillis);
+                NotifyExpiredSystemKeyOnRead = OptionalBool("notifyExpiredSystemKeyOnRead", DefaultNotifyExpiredSystemKeyOnRead);
+                NotifyExpiredIntermediateKeyOnRead = OptionalBool("notifyExpiredIntermediateKeyOnRead", DefaultNotifyExpiredIntermediateKeyOnRead);
+            }
+
+            private int RequiredInt(string name)
+            {
+                var val = configuration[name];
+                if (string.IsNullOrWhiteSpace(val))
+                {
+                    throw new Exception($"Required configuration value {val} not found");
+                }
+                else
+                {
+                    return int.Parse(val);
+                }
+            }
+
+            private string OptionalString(string name, string defaultValue)
+            {
+                var val = configuration[name];
+                if (string.IsNullOrWhiteSpace(val))
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return val;
+                }
+            }
+
+            private long OptionalLong(string name, long defaultValue)
+            {
+                var val = configuration[name];
+                if (string.IsNullOrWhiteSpace(val))
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return long.Parse(val);
+                }
+            }
+
+            private bool OptionalBool(string name, bool defaultValue)
+            {
+                var val = configuration[name];
+                if (string.IsNullOrWhiteSpace(val))
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return bool.Parse(val);
+                }
+            }
+        }
+
+        private class Builder : ExpiringCryptoPolicyConfig, IKeyExpirationDaysStep, IRevokeCheckMinutesStep, IBuildStep
+        {
+            private IConfiguration configuration;
 
             public IRevokeCheckMinutesStep WithKeyExpirationDays(int days)
             {
@@ -264,9 +369,15 @@ namespace GoDaddy.Asherah.Crypto
                 return this;
             }
 
+            public IBuildStep WithConfiguration(IConfiguration configuration)
+            {
+                this.configuration = configuration;
+                return this;
+            }
+
             public BasicExpiringCryptoPolicy Build()
             {
-                return new BasicExpiringCryptoPolicy(this);
+                return new BasicExpiringCryptoPolicy(this, configuration);
             }
         }
     }

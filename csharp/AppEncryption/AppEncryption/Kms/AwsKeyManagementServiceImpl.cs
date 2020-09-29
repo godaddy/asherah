@@ -13,8 +13,8 @@ using Amazon.Runtime.SharedInterfaces;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Util;
+using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.BufferUtils;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
@@ -112,9 +112,13 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         /// </param>
         /// <param name="region">Preferred region to use.</param>
         /// <returns></returns>
-        public static Builder NewBuilder(Dictionary<string, string> regionToArnDictionary, string region)
+        public static Builder NewBuilder(Dictionary<string, string> regionToArnDictionary, string region, CryptoPolicy cryptoPolicy)
         {
-            return new Builder(regionToArnDictionary, region);
+            return new Builder(regionToArnDictionary, region, cryptoPolicy);
+        }
+
+        public override void Dispose()
+        {
         }
 
         /// <inheritdoc />
@@ -347,6 +351,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         {
             private readonly Dictionary<string, string> regionToArnDictionary;
             private readonly string preferredRegion;
+            private AeadEnvelopeCrypto crypto;
 
             /// <summary>
             /// Initializes the builder for <see cref="AwsKeyManagementServiceImpl"/> class with the specified options.
@@ -355,10 +360,11 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             /// <param name="regionToArnDictionary">A dictionary with region and arn of the KMS key(s) as key value
             /// pairs.</param>
             /// <param name="region">The preferred region to choose.</param>
-            public Builder(Dictionary<string, string> regionToArnDictionary, string region)
+            public Builder(Dictionary<string, string> regionToArnDictionary, string region, CryptoPolicy cryptoPolicy)
             {
                 this.regionToArnDictionary = regionToArnDictionary;
                 preferredRegion = region;
+                crypto = cryptoPolicy.GetCrypto();
             }
 
             /// <summary>
@@ -372,7 +378,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 return new AwsKeyManagementServiceImpl(
                     regionToArnDictionary,
                     preferredRegion,
-                    new BouncyAes256GcmCrypto(),
+                    crypto,
                     new AwsKmsClientFactory());
             }
         }

@@ -1,17 +1,21 @@
 using System;
 using GoDaddy.Asherah.AppEncryption.Kms;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
+using GoDaddy.Asherah.Crypto;
+using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
     public class DummyKeyManagementService : KeyManagementService
     {
         private readonly CryptoKey encryptionKey;
-        private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
+        private readonly AeadEnvelopeCrypto crypto;
 
-        public DummyKeyManagementService()
+        public DummyKeyManagementService(IConfiguration configuration)
         {
+            var cryptoPolicy = BasicExpiringCryptoPolicy.BuildWithConfiguration(configuration);
+            crypto = cryptoPolicy.GetCrypto();
             encryptionKey = crypto.GenerateKey();
         }
 
@@ -28,6 +32,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
         public override string ToString()
         {
             return typeof(DummyKeyManagementService).FullName + "[kms_arn=LOCAL, crypto=" + crypto + "]";
+        }
+
+        public override void Dispose()
+        {
+            encryptionKey.Dispose();
         }
     }
 }

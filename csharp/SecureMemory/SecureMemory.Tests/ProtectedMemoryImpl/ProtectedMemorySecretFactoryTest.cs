@@ -60,34 +60,45 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [Fact]
-        private void TestMmapConfiguration()
+        private void TestInvalidSecureHeapEngine()
+        {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"secureHeapEngine", "donkey-ssl"}
+            }).Build();
+
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestInvalidSecureHeapEngine");
+
+            Assert.Throws<PlatformNotSupportedException>(() =>
+            {
+                using var factory = new ProtectedMemorySecretFactory(configuration);
+            });
+        }
+
+        private void TestMmapSecureHeapEngine()
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"secureHeapEngine", "mmap"}
             }).Build();
 
-            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapSecureHeapEngine");
             using (var factory = new ProtectedMemorySecretFactory(configuration))
             {
             }
         }
 
         [Fact]
-        private void TestInvalidConfiguration()
+        private void TestTwoFactories()
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
-                {"secureHeapEngine", "magic-heap-engine2"}
+                {"secureHeapEngine", "mmap"}
             }).Build();
 
-            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
-            Assert.Throws<PlatformNotSupportedException>(() =>
-            {
-                using (var factory = new ProtectedMemorySecretFactory(configuration))
-                {
-                }
-            });
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestTwoFactories");
+            using var factory1 = new ProtectedMemorySecretFactory(configuration);
+            using var factory2 = new ProtectedMemorySecretFactory(configuration);
         }
 
         [Fact]

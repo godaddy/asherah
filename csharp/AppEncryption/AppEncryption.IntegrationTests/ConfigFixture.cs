@@ -1,19 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.Crypto.Exceptions;
+using GoDaddy.Asherah.Crypto;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
 
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
-    public class ConfigFixture
+    public class ConfigFixture : IDisposable
     {
         private readonly IConfigurationRoot config;
 
@@ -30,99 +29,71 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                 .AddYamlFile(configFile)
                 .Build();
 
-            MetastoreType = GetParam(Constants.MetastoreType);
-            if (string.IsNullOrWhiteSpace(MetastoreType))
-            {
-                MetastoreType = DefaultMetastoreType;
-            }
-
-            KmsType = GetParam(Constants.KmsType);
-            if (string.IsNullOrWhiteSpace(KmsType))
-            {
-                KmsType = DefaultKeyManagementType;
-            }
-
             KeyManagementService = CreateKeyManagementService();
             Metastore = CreateMetastore();
         }
+
+        public IConfiguration Configuration => config;
 
         public KeyManagementService KeyManagementService { get; }
 
         public IMetastore<JObject> Metastore { get; }
 
-        private string PreferredRegion { get; set; }
-
-        private string MetastoreType { get; }
-
-        private string KmsType { get; }
+        public void Dispose()
+        {
+            KeyManagementService.Dispose();
+        }
 
         private static string GetEnvVariable(string input)
         {
-            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper();
-        }
-
-        private string GetParam(string paramName)
-        {
-            string paramValue = Environment.GetEnvironmentVariable(GetEnvVariable(paramName));
-            if (string.IsNullOrWhiteSpace(paramValue))
-            {
-                paramValue = config[paramName];
-            }
-
-            return paramValue;
+            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x : x.ToString())).ToUpper();
         }
 
         private IMetastore<JObject> CreateMetastore()
         {
-            if (MetastoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
+            string envMetaStoreType = Environment.GetEnvironmentVariable(GetEnvVariable(Constants.MetastoreType));
+            if (!string.IsNullOrWhiteSpace(envMetaStoreType))
             {
-                string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
+                config[MetastoreSelector<JObject>.MetastoreType] = envMetaStoreType;
+            }
 
-                if (string.IsNullOrWhiteSpace(metastoreAdoConnectionString))
+            if (config[MetastoreSelector<JObject>.MetastoreType].Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
+            {
+                string envAdoConnStr = Environment.GetEnvironmentVariable(GetEnvVariable(MetastoreAdoConnectionString));
+                if (!string.IsNullOrWhiteSpace(envAdoConnStr))
                 {
-                    throw new AppEncryptionException("Missing ADO connection string");
+                    config[MetastoreSelector<JObject>.MetastoreAdoConnectionString] = envAdoConnStr;
                 }
 
-                return AdoMetastoreImpl
-                    .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
-                    .Build();
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return null;
+                }
             }
 
-            if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return DynamoDbMetastoreImpl.NewBuilder("us-west-2").Build();
-            }
-
-            return new InMemoryMetastoreImpl<JObject>();
+            return MetastoreSelector<JObject>.SelectMetastoreWithConfiguration(config);
         }
 
         private KeyManagementService CreateKeyManagementService()
         {
-            if (KmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
+            string envKmsType = Environment.GetEnvironmentVariable(GetEnvVariable(Constants.KmsType));
+            if (!string.IsNullOrWhiteSpace(envKmsType))
             {
-                string regionToArnTuples = GetParam(KmsAwsRegionTuples);
-
-                if (string.IsNullOrWhiteSpace(regionToArnTuples))
-                {
-                    throw new AppEncryptionException("Missing AWS Region ARN tuples");
-                }
-
-                Dictionary<string, string> regionToArnDictionary =
-                    regionToArnTuples.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(part => part.Split('='))
-                        .ToDictionary(split => split[0], split => split[1]);
-
-                PreferredRegion = GetParam(KmsAwsPreferredRegion);
-                if (string.IsNullOrWhiteSpace(PreferredRegion))
-                {
-                    PreferredRegion = DefaultPreferredRegion;
-                }
-
-                return AwsKeyManagementServiceImpl.NewBuilder(regionToArnDictionary, PreferredRegion)
-                    .Build();
+                config[KeyManagementServiceSelector.KmsType] = envKmsType;
             }
 
-            return new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            if (string.IsNullOrWhiteSpace(config[KeyManagementServiceSelector.KmsType]))
+            {
+                config[KeyManagementServiceSelector.KmsType] = DefaultKeyManagementType;
+            }
+
+            if (string.IsNullOrWhiteSpace(config[KeyManagementServiceSelector.KmsStaticKey]))
+            {
+                config[KeyManagementServiceSelector.KmsStaticKey] = KeyManagementStaticMasterKey;
+            }
+
+            var cryptoPolicy = BasicExpiringCryptoPolicy.BuildWithConfiguration(config);
+            return KeyManagementServiceSelector.SelectKmsWithConfiguration(cryptoPolicy, config);
         }
     }
 }

@@ -12,6 +12,7 @@ using Amazon.Runtime;
 using Amazon.Runtime.SharedInterfaces;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Kms;
+using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
@@ -25,7 +26,7 @@ using static GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
     [Collection("Logger Fixture collection")]
-    public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>
+    public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>, IClassFixture<ConfigFixture>, IDisposable
     {
         private const string UsEast1 = "us-east-1";
         private const string ArnUsEast1 = "arn-us-east-1";
@@ -45,11 +46,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         private readonly Mock<AwsKmsClientFactory> awsKmsClientFactoryMock;
         private readonly Mock<CryptoKey> cryptoKeyMock;
         private readonly Mock<AwsKeyManagementServiceImpl> awsKeyManagementServiceImplSpy;
+        private readonly CryptoPolicy cryptoPolicy;
 
-        public AwsKeyManagementServiceImplTest()
+        public AwsKeyManagementServiceImplTest(ConfigFixture configFixture)
         {
+            cryptoPolicy = BasicExpiringCryptoPolicy.BuildWithConfiguration(configFixture.Configuration);
             amazonKeyManagementServiceClientMock = new Mock<IAmazonKeyManagementService>();
-            cryptoMock = new Mock<AeadEnvelopeCrypto>();
+            cryptoMock = new Mock<AeadEnvelopeCrypto>(configFixture.Configuration);
             awsKmsClientFactoryMock = new Mock<AwsKmsClientFactory>();
             cryptoKeyMock = new Mock<CryptoKey>();
 
@@ -60,6 +63,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object) { CallBase = true };
+        }
+
+        public void Dispose()
+        {
+            amazonKeyManagementServiceClientMock.Object.Dispose();
+            awsKeyManagementServiceImplSpy.Object.Dispose();
         }
 
         [Fact]
@@ -272,8 +281,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         [Fact]
         private void TestPrimaryBuilderPath()
         {
-            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
-                NewBuilder(regionToArnDictionary, preferredRegion);
+            Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion, cryptoPolicy);
             AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.Build();
             Assert.NotNull(awsKeyManagementServiceBuilder);
         }

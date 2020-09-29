@@ -5,6 +5,7 @@ using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.Logging;
 using GoDaddy.Asherah.SecureMemory;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -12,44 +13,49 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.SecureMemory.Multithreaded
 {
-    public class MultiThreadedSecretTest
+    public class MultiThreadedSecretTest : IClassFixture<ConfigFixture>
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiThreadedSecretTest>();
         private readonly byte[] payload;
+        private readonly IConfiguration configuration;
 
-        public MultiThreadedSecretTest()
+        public MultiThreadedSecretTest(ConfigFixture config)
         {
+            configuration = config.Configuration;
             payload = PayloadGenerator.CreateRandomBytePayload(PayloadSizeBytes);
         }
 
         [Fact]
         private void MultiThreadedWithSecretBytesAccess()
         {
-            ISecretFactory secretFactory = new ProtectedMemorySecretFactory();
-            Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]);
-
-            // Get the current settings and try to force minWorkers
-            ThreadPool.GetMinThreads(out _, out var currentMinIOC);
-            Assert.True(ThreadPool.SetMinThreads(NumThreads, currentMinIOC));
-
             int completedTasks = 0;
-
-            Parallel.ForEach(Enumerable.Range(0, NumThreads), i =>
+            using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
             {
-                try
+                using (Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]))
                 {
-                    secret.WithSecretBytes(decryptedBytes =>
+                    // Get the current settings and try to force minWorkers
+                    ThreadPool.GetMinThreads(out _, out var currentMinIOC);
+                    Assert.True(ThreadPool.SetMinThreads(NumThreads, currentMinIOC));
+
+                    Parallel.ForEach(Enumerable.Range(0, NumThreads), i =>
                     {
-                        Assert.Equal(payload, decryptedBytes);
-                        Interlocked.Increment(ref completedTasks);
+                        try
+                        {
+                            secret.WithSecretBytes(decryptedBytes =>
+                            {
+                                Assert.Equal(payload, decryptedBytes);
+                                Interlocked.Increment(ref completedTasks);
+                            });
+                        }
+                        catch (ThreadInterruptedException e)
+                        {
+                            Logger.LogError(e, "Unexpected error during call");
+                            throw;
+                        }
                     });
                 }
-                catch (ThreadInterruptedException e)
-                {
-                    Logger.LogError(e, "Unexpected error during call");
-                    throw;
-                }
-            });
+            }
+
             Assert.Equal(NumThreads, completedTasks);
         }
     }

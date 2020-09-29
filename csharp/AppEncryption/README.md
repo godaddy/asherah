@@ -5,6 +5,7 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
 [![Version](https://img.shields.io/nuget/v/Godaddy.Asherah.AppEncryption)](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption)
 
   * [Installation](#installation)
+  * [Configuration](#configuration)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -31,6 +32,83 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
 [Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
 for more information.
+
+
+## Configuration
+
+<table>
+    <tr>
+        <th>Configuration Name</th>
+        <th>Data type</th>
+        <th>Values</th>
+        <th>Default / Required</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>cryptoEngine</td>
+        <td>string</td>
+        <td>Bouncy, (null)</td>
+        <td>Bouncy</td>
+        <td>Select which engine is used for encryption</td>
+    </tr>
+    <tr>
+        <td>keyExpirationDays</td>
+        <td>int</td>
+        <td>Number of Days</td>
+        <td>Required</td>
+        <td>Days until keys are expired</td>
+    </tr>
+    <tr>
+        <td>revokeCheckMinutes</td>
+        <td>int</td>
+        <td>Number of minutes</td>
+        <td>Required</td>
+        <td>Minutes between revocation checks</td>
+    </tr>
+    <tr>
+        <td>keyRotationStrategy</td>
+        <td>enum</td>
+        <td>inline, queued</td>
+        <td>inline</td>
+        <td>Determines whether expired keys are rotated inline (synchronously) or queued (asynchronously)</td>
+    </tr>
+    <tr>
+        <td>canCacheSystemKeys</td>
+        <td>bool</td>
+        <td>true, false</td>
+        <td>true</td>
+        <td>Controls whether or not system keys are cached</td>
+    </tr>
+    <tr>
+        <td>canCacheIntermediateKeys</td>
+        <td>bool</td>
+        <td>true, false</td>
+        <td>true</td>
+        <td>Controls whether or not intermediate keys are cached</td>
+    </tr>
+    <tr>
+        <td>canCacheSessions</td>
+        <td>bool</td>
+        <td>true, false</td>
+        <td>false</td>
+        <td>Controls whether or not sessions are cached</td>
+    </tr>
+    <tr>
+        <td>sessionCacheMaxSize</td>
+        <td>long</td>
+        <td>Size in entries</td>
+        <td>1000</td>
+        <td>Maximum number of entries in the session cache</td>
+    </tr>
+        <tr>
+        <td>sessionCacheExpireMillis</td>
+        <td>long</td>
+        <td>Time in milliseconds</td>
+        <td>120000</td>
+        <td>Expiration time for cached sessions in milliseconds</td>
+    </tr>
+</table>
+<br>
 
 ## Quick Start
 

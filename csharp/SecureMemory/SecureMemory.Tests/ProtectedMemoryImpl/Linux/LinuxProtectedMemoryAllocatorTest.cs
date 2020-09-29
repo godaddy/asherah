@@ -31,6 +31,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         }
 
         [SkippableFact]
+        private void TestNullLibc()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+
+            Assert.Throws<ArgumentNullException>(() => new LinuxProtectedMemoryAllocatorLP64(null));
+        }
+
+        [SkippableFact]
         private void TestSetNoDumpInvalidLength()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));

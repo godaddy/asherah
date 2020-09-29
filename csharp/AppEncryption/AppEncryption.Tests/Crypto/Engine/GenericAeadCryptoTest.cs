@@ -5,20 +5,21 @@ using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Engine
 {
     [Collection("Logger Fixture collection")]
-    public abstract class GenericAeadCryptoTest
+    public abstract class GenericAeadCryptoTest : IClassFixture<ConfigFixture>
     {
         private readonly AeadEnvelopeCrypto crypto;
 
         private readonly RandomNumberGenerator random;
 
-        protected GenericAeadCryptoTest()
+        protected GenericAeadCryptoTest(ConfigFixture configFixture)
         {
-            crypto = GetCryptoInstance();
+            crypto = GetCryptoInstance(configFixture.Configuration);
             random = RandomNumberGenerator.Create();
         }
 
@@ -71,6 +72,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Engine
             Assert.Throws<AppEncryptionException>(() => crypto.Decrypt(cipherText, wrongKey));
         }
 
-        protected abstract AeadEnvelopeCrypto GetCryptoInstance();
+        protected abstract AeadEnvelopeCrypto GetCryptoInstance(IConfiguration configuration);
     }
 }

@@ -1,10 +1,16 @@
 using System;
 using GoDaddy.Asherah.Crypto;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
     public class DummyCryptoPolicy : CryptoPolicy
     {
+        public DummyCryptoPolicy(IConfiguration configuration)
+            : base(configuration)
+        {
+        }
+
         public override bool IsKeyExpired(DateTimeOffset keyCreationTime)
         {
             return false;

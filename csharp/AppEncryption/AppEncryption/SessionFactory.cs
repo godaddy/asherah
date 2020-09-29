@@ -8,10 +8,11 @@ using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
+using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -37,6 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache;
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
+        private readonly AeadEnvelopeCrypto crypto;
         private readonly ConcurrentDictionary<string, object> semaphoreLocks;
 
         /// <summary>
@@ -68,8 +70,14 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
+            crypto = cryptoPolicy.GetCrypto();
             semaphoreLocks = new ConcurrentDictionary<string, object>();
             SessionCache = new MemoryCache(new MemoryCacheOptions());
+        }
+
+        public interface IConfigurationStep
+        {
+            IMetastoreStep WithConfiguration(IConfiguration configuration);
         }
 
         public interface IMetastoreStep
@@ -93,6 +101,8 @@ namespace GoDaddy.Asherah.AppEncryption
             /// <returns>The current <see cref="ICryptoPolicyStep"/> instance initialized with some
             /// <see cref="IMetastore{T}"/> implementation.</returns>
             ICryptoPolicyStep WithMetastore(IMetastore<JObject> metastore);
+
+            ICryptoPolicyStep WithMetastoreFromConfiguration();
         }
 
         public interface ICryptoPolicyStep
@@ -101,8 +111,8 @@ namespace GoDaddy.Asherah.AppEncryption
             /// Initialize a session factory builder step with a new <see cref="NeverExpiredCryptoPolicy"/> object.
             /// </summary>
             ///
-            /// <returns>The current <see cref="IKeyManagementServiceStep"/> instance initialized with a
-            /// <see cref="NeverExpiredCryptoPolicy"/> object.</returns>
+            /// <returns>The current <see cref="IKeyManagementServiceStep"/> instance initialized with
+            /// a crypto policy set to maximum duration.</returns>
             IKeyManagementServiceStep WithNeverExpiredCryptoPolicy();
 
             /// <summary>
@@ -114,6 +124,8 @@ namespace GoDaddy.Asherah.AppEncryption
             /// <returns>The current <see cref="IKeyManagementServiceStep"/> instance initialized with some
             /// <see cref="CryptoPolicy"/> implementation.</returns>
             IKeyManagementServiceStep WithCryptoPolicy(CryptoPolicy cryptoPolicy);
+
+            IKeyManagementServiceStep WithConfigurationBasedCryptoPolicy();
         }
 
         public interface IKeyManagementServiceStep
@@ -139,6 +151,8 @@ namespace GoDaddy.Asherah.AppEncryption
             /// <returns>The current <see cref="IBuildStep"/> instance initialized with some
             /// <see cref="keyManagementService"/> implementation.</returns>
             IBuildStep WithKeyManagementService(KeyManagementService keyManagementService);
+
+            IBuildStep WithConfigurationBasedKeyManagementService();
         }
 
         public interface IBuildStep
@@ -171,7 +185,7 @@ namespace GoDaddy.Asherah.AppEncryption
         ///
         /// <returns>The current <see cref="IMetastoreStep"/> instance with initialized <see cref="productId"/> and
         /// <see cref="serviceId"/>.</returns>
-        public static IMetastoreStep NewBuilder(string productId, string serviceId)
+        public static IConfigurationStep NewBuilder(string productId, string serviceId)
         {
             return new Builder(productId, serviceId);
         }
@@ -186,7 +200,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "unexpected exception during skCache close");
+                Logger.LogError(e, "Unexpected exception during dispose");
             }
 
             // Actually dispose of all the remaining sessions that might be active in the cache.
@@ -368,7 +382,7 @@ namespace GoDaddy.Asherah.AppEncryption
                     metastore,
                     systemKeyCache,
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
-                    new BouncyAes256GcmCrypto(),
+                    crypto,
                     cryptoPolicy,
                     keyManagementService);
             };
@@ -438,7 +452,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
         }
 
-        private class Builder : IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
+        private class Builder : IConfigurationStep, IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
         {
             private readonly string productId;
             private readonly string serviceId;
@@ -447,11 +461,18 @@ namespace GoDaddy.Asherah.AppEncryption
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
             private IMetrics metrics;
+            private IConfiguration configuration;
 
             internal Builder(string productId, string serviceId)
             {
                 this.productId = productId;
                 this.serviceId = serviceId;
+            }
+
+            public IMetastoreStep WithConfiguration(IConfiguration configuration)
+            {
+                this.configuration = configuration;
+                return this;
             }
 
             public ICryptoPolicyStep WithInMemoryMetastore()
@@ -466,9 +487,24 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
+            public ICryptoPolicyStep WithMetastoreFromConfiguration()
+            {
+                metastore = MetastoreSelector<JObject>.SelectMetastoreWithConfiguration(configuration);
+                return this;
+            }
+
             public IKeyManagementServiceStep WithNeverExpiredCryptoPolicy()
             {
-                cryptoPolicy = new NeverExpiredCryptoPolicy();
+                cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
+                    .WithKeyExpirationDays(TimeSpan.MaxValue.Days)
+                    .WithRevokeCheckMinutes((int)TimeSpan.MaxValue.TotalMinutes)
+                    .Build();
+                return this;
+            }
+
+            public IKeyManagementServiceStep WithConfigurationBasedCryptoPolicy()
+            {
+                cryptoPolicy = BasicExpiringCryptoPolicy.BuildWithConfiguration(configuration);
                 return this;
             }
 
@@ -480,7 +516,13 @@ namespace GoDaddy.Asherah.AppEncryption
 
             public IBuildStep WithStaticKeyManagementService(string staticMasterKey)
             {
-                keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
+                keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey, cryptoPolicy, configuration);
+                return this;
+            }
+
+            public IBuildStep WithConfigurationBasedKeyManagementService()
+            {
+                keyManagementService = KeyManagementServiceSelector.SelectKmsWithConfiguration(cryptoPolicy, configuration);
                 return this;
             }
 

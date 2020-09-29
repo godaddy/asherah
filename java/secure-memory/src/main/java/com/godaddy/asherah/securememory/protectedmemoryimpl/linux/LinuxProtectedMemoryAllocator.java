@@ -24,8 +24,6 @@ public class LinuxProtectedMemoryAllocator extends LibcProtectedMemoryAllocator 
 
   @Override
   public void zeroMemory(final Pointer pointer, final long length) {
-    //Glibc bzero doesn't seem to be vulnerable to being optimized away
-    //Glibc doesn't seem to have explicit_bzero, memset_s, or memset_explicit
     libc.bzero(pointer, new NativeLong(length));
   }
 

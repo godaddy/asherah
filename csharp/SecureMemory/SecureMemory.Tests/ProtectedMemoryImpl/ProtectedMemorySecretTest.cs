@@ -120,7 +120,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestWithSecretUtf8CharsAction");
             char[] secretChars = { 'a', 'b' };
             using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+                ProtectedMemorySecret.FromCharArray((char[])secretChars.Clone(), protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {
@@ -136,7 +136,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestWithSecretUtf8CharsSuccess");
             char[] secretChars = { 'a', 'b' };
             using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+                ProtectedMemorySecret.FromCharArray((char[])secretChars.Clone(), protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {

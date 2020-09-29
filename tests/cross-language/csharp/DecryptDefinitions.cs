@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto;
+using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using TechTalk.SpecFlow;
 using Xunit;
@@ -31,7 +33,10 @@ namespace GoDaddy.Asherah.Cltf
         [When(@"I decrypt the encrypted_data")]
         public void IDecryptTheEncrypted_Data()
         {
-            KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                { "test", "true" },
+            }).Build();
 
             AdoMetastoreImpl metastore = AdoMetastoreImpl
                 .NewBuilder(MySqlClientFactory.Instance, AdoConnectionString)
@@ -43,9 +48,12 @@ namespace GoDaddy.Asherah.Cltf
                 .WithRevokeCheckMinutes(RevokeCheckMinutes)
                 .Build();
 
+            KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey, cryptoPolicy, configuration);
+
             // Create a session factory for the test
             using (SessionFactory sessionFactory = SessionFactory
                 .NewBuilder(DefaultProductId, DefaultServiceId)
+                .WithConfiguration(configuration)
                 .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)

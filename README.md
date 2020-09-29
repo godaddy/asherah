@@ -163,6 +163,7 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 | Session caching            | Yes  | Yes  | Yes |
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
 | Store/Load pattern.        | Yes  | Yes  | No  |
+| OpenSSL Secure Heap        | No   | Yes  | No  |
 
 
 ## Current Status

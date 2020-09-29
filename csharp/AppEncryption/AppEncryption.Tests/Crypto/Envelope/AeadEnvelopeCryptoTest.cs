@@ -7,17 +7,17 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Envelope
 {
     [Collection("Logger Fixture collection")]
-    public class AeadEnvelopeCryptoTest
+    public class AeadEnvelopeCryptoTest : IClassFixture<ConfigFixture>
     {
         private readonly Mock<CryptoKey> keyEncryptionKey;
         private readonly Mock<CryptoKey> keyMock;
         private readonly Mock<AeadEnvelopeCrypto> aeadEnvelopeCryptoMock;
 
-        public AeadEnvelopeCryptoTest()
+        public AeadEnvelopeCryptoTest(ConfigFixture configFixture)
         {
             keyEncryptionKey = new Mock<CryptoKey>();
             keyMock = new Mock<CryptoKey>();
-            aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>();
+            aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>(configFixture.Configuration);
         }
 
         [Fact]

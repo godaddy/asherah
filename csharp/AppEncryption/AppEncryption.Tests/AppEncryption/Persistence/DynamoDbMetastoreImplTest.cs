@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Amazon;
+using System.Runtime.InteropServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
@@ -43,52 +43,58 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
-                AuthenticationRegion = "us-west-2",
-            };
-            amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
+                AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+                {
+                    ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                    AuthenticationRegion = "us-west-2",
+                };
+                amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
-            CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
+                CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
 
-            dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, Region)
-                .Build();
+                dynamoDbMetastoreImpl = NewBuilder(Region)
+                    .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, Region)
+                    .Build();
 
-            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
+                table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
 
-            JObject jObject = JObject.FromObject(keyRecord);
-            Document document = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
+                JObject jObject = JObject.FromObject(keyRecord);
+                Document document = new Document
+                {
+                    [PartitionKey] = TestKey,
+                    [SortKey] = created.ToUnixTimeSeconds(),
+                    [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+                };
 
-            table.PutItemAsync(document).Wait();
+                table.PutItemAsync(document).Wait();
 
-            document = new Document
-            {
-                [PartitionKey] = TestKeyWithRegionSuffix,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
+                document = new Document
+                {
+                    [PartitionKey] = TestKeyWithRegionSuffix,
+                    [SortKey] = created.ToUnixTimeSeconds(),
+                    [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+                };
 
-            table.PutItemAsync(document).Wait();
+                table.PutItemAsync(document).Wait();
+            }
         }
 
         public void Dispose()
         {
-            try
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
-                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
-                    .Result;
-            }
-            catch (AggregateException)
-            {
-                // There is no such table.
+                try
+                {
+                    DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
+                        .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
+                        .Result;
+                }
+                catch (AggregateException)
+                {
+                    // There is no such table.
+                }
             }
         }
 
@@ -113,44 +119,54 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             CreateTableResponse createTableResponse = client.CreateTableAsync(request).Result;
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadSuccess()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
 
             Assert.True(actualJsonObject.IsSome);
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadWithNoResultShouldReturnEmpty()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load("fake_key", created);
 
             Assert.False(actualJsonObject.IsSome);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadWithFailureShouldReturnEmpty()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Dispose();
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
 
             Assert.False(actualJsonObject.IsSome);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithSingleRecord()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
             Assert.True(actualJsonObject.IsSome);
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithSingleRecordAndSuffix()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .WithKeySuffix()
@@ -162,9 +178,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithMultipleRecords()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             DateTimeOffset createdMinusOneHour = created.AddHours(-1);
             DateTimeOffset createdPlusOneHour = created.AddHours(1);
             DateTimeOffset createdMinusOneDay = created.AddDays(-1);
@@ -221,34 +239,41 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(createdPlusOneDay, ((JObject)actualJsonObject).GetValue("mytime")));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithNoResultShouldReturnEmpty()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest("fake_key");
 
             Assert.False(actualJsonObject.IsSome);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithFailureShouldReturnEmpty()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Dispose();
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
             Assert.False(actualJsonObject.IsSome);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStore()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             bool actualValue = dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
 
             Assert.True(actualValue);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStoreWithSuffixSuccess()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .WithKeySuffix()
@@ -258,17 +283,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(actualValue);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStoreWithDbErrorShouldThrowException()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Dispose();
             Assert.Throws<AppEncryptionException>(() =>
                 dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord)));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStoreWithDuplicateShouldReturnFalse()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             DateTimeOffset now = DateTimeOffset.Now;
             bool firstAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
             bool secondAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
@@ -277,9 +306,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(secondAttempt);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestBuilderPathWithEndPointConfiguration()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .Build();
@@ -287,9 +318,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.NotNull(dbMetastoreImpl);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestBuilderPathWithRegion()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Mock<Builder> builder = new Mock<Builder>(Region);
             Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
 
@@ -303,9 +336,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.NotNull(dbMetastoreImpl);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestBuilderPathWithKeySuffix()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .WithKeySuffix()
@@ -316,9 +350,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(dynamoDbMetastoreImpl.HasKeySuffix);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestBuilderPathWithTableName()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             const string tempTableName = "DummyTable";
 
             // Use AWS SDK to create client
@@ -353,9 +389,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestPrimaryBuilderPath()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             Mock<Builder> builder = new Mock<Builder>(Region);
             Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
 

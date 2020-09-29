@@ -1,21 +1,38 @@
 using System;
+using System.Collections.Generic;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
+using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Newtonsoft.Json.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
-    public static class MetastoreMock
+    public class MetastoreMockFactory : IDisposable
     {
-        private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
+        private readonly AeadEnvelopeCrypto crypto;
+        private readonly List<IDisposable> disposables = new List<IDisposable>();
 
-        internal static Mock<IMetastore<JObject>> CreateMetastoreMock(
+        public MetastoreMockFactory(IConfiguration configuration)
+        {
+            var cryptoPolicy = BasicExpiringCryptoPolicy.BuildWithConfiguration(configuration);
+            crypto = cryptoPolicy.GetCrypto();
+        }
+
+        public void Dispose()
+        {
+            foreach (var disposable in disposables)
+            {
+                disposable.Dispose();
+            }
+        }
+
+        internal Mock<IMetastore<JObject>> CreateMetastoreMock(
             Partition partition,
             KeyManagementService kms,
             KeyState metaIK,
@@ -44,7 +61,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     // We create a revoked copy of the same key
                     DateTimeOffset created = systemKey.GetCreated();
                     systemKey = systemKey
-                        .WithKey(bytes => Crypto.GenerateKeyFromBytes(bytes, created, true));
+                        .WithKey(bytes => crypto.GenerateKeyFromBytes(bytes, created, true));
+                    disposables.Add(systemKey);
                 }
 
                 EnvelopeKeyRecord systemKeyRecord = new EnvelopeKeyRecord(
@@ -63,13 +81,14 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     // We create a revoked copy of the same key
                     DateTimeOffset created = intermediateKey.GetCreated();
                     intermediateKey = intermediateKey
-                        .WithKey(bytes => Crypto.GenerateKeyFromBytes(bytes, created, true));
+                        .WithKey(bytes => crypto.GenerateKeyFromBytes(bytes, created, true));
+                    disposables.Add(intermediateKey);
                 }
 
                 EnvelopeKeyRecord intermediateKeyRecord = new EnvelopeKeyRecord(
                     intermediateKey.GetCreated(),
                     new KeyMeta(partition.SystemKeyId, systemKey.GetCreated()),
-                    Crypto.EncryptKey(intermediateKey, systemKey),
+                    crypto.EncryptKey(intermediateKey, systemKey),
                     intermediateKey.IsRevoked());
                 metastore.Store(
                     partition.IntermediateKeyId,

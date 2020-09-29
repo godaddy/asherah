@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using TestContainers.Core.Builders;
 using TestContainers.Core.Containers;
@@ -13,21 +14,25 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDBContainerFixture()
         {
-            disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
-
-            if (disableTestContainers)
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ServiceUrl = LocalServiceUrl;
-            }
-            else
-            {
-                DynamoDbContainer = new GenericContainerBuilder<Container>()
-                    .Begin()
-                    .WithImage("amazon/dynamodb-local:latest")
-                    .WithExposedPorts(8000)
-                    .Build();
+                disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
 
-                ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+                if (disableTestContainers)
+                {
+                    ServiceUrl = LocalServiceUrl;
+                }
+                else
+                {
+                    DynamoDbContainer = new GenericContainerBuilder<Container>()
+                        .Begin()
+                        .WithImage("amazon/dynamodb-local:latest")
+                        .WithExposedPorts(8000)
+                        .Build();
+
+                    ServiceUrl =
+                        $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+                }
             }
         }
 
@@ -37,12 +42,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public Task InitializeAsync()
         {
-            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Start();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Start();
+            }
+
+            return Task.CompletedTask;
         }
 
         public Task DisposeAsync()
         {
-            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Stop();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Stop();
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

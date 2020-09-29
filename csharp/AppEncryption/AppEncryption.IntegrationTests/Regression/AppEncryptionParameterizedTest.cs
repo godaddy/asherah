@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using App.Metrics;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
@@ -9,7 +10,6 @@ using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 using Newtonsoft.Json.Linq;
@@ -24,6 +24,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         public AppEncryptionParameterizedTest()
         {
+            Trace.Listeners.Clear();
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
+
             payload = PayloadGenerator.CreateDefaultRandomJsonPayload();
         }
 
@@ -58,6 +62,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 VerifyDecryptFlow(metastore, decryptMetastoreInteractions, partition);
                 Assert.True(JToken.DeepEquals(payload, decryptedPayload));
             }
+
+            envelopeEncryptionJson.Dispose();
         }
 
         private void VerifyDecryptFlow(
@@ -166,14 +172,17 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
         }
 
-        private class AppEncryptionParameterizedTestData : IEnumerable<object[]>
+        private class AppEncryptionParameterizedTestData : IEnumerable<object[]>, IDisposable
         {
             private static readonly Random Random = new Random();
             private readonly ConfigFixture configFixture;
+            private readonly List<IDisposable> disposables = new List<IDisposable>();
+            private readonly MetastoreMockFactory metastoreMockFactory;
 
             public AppEncryptionParameterizedTestData()
             {
                 configFixture = new ConfigFixture();
+                metastoreMockFactory = new MetastoreMockFactory(configFixture.Configuration);
 
                 // We do not log metrics for the Parameterized tests but we still need to set a disabled/no-op metrics
                 // instance for the tests to run successfully. This is done below.
@@ -201,6 +210,16 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 }
             }
 
+            public void Dispose()
+            {
+                Debug.WriteLine("AppEncryptionParameterizedTestData.Dispose");
+                metastoreMockFactory.Dispose();
+                foreach (var disposable in disposables)
+                {
+                    disposable.Dispose();
+                }
+            }
+
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
             private object[] GenerateMocks(KeyState cacheIK, KeyState metaIK, KeyState cacheSK, KeyState metaSK)
@@ -213,13 +232,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
                 KeyManagementService kms = configFixture.KeyManagementService;
 
-                CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
-
-                Mock<IMetastore<JObject>> metastoreMock = MetastoreMock.CreateMetastoreMock(
-                    partition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.Metastore);
-
-                CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder);
-
                 // Mimics (mostly) the old TimeBasedCryptoPolicyImpl settings
                 CryptoPolicy cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
                     .WithKeyExpirationDays(KeyExpiryDays)
@@ -228,20 +240,34 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     .WithCanCacheSystemKeys(false)
                     .Build();
 
+                var crypto = cryptoPolicy.GetCrypto();
+
+                CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK(crypto);
+                disposables.Add(cryptoKeyHolder);
+
+                Mock<IMetastore<JObject>> metastoreMock = metastoreMockFactory.CreateMetastoreMock(
+                    partition, kms, metaIK, metaSK, cryptoKeyHolder, configFixture.Metastore);
+
+                CacheMock cacheMock = CacheMock.CreateCacheMock(cacheIK, cacheSK, cryptoKeyHolder, crypto);
+
                 SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
+                disposables.Add(intermediateKeyCache);
                 SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
+                disposables.Add(systemKeyCache);
 
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastoreMock.Object,
                     systemKeyCache,
                     intermediateKeyCache,
-                    new BouncyAes256GcmCrypto(),
+                    crypto,
                     cryptoPolicy,
                     kms);
+                disposables.Add(envelopeEncryptionJson);
 
                 IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
                     new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
+                disposables.Add(envelopeEncryptionByteImpl);
 
                 return new object[]
                 {

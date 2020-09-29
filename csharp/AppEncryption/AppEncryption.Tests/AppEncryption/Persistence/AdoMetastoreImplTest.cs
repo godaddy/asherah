@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.InteropServices;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using LanguageExt;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -49,34 +52,40 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public AdoMetastoreImplTest(MySqlContainerFixture fixture)
         {
-            dbProviderFactory = MySqlClientFactory.Instance;
-            connectionString = fixture.ConnectionString + "Initial Catalog=testdb;";
-            dbConnection = dbProviderFactory.CreateConnection();
-            dbConnection.ConnectionString = fixture.ConnectionString;
-            dbConnection.Open();
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                dbProviderFactory = MySqlClientFactory.Instance;
+                connectionString = fixture.ConnectionString + "Initial Catalog=testdb;";
+                dbConnection = dbProviderFactory.CreateConnection();
+                dbConnection.ConnectionString = fixture.ConnectionString;
+                dbConnection.Open();
 
-            adoMetastoreImplSpy = new Mock<AdoMetastoreImpl>(
-                dbProviderFactory,
-                connectionString) { CallBase = true };
-            SetupDatabase();
+                adoMetastoreImplSpy = new Mock<AdoMetastoreImpl>(
+                    dbProviderFactory,
+                    connectionString) { CallBase = true };
+                SetupDatabase();
+            }
         }
 
         public void Dispose()
         {
-            using (DbConnection dbConnectionForTearDown = dbProviderFactory.CreateConnection())
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                dbConnectionForTearDown.ConnectionString = connectionString;
-                dbConnectionForTearDown.Open();
-
-                using (DbCommand dbCommand = dbConnectionForTearDown.CreateCommand())
+                using (DbConnection dbConnectionForTearDown = dbProviderFactory.CreateConnection())
                 {
-                    string createDatabaseQuery = @"DROP DATABASE testdb;";
-                    dbCommand.CommandText = createDatabaseQuery;
-                    dbCommand.ExecuteNonQuery();
-                }
-            }
+                    dbConnectionForTearDown.ConnectionString = connectionString;
+                    dbConnectionForTearDown.Open();
 
-            dbConnection.Close();
+                    using (DbCommand dbCommand = dbConnectionForTearDown.CreateCommand())
+                    {
+                        string createDatabaseQuery = @"DROP DATABASE testdb;";
+                        dbCommand.CommandText = createDatabaseQuery;
+                        dbCommand.ExecuteNonQuery();
+                    }
+                }
+
+                dbConnection.Close();
+            }
         }
 
         private void SetupDatabase()
@@ -138,11 +147,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Theory]
+        [SkippableTheory]
         [InlineData(KeyStringWithParentKeyMetaKey, KeyStringWithParentKeyMetaValue)]
         [InlineData(KeyStringWithNoParentKeyMetaKey, KeyStringWithNoParentKeyMetaValue)]
         private void TestExecuteQueryAndLoadJsonObject(string keyStringKey, string keyStringValue)
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             using (DbCommand command = dbConnection.CreateCommand())
             {
                 string selectQuery =
@@ -158,9 +168,35 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
-        private void TestExecuteQueryAndLoadJsonObjectFromKeyWithNoResultShouldReturnNone()
+        [SkippableFact]
+        private void TestExecuteQueryWithConfiguration()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { MetastoreSelector<JObject>.MetastoreType, MetastoreSelector<JObject>.MetastoreAdo },
+                { MetastoreSelector<JObject>.MetastoreAdoFactoryType, "MySql.Data.MySqlClient" },
+                { MetastoreSelector<JObject>.MetastoreAdoConnectionString, connectionString },
+            }).Build();
+
+            var metastore = MetastoreSelector<JObject>.SelectMetastoreWithConfiguration(configuration) as AdoMetastoreImpl;
+            using (DbCommand command = dbConnection.CreateCommand())
+            {
+                string selectQuery =
+                    @"SELECT key_record from  testdb.encryption_key WHERE id=@id And created=@created;";
+                command.CommandText = selectQuery;
+                adoMetastoreImplSpy.Object.AddParameter(command, Id, "non_existent_key");
+                adoMetastoreImplSpy.Object.AddParameter(command, Created, created.UtcDateTime);
+
+                Option<JObject> actualJsonObject = metastore.ExecuteQueryAndLoadJsonObjectFromKey(command);
+                Assert.Equal(Option<JObject>.None, actualJsonObject);
+            }
+        }
+
+        [SkippableFact]
+        private void TestExecuteQueryLoadJsonObjectFromKeyWithNoResultReturnNone()
+        {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             using (DbCommand command = dbConnection.CreateCommand())
             {
                 string selectQuery =
@@ -175,9 +211,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
-        private void TestExecuteQueryAndLoadJsonObjectFromKeyWithExceptionShouldReturnNone()
+        [SkippableFact]
+        private void TestExecuteQueryLoadJsonObjectFromKeyWithExceptionReturnNone()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             using (DbCommand command = dbConnection.CreateCommand())
             {
                 string selectQuery =
@@ -193,18 +230,20 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoad()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             string keyId = KeyStringWithParentKeyMetaKey;
             Option<JObject> actualJsonObject = adoMetastoreImplSpy.Object.Load(keyId, created.UtcDateTime);
             Assert.True(actualJsonObject.IsSome);
             Assert.Equal(KeyStringWithParentKeyMetaValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadWithSqlException()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             AdoMetastoreImpl adoMetastoreImpl =
                 NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -212,18 +251,20 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatest()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             string keyId = KeyStringWithParentKeyMetaKey;
             Option<JObject> actualJsonObject = adoMetastoreImplSpy.Object.LoadLatest(keyId);
             Assert.True(actualJsonObject.IsSome);
             Assert.Equal(KeyStringLatestValue, ((JObject)actualJsonObject).ToString(Formatting.None));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestLoadLatestWithSqlException()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             AdoMetastoreImpl adoMetastoreImpl =
                 NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -231,9 +272,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(Option<JObject>.None, actualJsonObject);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStore()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             string keyId = KeyStringWithParentKeyMetaKey;
             bool actualValue = adoMetastoreImplSpy.Object.Store(
                 keyId,
@@ -242,9 +284,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(actualValue);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStoreWithSqlExceptionShouldReturnFalse()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             AdoMetastoreImpl adoMetastoreImpl =
                 NewBuilder(dbProviderFactory, fakeDbConnectionStringBuilder.ConnectionString).Build();
             string keyId = KeyStringWithParentKeyMetaKey;
@@ -252,9 +295,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualValue);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestStoreWithDuplicateKeyInsertionShouldReturnFalse()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             string keyId = KeyStringWithParentKeyMetaKey;
             bool actualValue = adoMetastoreImplSpy.Object.Store(
                 keyId,
@@ -263,19 +307,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.False(actualValue);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestPrimaryBuilderPath()
         {
-            AdoMetastoreImpl.Builder adoMetastoreServicePrimaryBuilder =
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Builder adoMetastoreServicePrimaryBuilder =
                 NewBuilder(dbProviderFactory, dbConnection.ConnectionString);
             AdoMetastoreImpl adoMetastoreServiceBuilder =
                 adoMetastoreServicePrimaryBuilder.Build();
             Assert.NotNull(adoMetastoreServiceBuilder);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDbConnectionClosedAfterLoad()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
             adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);
@@ -293,9 +339,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDbConnectionClosedAfterLoadLatest()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
             adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);
@@ -313,9 +360,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDbConnectionClosedAfterStore()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             Mock<DbCommand> dbCommandMock = new Mock<DbCommand>();
             adoMetastoreImplSpy.Setup(x => x.CreateCommand(It.IsAny<DbConnection>()))
                 .Returns(dbCommandMock.Object);

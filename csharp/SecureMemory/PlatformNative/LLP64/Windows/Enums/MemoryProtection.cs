@@ -1,5 +1,3 @@
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums
 {
     public enum MemoryProtection : uint

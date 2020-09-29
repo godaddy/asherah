@@ -33,10 +33,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (configuration != null)
             {
+#if !DEBUG
                 if (configuration["debugSecrets"] == "true")
                 {
                     creationStackTrace = Environment.StackTrace;
                 }
+#else
+                creationStackTrace = Environment.StackTrace;
+#endif
 
                 if (configuration["requireSecretDisposal"] == "true")
                 {
@@ -84,6 +88,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override TResult WithSecretBytes<TResult>(Func<byte[], TResult> funcWithSecret)
         {
+            // Defend against truncation with Marshal.Copy below
+            if (length > int.MaxValue)
+            {
+                throw new InvalidOperationException($"WithSecretBytes only supports secrets up to {int.MaxValue} bytes");
+            }
+
             // Defend against truncation with Marshal.Copy below
             if (length > int.MaxValue)
             {
@@ -179,15 +189,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         public override void Close()
         {
             Debug.WriteLine("ProtectedMemorySecret.Close");
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public override void Dispose()
-        {
-            Debug.WriteLine("ProtectedMemorySecret.Dispose");
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Dispose();
         }
 
         internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, IProtectedMemoryAllocator allocator, IConfiguration configuration)
@@ -203,7 +205,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!disposing)
             {
@@ -288,6 +290,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     allocator.SetReadAccess(pointer, length);
                 }
             }
+
+            accessCounter++;
         }
 
         private void SetNoAccessIfNeeded()

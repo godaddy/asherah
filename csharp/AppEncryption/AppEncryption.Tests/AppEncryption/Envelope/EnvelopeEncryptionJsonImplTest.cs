@@ -18,7 +18,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
     [Collection("Logger Fixture collection")]
-    public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
+    public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>, IClassFixture<ConfigFixture>
     {
         private readonly Partition partition =
             new Partition("shopper_123", "payments", "ecomm");
@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 
         private readonly Mock<EnvelopeEncryptionJsonImpl> envelopeEncryptionJsonImplSpy;
 
-        public EnvelopeEncryptionJsonImplTest()
+        public EnvelopeEncryptionJsonImplTest(ConfigFixture configFixture)
         {
             // Have to init these in constructor
             ikDateTime = drkDateTime.AddHours(-1);
@@ -51,8 +51,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             metastoreMock = new Mock<IMetastore<JObject>>();
             systemKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1000);
             intermediateKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1000);
-            aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>();
-            cryptoPolicyMock = new Mock<CryptoPolicy>();
+            aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>(configFixture.Configuration);
+            cryptoPolicyMock = new Mock<CryptoPolicy>(configFixture.Configuration);
             keyManagementServiceMock = new Mock<KeyManagementService>();
 
             intermediateCryptoKeyMock = new Mock<CryptoKey>();

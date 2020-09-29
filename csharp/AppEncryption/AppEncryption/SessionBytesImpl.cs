@@ -46,7 +46,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "unexpected exception during close");
+                Logger.LogError(e, "Unexpected exception during dispose");
             }
         }
     }

@@ -24,8 +24,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         {
             payload = PayloadGenerator.CreateDefaultRandomBytePayload();
             sessionFactory = SessionFactoryGenerator.CreateDefaultSessionFactory(
-                configFixture.KeyManagementService,
-                configFixture.Metastore);
+                configFixture.Metastore,
+                configFixture.Configuration);
             partitionId = DefaultPartitionId + "_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset();
             sessionBytes = sessionFactory.GetSessionBytes(partitionId);
         }

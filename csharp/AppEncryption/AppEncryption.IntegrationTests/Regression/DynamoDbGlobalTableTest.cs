@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
@@ -15,61 +16,65 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private const string PartitionKey = "Id";
         private const string SortKey = "Created";
         private const string DefaultTableName = "EncryptionKey";
-
         private readonly ConfigFixture configFixture;
         private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
         private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImplWithKeySuffix;
 
         public DynamoDbGlobalTableTest(DynamoDBContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
         {
-            this.configFixture = configFixture;
-
-            // Use AWS SDK to create client and initialize table
-            AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
-                AuthenticationRegion = "us-west-2",
-            };
-            IAmazonDynamoDB tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
-            CreateTableRequest request = new CreateTableRequest
-            {
-                TableName = DefaultTableName,
-                AttributeDefinitions = new List<AttributeDefinition>
-                {
-                    new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
-                    new AttributeDefinition(SortKey, ScalarAttributeType.N),
-                },
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement(PartitionKey, KeyType.HASH),
-                    new KeySchemaElement(SortKey, KeyType.RANGE),
-                },
-                ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
-            };
-            tempDynamoDbClient.CreateTableAsync(request).Wait();
+                this.configFixture = configFixture;
 
-            // Use a builder without the suffix
-            dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .Build();
+                // Use AWS SDK to create client and initialize table
+                AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
+                {
+                    ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                    AuthenticationRegion = "us-west-2",
+                };
+                IAmazonDynamoDB tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
+                CreateTableRequest request = new CreateTableRequest
+                {
+                    TableName = DefaultTableName,
+                    AttributeDefinitions = new List<AttributeDefinition>
+                    {
+                        new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
+                        new AttributeDefinition(SortKey, ScalarAttributeType.N),
+                    },
+                    KeySchema = new List<KeySchemaElement>
+                    {
+                        new KeySchemaElement(PartitionKey, KeyType.HASH),
+                        new KeySchemaElement(SortKey, KeyType.RANGE),
+                    },
+                    ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
+                };
+                tempDynamoDbClient.CreateTableAsync(request).Wait();
 
-            // Connect to the same metastore but initialize it with a key suffix
-            dynamoDbMetastoreImplWithKeySuffix = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .WithKeySuffix()
-                .Build();
+                // Use a builder without the suffix
+                dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
+                    .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
+                    .Build();
+
+                // Connect to the same metastore but initialize it with a key suffix
+                dynamoDbMetastoreImplWithKeySuffix = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
+                    .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
+                    .WithKeySuffix()
+                    .Build();
+            }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestRegionSuffixBackwardCompatibility()
         {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
             byte[] originalPayload = PayloadGenerator.CreateDefaultRandomBytePayload();
             byte[] decryptedBytes;
             byte[] dataRowRecordBytes;
 
             // Encrypt originalPayloadString with metastore without key suffix
             using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImpl))
+                .CreateDefaultSessionFactory(dynamoDbMetastoreImpl, configFixture.Configuration))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {
@@ -79,7 +84,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             // Decrypt dataRowString with metastore with key suffix
             using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+                .CreateDefaultSessionFactory(dynamoDbMetastoreImplWithKeySuffix, configFixture.Configuration))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {

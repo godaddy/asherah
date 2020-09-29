@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using GoDaddy.Asherah.Crypto.BufferUtils;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -19,9 +20,9 @@ namespace GoDaddy.Asherah.Crypto
         private readonly NonceGenerator nonceGenerator;
         private readonly ISecretFactory secretFactory;
 
-        protected AeadCrypto()
+        protected AeadCrypto(IConfiguration configuration)
         {
-            secretFactory = new TransientSecretFactory();
+            secretFactory = new TransientSecretFactory(configuration);
             nonceGenerator = new NonceGenerator();
         }
 
@@ -121,8 +122,6 @@ namespace GoDaddy.Asherah.Crypto
         }
 
         protected abstract int GetNonceSizeBits();
-
-        protected abstract int GetMacSizeBits();
 
         protected byte[] GetAppendedNonce(byte[] cipherTextAndNonce)
         {

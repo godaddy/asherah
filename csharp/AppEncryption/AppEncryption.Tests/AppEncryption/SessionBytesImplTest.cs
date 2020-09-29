@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class SessionBytesImplTest
+    public class SessionBytesImplTest : IDisposable
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;
         private readonly SessionBytesImpl<string> sessionBytesImpl;
@@ -15,6 +15,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         {
             envelopeEncryptionMock = new Mock<IEnvelopeEncryption<string>>();
             sessionBytesImpl = new SessionBytesImpl<string>(envelopeEncryptionMock.Object);
+        }
+
+        public void Dispose()
+        {
+            sessionBytesImpl.Dispose();
         }
 
         [Fact]

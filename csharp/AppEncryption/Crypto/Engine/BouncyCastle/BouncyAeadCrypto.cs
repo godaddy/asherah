@@ -4,6 +4,7 @@ using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -13,6 +14,11 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
     public abstract class BouncyAeadCrypto : AeadEnvelopeCrypto
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<BouncyAeadCrypto>();
+
+        protected BouncyAeadCrypto(IConfiguration configuration)
+            : base(configuration)
+        {
+        }
 
         public override byte[] Encrypt(byte[] input, CryptoKey key)
         {

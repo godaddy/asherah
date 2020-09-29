@@ -1,5 +1,8 @@
 using System;
+using System.Data.Common;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
 using TestContainers.Core.Builders;
 using TestContainers.Core.Containers;
 using Xunit;
@@ -13,7 +16,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public MySqlContainerFixture()
         {
-            disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
+            disableTestContainers = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                || Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
+
+#if !NETSTANDARD2_0
+            if (!DbProviderFactories.TryGetFactory("MySql.Data.MySqlClient", out _))
+            {
+                DbProviderFactories.RegisterFactory("MySql.Data.MySqlClient", typeof(MySqlClientFactory));
+            }
+#endif
 
             if (disableTestContainers)
             {

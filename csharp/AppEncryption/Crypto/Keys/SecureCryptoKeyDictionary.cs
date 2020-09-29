@@ -12,7 +12,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
             new ConcurrentDictionary<TKey, SharedCryptoKeyEntry>();
 
         private readonly long revokeCheckPeriodMillis;
-        private volatile int isClosed = 0; // using volatile int as 0/1 value to mimic Java's AtomicBoolean functionality
+        private volatile int isClosed; // using volatile int as 0/1 value to mimic Java's AtomicBoolean functionality
 
         public SecureCryptoKeyDictionary(long revokeCheckPeriodMillis)
         {
@@ -38,7 +38,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
                 return null;
             }
 
-            throw new InvalidOperationException("Attempted to get CryptoKey after close");
+            throw new InvalidOperationException("Attempted to get CryptoKey after close" + Environment.NewLine + Environment.StackTrace);
         }
 
         public virtual CryptoKey GetLast()
@@ -64,7 +64,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
                 return null;
             }
 
-            throw new InvalidOperationException("Attempted to get CryptoKey after close");
+            throw new InvalidOperationException("Attempted to get CryptoKey after close" + Environment.NewLine + Environment.StackTrace);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
                 return cryptoKey;
             }
 
-            throw new InvalidOperationException("Attempted to get CryptoKey after close");
+            throw new InvalidOperationException("Attempted to get CryptoKey after close" + Environment.NewLine + Environment.StackTrace);
         }
 
         public virtual void Dispose()

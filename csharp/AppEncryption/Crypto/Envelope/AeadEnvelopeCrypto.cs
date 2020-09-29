@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.Crypto.BufferUtils;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
@@ -9,6 +10,11 @@ namespace GoDaddy.Asherah.Crypto.Envelope
 {
     public abstract class AeadEnvelopeCrypto : AeadCrypto
     {
+        protected AeadEnvelopeCrypto(IConfiguration configuration)
+            : base(configuration)
+        {
+        }
+
         public virtual byte[] EncryptKey(CryptoKey key, CryptoKey keyEncryptionKey)
         {
             return key.WithKey(keyBytes => Encrypt(keyBytes, keyEncryptionKey));

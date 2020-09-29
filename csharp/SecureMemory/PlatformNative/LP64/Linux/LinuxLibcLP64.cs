@@ -25,8 +25,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 
         public void bzero(IntPtr start, size_t len)
         {
-            // On Linux/glibc bzero is guaranteed to not be optimized away?
-            // NOTE: there was a note in the java repo that glibc didn't have explicit_bzero?
             _bzero(start, len);
         }
 

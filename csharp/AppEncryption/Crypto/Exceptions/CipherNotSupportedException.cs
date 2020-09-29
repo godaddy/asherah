@@ -8,10 +8,5 @@ namespace GoDaddy.Asherah.Crypto.Exceptions
             : base(message)
         {
         }
-
-        public CipherNotSupportedException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
     }
 }

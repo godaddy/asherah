@@ -25,8 +25,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             using (SessionFactory sessionFactory =
                 SessionFactoryGenerator.CreateDefaultSessionFactory(
-                    configFixture.KeyManagementService,
-                    configFixture.Metastore))
+                    configFixture.Metastore,
+                    configFixture.Configuration))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(originalPartitionId))
                 {

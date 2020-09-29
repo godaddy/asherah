@@ -1,0 +1,2 @@
+keyExpirationDays: "90"
+revokeCheckMinutes: "30"

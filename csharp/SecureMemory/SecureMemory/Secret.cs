@@ -42,6 +42,12 @@ namespace GoDaddy.Asherah.SecureMemory
 
         public abstract void Close();
 
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected abstract void Dispose(bool disposing);
     }
 }

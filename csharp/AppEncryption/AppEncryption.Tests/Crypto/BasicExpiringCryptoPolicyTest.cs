@@ -1,10 +1,10 @@
 using System;
 using GoDaddy.Asherah.Crypto;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
-    [Collection("Logger Fixture collection")]
     public class BasicExpiringCryptoPolicyTest
     {
         private static readonly int TestExpirationDays = 2;
@@ -92,6 +92,31 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
             Assert.Equal(33000, basicExpiringCryptoPolicy.GetSessionCacheExpireMillis());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredSystemKeyOnRead());
             Assert.True(basicExpiringCryptoPolicy.NotifyExpiredIntermediateKeyOnRead());
+        }
+
+        [Theory]
+        [ClassData(typeof(TestGoodConfigurations))]
+        private void TestWithConfigurations(IConfiguration configuration)
+        {
+            BasicExpiringCryptoPolicy.BuildWithConfiguration(configuration);
+        }
+
+        [Theory]
+        [ClassData(typeof(TestGoodConfigurations))]
+        private void TestWithBuilderPlusConfigurations(IConfiguration configuration)
+        {
+            BasicExpiringCryptoPolicy.NewBuilder().WithKeyExpirationDays(90).WithRevokeCheckMinutes(90)
+                .WithConfiguration(configuration);
+        }
+
+        [Theory]
+        [ClassData(typeof(TestBadPolicyConfigurations))]
+        private void TestWithBadConfigurations(IConfiguration configuration, Type exceptionType)
+        {
+            Assert.Throws(exceptionType, () =>
+            {
+                return BasicExpiringCryptoPolicy.BuildWithConfiguration(configuration);
+            });
         }
     }
 }

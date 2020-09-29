@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     /// which in turn is used to encrypt the system keys. It enables the user to use a HSM for providing the master key
     /// or staying cloud agnostic if using a hosted key management service.
     /// </summary>
-    public abstract class KeyManagementService
+    public abstract class KeyManagementService : IDisposable
     {
         /// <summary>
         /// Encrypts a <see cref="CryptoKey"/> using the implemented key management service.
@@ -50,5 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 return actionWithDecryptedKey.Invoke(key, keyCreated);
             }
         }
+
+        public abstract void Dispose();
     }
 }

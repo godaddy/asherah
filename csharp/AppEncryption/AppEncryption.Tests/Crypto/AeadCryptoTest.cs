@@ -8,7 +8,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
     [Collection("Logger Fixture collection")]
-    public class AeadCryptoTest
+    public class AeadCryptoTest : IClassFixture<ConfigFixture>
     {
         private const int BitsPerByte = 8;
         private readonly Mock<AeadCrypto> aeadCryptoMock;
@@ -16,10 +16,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         private readonly Mock<Secret> secretMock;
         private readonly Mock<ISecretFactory> secretFactoryMock;
 
-        public AeadCryptoTest()
+        public AeadCryptoTest(ConfigFixture configFixture)
         {
             cryptoKeyMock = new Mock<CryptoKey>();
-            aeadCryptoMock = new Mock<AeadCrypto>();
+            aeadCryptoMock = new Mock<AeadCrypto>(configFixture.Configuration);
             secretMock = new Mock<Secret>();
             secretFactoryMock = new Mock<ISecretFactory>();
         }

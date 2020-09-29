@@ -161,7 +161,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                         if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
                             throw new PlatformNotSupportedException(
-                                "OpenSSL 1.1 selected for secureHeapEngine but not supported on Windows");
+                                "OpenSSL 1.1 selected for secureHeapEngine but unsupported on Windows");
                         }
 
                         if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)

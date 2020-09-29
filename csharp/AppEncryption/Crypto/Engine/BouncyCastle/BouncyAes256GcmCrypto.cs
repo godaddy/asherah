@@ -1,4 +1,5 @@
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -10,6 +11,11 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
         private const int NonceSizeBits = 96;
         private const int KeySizeBits = 256;
         private const int MacSizeBits = 128;
+
+        public BouncyAes256GcmCrypto(IConfiguration configuration)
+            : base(configuration)
+        {
+        }
 
         protected internal override int GetKeySizeBits()
         {
@@ -29,11 +35,6 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
         protected override int GetNonceSizeBits()
         {
             return NonceSizeBits;
-        }
-
-        protected override int GetMacSizeBits()
-        {
-            return MacSizeBits;
         }
     }
 }

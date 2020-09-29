@@ -7,13 +7,13 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
     [Collection("Logger Fixture collection")]
-    public class CryptoPolicyTest
+    public class CryptoPolicyTest : IClassFixture<ConfigFixture>
     {
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
 
-        public CryptoPolicyTest()
+        public CryptoPolicyTest(ConfigFixture configFixture)
         {
-            cryptoPolicyMock = new Mock<CryptoPolicy>();
+            cryptoPolicyMock = new Mock<CryptoPolicy>(configFixture.Configuration);
         }
 
         [Fact]

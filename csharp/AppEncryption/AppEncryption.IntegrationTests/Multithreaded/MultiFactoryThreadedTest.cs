@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -13,7 +14,7 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 {
     [Collection("Configuration collection")]
-    public class MultiFactoryThreadedTest
+    public class MultiFactoryThreadedTest : IClassFixture<ConfigFixture>
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiFactoryThreadedTest>();
         private readonly ConfigFixture configFixture;
@@ -28,8 +29,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         // Ensure keys get created properly, DRR's are created as expected,
         // and (future) collect timing information to ensure no thread is
         // starved more than others since there will be some locks in play.
-        [Fact]
-        public void MultiThreadedMultiFactoryUniquePartitionsEncryptDecrypt()
+        [Theory]
+        [ClassData(typeof(TestGoodConfigurations))]
+        public void MultiThreadedMultiFactoryUniquePartitionsEncryptDecrypt(IConfiguration configuration)
         {
             // Get the current settings and try to force minWorkers
             ThreadPool.GetMinThreads(out _, out var currentMinIOC);
@@ -41,7 +43,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             {
                 try
                 {
-                    RunPartitionTest(NumIterations, $"request-{i}", PayloadSizeBytes);
+                    RunPartitionTest(configuration, NumIterations, $"request-{i}", PayloadSizeBytes);
                     Interlocked.Increment(ref completedTasks);
                 }
                 catch (ThreadInterruptedException e)
@@ -60,8 +62,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
         // Ensure keys get created properly, DRR's are created as expected,
         // and (future) collect timing information to ensure no thread is
         // starved more than others since there will be some locks in play.
-        [Fact]
-        public void MultiThreadedMultiFactorySamePartitionEncryptDecrypt()
+        [Theory]
+        [ClassData(typeof(TestGoodConfigurations))]
+        public void MultiThreadedMultiFactorySamePartitionEncryptDecrypt(IConfiguration configuration)
         {
             // Get the current settings and try to force minWorkers
             ThreadPool.GetMinThreads(out _, out var currentMinIOC);
@@ -73,7 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             {
                 try
                 {
-                    RunPartitionTest(NumIterations, DefaultPartitionId, PayloadSizeBytes);
+                    RunPartitionTest(configuration, NumIterations, DefaultPartitionId, PayloadSizeBytes);
                     Interlocked.Increment(ref completedTasks);
                 }
                 catch (ThreadInterruptedException e)
@@ -87,14 +90,14 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
             Assert.Equal(NumRequests, completedTasks);
         }
 
-        private void RunPartitionTest(int testIterations, string partitionId, int payloadSizeBytesBase)
+        private void RunPartitionTest(IConfiguration configuration, int testIterations, string partitionId, int payloadSizeBytesBase)
         {
             try
             {
                 using (SessionFactory sessionFactory =
                     SessionFactoryGenerator.CreateDefaultSessionFactory(
-                        configFixture.KeyManagementService,
-                        configFixture.Metastore))
+                        configFixture.Metastore,
+                        configuration))
                 {
                     using (Session<JObject, byte[]> session = sessionFactory.GetSessionJson(partitionId))
                     {
