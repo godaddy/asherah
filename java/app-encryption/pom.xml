@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.1.3</version>
+  <version>0.1.4-alpha</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -232,7 +232,7 @@
     <dependency>
       <groupId>com.godaddy.asherah</groupId>
       <artifactId>securememory</artifactId>
-      <version>0.1.0</version>
+      <version>0.1.1</version>
     </dependency>
 
     <dependency>
