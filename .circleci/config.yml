@@ -201,7 +201,7 @@ jobs:
       - save-java-cache
   java-app-encryption:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/openjdk:11.0
     steps:
       - checkout
       - restore-java-cache
@@ -649,11 +649,13 @@ jobs:
       - run:
           name: Setup java environment
           command: |
-            apt-get install -y openjdk-8-jdk
+            apt-get install -y openjdk-8-jdk openjdk-11-jdk
             apt-get install -y maven
             # Delete Java appencryption & gRPC server from local maven repo/cache and build from the current branch
             rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+            export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
             mvn clean install -f java/app-encryption/pom.xml -DskipTests
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup csharp environment
