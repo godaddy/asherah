@@ -234,7 +234,7 @@ jobs:
       - save-java-cache
   samples-java-reference-app:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/openjdk:11.0
     steps:
       - checkout
       - restore-java-cache
