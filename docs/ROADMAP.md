@@ -1,9 +1,5 @@
 # Asherah roadmap
 
-![Roadmap](images/roadmap.png)
-
-## Current Status
-
 Asherah is an incubator project and we are currently testing internally. In addition, we have a
 roadmap that includes plans to have third-party security audits of the code for every supported
 language. Our goal in open sourcing it is to invite the security community and the developer
