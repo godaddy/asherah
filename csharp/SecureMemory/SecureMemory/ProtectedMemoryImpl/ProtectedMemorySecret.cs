@@ -159,14 +159,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (!disposing)
                 {
-                    if (creationStackTrace != null)
-                    {
-                        throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())\n" + creationStackTrace);
-                    }
-                    else
-                    {
-                        throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())");
-                    }
+                    const string exceptionMessage = "FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
+                    throw new Exception(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
                 }
                 else
                 {
