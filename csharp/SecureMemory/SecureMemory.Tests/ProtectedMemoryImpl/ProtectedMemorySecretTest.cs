@@ -44,12 +44,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("ProtectedMemorySecretTest End\n");
         }
 
-        [Fact]
-        private void TestNullConfiguration()
+        [Theory]
+        [ClassData(typeof(AllocatorGenerator))]
+        private void TestNullConfiguration(IProtectedMemoryAllocator protectedMemoryAllocator)
         {
             Debug.WriteLine("TestNullConfiguration");
-            protectedMemoryAllocatorMock.Setup(x => x.Alloc(It.IsAny<ulong>())).Returns(IntPtr.Zero);
-            using (var secret = new ProtectedMemorySecret(new byte[] { 0, 1 }, protectedMemoryAllocatorMock.Object, null))
+            using (var secret = new ProtectedMemorySecret(new byte[] { 0, 1 }, protectedMemoryAllocator, null))
             {
             }
         }
