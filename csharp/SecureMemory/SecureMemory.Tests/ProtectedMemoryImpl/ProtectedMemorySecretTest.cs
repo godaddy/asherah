@@ -29,8 +29,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configDictionary = new Dictionary<string,string>();
+            configDictionary["debugSecrets"] = "true";
+
             configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection()
+                .AddInMemoryCollection(configDictionary)
                 .Build();
 
             Debug.WriteLine("\nProtectedMemorySecretTest ctor");
