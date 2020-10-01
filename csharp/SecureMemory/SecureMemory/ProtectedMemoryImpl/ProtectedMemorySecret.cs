@@ -30,7 +30,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             this.allocator = allocator;
             this.configuration = configuration;
 
-            if (configuration["debugSecrets"] == "true")
+            if (configuration != null && configuration["debugSecrets"] == "true")
             {
                 creationStackTrace = Environment.StackTrace;
             }
