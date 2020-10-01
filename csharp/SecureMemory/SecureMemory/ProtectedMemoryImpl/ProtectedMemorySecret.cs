@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 
@@ -15,16 +16,24 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         private readonly ulong length;
         private readonly IProtectedMemoryAllocator allocator;
+        private readonly IConfiguration configuration;
         private IntPtr pointer;
+        private string creationStackTrace;
 
         // IMPORTANT: accessCounter is not volatile nor atomic since we use accessLock for all read and write
         // access. If that changes, update the counter accordingly!
         private long accessCounter = 0;
 
-        internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator)
+        internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator, IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecret ctor");
             this.allocator = allocator;
+            this.configuration = configuration;
+
+            if (configuration["debugSecrets"] == "true")
+            {
+                creationStackTrace = Environment.StackTrace;
+            }
 
             length = (ulong)sourceBytes.Length;
             pointer = this.allocator.Alloc((ulong)sourceBytes.Length);
@@ -114,7 +123,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         public override Secret CopySecret()
         {
             Debug.WriteLine("ProtectedMemorySecret.CopySecret");
-            return WithSecretBytes(bytes => new ProtectedMemorySecret(bytes, allocator));
+            return WithSecretBytes(bytes => new ProtectedMemorySecret(bytes, allocator, configuration));
         }
 
         public override void Close()
@@ -131,12 +140,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             GC.SuppressFinalize(this);
         }
 
-        internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, IProtectedMemoryAllocator allocator)
+        internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, IProtectedMemoryAllocator allocator, IConfiguration configuration)
         {
             byte[] sourceBytes = Encoding.UTF8.GetBytes(sourceChars);
             try
             {
-                return new ProtectedMemorySecret(sourceBytes, allocator);
+                return new ProtectedMemorySecret(sourceBytes, allocator, configuration);
             }
             finally
             {
@@ -150,7 +159,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (!disposing)
                 {
-                    throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())");
+                    if (creationStackTrace != null)
+                    {
+                        throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())\n" + creationStackTrace);
+                    }
+                    else
+                    {
+                        throw new Exception("FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())");
+                    }
                 }
                 else
                 {
