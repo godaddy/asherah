@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
@@ -17,8 +18,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configDictionary = new Dictionary<string, string>();
+            configDictionary["debugSecrets"] = "true";
+
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection()
+                .AddInMemoryCollection(configDictionary)
                 .Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest ctor");
