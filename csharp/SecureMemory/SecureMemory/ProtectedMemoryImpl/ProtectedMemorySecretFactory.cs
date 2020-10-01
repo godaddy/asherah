@@ -16,12 +16,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private static IProtectedMemoryAllocator allocator;
         private static int refCount = 0;
         private static object allocatorLock = new object();
+        private IConfiguration configuration;
 
         public ProtectedMemorySecretFactory(IConfiguration configuration = null)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)
             {
+                this.configuration = configuration;
                 if (allocator != null)
                 {
                     refCount++;
@@ -46,12 +48,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public Secret CreateSecret(byte[] secretData)
         {
-            return new ProtectedMemorySecret(secretData, allocator);
+            return new ProtectedMemorySecret(secretData, allocator, configuration);
         }
 
         public Secret CreateSecret(char[] secretData)
         {
-            return ProtectedMemorySecret.FromCharArray(secretData, allocator);
+            return ProtectedMemorySecret.FromCharArray(secretData, allocator, configuration);
         }
 
         public void Dispose()
