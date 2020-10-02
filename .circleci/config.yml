@@ -124,12 +124,16 @@ commands:
           name: Upload Coverage Results
           command: |
             upload() {
-              curl -s https://codecov.io/bash | bash -s -- \
-                -f "<<parameters.file>>" \
-                -t "${CODECOV_TOKEN}" \
-                -n "${CIRCLE_BUILD_NUM}" \
-                -F "<<parameters.flags>>" \
-                -Z
+              echo 'Downloading and executing codecov bash'
+              output="$(curl -s https://codecov.io/bash | bash -s -- \
+                        -f "<<parameters.file>>" \
+                        -t "${CODECOV_TOKEN}" \
+                        -n "${CIRCLE_BUILD_NUM}" \
+                        -F "<<parameters.flags>>" \
+                        -Z)"
+              ec=$?
+              echo "$output"
+              return $ec
             }
 
             max_retries=5
@@ -139,7 +143,7 @@ commands:
                 [[ $retries -eq $max_retries ]] && echo 'Giving up!' && exit 0
                 echo 'Retrying in 5 seconds'
                 sleep 5
-                (( retries++ ))
+                let "retries=retries+1"
             done
             echo 'Codecov upload succeeded'
 
