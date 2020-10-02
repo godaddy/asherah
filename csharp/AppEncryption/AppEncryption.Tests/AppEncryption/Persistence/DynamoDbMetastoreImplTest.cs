@@ -7,6 +7,7 @@ using Amazon.DynamoDBv2.Model;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
+using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using static GoDaddy.Asherah.AppEncryption.Persistence.DynamoDbMetastoreImpl;
@@ -55,7 +56,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 .WithEndPointConfiguration("http://localhost:8000", Region)
                 .Build();
 
-            table = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
 
             JObject jObject = JObject.FromObject(keyRecord);
             Document document = new Document
@@ -82,7 +83,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             try
             {
                 DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
-                    .DeleteTableAsync("EncryptionKey")
+                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
                     .Result;
             }
             catch (AggregateException)
@@ -301,8 +302,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithRegion()
         {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithRegion("us-west-1")
+            Mock<Builder> builder = new Mock<Builder>(Region);
+            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+
+            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+                .Returns(loadTable);
+
+            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+                .WithRegion(Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
