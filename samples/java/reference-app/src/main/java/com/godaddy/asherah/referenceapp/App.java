@@ -61,9 +61,9 @@ public final class App implements Callable<Void> {
   @Option(names = "--jdbc-url",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
-  @Option(names = "--key-suffix",
+  @Option(names = "--enable-key-suffix",
       description = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")
-  private String keySuffix;
+  private boolean enableKeySuffix;
   @Option(names = "--dynamodb-table-name",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")
   private String dynamoDbTableName;
@@ -115,7 +115,17 @@ public final class App implements Callable<Void> {
     }
     if (metastoreType == MetastoreType.DYNAMODB) {
       logger.info("using DynamoDB-based metastore...");
-      DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
+      if (dynamoDbRegion != null) {
+        if (dynamoDbRegion.trim().isEmpty()) {
+          logger.error("Region cannot be empty.");
+          return null;
+        }
+      }
+      else {
+        dynamoDbRegion = "us-west-2";
+        logger.info("configuring metastore with default region: {}.", dynamoDbRegion);
+      }
+      DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(dynamoDbRegion);
 
       // Check for region and endpoint configuration.
       // The client can use either withRegion or withEndPointConfiguration but not both
@@ -126,14 +136,7 @@ public final class App implements Callable<Void> {
         }
         builder.withEndPointConfiguration(dynamoDbEndpoint, dynamoDbRegion);
       }
-      else if (dynamoDbRegion != null) {
-        if (dynamoDbRegion.trim().isEmpty()) {
-          logger.error("Region cannot be empty.");
-          return null;
-        }
-        builder.withRegion(dynamoDbRegion);
-      }
-      //Check for table name
+      // Check for table name
       if (dynamoDbTableName != null) {
         if (dynamoDbTableName.trim().isEmpty()) {
           logger.error("Table name cannot be empty.");
@@ -142,12 +145,8 @@ public final class App implements Callable<Void> {
         builder.withTableName(dynamoDbTableName);
       }
       // Check for key suffix
-      if (keySuffix != null) {
-        if (keySuffix.trim().isEmpty()) {
-          logger.error("KeySuffix cannot be empty.");
-          return null;
-        }
-        builder.withKeySuffix(keySuffix);
+      if (enableKeySuffix) {
+        builder.withKeySuffix();
       }
       return builder.build();
     }

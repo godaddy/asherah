@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  codecov: codecov/codecov@1.1.1
-
 parameters:
   db-name:
     type: "string"
@@ -116,6 +113,39 @@ commands:
             else
               echo "WhiteSource scans will only run in the original repository"
             fi
+  upload-coverage:
+    parameters:
+      file:
+        type: string
+      flags:
+        type: string
+    steps:
+      - run:
+          name: Upload Coverage Results
+          command: |
+            upload() {
+              echo 'Downloading and executing codecov bash'
+              output="$(curl -s https://codecov.io/bash | bash -s -- \
+                        -f "<<parameters.file>>" \
+                        -t "${CODECOV_TOKEN}" \
+                        -n "${CIRCLE_BUILD_NUM}" \
+                        -F "<<parameters.flags>>" \
+                        -Z)"
+              ec=$?
+              echo "$output"
+              return $ec
+            }
+
+            max_retries=5
+            retries=0
+            until upload; do
+                echo 'Codecov upload failed'
+                [[ $retries -eq $max_retries ]] && echo 'Giving up!' && exit 0
+                echo 'Retrying in 5 seconds'
+                sleep 5
+                let "retries=retries+1"
+            done
+            echo 'Codecov upload succeeded'
 
 workflows:
   version: 2
@@ -175,7 +205,7 @@ workflows:
 jobs:
   java-secure-memory:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/openjdk:11.0
     steps:
       - checkout
       - restore-java-cache
@@ -192,7 +222,7 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: java/secure-memory/target/surefire-reports
-      - codecov/upload:
+      - upload-coverage:
           file: java/secure-memory/target/site/jacoco/jacoco.xml
           flags: java_secure_memory
       - maybe-deploy:
@@ -201,7 +231,7 @@ jobs:
       - save-java-cache
   java-app-encryption:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/openjdk:11.0
     steps:
       - checkout
       - restore-java-cache
@@ -225,7 +255,7 @@ jobs:
             ./scripts/integration_test.sh
       - store_test_results:
           path: java/app-encryption/target/surefire-reports
-      - codecov/upload:
+      - upload-coverage:
           file: java/app-encryption/target/site/jacoco/jacoco.xml
           flags: java_app_encryption
       - maybe-deploy:
@@ -234,7 +264,7 @@ jobs:
       - save-java-cache
   samples-java-reference-app:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/openjdk:11.0
     steps:
       - checkout
       - restore-java-cache
@@ -275,7 +305,7 @@ jobs:
             ~/.dotnet/tools/trx2junit Logging.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/Logging/Logging.Tests/TestResults
-      - codecov/upload:
+      - upload-coverage:
           file: csharp/Logging/Logging.Tests/coverage.opencover.xml
           flags: csharp_Logging
       - maybe-deploy:
@@ -312,7 +342,7 @@ jobs:
             ~/.dotnet/tools/trx2junit SecureMemory.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/SecureMemory/SecureMemory.Tests/TestResults
-      - codecov/upload:
+      - upload-coverage:
           file: csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml
           flags: csharp_SecureMemory
       - maybe-deploy:
@@ -355,7 +385,7 @@ jobs:
             ~/.dotnet/tools/trx2junit AppEncryption.Tests/TestResults/*.trx
       - store_test_results:
           path: csharp/AppEncryption/AppEncryption.Tests/TestResults
-      - codecov/upload:
+      - upload-coverage:
           file: csharp/AppEncryption/AppEncryption.Tests/coverage.opencover.xml
           flags: csharp_AppEncryption
       - run:
@@ -423,7 +453,7 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/securememory
-      - codecov/upload:
+      - upload-coverage:
           file: go/securememory/cobertura-coverage.xml
           flags: go_securememory
       - maybe-deploy:
@@ -472,7 +502,7 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: go/appencryption
-      - codecov/upload:
+      - upload-coverage:
           file: go/appencryption/cobertura-coverage.xml
           flags: go_appencryption
       - maybe-deploy:
@@ -527,7 +557,7 @@ jobs:
             ./scripts/lint.sh
       - store_test_results:
           path: server/go
-      - codecov/upload:
+      - upload-coverage:
           file: server/go/cobertura-coverage.xml
           flags: server_go
       - save-go-cache
@@ -551,7 +581,7 @@ jobs:
             ./scripts/test.sh
       - store_test_results:
           path: server/java/target/surefire-reports
-      - codecov/upload:
+      - upload-coverage:
           file: server/java/target/site/jacoco/jacoco.xml
           flags: server_java
       - save-java-cache
@@ -649,11 +679,13 @@ jobs:
       - run:
           name: Setup java environment
           command: |
-            apt-get install -y openjdk-8-jdk
+            apt-get install -y openjdk-8-jdk openjdk-11-jdk
             apt-get install -y maven
             # Delete Java appencryption & gRPC server from local maven repo/cache and build from the current branch
             rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+            export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
             mvn clean install -f java/app-encryption/pom.xml -DskipTests
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             mvn clean install -f server/java/pom.xml -DskipTests
       - run:
           name: Setup csharp environment
