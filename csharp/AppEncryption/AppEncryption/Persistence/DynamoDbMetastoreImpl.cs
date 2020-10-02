@@ -47,16 +47,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             preferredRegion = builder.PreferredRegion;
             HasKeySuffix = builder.HasKeySuffix;
 
-            try
-            {
-                // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
-                table = Table.LoadTable(DbClient, TableName);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e.Message, "Cannot load table");
-                throw;
-            }
+            // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
+            table = Table.LoadTable(DbClient, TableName);
         }
 
         public interface IBuildStep

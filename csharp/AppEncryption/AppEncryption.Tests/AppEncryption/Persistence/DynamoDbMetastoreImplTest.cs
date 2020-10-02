@@ -42,14 +42,20 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
+            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+            {
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                AuthenticationRegion = "us-west-2",
+            };
+            amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
+
+            CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
+
             dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
+                .WithEndPointConfiguration("http://localhost:8000", Region)
                 .Build();
-            amazonDynamoDbClient = dynamoDbMetastoreImpl.DbClient;
 
-            CreateTableSchema(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
-
-            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
+            table = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
 
             JObject jObject = JObject.FromObject(keyRecord);
             Document document = new Document
@@ -76,7 +82,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             try
             {
                 DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
-                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
+                    .DeleteTableAsync("EncryptionKey")
                     .Result;
             }
             catch (AggregateException)
@@ -276,6 +282,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
             AWSConfigs.AWSRegion = "us-west-2";
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -305,6 +312,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .WithKeySuffix()
                 .Build();
 
