@@ -16,6 +16,8 @@
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
     <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/AppEncryption</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
