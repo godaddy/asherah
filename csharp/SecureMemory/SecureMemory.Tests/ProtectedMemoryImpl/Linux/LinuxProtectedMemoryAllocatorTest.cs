@@ -31,6 +31,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         }
 
         [Fact]
+        private void TestSetNoDumpInvalidLength()
+        {
+            IntPtr fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
+            Assert.Throws<Exception>(() =>
+            linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
+        }
+
+        [Fact]
         private void TestGetResourceCore()
         {
             if (linuxProtectedMemoryAllocator == null)
