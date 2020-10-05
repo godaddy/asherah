@@ -53,7 +53,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
 
             dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration("http://localhost:8000", Region)
+                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, Region)
                 .Build();
 
             table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
@@ -278,18 +278,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestPrimaryBuilderPath()
-        {
-            // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
-            AWSConfigs.AWSRegion = "us-west-2";
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
-
-        [Fact]
         private void TestBuilderPathWithEndPointConfiguration()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
@@ -364,5 +352,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(actualJsonObject.IsSome);
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
+
+        // This test is commented out since the constructor initializes the Table, which results in a network call. We decided
+        // it wasn't worth the effort of refactoring it with thread-safe lazy loading for slightly higher code coverage.
+//        [Fact]
+//        private void TestPrimaryBuilderPath()
+//        {
+//            AWSConfigs.AWSRegion = "us-west-2";
+//            Builder dynamoDbMetastorePersistenceServicePrimaryBuilder = NewBuilder();
+//            DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
+//                dynamoDbMetastorePersistenceServicePrimaryBuilder.Build();
+//            Assert.NotNull(dynamoDbMetastorePersistenceImpl);
+//        }
     }
 }
