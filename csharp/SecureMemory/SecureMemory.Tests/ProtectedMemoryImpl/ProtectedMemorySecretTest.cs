@@ -31,6 +31,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             var configDictionary = new Dictionary<string,string>();
             configDictionary["debugSecrets"] = "true";
+            configDictionary["requireSecretDisposal"] = "true";
 
             configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)
