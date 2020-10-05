@@ -28,13 +28,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             windowsProtectedMemoryAllocator?.Dispose();
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocSuccess()
         {
-            if (windowsProtectedMemoryAllocator == null)
-            {
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
             IntPtr pointer = windowsProtectedMemoryAllocator.Alloc(1);
             try
@@ -49,13 +46,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestZeroMemory()
         {
-            if (windowsProtectedMemoryAllocator == null)
-            {
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
             byte[] origValue = { 1, 2, 3, 4 };
             ulong length = (ulong)origValue.Length;

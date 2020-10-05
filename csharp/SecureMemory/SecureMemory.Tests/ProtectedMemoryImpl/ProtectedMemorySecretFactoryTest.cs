@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
+using Moq;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemorySecretFactoryTest : IDisposable
+    public class ProtectedMemorySecretFactoryTest
     {
-        private readonly ProtectedMemorySecretFactory protectedMemorySecretFactory;
+        private readonly IConfiguration configuration;
 
         public ProtectedMemorySecretFactoryTest()
         {
@@ -21,18 +22,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var configDictionary = new Dictionary<string, string>();
             configDictionary["debugSecrets"] = "true";
 
-            var configuration = new ConfigurationBuilder()
+            configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)
                 .Build();
-
-            Debug.WriteLine("ProtectedMemorySecretFactoryTest ctor");
-            protectedMemorySecretFactory = new ProtectedMemorySecretFactory(configuration);
-        }
-
-        public void Dispose()
-        {
-            Debug.WriteLine("ProtectedMemorySecretFactoryTest.Dispose");
-            protectedMemorySecretFactory.Dispose();
         }
 
         // TODO Mocking static methods is not yet possible in Moq framework.
@@ -56,16 +48,32 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestCreateSecretByteArray()
         {
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretByteArray");
-            using Secret secret = protectedMemorySecretFactory.CreateSecret(new byte[] { 0, 1 });
-            Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+                using Secret secret = factory.CreateSecret(new byte[] { 0, 1 });
+                Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            }
         }
 
         [Fact]
         private void TestCreateSecretCharArray()
         {
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretCharArray");
-            using Secret secret = protectedMemorySecretFactory.CreateSecret(new[] { 'a', 'b' });
-            Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+                using Secret secret = factory.CreateSecret(new[] { 'a', 'b' });
+                Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            }
+        }
+
+        [Fact]
+        private void TestDoubleDispose()
+        {
+            var factory = new ProtectedMemorySecretFactory(configuration);
+            factory.Dispose();
+            Assert.Throws<Exception>(() => {
+                factory.Dispose();
+             });
         }
     }
 }

@@ -30,32 +30,27 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             linuxProtectedMemoryAllocator?.Dispose();
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestSetNoDumpInvalidLength()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+
             IntPtr fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
-            Assert.Throws<Exception>(() =>
-            linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
+            Assert.Throws<Exception>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestGetResourceCore()
         {
-            if (linuxProtectedMemoryAllocator == null)
-            {
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Assert.Equal(4, linuxProtectedMemoryAllocator.GetRlimitCoreResource());
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocFree()
         {
-            if (linuxProtectedMemoryAllocator == null)
-            {
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             byte[] origValue = { 1, 2, 3, 4 };
             ulong length = (ulong)origValue.Length;

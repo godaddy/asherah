@@ -59,15 +59,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             libcProtectedMemoryAllocator?.Dispose();
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDisableCoreDumpGlobally()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestDisableCoreDumpGlobally");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             // Mac allocator has global core dumps disabled on init
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -88,15 +85,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -118,15 +112,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
@@ -139,15 +130,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
@@ -155,15 +143,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
@@ -171,54 +156,42 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroWithZeroResult()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Check.Zero(0, "TestCheckZeroWithZeroResult");
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroWithNonZeroResult()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Assert.Throws<LibcOperationFailedException>(() => { Check.Zero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Check.Zero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
+            Skip.If(libc == null);
+
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
-            // Don't run libc tests on platforms that don't match libc/posix behaviors
-            if (libc == null)
-            {
-                return;
-            }
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
