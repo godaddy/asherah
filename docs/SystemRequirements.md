@@ -80,3 +80,45 @@ Below is an example setting unlimited memlock:
 ```console
 docker run -it --ulimit memlock=-1:-1  [...]
 ```
+
+### Kubernetes
+
+See this article for configuring mlock on Kubernetes
+
+https://medium.com/@thejasongerard/resource-limits-mlock-and-containers-oh-my-cca1e5d1f259
+
+```
+FROM alpine:3.8
+
+RUN apk add libcap && \
+    mkdir -p /home/appuser && \
+    addgroup -S app && \
+    adduser -u 1000 -S -h /home/appuser -G app appuser
+
+WORKDIR /home/appuser
+COPY app.o .
+
+RUN chown -R appuser:app /home/appuser
+RUN setcap cap_ipc_lock=+ep app.o
+USER appuser
+
+CMD ["./app.o"]
+```
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mlockex
+spec:
+  containers:
+  - name: mlockex
+    image: mlockex:latest
+    imagePullPolicy: IfNotPresent
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        add: ["IPC_LOCK"]
+  restartPolicy: Never
+```  
