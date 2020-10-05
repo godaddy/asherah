@@ -13,7 +13,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public TransientSecretFactoryTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 

@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
         public LibcProtectedMemoryAllocatorTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 

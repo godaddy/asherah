@@ -13,7 +13,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 

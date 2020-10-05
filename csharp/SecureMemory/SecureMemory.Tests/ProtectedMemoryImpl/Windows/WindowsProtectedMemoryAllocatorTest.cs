@@ -13,7 +13,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
 
         public WindowsProtectedMemoryAllocatorTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
