@@ -210,6 +210,48 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
         }
 
+        [Fact]
+        private void TestAllocatorSetNoAccessFailure()
+        {
+            Debug.WriteLine("TestCloseWithClosedSecretShouldNoop");
+            byte[] secretBytes = { 0, 1 };
+            IProtectedMemoryAllocator allocator = null;
+
+            // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
+
+                protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                    .Throws(new Exception());
+
+                allocator = protectedMemoryAllocatorMacOSMock.Object;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
+
+                protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                    .Throws(new Exception());
+
+                allocator = protectedMemoryAllocatorLinuxMock.Object;
+            }
+            else
+            {
+                return;
+            }
+
+            Assert.Throws<Exception>(() =>
+            {
+                ProtectedMemorySecret secret =
+                    new ProtectedMemorySecret(secretBytes, allocator, configuration);
+
+                secret.Close();
+            });
+        }
+
         // Borderline integration test, but still runs fast and can help catch critical regression
         [Fact]
         private void TestWithSecretBytesMultiThreadedAccess()
