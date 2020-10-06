@@ -13,7 +13,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void EndToEndTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
@@ -43,7 +43,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void EndToEndOpenSSLTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
