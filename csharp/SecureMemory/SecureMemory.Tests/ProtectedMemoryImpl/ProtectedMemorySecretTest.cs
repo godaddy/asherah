@@ -255,7 +255,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestAllocatorSetNoDumpFailure()
         {
-            Debug.WriteLine("TestCloseWithClosedSecretShouldNoop");
+            Debug.WriteLine("TestAllocatorSetNoDumpFailure");
             byte[] secretBytes = { 0, 1 };
             IProtectedMemoryAllocator allocator = null;
 
