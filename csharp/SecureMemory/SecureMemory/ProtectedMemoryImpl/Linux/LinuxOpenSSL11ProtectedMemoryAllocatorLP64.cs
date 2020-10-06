@@ -15,7 +15,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
     internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator, IDisposable
     {
-        private static readonly IntPtr InvalidPointer = new IntPtr(-1);
         private readonly ulong blockSize;
         private LinuxOpenSSL11LP64 openSSL11;
         private OpenSSLCryptProtectMemory cryptProtectMemory;

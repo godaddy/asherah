@@ -17,6 +17,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private readonly ulong length;
         private readonly IProtectedMemoryAllocator allocator;
         private readonly IConfiguration configuration;
+        private readonly bool requireSecretDisposal;
         private IntPtr pointer;
         private string creationStackTrace;
 
@@ -30,9 +31,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             this.allocator = allocator;
             this.configuration = configuration;
 
-            if (configuration != null && configuration["debugSecrets"] == "true")
+            if (configuration != null)
             {
-                creationStackTrace = Environment.StackTrace;
+                if (configuration["debugSecrets"] == "true")
+                {
+                    creationStackTrace = Environment.StackTrace;
+                }
+
+                if (configuration["requireSecretDisposal"] == "true")
+                {
+                    requireSecretDisposal = true;
+                }
             }
 
             length = (ulong)sourceBytes.Length;
@@ -159,8 +168,16 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (!disposing)
                 {
-                    const string exceptionMessage = "FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
-                    throw new Exception(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
+                    if (requireSecretDisposal)
+                    {
+                        const string exceptionMessage = "FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
+                        throw new Exception(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
+                    }
+                    else
+                    {
+                        const string warningMessage = "WARN: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
+                        Debug.WriteLine(warningMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
+                    }
                 }
                 else
                 {
