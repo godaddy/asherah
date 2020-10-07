@@ -356,16 +356,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestPrimaryBuilderPath()
         {
-        Mock<Builder> builder = new Mock<Builder>(Region);
-        Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+            Mock<Builder> builder = new Mock<Builder>(Region);
+            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
 
-        builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
-        .Returns(loadTable);
+            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+                .Returns(loadTable);
 
-        DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
-            .Build();
+            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+                .Build();
 
-        Assert.NotNull(dbMetastoreImpl);
+            Assert.NotNull(dbMetastoreImpl);
         }
     }
 }
