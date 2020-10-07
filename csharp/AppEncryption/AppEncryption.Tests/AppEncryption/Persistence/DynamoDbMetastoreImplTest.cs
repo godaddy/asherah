@@ -353,16 +353,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
         }
 
-        // This test is commented out since the constructor initializes the Table, which results in a network call. We decided
-        // it wasn't worth the effort of refactoring it with thread-safe lazy loading for slightly higher code coverage.
-//        [Fact]
-//        private void TestPrimaryBuilderPath()
-//        {
-//            AWSConfigs.AWSRegion = "us-west-2";
-//            Builder dynamoDbMetastorePersistenceServicePrimaryBuilder = NewBuilder();
-//            DynamoDbMetastorePersistenceImpl dynamoDbMetastorePersistenceImpl =
-//                dynamoDbMetastorePersistenceServicePrimaryBuilder.Build();
-//            Assert.NotNull(dynamoDbMetastorePersistenceImpl);
-//        }
+        [Fact]
+        private void TestPrimaryBuilderPath()
+        {
+        Mock<Builder> builder = new Mock<Builder>(Region);
+        Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+
+        builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+        .Returns(loadTable);
+
+        DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+            .Build();
+
+        Assert.NotNull(dbMetastoreImpl);
+        }
     }
 }
