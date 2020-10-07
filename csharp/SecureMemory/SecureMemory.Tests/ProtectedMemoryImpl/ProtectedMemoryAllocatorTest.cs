@@ -19,27 +19,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public ProtectedMemoryAllocatorTest()
         {
-            Trace.Listeners.RemoveAt(0);
+            Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
             Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                protectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                protectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64();
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                protectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
-            }
-            else
-            {
-                throw new NotSupportedException("Cannot determine platform for testing");
-            }
+            protectedMemoryAllocator = GetPlatformAllocator();
         }
 
         public void Dispose()
@@ -48,12 +33,43 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocator.Dispose();
         }
 
+        internal IProtectedMemoryAllocator GetPlatformAllocator()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return new LinuxProtectedMemoryAllocatorLP64();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return new MacOSProtectedMemoryAllocatorLP64();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return new WindowsProtectedMemoryAllocatorVirtualAlloc();
+            }
+            else
+            {
+                throw new NotSupportedException("Cannot determine platform for testing");
+            }
+        }
+
         private static void CheckIntPtr(IntPtr intPointer, string methodName)
         {
             if (intPointer == IntPtr.Zero || intPointer == InvalidPointer)
             {
                 throw new LibcOperationFailedException(methodName, intPointer.ToInt64());
             }
+        }
+
+        [Fact]
+        private void TestTwoAllocatorInstances()
+        {
+            var allocator1 = GetPlatformAllocator();
+            var allocator2 = GetPlatformAllocator();
+            Assert.NotNull(allocator1);
+            Assert.NotNull(allocator2);
+            allocator1.Dispose();
+            allocator2.Dispose();
         }
 
         [Fact]
