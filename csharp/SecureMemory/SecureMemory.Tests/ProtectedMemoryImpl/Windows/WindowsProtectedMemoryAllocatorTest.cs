@@ -21,8 +21,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
 
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
-                {"heapSize", "32000"},
-                {"minimumAllocationSize", "128"},
+                { "minimumWorkingSetSize", "33554430"},
+                { "maximumWorkingSetSize", "67108860"},
             }).Build();
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
