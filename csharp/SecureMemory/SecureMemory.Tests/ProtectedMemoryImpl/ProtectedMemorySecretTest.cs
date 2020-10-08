@@ -272,7 +272,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>((ulong)32000, 128) { CallBase = true };
+                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>(configuration) { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
