@@ -13,8 +13,8 @@ For classes that support IConfiguration based configuration:
     <tr>
         <td>secureHeapEngine</td>
         <td>string</td>
-        <td>openssl11, (null)</td>
-        <td>Platform default</td>
+        <td>openssl11, mmap</td>
+        <td>Platform default (mmap)</td>
         <td>Controls which secure heap implementation is used</td>
     </tr>
     <tr>
