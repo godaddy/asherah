@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -32,7 +31,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var configDictionary = new Dictionary<string,string>();
             configDictionary["debugSecrets"] = "true";
             configDictionary["requireSecretDisposal"] = "true";
-
+            configDictionary["heapSize"] = "32000";
+            configDictionary["minimumAllocationSize"] = "128";
             configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)
                 .Build();
@@ -273,7 +273,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>((ulong)32000, 128) { CallBase = true };
+                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>(configuration) { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());

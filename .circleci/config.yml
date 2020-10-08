@@ -125,7 +125,7 @@ commands:
           command: |
             upload() {
               echo 'Downloading and executing codecov bash'
-              output="$(curl -s https://codecov.io/bash | bash -s -- \
+              output="$(curl -sS https://codecov.io/bash | bash -s -- \
                         -f "<<parameters.file>>" \
                         -t "${CODECOV_TOKEN}" \
                         -n "${CIRCLE_BUILD_NUM}" \

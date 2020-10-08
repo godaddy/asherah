@@ -7,6 +7,7 @@ using Amazon.DynamoDBv2.Model;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
+using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using static GoDaddy.Asherah.AppEncryption.Persistence.DynamoDbMetastoreImpl;
@@ -42,12 +43,18 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .Build();
-            amazonDynamoDbClient = dynamoDbMetastoreImpl.DbClient;
+            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+            {
+                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                AuthenticationRegion = "us-west-2",
+            };
+            amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
-            CreateTableSchema(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
+            CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
+
+            dynamoDbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, Region)
+                .Build();
 
             table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
 
@@ -271,17 +278,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestPrimaryBuilderPath()
-        {
-            // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
-            AWSConfigs.AWSRegion = "us-west-2";
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
-
-        [Fact]
         private void TestBuilderPathWithEndPointConfiguration()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
@@ -294,8 +290,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithRegion()
         {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithRegion("us-west-1")
+            Mock<Builder> builder = new Mock<Builder>(Region);
+            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+
+            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+                .Returns(loadTable);
+
+            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+                .WithRegion(Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -305,6 +307,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
                 .WithKeySuffix()
                 .Build();
 
@@ -348,6 +351,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
             Assert.True(actualJsonObject.IsSome);
             Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+        }
+
+        [Fact]
+        private void TestPrimaryBuilderPath()
+        {
+            Mock<Builder> builder = new Mock<Builder>(Region);
+            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+
+            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+                .Returns(loadTable);
+
+            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
         }
     }
 }
