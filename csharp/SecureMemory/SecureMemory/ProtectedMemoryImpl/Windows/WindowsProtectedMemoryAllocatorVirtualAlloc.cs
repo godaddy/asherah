@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows

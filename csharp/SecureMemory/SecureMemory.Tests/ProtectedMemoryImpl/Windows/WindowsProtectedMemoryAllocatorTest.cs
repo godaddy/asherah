@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
     [Collection("Logger Fixture collection")]
     public class WindowsProtectedMemoryAllocatorTest : IDisposable
     {
-        private WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
+        private readonly WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
 
         public WindowsProtectedMemoryAllocatorTest()
         {
@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows

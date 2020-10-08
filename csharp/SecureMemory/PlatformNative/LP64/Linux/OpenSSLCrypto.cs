@@ -141,7 +141,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 
         public int EVP_CIPHER_block_size(IntPtr e)
         {
-            int blockSize = (int)_EVP_CIPHER_block_size(e);
+            int blockSize = _EVP_CIPHER_block_size(e);
 
             // BUG: EVP_CIPHER_block_size returns 1
             if (blockSize == 1)

@@ -1,9 +1,6 @@
+using System;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests

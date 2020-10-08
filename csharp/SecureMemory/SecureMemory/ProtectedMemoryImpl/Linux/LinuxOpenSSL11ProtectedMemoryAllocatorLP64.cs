@@ -1,12 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Xml.Schema;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -14,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
-    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator, IDisposable
+    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64
     {
         private readonly ulong blockSize;
         private LinuxOpenSSL11LP64 openSSL11;
@@ -22,7 +17,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private bool disposedValue;
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
-            : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
+            : base(new LinuxOpenSSL11LP64())
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
             if (openSSL11 == null)
