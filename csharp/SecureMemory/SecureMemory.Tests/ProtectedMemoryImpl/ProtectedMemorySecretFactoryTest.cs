@@ -44,6 +44,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [Fact]
+        private void TestInvalidConfiguration()
+        {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"secureHeapEngine", "openssl11"}  // Note the missing "required" settings
+            }).Build();
+
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestInvalidConfiguration");
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+            }
+        }
+
+        [Fact]
         private void TestCreateSecretByteArray()
         {
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretByteArray");
