@@ -126,9 +126,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             {
                                 if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                                 {
-                                    ulong heapSize = ulong.Parse(configuration["heapSize"]);
-                                    int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
-                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(heapSize, minimumAllocationSize);
+                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
                                 }
                                 else
                                 {
@@ -170,7 +168,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new WindowsProtectedMemoryAllocatorVirtualAlloc();
+                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried

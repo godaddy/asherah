@@ -7,6 +7,7 @@ using System.Xml.Schema;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -20,7 +21,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private OpenSSLCryptProtectMemory cryptProtectMemory;
         private bool disposedValue;
 
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
             : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
@@ -29,10 +30,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new Exception("GetLibc returned null object for openSSL11");
             }
 
+            ulong heapSize = ulong.Parse(configuration["heapSize"]);
+            int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
+
             Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
 
             Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
-            Check.Result(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+            Check.Result(openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
 
             cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", this);
             blockSize = (ulong)cryptProtectMemory.GetBlockSize();

@@ -3,11 +3,40 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal sealed class WindowsProtectedMemoryAllocatorVirtualAlloc : WindowsProtectedMemoryAllocatorLLP64
     {
+        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration)
+        {
+            UIntPtr min = UIntPtr.Zero;
+            UIntPtr max = UIntPtr.Zero;
+            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
+            var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
+            if (!result)
+            {
+                throw new Exception("GetProcessWorkingSetSize failed");
+            }
+
+            var minConfig = configuration["minimumWorkingSetSize"];
+            min = !string.IsNullOrWhiteSpace(minConfig) ?
+                new UIntPtr(ulong.Parse(minConfig)) :
+                new UIntPtr(min.ToUInt64() * 16);
+
+            var maxConfig = configuration["maximumWorkingSetSize"];
+            max = !string.IsNullOrWhiteSpace(maxConfig) ?
+                new UIntPtr(ulong.Parse(maxConfig)) :
+                new UIntPtr(max.ToUInt64() * 32);
+
+            result = WindowsInterop.SetProcessWorkingSetSize(hProcess, min, max);
+            if (!result)
+            {
+                throw new Exception("SetProcessWorkingSetSize failed");
+            }
+        }
+
         public override IntPtr Alloc(ulong length)
         {
             length = AdjustLength(length);

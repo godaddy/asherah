@@ -1,12 +1,12 @@
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 {
@@ -16,6 +16,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public AllocatorGenerator()
         {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"heapSize", "32000"},
+                {"minimumAllocationSize", "128"},
+            }).Build();
+
             allocators = new List<object[]>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -25,7 +31,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                 {
-                    allocators.Add(new object[] { new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(32000, 128) });
+                    allocators.Add(new object[] { new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration) });
                 }
                 allocators.Add(new object[] { new LinuxProtectedMemoryAllocatorLP64() });
             }
