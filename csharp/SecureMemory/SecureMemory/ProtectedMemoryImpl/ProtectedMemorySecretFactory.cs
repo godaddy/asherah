@@ -16,9 +16,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private static IProtectedMemoryAllocator allocator;
         private static int refCount = 0;
         private static object allocatorLock = new object();
-        private IConfiguration configuration;
+        private readonly IConfiguration configuration;
 
-        public ProtectedMemorySecretFactory(IConfiguration configuration = null)
+        public ProtectedMemorySecretFactory(IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
@@ -17,9 +19,15 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"heapSize", "32000"},
+                {"minimumAllocationSize", "128"},
+            }).Build();
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
+                windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
             }
         }
 
