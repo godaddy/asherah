@@ -120,22 +120,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on Linux X64 or Aarch64");
                         }
 
-                        if (configuration != null)
-                        {
-                            if (string.Compare(configuration["secureHeapEngine"], "openssl11", true) == 0)
-                            {
-                                if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
-                                {
-                                    return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
-                                }
-                                else
-                                {
-                                    throw new PlatformNotSupportedException("OpenSSL 1.1 selected for secureHeapEngine but library not found");
-                                }
-                            }
-                        }
-
-                        return new LinuxProtectedMemoryAllocatorLP64();
+                        return ConfigureForLinux64(configuration);
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture Linux X86");
                     case Architecture.Arm:
@@ -175,6 +160,36 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return null;
         }
 
+        private static IProtectedMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
+        {
+            if (configuration != null)
+            {
+                var secureHeapEngine = configuration["secureHeapEngine"];
+                if (!string.IsNullOrWhiteSpace(secureHeapEngine))
+                {
+                    if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                        {
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
+                        }
+
+                        throw new PlatformNotSupportedException(
+                            "OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                    }
+
+                    if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        return new LinuxProtectedMemoryAllocatorLP64();
+                    }
+
+                    throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
+                }
+            }
+
+            return new LinuxProtectedMemoryAllocatorLP64();
+        }
+
         [ExcludeFromCodeCoverage]
         private static IProtectedMemoryAllocator DetectOsDescription(IConfiguration configuration)
         {
@@ -183,7 +198,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (Environment.Is64BitProcess)
                 {
-                    return new LinuxProtectedMemoryAllocatorLP64();
+                    return ConfigureForLinux64(configuration);
                 }
 
                 if (desc.IndexOf("i686", StringComparison.OrdinalIgnoreCase) == -1)

@@ -11,6 +11,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
     internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64
     {
+        private const ulong DefaultHeapSize = 32768;
+        private const int DefaultMinimumAllocationSize = 32;
         private readonly ulong blockSize;
         private LinuxOpenSSL11LP64 openSSL11;
         private OpenSSLCryptProtectMemory cryptProtectMemory;
@@ -25,8 +27,27 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new Exception("GetLibc returned null object for openSSL11");
             }
 
-            ulong heapSize = ulong.Parse(configuration["heapSize"]);
-            int minimumAllocationSize = int.Parse(configuration["minimumAllocationSize"]);
+            ulong heapSize;
+            var heapSizeConfig = configuration["heapSize"];
+            if (!string.IsNullOrWhiteSpace(heapSizeConfig))
+            {
+                heapSize = ulong.Parse(heapSizeConfig);
+            }
+            else
+            {
+                heapSize = DefaultHeapSize;
+            }
+
+            int minimumAllocationSize;
+            var minimumAllocationSizeConfig = configuration["minimumAllocationSize"];
+            if (!string.IsNullOrWhiteSpace(minimumAllocationSizeConfig))
+            {
+                minimumAllocationSize = int.Parse(minimumAllocationSizeConfig);
+            }
+            else
+            {
+                minimumAllocationSize = DefaultMinimumAllocationSize;
+            }
 
             Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
 
