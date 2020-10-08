@@ -40,13 +40,15 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly string preferredRegion;
         private readonly Table table;
 
-        private DynamoDbMetastoreImpl(Builder builder)
+        internal DynamoDbMetastoreImpl(Builder builder)
         {
             DbClient = builder.DbClient;
             TableName = builder.TableName;
             preferredRegion = builder.PreferredRegion;
             HasKeySuffix = builder.HasKeySuffix;
-            Table.TryLoadTable(DbClient, TableName, out table);
+
+            // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
+            table = builder.LoadTable(DbClient, TableName);
         }
 
         public interface IBuildStep
@@ -355,6 +357,11 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
                 DbClient = new AmazonDynamoDBClient(dbConfig);
                 return new DynamoDbMetastoreImpl(this);
+            }
+
+            internal virtual Table LoadTable(IAmazonDynamoDB client, string tableName)
+            {
+                return Table.LoadTable(client, tableName);
             }
         }
     }
