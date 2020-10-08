@@ -1,0 +1,23 @@
+name: Sync release branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Release branch to target'
+        default: 'release-0.1.x'
+        required: true
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Merge master -> {RELEASE_TARGET}
+        uses: devmasx/merge-branch@v1.3.0
+        with:
+          type: now
+          head_to_merge: master
+          target_branch: ${{ github.event.inputs.target }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
