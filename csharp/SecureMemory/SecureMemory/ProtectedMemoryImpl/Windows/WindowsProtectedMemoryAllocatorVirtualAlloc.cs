@@ -2,12 +2,59 @@ using System;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal sealed class WindowsProtectedMemoryAllocatorVirtualAlloc : WindowsProtectedMemoryAllocatorLLP64
     {
+        private const int DefaultMaximumWorkingSetSize = 67108860;
+        private const int DefaultMinimumWorkingSetSize = 33554430;
+
+        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration)
+        {
+            UIntPtr min = UIntPtr.Zero;
+            UIntPtr max = UIntPtr.Zero;
+            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
+            var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
+            if (!result)
+            {
+                throw new Exception("GetProcessWorkingSetSize failed");
+            }
+
+            var minConfig = configuration["minimumWorkingSetSize"];
+            if (!string.IsNullOrWhiteSpace(minConfig))
+            {
+                min = new UIntPtr(ulong.Parse(minConfig));
+            }
+            else
+            {
+                if (min.ToUInt64() < DefaultMinimumWorkingSetSize)
+                {
+                    min = new UIntPtr(DefaultMinimumWorkingSetSize);
+                }
+            }
+
+            var maxConfig = configuration["maximumWorkingSetSize"];
+            if (!string.IsNullOrWhiteSpace(maxConfig))
+            {
+                max = new UIntPtr(ulong.Parse(maxConfig));
+            }
+            else
+            {
+                if (max.ToUInt64() < DefaultMaximumWorkingSetSize)
+                {
+                    max = new UIntPtr(DefaultMaximumWorkingSetSize);
+                }
+            }
+
+            result = WindowsInterop.SetProcessWorkingSetSize(hProcess, min, max);
+            if (!result)
+            {
+                throw new Exception($"SetProcessWorkingSetSize({min.ToUInt64()},{max.ToUInt64()}) failed");
+            }
+        }
+
         public override IntPtr Alloc(ulong length)
         {
             length = AdjustLength(length);

@@ -1,27 +1,25 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Xml.Schema;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
-    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64, IProtectedMemoryAllocator, IDisposable
+    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64
     {
+        private const ulong DefaultHeapSize = 32768;
+        private const int DefaultMinimumAllocationSize = 32;
         private readonly ulong blockSize;
         private LinuxOpenSSL11LP64 openSSL11;
         private OpenSSLCryptProtectMemory cryptProtectMemory;
         private bool disposedValue;
 
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(ulong size, int minsize)
-            : base((LinuxLibcLP64)new LinuxOpenSSL11LP64())
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
+            : base(new LinuxOpenSSL11LP64())
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
             if (openSSL11 == null)
@@ -29,10 +27,32 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new Exception("GetLibc returned null object for openSSL11");
             }
 
+            ulong heapSize;
+            var heapSizeConfig = configuration["heapSize"];
+            if (!string.IsNullOrWhiteSpace(heapSizeConfig))
+            {
+                heapSize = ulong.Parse(heapSizeConfig);
+            }
+            else
+            {
+                heapSize = DefaultHeapSize;
+            }
+
+            int minimumAllocationSize;
+            var minimumAllocationSizeConfig = configuration["minimumAllocationSize"];
+            if (!string.IsNullOrWhiteSpace(minimumAllocationSizeConfig))
+            {
+                minimumAllocationSize = int.Parse(minimumAllocationSizeConfig);
+            }
+            else
+            {
+                minimumAllocationSize = DefaultMinimumAllocationSize;
+            }
+
             Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
 
             Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
-            Check.Result(openSSL11.CRYPTO_secure_malloc_init(size, minsize), 1, "CRYPTO_secure_malloc_init");
+            Check.Result(openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
 
             cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", this);
             blockSize = (ulong)cryptProtectMemory.GetBlockSize();

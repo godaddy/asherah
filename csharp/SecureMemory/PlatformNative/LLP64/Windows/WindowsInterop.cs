@@ -21,6 +21,18 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
         public static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, AllocationType dwFreeType);
 
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        public static extern IntPtr GetCurrentProcess();
+
+        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
+        public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, UIntPtr minimumWorkingSetSize, UIntPtr maximumWorkingSetSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool GetProcessWorkingSetSize(
+            IntPtr hProcess,
+            ref UIntPtr lpMinimumWorkingSetSize,
+            ref UIntPtr lpMaximumWorkingSetSize);
+
         [DllImport("crypt32.dll", SetLastError=true)]
         public static extern bool CryptProtectMemory(IntPtr ptr, UIntPtr dwSize, CryptProtectMemoryOptions dwFlags);
 

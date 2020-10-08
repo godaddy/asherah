@@ -1,7 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]

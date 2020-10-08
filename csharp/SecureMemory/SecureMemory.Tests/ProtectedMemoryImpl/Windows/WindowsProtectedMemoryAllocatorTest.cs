@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
@@ -9,7 +11,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
     [Collection("Logger Fixture collection")]
     public class WindowsProtectedMemoryAllocatorTest : IDisposable
     {
-        private WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
+        private readonly WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
 
         public WindowsProtectedMemoryAllocatorTest()
         {
@@ -17,9 +19,15 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { "minimumWorkingSetSize", "33554430"},
+                { "maximumWorkingSetSize", "67108860"},
+            }).Build();
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc();
+                windowsProtectedMemoryAllocator = new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
             }
         }
 
