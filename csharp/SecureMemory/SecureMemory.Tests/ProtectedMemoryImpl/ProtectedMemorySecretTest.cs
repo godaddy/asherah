@@ -31,7 +31,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var configDictionary = new Dictionary<string,string>();
             configDictionary["debugSecrets"] = "true";
             configDictionary["requireSecretDisposal"] = "true";
-
+            configDictionary["heapSize"] = "32000";
+            configDictionary["minimumAllocationSize"] = "128";
             configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)
                 .Build();
