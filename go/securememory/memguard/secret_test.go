@@ -178,21 +178,25 @@ func (m *MockMemcall) Alloc(size int) ([]byte, error) {
 }
 
 func (m *MockMemcall) Protect(b []byte, mpf memcall.MemoryProtectionFlag) error {
-	args := m.Called(b, mpf)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything, mpf)
 	return args.Error(0)
 }
 
 func (m *MockMemcall) Lock(b []byte) error {
+	// b is owned by memguard, so we MUST not access here to prevent segfault
 	return nil
 }
 
 func (m *MockMemcall) Unlock(b []byte) error {
-	args := m.Called(b)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything)
 	return args.Error(0)
 }
 
 func (m *MockMemcall) Free(b []byte) error {
-	args := m.Called(b)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything)
 	return args.Error(0)
 }
 
