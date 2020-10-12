@@ -47,6 +47,7 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
     }
   }
 
+  @Override
   public byte[] decrypt(final byte[] input, final CryptoKey key) {
     byte[] nonce = getAppendedNonce(input);
     AEADBlockCipher cipher = getNewAeadBlockCipherInstance();
