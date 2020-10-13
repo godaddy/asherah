@@ -199,6 +199,8 @@ func (s *secretInternal) close() (err error) {
 	s.bytes = nil
 	s.closed = true
 
+	securememory.InUseCounter.Dec(1)
+
 	return nil
 }
 
@@ -241,6 +243,7 @@ func (f *SecretFactory) New(b []byte) (securememory.Secret, error) {
 	}
 
 	securememory.AllocCounter.Inc(1)
+	securememory.InUseCounter.Inc(1)
 
 	return secret, nil
 }
@@ -285,6 +288,7 @@ func (f *SecretFactory) createRandom(size int, readFunc func(b []byte) (n int, e
 	}
 
 	securememory.AllocCounter.Inc(1)
+	securememory.InUseCounter.Inc(1)
 
 	return s, nil
 }
