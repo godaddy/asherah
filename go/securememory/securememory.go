@@ -7,8 +7,17 @@ import (
 )
 
 var (
-	// AllocCounter is used to track secret allocations.
+	// AllocCounter is used to track cumulative secret allocations.
+	//
+	// AllocCounter increases as secret objects are allocated, but unlike
+	// InUseCounter, it does not decrease as secrets are released.
 	AllocCounter = metrics.GetOrRegisterCounter("secret.allocated", nil)
+
+	// InUseCounter is used to track the number of secret objects currently in use.
+	//
+	// InUseCounter increases as secret objects are allocated and decreases
+	// as secrets are released.
+	InUseCounter = metrics.GetOrRegisterCounter("secret.inuse", nil)
 )
 
 // Secret contains sensitive memory and stores data in protected page(s) in memory.

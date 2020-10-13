@@ -91,12 +91,19 @@
         <!-- See http://checkstyle.sourceforge.net/config_annotation.html#SuppressWarningsHolder -->
         <module name="SuppressWarningsHolder" />
 
-        <!-- Checks for Javadoc comments.                     -->
-        <!-- See http://checkstyle.sf.net/config_javadoc.html -->
-        <!--<module name="JavadocMethod"/>-->
-        <!--<module name="JavadocType"/>-->
+        <!-- Checks for Javadoc comments. -->
+        <!-- See https://checkstyle.org/config_javadoc.html -->
+        <!--<module name="InvalidJavadocPosition"/>-->
+        <module name="JavadocMethod">
+            <property name="scope" value="public"/>
+        </module>
+        <module name="JavadocType"/>
         <!--<module name="JavadocVariable"/>-->
-        <!--<module name="JavadocStyle"/>-->
+        <module name="JavadocStyle"/>
+        <module name="MissingJavadocMethod">
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+        </module>
+        <module name="JavadocBlockTagLocation"/>
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->

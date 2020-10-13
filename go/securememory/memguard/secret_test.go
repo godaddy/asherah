@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/godaddy/asherah/go/securememory"
 	"github.com/godaddy/asherah/go/securememory/internal/memcall"
 )
 
@@ -17,6 +18,52 @@ const keySize = 32
 
 var factory = new(SecretFactory)
 var errProtect = errors.New("error from protect")
+
+func TestMemguardSecret_Metrics(t *testing.T) {
+	// reset the counters
+	securememory.AllocCounter.Clear()
+	securememory.InUseCounter.Clear()
+
+	assert.Equal(t, int64(0), securememory.AllocCounter.Count())
+	assert.Equal(t, int64(0), securememory.InUseCounter.Count())
+
+	// count is the number of secrets per factory constructor (New and CreateRandom)
+	const count int64 = 10
+
+	func() {
+		for i := int64(0); i < count; i++ {
+			orig := []byte("testing")
+			copyBytes := make([]byte, len(orig))
+			copy(copyBytes, orig)
+
+			s, err := factory.New(orig)
+			require.NoError(t, err)
+
+			defer s.Close()
+
+			require.NoError(t, s.WithBytes(func(b []byte) error {
+				assert.Equal(t, copyBytes, b)
+				return nil
+			}))
+
+			r, err := factory.CreateRandom(8)
+			require.NoError(t, err)
+
+			defer r.Close()
+
+			require.NoError(t, r.WithBytes(func(b []byte) error {
+				assert.Equal(t, 8, len(b))
+				return nil
+			}))
+		}
+
+		assert.Equal(t, count*2, securememory.AllocCounter.Count())
+		assert.Equal(t, count*2, securememory.InUseCounter.Count())
+	}()
+
+	assert.Equal(t, count*2, securememory.AllocCounter.Count())
+	assert.Equal(t, int64(0), securememory.InUseCounter.Count())
+}
 
 func TestMemguardSecret_WithBytes(t *testing.T) {
 	orig := []byte("testing")
@@ -178,21 +225,25 @@ func (m *MockMemcall) Alloc(size int) ([]byte, error) {
 }
 
 func (m *MockMemcall) Protect(b []byte, mpf memcall.MemoryProtectionFlag) error {
-	args := m.Called(b, mpf)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything, mpf)
 	return args.Error(0)
 }
 
 func (m *MockMemcall) Lock(b []byte) error {
+	// b is owned by memguard, so we MUST not access here to prevent segfault
 	return nil
 }
 
 func (m *MockMemcall) Unlock(b []byte) error {
-	args := m.Called(b)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything)
 	return args.Error(0)
 }
 
 func (m *MockMemcall) Free(b []byte) error {
-	args := m.Called(b)
+	// b is owned by memguard, so we MUST not access here to prevent segfault
+	args := m.Called(mock.Anything)
 	return args.Error(0)
 }
 
