@@ -113,6 +113,8 @@ func (s *secret) Close() error {
 			// This panics on failure currently
 			s.buffer.Destroy()
 
+			securememory.InUseCounter.Dec(1)
+
 			return nil
 		}
 
@@ -204,6 +206,7 @@ func (f *SecretFactory) newFromBuffer(lb *memguard.LockedBuffer) (*secret, error
 	}
 
 	securememory.AllocCounter.Inc(1)
+	securememory.InUseCounter.Inc(1)
 
 	rw := new(sync.RWMutex)
 
