@@ -245,10 +245,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             Assert.Throws<Exception>(() =>
             {
-                ProtectedMemorySecret secret =
+                using ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(secretBytes, allocator, configuration);
-
-                secret.Close();
             });
         }
 
@@ -287,10 +285,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             Assert.Throws<Exception>(() =>
             {
-                ProtectedMemorySecret secret =
+                using ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(secretBytes, allocator, configuration);
-
-                secret.Close();
             });
         }
 
