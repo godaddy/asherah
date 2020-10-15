@@ -22,10 +22,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             : base(new LinuxOpenSSL11LP64())
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
-            if (openSSL11 == null)
-            {
-                throw new Exception("GetLibc returned null object for openSSL11");
-            }
 
             ulong heapSize;
             var heapSizeConfig = configuration["heapSize"];

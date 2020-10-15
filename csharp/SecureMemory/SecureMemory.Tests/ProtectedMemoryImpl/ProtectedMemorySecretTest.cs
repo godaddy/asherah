@@ -148,6 +148,60 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         [Theory]
         [ClassData(typeof(AllocatorGenerator))]
+        private void TestWithSecretIntPtrSuccess(IProtectedMemoryAllocator protectedMemoryAllocator)
+        {
+            Debug.WriteLine("TestWithSecretIntPtrSuccess");
+            char[] secretChars = { 'a', 'b' };
+            using (ProtectedMemorySecret secret =
+                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            {
+                secret.WithSecretIntPtr((ptr, len) =>
+                {
+                    Assert.NotEqual(ptr, IntPtr.Zero);
+                    Assert.True(len == 2);
+                    return true;
+                });
+            }
+        }
+
+        [Theory]
+        [ClassData(typeof(AllocatorGenerator))]
+        private void TestWithSecretIntPtrDisposed(IProtectedMemoryAllocator protectedMemoryAllocator)
+        {
+            Debug.WriteLine("TestWithSecretIntPtrDisposed");
+            char[] secretChars = { 'a', 'b' };
+            ProtectedMemorySecret secret =
+                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration);
+
+            secret.Dispose();
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                secret.WithSecretIntPtr((ptr, len) =>
+                {
+                    return true;
+                });
+            });
+        }
+
+        [Theory]
+        [ClassData(typeof(AllocatorGenerator))]
+        private void TestWithSecretIntPtrActionSuccess(IProtectedMemoryAllocator protectedMemoryAllocator)
+        {
+            Debug.WriteLine("TestWithSecretIntPtrActionSuccess");
+            char[] secretChars = { 'a', 'b' };
+            using (ProtectedMemorySecret secret =
+                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            {
+                secret.WithSecretIntPtr((ptr, len) =>
+                {
+                    Assert.NotEqual(ptr, IntPtr.Zero);
+                    Assert.True(len == 2);
+                });
+            }
+        }
+
+        [Theory]
+        [ClassData(typeof(AllocatorGenerator))]
         private void TestWithSecretUtf8CharsWithClosedSecretShouldFail(IProtectedMemoryAllocator protectedMemoryAllocator)
         {
             Debug.WriteLine("TestWithSecretUtf8CharsWithClosedSecretShouldFail");
@@ -245,10 +299,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             Assert.Throws<Exception>(() =>
             {
-                ProtectedMemorySecret secret =
+                using ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(secretBytes, allocator, configuration);
-
-                secret.Close();
             });
         }
 
@@ -287,10 +339,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             Assert.Throws<Exception>(() =>
             {
-                ProtectedMemorySecret secret =
+                using ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(secretBytes, allocator, configuration);
-
-                secret.Close();
             });
         }
 

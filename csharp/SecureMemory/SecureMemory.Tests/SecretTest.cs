@@ -58,5 +58,25 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             secretMock.Object.WithSecretUtf8Chars(actionWithSecret);
             Debug.WriteLine("TestWithSecretUtf8CharsActionOfChar: Finish\n");
         }
+
+        [Fact]
+        private void TestWithSecretIntPtrAction()
+        {
+            Debug.WriteLine("\nTestWithSecretIntPtrAction: Start");
+            char[] secretChars = { (char)0, (char)1 };
+
+            Action<IntPtr, ulong> actionWithSecret = (ptr, len) =>
+            {
+                Assert.Equal(IntPtr.Add(IntPtr.Zero, 1), ptr);
+                Assert.True(len == 1);
+            };
+
+            secretMock.Setup(x => x.WithSecretIntPtr(It.IsAny<Action<IntPtr, ulong>>())).CallBase();
+            secretMock.Setup(x => x.WithSecretIntPtr(It.IsAny<Func<IntPtr, ulong, bool>>()))
+                .Returns<Func<IntPtr, ulong, bool>>(action => action(
+                    IntPtr.Add(IntPtr.Zero, 1), 1));
+            secretMock.Object.WithSecretIntPtr(actionWithSecret);
+            Debug.WriteLine("TestWithSecretIntPtrActionOfChar: Finish\n");
+        }
     }
 }

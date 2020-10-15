@@ -23,6 +23,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS
         [DllImport("libc", EntryPoint = "memset_s", SetLastError = true)]
         private static extern int _memset_s(IntPtr dest, size_t destSize, int val, size_t count);
 
+        [ExcludeFromCodeCoverage]
         public int memset_s(IntPtr dest, size_t destSize, int val, size_t count)
         {
             return _memset_s(dest, destSize, val, count);
