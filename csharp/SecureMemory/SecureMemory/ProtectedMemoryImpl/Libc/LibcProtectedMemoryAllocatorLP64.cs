@@ -48,13 +48,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // ************************************
         public virtual IntPtr Alloc(ulong length)
         {
-            libc.getrlimit(GetMemLockLimit(), out var rlim);
-            if (rlim.rlim_max != rlimit.UNLIMITED && rlim.rlim_max < length)
-            {
-                throw new MemoryLimitException(
-                    $"Requested MemLock length exceeds resource limit max of {rlim.rlim_max}");
-            }
-
             // Some platforms may require fd to be -1 even if using anonymous
             IntPtr protectedMemory = libc.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
