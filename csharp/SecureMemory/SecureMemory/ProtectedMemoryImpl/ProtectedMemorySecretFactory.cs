@@ -153,6 +153,26 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                if (configuration != null)
+                {
+                    var secureHeapEngine = configuration["secureHeapEngine"];
+                    if (!string.IsNullOrWhiteSpace(secureHeapEngine))
+                    {
+                        if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            throw new PlatformNotSupportedException(
+                                "OpenSSL 1.1 selected for secureHeapEngine but not supported on Windows");
+                        }
+
+                        if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
+                        }
+
+                        throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
+                    }
+                }
+
                 return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
             }
 

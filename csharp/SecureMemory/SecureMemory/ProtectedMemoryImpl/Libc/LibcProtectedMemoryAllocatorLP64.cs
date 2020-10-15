@@ -9,8 +9,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 {
     internal abstract class LibcProtectedMemoryAllocatorLP64 : IProtectedMemoryAllocator
     {
-        private static readonly IntPtr InvalidPointer = new IntPtr(-1);
-
         private readonly LibcLP64 libc;
 
         private bool globallyDisabledCoreDumps = false;

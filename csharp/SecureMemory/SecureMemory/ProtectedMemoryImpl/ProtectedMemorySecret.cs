@@ -205,13 +205,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         protected virtual void Dispose(bool disposing)
         {
-            if (pointer == IntPtr.Zero)
-            {
-                return;
-            }
-
             if (!disposing)
             {
+                if (pointer == IntPtr.Zero)
+                {
+                    return;
+                }
+
                 if (requireSecretDisposal)
                 {
                     const string exceptionMessage = "FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
@@ -226,10 +226,15 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 pointerLock.EnterWriteLock();
                 try
                 {
+                    if (pointer == IntPtr.Zero)
+                    {
+                        return;
+                    }
 #if DEBUG
                     // TODO Add/uncomment this when we refactor logging to use static creation
                     // log.LogDebug("closing: {pointer}", ptr);
 #endif
+
                     // accessLock isn't needed here since we are holding the pointer lock in write
                     try
                     {

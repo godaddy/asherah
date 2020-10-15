@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -43,18 +44,50 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
         }
 
+        [SkippableFact]
+        private void TestOpenSSLConfiguration()
+        {
+            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"secureHeapEngine", "openssl11"}
+            }).Build();
+
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestOpenSSLConfiguration");
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+            }
+        }
+
+        [Fact]
+        private void TestMmapConfiguration()
+        {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"secureHeapEngine", "mmap"}
+            }).Build();
+
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+            }
+        }
+
         [Fact]
         private void TestInvalidConfiguration()
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
-                {"secureHeapEngine", "openssl11"}  // Note the missing "required" settings
+                {"secureHeapEngine", "magic-heap-engine2"}
             }).Build();
 
-            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestInvalidConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
+            Assert.Throws<PlatformNotSupportedException>(() =>
             {
-            }
+                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                {
+                }
+            });
         }
 
         [Fact]
