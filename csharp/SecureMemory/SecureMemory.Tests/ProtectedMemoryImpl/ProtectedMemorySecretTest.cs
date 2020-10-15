@@ -187,7 +187,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [ClassData(typeof(AllocatorGenerator))]
         private void TestWithSecretIntPtrActionSuccess(IProtectedMemoryAllocator protectedMemoryAllocator)
         {
-            Debug.WriteLine("TestWithSecretUtf8CharsSuccess");
+            Debug.WriteLine("TestWithSecretIntPtrActionSuccess");
             char[] secretChars = { 'a', 'b' };
             using (ProtectedMemorySecret secret =
                 ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
