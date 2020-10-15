@@ -12,7 +12,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 {
     internal class ProtectedMemorySecret : Secret
     {
-        private readonly ReaderWriterLockSlim accessLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly ReaderWriterLockSlim pointerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly object accessLock = new object();
         private readonly ulong length;
         private readonly IProtectedMemoryAllocator allocator;
         private readonly IConfiguration configuration;
@@ -82,11 +83,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override TResult WithSecretBytes<TResult>(Func<byte[], TResult> funcWithSecret)
         {
-            if (pointer == IntPtr.Zero)
-            {
-                throw new InvalidOperationException("Attempt to access disposed secret");
-            }
-
             // Defend against truncation with Marshal.Copy below
             if (length > int.MaxValue)
             {
@@ -97,9 +93,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
             try
             {
-                accessLock.EnterReadLock();
+                pointerLock.EnterReadLock();
                 try
                 {
+                    if (pointer == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Attempt to access disposed secret");
+                    }
+
                     SetReadAccessIfNeeded();
                     try
                     {
@@ -112,7 +113,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 }
                 finally
                 {
-                    accessLock.ExitReadLock();
+                    pointerLock.ExitReadLock();
                 }
 
                 return funcWithSecret(bytes);
@@ -126,11 +127,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override TResult WithSecretUtf8Chars<TResult>(Func<char[], TResult> funcWithSecret)
         {
-            if (pointer == IntPtr.Zero)
-            {
-                throw new InvalidOperationException("Attempt to access disposed secret");
-            }
-
             return WithSecretBytes(bytes =>
             {
                 char[] chars = Encoding.UTF8.GetChars(bytes);
@@ -149,14 +145,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override TResult WithSecretIntPtr<TResult>(Func<IntPtr, ulong, TResult> funcWithSecret)
         {
-            if (pointer == IntPtr.Zero)
-            {
-                throw new InvalidOperationException("Attempt to access disposed secret");
-            }
-
-            accessLock.EnterReadLock();
+            pointerLock.EnterReadLock();
             try
             {
+                if (pointer == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Attempt to access disposed secret");
+                }
+
                 SetReadAccessIfNeeded();
                 try
                 {
@@ -169,7 +165,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             }
             finally
             {
-                accessLock.ExitReadLock();
+                pointerLock.ExitReadLock();
             }
         }
 
@@ -226,13 +222,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             }
             else
             {
-                accessLock.EnterWriteLock();
+                pointerLock.EnterWriteLock();
                 try
                 {
 #if DEBUG
                     // TODO Add/uncomment this when we refactor logging to use static creation
                     // log.LogDebug("closing: {pointer}", ptr);
 #endif
+                    // accessLock isn't needed here since we are holding the pointer lock in write
                     try
                     {
                         allocator.SetReadWriteAccess(pointer, length);
@@ -245,7 +242,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 }
                 finally
                 {
-                    accessLock.ExitWriteLock();
+                    pointerLock.ExitWriteLock();
                 }
             }
         }
@@ -274,19 +271,31 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         private void SetReadAccessIfNeeded()
         {
-            // Only set read access if we're the first one trying to access this potentially-shared Secret
-            if (Interlocked.Increment(ref accessCounter) == 1)
+            // accessLock protects concurrent readers from changing access permissions at the same time
+            // while holding the pointerLock in read mode
+            lock (accessLock)
             {
-                allocator.SetReadAccess(pointer, length);
+                // Only set read access if we're the first one trying to access this potentially-shared Secret
+                accessCounter++;
+                if (accessCounter == 1)
+                {
+                    allocator.SetReadAccess(pointer, length);
+                }
             }
         }
 
         private void SetNoAccessIfNeeded()
         {
-            // Only set no access if we're the last one trying to access this potentially-shared Secret
-            if (Interlocked.Decrement(ref accessCounter) == 0)
+            // accessLock protects concurrent readers from changing access permissions at the same time
+            // while holding the pointerLock in read mode
+            lock (accessLock)
             {
-                allocator.SetNoAccess(pointer, length);
+                // Only set no access if we're the last one trying to access this potentially-shared Secret
+                accessCounter--;
+                if (accessCounter == 0)
+                {
+                    allocator.SetNoAccess(pointer, length);
+                }
             }
         }
     }
