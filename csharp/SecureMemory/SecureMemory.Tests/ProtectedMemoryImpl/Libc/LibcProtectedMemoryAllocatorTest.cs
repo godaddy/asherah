@@ -134,7 +134,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         {
             Skip.If(libc == null);
 
-            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestFreeWithInvalidLengthShouldFail");
 
             IntPtr fakePtr = IntPtr.Add(IntPtr.Zero, 1);
             Assert.Throws<LibcOperationFailedException>(() => libcProtectedMemoryAllocator.Free(fakePtr, 0));
