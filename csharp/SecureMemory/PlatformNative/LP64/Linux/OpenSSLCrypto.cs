@@ -24,14 +24,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
             return _EVP_CIPHER_CTX_new();
         }
 
-        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_reset", SetLastError = true)]
-        private static extern int _EVP_CIPHER_CTX_reset(IntPtr ctx);
-
-        public int EVP_CIPHER_CTX_reset(IntPtr ctx)
-        {
-            return _EVP_CIPHER_CTX_reset(ctx);
-        }
-
         [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_free", SetLastError = true)]
         private static extern void _EVP_CIPHER_CTX_free(IntPtr ctx);
 
@@ -126,14 +118,6 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         public int RAND_bytes(IntPtr buf, int num)
         {
             return _RAND_bytes(buf, num);
-        }
-
-        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_block_size", SetLastError = true)]
-        private static extern int _EVP_CIPHER_CTX_block_size(IntPtr e);
-
-        public int EVP_CIPHER_CTX_block_size(IntPtr e)
-        {
-            return _EVP_CIPHER_CTX_block_size(e);
         }
 
         [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_block_size", SetLastError = true)]

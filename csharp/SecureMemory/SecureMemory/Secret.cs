@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
@@ -7,6 +8,8 @@ namespace GoDaddy.Asherah.SecureMemory
         public abstract TResult WithSecretBytes<TResult>(Func<byte[], TResult> funcWithSecret);
 
         public abstract TResult WithSecretUtf8Chars<TResult>(Func<char[], TResult> funcWithSecret);
+
+        public abstract TResult WithSecretIntPtr<TResult>(Func<IntPtr, ulong, TResult> funcWithSecret);
 
         public virtual void WithSecretBytes(Action<byte[]> actionWithSecret)
         {
@@ -22,6 +25,15 @@ namespace GoDaddy.Asherah.SecureMemory
             WithSecretUtf8Chars(chars =>
             {
                 actionWithSecret(chars);
+                return true;
+            });
+        }
+
+        public virtual void WithSecretIntPtr(Action<IntPtr, ulong> actionWithSecret)
+        {
+            WithSecretIntPtr((ptr, len) =>
+            {
+                actionWithSecret(ptr, len);
                 return true;
             });
         }
