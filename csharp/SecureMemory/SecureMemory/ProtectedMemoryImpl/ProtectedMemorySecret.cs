@@ -275,20 +275,16 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private void SetReadAccessIfNeeded()
         {
             // Only set read access if we're the first one trying to access this potentially-shared Secret
-            if (accessCounter == 0)
+            if (Interlocked.Increment(ref accessCounter) == 1)
             {
                 allocator.SetReadAccess(pointer, length);
             }
-
-            accessCounter++;
         }
 
         private void SetNoAccessIfNeeded()
         {
-            accessCounter--;
-
             // Only set no access if we're the last one trying to access this potentially-shared Secret
-            if (accessCounter == 0)
+            if (Interlocked.Decrement(ref accessCounter) == 0)
             {
                 allocator.SetNoAccess(pointer, length);
             }
