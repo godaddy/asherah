@@ -66,6 +66,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 finally
                 {
                     this.allocator.Free(pointer, length);
+                    pointer = IntPtr.Zero;
                 }
 
                 throw;
