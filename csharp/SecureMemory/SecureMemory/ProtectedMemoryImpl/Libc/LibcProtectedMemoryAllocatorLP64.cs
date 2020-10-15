@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -9,18 +10,24 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 {
     internal abstract class LibcProtectedMemoryAllocatorLP64 : IProtectedMemoryAllocator
     {
+        private static long resourceLimit;
+        private static long memoryLocked;
         private readonly LibcLP64 libc;
-
         private bool globallyDisabledCoreDumps = false;
 
         protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc)
         {
-            if (libc == null)
-            {
-                throw new ArgumentNullException(nameof(libc));
-            }
+            this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
 
-            this.libc = libc;
+            libc.getrlimit(GetMemLockLimit(), out var rlim);
+            if (rlim.rlim_max == rlimit.UNLIMITED)
+            {
+                resourceLimit = 0;
+            }
+            else
+            {
+                resourceLimit = (long)rlim.rlim_max;
+            }
         }
 
         // Implementation order of preference:
@@ -48,6 +55,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         // ************************************
         public virtual IntPtr Alloc(ulong length)
         {
+            if (Interlocked.Read(ref memoryLocked) + (long)length > resourceLimit)
+            {
+                throw new MemoryLimitException(
+                    $"Requested MemLock length exceeds resource limit max of {resourceLimit}");
+            }
+
             // Some platforms may require fd to be -1 even if using anonymous
             IntPtr protectedMemory = libc.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
@@ -59,11 +72,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
                 try
                 {
+                    Interlocked.Add(ref memoryLocked, (long)length);
                     SetNoDump(protectedMemory, length);
                 }
                 catch (Exception e)
                 {
                     Check.Zero(libc.munlock(protectedMemory, length), "munlock", e);
+                    Interlocked.Add(ref memoryLocked, 0 - (long)length);
                     throw;
                 }
             }
@@ -91,6 +106,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
                     // Unlock the protected memory
                     Check.Zero(libc.munlock(pointer, length), "munlock");
+                    Interlocked.Add(ref memoryLocked, 0 - (long)length);
                 }
                 finally
                 {
