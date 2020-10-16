@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.SecureMemory
 
         public abstract TResult WithSecretIntPtr<TResult>(Func<IntPtr, ulong, TResult> funcWithSecret);
 
-        public void WithSecretBytes(Action<byte[]> actionWithSecret)
+        public virtual void WithSecretBytes(Action<byte[]> actionWithSecret)
         {
             WithSecretBytes(bytes =>
             {
@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.SecureMemory
             });
         }
 
-        public void WithSecretUtf8Chars(Action<char[]> actionWithSecret)
+        public virtual void WithSecretUtf8Chars(Action<char[]> actionWithSecret)
         {
             WithSecretUtf8Chars(chars =>
             {
@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory
             });
         }
 
-        public void WithSecretIntPtr(Action<IntPtr, ulong> actionWithSecret)
+        public virtual void WithSecretIntPtr(Action<IntPtr, ulong> actionWithSecret)
         {
             WithSecretIntPtr((ptr, len) =>
             {
