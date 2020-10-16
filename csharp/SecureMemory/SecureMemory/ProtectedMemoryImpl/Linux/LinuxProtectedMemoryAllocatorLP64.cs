@@ -47,7 +47,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
             if (systemInterface == null)
             {
-                throw new ArgumentNullException(nameof(libc));
+                throw new ArgumentNullException(nameof(systemInterface));
             }
         }
 
