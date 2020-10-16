@@ -29,7 +29,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
     // /usr/include/x86_64-linux-gnu/bits/mman.h:       #define  MAP_HUGETLB    0x40000     /* Create huge page mapping.  */
     // /usr/include/x86_64-linux-gnu/sys/mman.h:        #define  MAP_FAILED     ((void *) -1)
     [Flags]
-    public enum MmapFlags : int
+    public enum MmapFlags
     {
         MAP_SHARED = 0x01,
         MAP_PRIVATE = 0x02,

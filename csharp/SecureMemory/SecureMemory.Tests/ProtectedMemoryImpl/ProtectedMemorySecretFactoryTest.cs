@@ -48,13 +48,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestOpenSSLConfiguration()
         {
             Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"secureHeapEngine", "openssl11"}
             }).Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestOpenSSLConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            using (var factory = new ProtectedMemorySecretFactory(config))
             {
             }
         }
@@ -62,13 +62,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestMmapConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"secureHeapEngine", "mmap"}
             }).Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            using (var factory = new ProtectedMemorySecretFactory(config))
             {
             }
         }
@@ -76,7 +76,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestInvalidConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"secureHeapEngine", "magic-heap-engine2"}
             }).Build();
@@ -84,7 +84,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
             Assert.Throws<PlatformNotSupportedException>(() =>
             {
-                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                using (var factory = new ProtectedMemorySecretFactory(config))
                 {
                 }
             });
@@ -113,6 +113,50 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [Fact]
+        private void TestCreateSecretIntPtr()
+        {
+            var bytes = new byte[] {0, 1};
+            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretIntPtr");
+                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                {
+                    using Secret secret = factory.CreateSecret(handle.AddrOfPinnedObject(), (ulong)bytes.LongLength);
+                    Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        [Fact]
+        private void TestCreateSecretIntPtrZero()
+        {
+            var bytes = new byte[] { 0, 1 };
+            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            var ptr = IntPtr.Zero;
+            var len = 100;
+            try
+            {
+                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretByteArray");
+                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                {
+                    Assert.Throws<ArgumentNullException>(() =>
+                    {
+                        using Secret secret = factory.CreateSecret(ptr, (ulong)len);
+                    });
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        [Fact]
         private void TestDoubleDispose()
         {
             var factory = new ProtectedMemorySecretFactory(configuration);
@@ -120,6 +164,42 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Assert.Throws<Exception>(() => {
                 factory.Dispose();
              });
+        }
+
+        [Fact]
+        private void TestMultipleRefCount()
+        {
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+                using (var factory2 = new ProtectedMemorySecretFactory(configuration))
+                {
+                }
+            }
+        }
+
+        [Fact]
+        private void TestRequiredDisposeIntPtrSuccess()
+        {
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"requireSecretDisposal", "true"}
+            }).Build();
+
+            var bytes = new byte[] {0, 1};
+            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestRequiredDisposeIntPtrSuccess");
+                using (var factory = new ProtectedMemorySecretFactory(config))
+                {
+                    using Secret secret = factory.CreateSecret(handle.AddrOfPinnedObject(), (ulong)bytes.LongLength);
+                    Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
     }
 }

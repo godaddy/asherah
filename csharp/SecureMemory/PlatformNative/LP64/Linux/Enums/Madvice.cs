@@ -24,7 +24,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:# define MADV_DONTDUMP    16    /* Explicity exclude from the core dump,
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:# define MADV_DODUMP      17    /* Clear the MADV_DONTDUMP flag.  */
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:# define MADV_HWPOISON    100    /* Poison a page for testing.  */
-    public enum Madvice : int
+    public enum Madvice
     {
         POSIX_MADV_NORMAL = 0,
         POSIX_MADV_RANDOM = 1,

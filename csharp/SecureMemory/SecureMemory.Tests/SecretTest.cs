@@ -63,7 +63,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestWithSecretIntPtrAction()
         {
             Debug.WriteLine("\nTestWithSecretIntPtrAction: Start");
-            char[] secretChars = { (char)0, (char)1 };
 
             Action<IntPtr, ulong> actionWithSecret = (ptr, len) =>
             {

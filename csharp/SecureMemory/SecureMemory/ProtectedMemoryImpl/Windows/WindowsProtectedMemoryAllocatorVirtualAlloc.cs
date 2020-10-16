@@ -1,7 +1,4 @@
-using System;
-using System.Runtime.InteropServices;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
+using GoDaddy.Asherah.PlatformNative;
 using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
@@ -11,73 +8,39 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         private const int DefaultMaximumWorkingSetSize = 67108860;
         private const int DefaultMinimumWorkingSetSize = 33554430;
 
-        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration)
+        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration, SystemInterface systemInterface)
+            : base(systemInterface)
         {
-            UIntPtr min = UIntPtr.Zero;
-            UIntPtr max = UIntPtr.Zero;
-            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
-            var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
-            if (!result)
-            {
-                throw new Exception("GetProcessWorkingSetSize failed");
-            }
+            ulong min = 0;
 
             var minConfig = configuration["minimumWorkingSetSize"];
             if (!string.IsNullOrWhiteSpace(minConfig))
             {
-                min = new UIntPtr(ulong.Parse(minConfig));
+                min = ulong.Parse(minConfig);
             }
             else
             {
-                if (min.ToUInt64() < DefaultMinimumWorkingSetSize)
+                if (min < DefaultMinimumWorkingSetSize)
                 {
-                    min = new UIntPtr(DefaultMinimumWorkingSetSize);
+                    min = DefaultMinimumWorkingSetSize;
                 }
             }
 
+            ulong max = 0;
             var maxConfig = configuration["maximumWorkingSetSize"];
             if (!string.IsNullOrWhiteSpace(maxConfig))
             {
-                max = new UIntPtr(ulong.Parse(maxConfig));
+                max = ulong.Parse(maxConfig);
             }
             else
             {
-                if (max.ToUInt64() < DefaultMaximumWorkingSetSize)
+                if (max < DefaultMaximumWorkingSetSize)
                 {
-                    max = new UIntPtr(DefaultMaximumWorkingSetSize);
+                    max = DefaultMaximumWorkingSetSize;
                 }
             }
 
-            result = WindowsInterop.SetProcessWorkingSetSize(hProcess, min, max);
-            if (!result)
-            {
-                throw new Exception($"SetProcessWorkingSetSize({min.ToUInt64()},{max.ToUInt64()}) failed");
-            }
-        }
-
-        public override IntPtr Alloc(ulong length)
-        {
-            length = AdjustLength(length);
-
-            var result = WindowsInterop.VirtualAlloc(IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_EXECUTE_READWRITE);
-            if (result == IntPtr.Zero || result == InvalidPointer)
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("VirtualAlloc", (long)result, errno);
-            }
-
-            return result;
-        }
-
-        public override void Free(IntPtr pointer, ulong length)
-        {
-            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
-
-            if (!WindowsInterop.VirtualFree(pointer, UIntPtr.Zero, AllocationType.RELEASE))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("VirtualFree", 0L, errno);
-            }
+            SystemInterface.SetMemoryLockLimit(max);
         }
     }
 }

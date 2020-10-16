@@ -4,27 +4,26 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using size_t = System.UInt64;
 
-namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
+namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
-    public class LinuxOpenSSL11LP64 : LinuxLibcLP64
+    public class LinuxOpenSSL11LP64
     {
         public const string LibraryName = "libcrypto.so.1.1";
 
-        public static bool IsAvailable()
+        public LinuxOpenSSL11LP64()
         {
-            try
-            {
-                CRYPTO_secure_malloc_initialized();
-            }
-            catch (DllNotFoundException)
-            {
-                return false;
-            }
+            // ReSharper disable once VirtualMemberCallInConstructor
+            LibraryCheck();
+        }
 
-            return true;
+        // This is virtual for testing library-not-found
+        // ReSharper disable once MemberCanBeProtected.Global
+        public virtual void LibraryCheck()
+        {
+            CRYPTO_secure_malloc_initialized();
         }
 
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_init", SetLastError = true)]

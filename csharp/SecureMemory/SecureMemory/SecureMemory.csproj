@@ -33,4 +33,8 @@
     <ProjectReference Include="..\PlatformNative\PlatformNative.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ProtectedMemoryImpl\MacOS\" />
+  </ItemGroup>
+
 </Project>

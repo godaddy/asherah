@@ -1,93 +1,81 @@
 using System;
-using System.Runtime.InteropServices;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
+using GoDaddy.Asherah.PlatformNative;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
     internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
-        protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
+        private ulong encryptedMemoryBlockSize;
 
-        public abstract IntPtr Alloc(ulong length);
+        protected WindowsProtectedMemoryAllocatorLLP64(SystemInterface systemInterface)
+        {
+            if (systemInterface == null)
+            {
+                throw new ArgumentNullException(nameof(systemInterface));
+            }
 
-        public abstract void Free(IntPtr pointer, ulong length);
+            SystemInterface = systemInterface;
+            encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
+        }
+
+        protected SystemInterface SystemInterface { get; }
+
+        public virtual IntPtr Alloc(ulong length)
+        {
+            // Adjust length to CryptProtect block size
+            length = AdjustLength(length);
+
+            return SystemInterface.PageAlloc(length);
+        }
+
+        public virtual void Free(IntPtr pointer, ulong length)
+        {
+            // Adjust length to CryptProtect block size
+            length = AdjustLength(length);
+
+            SystemInterface.ZeroMemory(pointer, length);
+            SystemInterface.PageFree(pointer, length);
+        }
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
-            }
-
-            UnlockMemory(pointer, length);
+            SystemInterface.ProcessEncryptMemory(pointer, length);
+            SystemInterface.UnlockMemory(pointer, length);
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            LockMemory(pointer, length);
+            SystemInterface.LockMemory(pointer, length);
 
-            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
-            }
+            SystemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            LockMemory(pointer, length);
+            SystemInterface.LockMemory(pointer, length);
 
-            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
-            }
+            SystemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
-            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
+            SystemInterface.ZeroMemory(pointer, length);
         }
 
         public void Dispose()
         {
         }
 
-        protected void LockMemory(IntPtr pointer, ulong length)
-        {
-            if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("VirtualLock", 0L, errno);
-            }
-        }
-
-        protected void UnlockMemory(IntPtr pointer, ulong length)
-        {
-            if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
-            {
-                var errno = Marshal.GetLastWin32Error();
-                if (errno == (int)VirtualUnlockErrors.ERROR_NOT_LOCKED)
-                {
-                    return;
-                }
-
-                throw new WindowsOperationFailedException("VirtualUnlock", 0L, errno);
-            }
-        }
-
         protected ulong AdjustLength(ulong length)
         {
-            return length % CryptProtect.BLOCKSIZE != 0
-                ? ((length / CryptProtect.BLOCKSIZE) + 1) * CryptProtect.BLOCKSIZE
+            return length % encryptedMemoryBlockSize != 0
+                ? ((length / encryptedMemoryBlockSize) + 1) * encryptedMemoryBlockSize
                 : length;
         }
     }

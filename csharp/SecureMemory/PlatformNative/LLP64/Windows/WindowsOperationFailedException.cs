@@ -1,7 +1,7 @@
 using System;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
+namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     public class WindowsOperationFailedException : LibcOperationFailedException
     {

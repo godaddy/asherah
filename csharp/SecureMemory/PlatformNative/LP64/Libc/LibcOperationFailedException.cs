@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
+namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 {
     public class LibcOperationFailedException : SystemException
     {
@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         }
 
         public LibcOperationFailedException(string methodName, long result, Exception exceptionInProgress)
-            : this(methodName, result, exceptionInProgress as object)
+            : base($"Libc call {methodName} failed with result {result}", exceptionInProgress)
         {
         }
 

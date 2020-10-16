@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
     // /usr/include/sys/mman.h:#define MADV_FREE_REUSE         8    /* caller wants to reuse those pages */
     // /usr/include/sys/mman.h:#define MADV_CAN_REUSE          9
     // /usr/include/sys/mman.h:#define MADV_PAGEOUT            10    /* page out now (internal only) */
-    public enum Madvice : int
+    public enum Madvice
     {
         POSIX_MADV_NORMAL = 0,
         POSIX_MADV_RANDOM = 1,

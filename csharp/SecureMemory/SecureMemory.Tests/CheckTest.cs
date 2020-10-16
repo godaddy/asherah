@@ -1,6 +1,6 @@
 using System;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
@@ -54,6 +54,17 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void CheckZero()
         {
             Check.Zero(0, "CheckZero");
+        }
+
+        [Fact]
+        private void CheckZeroException()
+        {
+            var exception = Assert.Throws<LibcOperationFailedException>(() =>
+            {
+                Check.Zero(10, "CheckBadZero", new Exception("Exception in progress to set as inner exception"));
+            });
+
+            Assert.NotNull(exception.InnerException);
         }
 
         [Fact]

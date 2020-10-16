@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
     // /usr/include/sys/mman.h:#define MAP_ANON          0x1000       /* allocated from memory, swap space */
     // /usr/include/sys/mman.h:#define MAP_ANONYMOUS     MAP_ANON
     [Flags]
-    public enum MmapFlags : int
+    public enum MmapFlags
     {
         MAP_SHARED = 0x0001,
         MAP_PRIVATE = 0x0002,

@@ -14,8 +14,16 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
-    public class LibcLP64
+    internal static class LibcLP64
     {
+        [DllImport("libc", EntryPoint = "memcpy", SetLastError = true)]
+        private static extern IntPtr _memcpy(IntPtr dest, IntPtr src, size_t len);
+
+        public static IntPtr memcpy(IntPtr dest, IntPtr src, size_t len)
+        {
+            return _memcpy(dest, src, len);
+        }
+
         // **********************************************************************************************
         // madvise
         // int madvise(void *addr, size_t length, int advice);
@@ -23,7 +31,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "madvise", SetLastError = true)]
         private static extern int _madvise(IntPtr addr, size_t length, int advice);
 
-        public int madvise(IntPtr addr, size_t length, int advice)
+        public static int madvise(IntPtr addr, size_t length, int advice)
         {
             return _madvise(addr, length, advice);
         }
@@ -36,7 +44,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "mlock", SetLastError = true)]
         private static extern int _mlock(IntPtr start, size_t len);
 
-        public int mlock(IntPtr start, size_t len)
+        public static int mlock(IntPtr start, size_t len)
         {
             return _mlock(start, len);
         }
@@ -49,7 +57,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "munlock", SetLastError = true)]
         private static extern int _munlock(IntPtr start, size_t len);
 
-        public int munlock(IntPtr start, size_t len)
+        public static int munlock(IntPtr start, size_t len)
         {
             return _munlock(start, len);
         }
@@ -62,7 +70,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "mmap", SetLastError = true)]
         private static extern IntPtr _mmap(IntPtr start, size_t length, int prot, int flags, int fd, off_t offset);
 
-        public IntPtr mmap(IntPtr start, size_t length, int prot, int flags, int fd, off_t offset)
+        public static IntPtr mmap(IntPtr start, size_t length, int prot, int flags, int fd, off_t offset)
         {
             return _mmap(start, length, prot, flags, fd, offset);
         }
@@ -75,7 +83,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "munmap", SetLastError = true)]
         private static extern int _munmap(IntPtr start, size_t length);
 
-        public int munmap(IntPtr start, size_t length)
+        public static int munmap(IntPtr start, size_t length)
         {
             return _munmap(start, length);
         }
@@ -88,7 +96,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "mprotect", SetLastError = true)]
         private static extern int _mprotect(IntPtr start, size_t len, int prots);
 
-        public int mprotect(IntPtr start, size_t len, int prots)
+        public static int mprotect(IntPtr start, size_t len, int prots)
         {
             return _mprotect(start, len, prots);
         }
@@ -100,7 +108,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "setrlimit", SetLastError = true)]
         private static extern int _setrlimit(int resource, IntPtr rlp);
 
-        public int setrlimit(int resource, rlimit rlp)
+        public static int setrlimit(int resource, rlimit rlp)
         {
             // Explicit boxing
             object rlpObj = rlp;
@@ -124,7 +132,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [DllImport("libc", EntryPoint = "getrlimit", SetLastError = true)]
         private static extern int _getrlimit(int resource, IntPtr rlp);
 
-        public int getrlimit(int resource, out rlimit rlim)
+        public static int getrlimit(int resource, out rlimit rlim)
         {
             var output = default(rlimit);
             rlim = output;
@@ -144,6 +152,33 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
             {
                 handle.Free();
             }
+        }
+
+        // **********************************************************************************************
+        // bzero - NOTE: Linux only!
+        // void bzero(void *s, size_t n);
+        // http://man7.org/linux/man-pages/man3/bzero.3.html
+        // **********************************************************************************************
+        [DllImport("libc", EntryPoint = "bzero", SetLastError = true)]
+        private static extern int _bzero(IntPtr s, size_t n);
+
+        public static void bzero(IntPtr start, size_t len)
+        {
+            _bzero(start, len);
+        }
+
+        // **********************************************************************************************
+        // memset_s - NOTE: MacOS only!
+        // errno_t memset_s( void *dest, rsize_t destsz, int ch, rsize_t count );
+        // http://en.cppreference.com/w/c/string/byte/memset
+        // **********************************************************************************************
+        [DllImport("libc", EntryPoint = "memset_s", SetLastError = true)]
+        private static extern int _memset_s(IntPtr dest, size_t destSize, int val, size_t count);
+
+        [ExcludeFromCodeCoverage]
+        public static int memset_s(IntPtr dest, size_t destSize, int val, size_t count)
+        {
+            return _memset_s(dest, destSize, val, count);
         }
     }
 }

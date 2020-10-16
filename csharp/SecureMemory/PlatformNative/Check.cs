@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.PlatformNative
 {
     public static class Check
     {

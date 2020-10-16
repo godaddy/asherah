@@ -1,27 +1,48 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using GoDaddy.Asherah.PlatformNative.LP64.Linux;
+using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using Microsoft.Extensions.Configuration;
-
-[assembly: InternalsVisibleTo("SecureMemory.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 {
-    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LinuxProtectedMemoryAllocatorLP64
+    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
     {
         private const ulong DefaultHeapSize = 32768;
         private const int DefaultMinimumAllocationSize = 32;
         private readonly ulong blockSize;
-        private LinuxOpenSSL11LP64 openSSL11;
-        private OpenSSLCryptProtectMemory cryptProtectMemory;
+        private readonly LinuxOpenSSL11LP64 openSSL11;
+        private readonly OpenSSLCryptProtectMemory cryptProtectMemory;
         private bool disposedValue;
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
-            : base(new LinuxOpenSSL11LP64())
+            : this(configuration, SystemInterface.GetInstance(), new LinuxOpenSSL11LP64())
         {
-            openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
+        }
+
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
+            : this(configuration, systemInterface, new LinuxOpenSSL11LP64())
+        {
+        }
+
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(
+            IConfiguration configuration,
+            SystemInterface systemInterface,
+            LinuxOpenSSL11LP64 libc)
+            : base(systemInterface)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            if (systemInterface == null)
+            {
+                throw new ArgumentNullException(nameof(systemInterface));
+            }
+
+            openSSL11 = libc;
 
             ulong heapSize;
             var heapSizeConfig = configuration["heapSize"];
@@ -50,7 +71,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
             Check.Result(openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
 
-            cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", this);
+            cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
             blockSize = (ulong)cryptProtectMemory.GetBlockSize();
         }
 
@@ -58,11 +79,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Finalizer");
             Dispose(disposing: false);
-        }
-
-        public static bool IsAvailable()
-        {
-            return LinuxOpenSSL11LP64.IsAvailable();
         }
 
         public override void SetNoAccess(IntPtr pointer, ulong length)
@@ -138,7 +154,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
-                SetNoDump(protectedMemory, length);
+                SystemInterface.SetNoDump(protectedMemory, length);
             }
             catch (Exception)
             {
@@ -165,14 +181,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
         }
 
-        public override void Dispose()
-        {
-            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Dispose");
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose({disposing})");
             if (disposing)
@@ -183,11 +192,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     cryptProtectMemory.Dispose();
                 }
             }
-        }
-
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // CRYPTO_secure_clear_free includes ZeroMemory functionality
         }
     }
 }

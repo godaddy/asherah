@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:#define PROT_GROWSDOWN   0x01000000    /* Extend change to start of
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:#define PROT_GROWSUP     0x02000000    /* Extend change to start of
     [Flags]
-    public enum MmapProts : int
+    public enum MmapProts
     {
         PROT_NONE = 0x0,
         PROT_READ = 0x01,

@@ -2,34 +2,28 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using GoDaddy.Asherah.PlatformNative.LP64.Linux;
-using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
+using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
+namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 {
     public class OpenSSLCryptProtectMemory : IDisposable
     {
-        private readonly ulong pageSize = (ulong)Environment.SystemPageSize;
-        private OpenSSLCrypto openSSLCrypto;
-        private IntPtr encryptCtx = IntPtr.Zero;
-        private IntPtr decryptCtx = IntPtr.Zero;
-        private IntPtr evpCipher = IntPtr.Zero;
-        private IntPtr key = IntPtr.Zero;
-        private IntPtr iv = IntPtr.Zero;
-        private int blockSize;
+        private readonly OpenSSLCrypto openSSLCrypto;
+        private readonly object cryptProtectLock = new object();
+        private readonly IntPtr iv;
+        private readonly int blockSize;
+        private readonly IntPtr evpCipher;
+        private readonly SystemInterface systemInterface;
+        private IntPtr encryptCtx;
+        private IntPtr decryptCtx;
+        private IntPtr key;
         private bool disposedValue;
-        private LinuxOpenSSL11LP64 openSSL11;
-        private object cryptProtectLock = new object();
-        private int protNone;
-        private int protRead;
 
-        internal OpenSSLCryptProtectMemory(string cipher, LinuxProtectedMemoryAllocatorLP64 allocator)
+        internal OpenSSLCryptProtectMemory(string cipher, SystemInterface systemInterface)
         {
-            openSSL11 = new LinuxOpenSSL11LP64();
             openSSLCrypto = new OpenSSLCrypto();
-
-            protNone = allocator.GetProtNoAccess();
-            protRead = allocator.GetProtRead();
+            this.systemInterface = systemInterface;
 
             evpCipher = openSSLCrypto.EVP_get_cipherbyname(cipher);
             Check.IntPtr(evpCipher, "EVP_get_cipherbyname");
@@ -44,14 +38,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             int ivSize = openSSLCrypto.EVP_CIPHER_iv_length(evpCipher);
             Debug.WriteLine("IV length: " + ivSize);
 
-            key = openSSL11.mmap(IntPtr.Zero, pageSize, allocator.GetProtReadWrite(), allocator.GetPrivateAnonymousFlags(), -1, 0);
+            key = systemInterface.PageAlloc((ulong)systemInterface.PageSize);
             Check.IntPtr(key, "mmap");
 
-            int result = openSSL11.mlock(key, pageSize);
-            Check.Result(result, 0, "mlock");
-
-            result = openSSL11.madvise(key, pageSize, (int)Madvice.MADV_DONTDUMP);
-            Check.Result(result, 0, "madvise");
+            systemInterface.LockMemory(key, (ulong)systemInterface.PageSize);
+            systemInterface.SetNoDump(key, (ulong)systemInterface.PageSize);
 
             iv = IntPtr.Add(key, keySize);
 
@@ -63,7 +54,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             decryptCtx = openSSLCrypto.EVP_CIPHER_CTX_new();
             Check.IntPtr(decryptCtx, "EVP_CIPHER_CTX_new decryptCtx");
 
-            result = openSSLCrypto.RAND_bytes(key, keySize);
+            var result = openSSLCrypto.RAND_bytes(key, keySize);
             Check.Result(result, 1, "RAND_bytes");
 
             result = openSSLCrypto.RAND_bytes(iv, ivSize);
@@ -94,13 +85,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
             {
-                openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
-                openSSL11.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
+                systemInterface.LockMemory(tmpBuffer, (ulong)length + (ulong)blockSize);
+                systemInterface.SetNoDump(tmpBuffer, (ulong)length + (ulong)blockSize);
 
                 lock (cryptProtectLock)
                 {
                     int finalOutputLength;
-                    openSSL11.mprotect(key, pageSize, protRead);
+                    systemInterface.SetReadAccess(key, (ulong)systemInterface.PageSize);
 
                     try
                     {
@@ -128,10 +119,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     }
                     finally
                     {
-                        openSSL11.mprotect(key, pageSize, protNone);
+                        systemInterface.SetNoAccess(key, (ulong)systemInterface.PageSize);
                     }
 
-                    openSSL11.memcpy(memory, tmpBuffer, (ulong)finalOutputLength);
+                    systemInterface.CopyMemory(tmpBuffer, memory, (ulong)finalOutputLength);
                 }
             }
             finally
@@ -154,13 +145,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
             {
-                openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
-                openSSL11.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
+                systemInterface.LockMemory(tmpBuffer, (ulong)length + (ulong)blockSize);
+                systemInterface.SetNoDump(tmpBuffer, (ulong)length + (ulong)blockSize);
 
                 lock (cryptProtectLock)
                 {
                     int finalDecryptedLength;
-                    openSSL11.mprotect(key, pageSize, protRead);
+                    systemInterface.SetReadAccess(key, (ulong)systemInterface.PageSize);
                     try
                     {
                         Debug.WriteLine("EVP_DecryptInit_ex");
@@ -179,16 +170,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                         IntPtr finalDecrypted = IntPtr.Add(tmpBuffer, decryptedLength);
                         Debug.WriteLine("EVP_DecryptFinal_ex");
                         result = openSSLCrypto.EVP_DecryptFinal_ex(decryptCtx, finalDecrypted, out finalDecryptedLength);
+                        Check.Result(result, 1, "EVP_DecryptFinal_ex");
                         finalDecryptedLength += decryptedLength;
                         Debug.WriteLine($"EVP_DecryptFinal_ex finalDecryptedLength = {finalDecryptedLength}");
                     }
                     finally
                     {
-                        openSSL11.mprotect(key, pageSize, protNone);
+                        systemInterface.SetNoAccess(key, (ulong)systemInterface.PageSize);
                     }
 
                     Debug.WriteLine("memcpy");
-                    openSSL11.memcpy(memory, tmpBuffer, (ulong)finalDecryptedLength);
+                    systemInterface.CopyMemory(tmpBuffer, memory, (ulong)finalDecryptedLength);
                 }
             }
             finally
@@ -207,17 +199,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             if (!disposedValue)
             {
-                LinuxOpenSSL11LP64 openSSL11ref = null;
+                SystemInterface disposeSystemInterface;
                 try
                 {
                     if (disposing)
                     {
-                        openSSL11ref = openSSL11;
+                        disposeSystemInterface = systemInterface;
                         Monitor.Enter(cryptProtectLock);
                     }
                     else
                     {
-                        openSSL11ref = new LinuxOpenSSL11LP64();
+                        disposeSystemInterface = SystemInterface.GetInstance();
                     }
 
                     Debug.WriteLine("EVP_CIPHER_CTX_free encryptCtx");
@@ -228,8 +220,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     openSSLCrypto.EVP_CIPHER_CTX_free(decryptCtx);
                     decryptCtx = IntPtr.Zero;
 
-                    Debug.WriteLine($"munmap({key}, {pageSize})");
-                    openSSL11ref.munmap(key, pageSize);
+                    Debug.WriteLine($"PageFree({key}, {disposeSystemInterface.PageSize})");
+                    disposeSystemInterface.PageFree(key, (ulong)disposeSystemInterface.PageSize);
                     key = IntPtr.Zero;
                 }
                 finally
