@@ -366,6 +366,59 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [Fact]
+        private void TestAllocatorIntPtrSetNoAccessFailure()
+        {
+            Debug.WriteLine("TestAllocatorSetNoAccessFailure");
+            byte[] secretBytes = { 0, 1 };
+            IProtectedMemoryAllocator allocator = null;
+
+            var handle = GCHandle.Alloc(secretBytes, GCHandleType.Pinned);
+            try
+            {
+                // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                        new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
+
+                    protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                        .Throws(new Exception());
+
+                    allocator = protectedMemoryAllocatorMacOSMock.Object;
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                        new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
+
+                    protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                        .Throws(new Exception());
+
+                    allocator = protectedMemoryAllocatorLinuxMock.Object;
+                }
+                else
+                {
+                    return;
+                }
+
+                Assert.Throws<Exception>(() =>
+                {
+                    using ProtectedMemorySecret secret =
+                        new ProtectedMemorySecret(
+                            handle.AddrOfPinnedObject(),
+                            (ulong)secretBytes.LongLength,
+                            allocator,
+                            SystemInterface.GetInstance(),
+                            configuration);
+                });
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        [Fact]
         private void TestAllocatorSetNoDumpFailure()
         {
             Debug.WriteLine("TestAllocatorSetNoDumpFailure");
