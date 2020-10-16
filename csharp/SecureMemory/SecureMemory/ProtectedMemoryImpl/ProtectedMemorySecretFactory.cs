@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
@@ -13,15 +14,16 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
     {
         // Detect methods should throw if they know for sure what the OS/platform is, but it isn't supported
         // Detect methods should return null if they don't know for sure what the OS/platform is
+        private static readonly object AllocatorLock = new object();
         private static IProtectedMemoryAllocator allocator;
+        private static SystemInterface systemInterface;
         private static int refCount = 0;
-        private static object allocatorLock = new object();
         private readonly IConfiguration configuration;
 
         public ProtectedMemorySecretFactory(IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
-            lock (allocatorLock)
+            lock (AllocatorLock)
             {
                 this.configuration = configuration;
                 if (allocator != null)
@@ -43,23 +45,30 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 Debug.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
                 refCount++;
                 Debug.WriteLine($"ProtectedMemorySecretFactory: Using new allocator refCount: {refCount}");
+
+                systemInterface = SystemInterface.GetInstance();
             }
+        }
+
+        public Secret CreateSecret(IntPtr secretData, ulong length)
+        {
+            return new ProtectedMemorySecret(secretData, length, allocator, systemInterface, configuration);
         }
 
         public Secret CreateSecret(byte[] secretData)
         {
-            return new ProtectedMemorySecret(secretData, allocator, configuration);
+            return new ProtectedMemorySecret(secretData, allocator, systemInterface, configuration);
         }
 
         public Secret CreateSecret(char[] secretData)
         {
-            return ProtectedMemorySecret.FromCharArray(secretData, allocator, configuration);
+            return ProtectedMemorySecret.FromCharArray(secretData, allocator, systemInterface, configuration);
         }
 
         public void Dispose()
         {
             Debug.WriteLine("ProtectedMemorySecretFactory: Dispose");
-            lock (allocatorLock)
+            lock (AllocatorLock)
             {
                 if (allocator == null)
                 {
@@ -90,7 +99,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 case PlatformID.MacOSX:
                     if (Environment.Is64BitProcess)
                     {
-                        return new MacOSProtectedMemoryAllocatorLP64();
+                        return new MacOSProtectedMemoryAllocatorLP64(systemInterface);
                     }
 
                     throw new PlatformNotSupportedException("Non-64bit process on macOS not supported");
@@ -141,7 +150,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on macOS X64 or Arm64");
                         }
 
-                        return new MacOSProtectedMemoryAllocatorLP64();
+                        return new MacOSProtectedMemoryAllocatorLP64(systemInterface);
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture macOS X86");
                     case Architecture.Arm:
@@ -166,14 +175,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                         if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
+                            return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface);
                         }
 
                         throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
                     }
                 }
 
-                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
+                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface);
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried
@@ -191,7 +200,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     {
                         if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                         {
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
                         }
 
                         throw new PlatformNotSupportedException(
@@ -200,14 +209,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                     if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
                     {
-                        return new LinuxProtectedMemoryAllocatorLP64();
+                        return new LinuxProtectedMemoryAllocatorLP64(systemInterface);
                     }
 
                     throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
                 }
             }
 
-            return new LinuxProtectedMemoryAllocatorLP64();
+            return new LinuxProtectedMemoryAllocatorLP64(systemInterface);
         }
 
         [ExcludeFromCodeCoverage]
@@ -230,7 +239,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (Environment.Is64BitProcess)
                 {
-                    return new MacOSProtectedMemoryAllocatorLP64();
+                    return new MacOSProtectedMemoryAllocatorLP64(systemInterface);
                 }
             }
 

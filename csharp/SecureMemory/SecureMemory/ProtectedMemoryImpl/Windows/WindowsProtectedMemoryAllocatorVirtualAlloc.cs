@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +12,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         private const int DefaultMaximumWorkingSetSize = 67108860;
         private const int DefaultMinimumWorkingSetSize = 33554430;
 
-        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration)
+        public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration, SystemInterface systemInterface)
+            : base(systemInterface)
         {
             UIntPtr min = UIntPtr.Zero;
             UIntPtr max = UIntPtr.Zero;
@@ -71,8 +73,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public override void Free(IntPtr pointer, ulong length)
         {
-            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
-
+            SystemInterface.ZeroMemory(pointer, length);
             if (!WindowsInterop.VirtualFree(pointer, UIntPtr.Zero, AllocationType.RELEASE))
             {
                 var errno = Marshal.GetLastWin32Error();

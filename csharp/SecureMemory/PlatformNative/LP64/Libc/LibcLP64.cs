@@ -16,6 +16,14 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
     public class LibcLP64
     {
+        [DllImport("libc", EntryPoint = "memcpy", SetLastError = true)]
+        private static extern IntPtr _memcpy(IntPtr dest, IntPtr src, size_t len);
+
+        public IntPtr memcpy(IntPtr dest, IntPtr src, size_t len)
+        {
+            return _memcpy(dest, src, len);
+        }
+
         // **********************************************************************************************
         // madvise
         // int madvise(void *addr, size_t length, int advice);

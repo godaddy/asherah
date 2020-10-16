@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -20,11 +21,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},
             }).Build();
-
+            var systemInterface = SystemInterface.GetInstance();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
             }
         }
 

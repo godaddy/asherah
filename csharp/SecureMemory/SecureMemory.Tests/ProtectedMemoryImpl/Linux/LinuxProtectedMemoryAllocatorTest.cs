@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Xunit;
 
@@ -16,11 +17,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
+            var systemInterface = SystemInterface.GetInstance();
 
             Debug.WriteLine("LinuxProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                linuxProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
+                linuxProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64(systemInterface);
             }
         }
 

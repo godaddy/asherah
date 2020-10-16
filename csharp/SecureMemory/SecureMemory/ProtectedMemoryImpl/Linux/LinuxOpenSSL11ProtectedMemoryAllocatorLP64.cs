@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using Microsoft.Extensions.Configuration;
 
@@ -18,8 +19,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private OpenSSLCryptProtectMemory cryptProtectMemory;
         private bool disposedValue;
 
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
-            : base(new LinuxOpenSSL11LP64())
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
+            : base(new LinuxOpenSSL11LP64(), systemInterface)
         {
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
 
@@ -183,11 +184,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     cryptProtectMemory.Dispose();
                 }
             }
-        }
-
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // CRYPTO_secure_clear_free includes ZeroMemory functionality
         }
     }
 }

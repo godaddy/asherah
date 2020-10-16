@@ -6,9 +6,6 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     public class WindowsInterop
     {
-        [DllImport("Kernel32.dll", EntryPoint="RtlZeroMemory", SetLastError=true, ExactSpelling=true)]
-        public static extern void ZeroMemory(IntPtr dest, UIntPtr size);
-
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
         public static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize, AllocationType flAllocationType, MemoryProtection flProtect);
 
@@ -38,5 +35,11 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         [DllImport("crypt32.dll", SetLastError=true)]
         public static extern bool CryptUnprotectMemory(IntPtr ptr, UIntPtr dwSize, CryptProtectMemoryOptions dwFlags);
+
+        [DllImport("Kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = true, ExactSpelling = true)]
+        internal static extern void ZeroMemory(IntPtr dest, UIntPtr size);
+
+        [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
+        internal static extern void CopyMemory(IntPtr dest, IntPtr src, UIntPtr count);
     }
 }

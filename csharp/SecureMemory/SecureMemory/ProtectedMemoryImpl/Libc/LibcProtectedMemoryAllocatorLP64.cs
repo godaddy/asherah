@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -15,9 +16,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         private readonly LibcLP64 libc;
         private bool globallyDisabledCoreDumps = false;
 
-        protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc)
+        protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc, SystemInterface systemInterface)
         {
             this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
+            SystemInterface = systemInterface;
 
             libc.getrlimit(GetMemLockLimit(), out var rlim);
             if (rlim.rlim_max == rlimit.UNLIMITED)
@@ -29,6 +31,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 resourceLimit = (long)rlim.rlim_max;
             }
         }
+
+        protected SystemInterface SystemInterface { get; }
 
         // Implementation order of preference:
         // memset_s (standards)
@@ -96,7 +100,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             try
             {
                 // Wipe the protected memory (assumes memory was made writeable)
-                ZeroMemory(pointer, length);
+                SystemInterface.ZeroMemory(pointer, length);
             }
             finally
             {
@@ -151,8 +155,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         internal abstract int GetPrivateAnonymousFlags();
 
         internal abstract int GetMemLockLimit();
-
-        protected abstract void ZeroMemory(IntPtr pointer, ulong length);
 
         protected LibcLP64 GetLibc()
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
@@ -22,15 +23,15 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
     {
         private readonly MacOSLibcLP64 libc;
 
-        public MacOSProtectedMemoryAllocatorLP64()
-            : base(new MacOSLibcLP64())
+        public MacOSProtectedMemoryAllocatorLP64(SystemInterface systemInterface)
+            : base(new MacOSLibcLP64(), systemInterface)
         {
             libc = (MacOSLibcLP64)GetLibc();
             DisableCoreDumpGlobally();
         }
 
-        public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc)
-            : base(libc)
+        public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc, SystemInterface systemInterface)
+            : base(libc, systemInterface)
         {
             this.libc = libc;
         }
@@ -82,13 +83,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
         internal override int GetMemLockLimit()
         {
             return (int)RlimitResource.RLIMIT_MEMLOCK;
-        }
-
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // This differs on different platforms
-            // MacOS has memset_s which is standardized and secure
-            libc.memset_s(pointer, length, 0, length);
         }
     }
 }

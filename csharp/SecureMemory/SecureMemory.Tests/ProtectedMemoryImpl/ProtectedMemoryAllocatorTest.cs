@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
@@ -44,17 +45,18 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         internal IProtectedMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
         {
+            var systemInterface = SystemInterface.GetInstance();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return new LinuxProtectedMemoryAllocatorLP64();
+                return new LinuxProtectedMemoryAllocatorLP64(systemInterface);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return new MacOSProtectedMemoryAllocatorLP64();
+                return new MacOSProtectedMemoryAllocatorLP64(systemInterface);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
+                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface);
             }
             else
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
@@ -21,22 +22,24 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 {"minimumAllocationSize", "128"},
             }).Build();
 
+            var systemInterface = SystemInterface.GetInstance();
+
             allocators = new List<object[]>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                allocators.Add(new object[] { new MacOSProtectedMemoryAllocatorLP64() });
+                allocators.Add(new object[] { new MacOSProtectedMemoryAllocatorLP64(systemInterface) });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
                 {
-                    allocators.Add(new object[] { new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration) });
+                    allocators.Add(new object[] { new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface) });
                 }
-                allocators.Add(new object[] { new LinuxProtectedMemoryAllocatorLP64() });
+                allocators.Add(new object[] { new LinuxProtectedMemoryAllocatorLP64(systemInterface) });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration) });
+                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface) });
             }
         }
 

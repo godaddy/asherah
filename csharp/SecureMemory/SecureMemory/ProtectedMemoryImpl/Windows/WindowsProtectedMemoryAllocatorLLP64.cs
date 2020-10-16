@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 
@@ -8,6 +9,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
     internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
         protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
+
+        protected WindowsProtectedMemoryAllocatorLLP64(SystemInterface systemInterface)
+        {
+            SystemInterface = systemInterface;
+        }
+
+        protected SystemInterface SystemInterface { get; }
 
         public abstract IntPtr Alloc(ulong length);
 
@@ -54,7 +62,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
-            WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
+            SystemInterface.ZeroMemory(pointer, length);
         }
 
         public void Dispose()

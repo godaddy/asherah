@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
@@ -24,15 +25,15 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private readonly int pageSize = Environment.SystemPageSize;
         private readonly LinuxLibcLP64 libc;
 
-        public LinuxProtectedMemoryAllocatorLP64()
-            : base(new LinuxLibcLP64())
+        public LinuxProtectedMemoryAllocatorLP64(SystemInterface systemInterface)
+            : base(new LinuxLibcLP64(), systemInterface)
         {
             Debug.WriteLine("LinuxProtectedMemoryAllocatorLP64 ctor");
             libc = (LinuxLibcLP64)GetLibc();
         }
 
-        public LinuxProtectedMemoryAllocatorLP64(LinuxLibcLP64 libc)
-            : base(libc)
+        public LinuxProtectedMemoryAllocatorLP64(LinuxLibcLP64 libc, SystemInterface systemInterface)
+            : base(libc, systemInterface)
         {
             this.libc = libc;
         }
@@ -91,20 +92,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         internal override int GetMemLockLimit()
         {
             return (int)RlimitResource.RLIMIT_MEMLOCK;
-        }
-
-        // Platform specific zero memory
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            Check.IntPtr(pointer, "ZeroMemory");
-            if (length < 1)
-            {
-                throw new Exception("ZeroMemory: Invalid length");
-            }
-
-            // Glibc bzero doesn't seem to be vulnerable to being optimized away
-            // Glibc doesn't seem to have explicit_bzero, memset_s, or memset_explicit
-            libc.bzero(pointer, length);
         }
     }
 }
