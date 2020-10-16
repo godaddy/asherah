@@ -133,6 +133,31 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         }
 
         [SkippableFact]
+        private void TestNullConfiguration()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+
+            Debug.WriteLine("\nTestNullConfiguration");
+
+            Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(null, systemInterface);
+            });
+        }
+
+        [SkippableFact]
+        private void TestNullSystemInterface()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+
+            Debug.WriteLine("TestNullSystemInterface");
+            Assert.Throws<Exception>(() =>
+            {
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, null);
+            });
+        }
+
+        [SkippableFact]
         private void TestAllocAfterDispose()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
