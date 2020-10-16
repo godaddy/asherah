@@ -141,15 +141,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestWithSecretUtf8CharsAction");
             char[] secretChars = { 'a', 'b' };
             using (ProtectedMemorySecret secret =
-<<<<<<< HEAD
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
-=======
                 ProtectedMemorySecret.FromCharArray(
                     (char[])secretChars.Clone(),
                     protectedMemoryAllocator,
                     SystemInterface.GetInstance(),
                     configuration))
->>>>>>> 727d35d... Start moving allocators to SystemInterface
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {
@@ -165,15 +161,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestWithSecretUtf8CharsSuccess");
             char[] secretChars = { 'a', 'b' };
             using (ProtectedMemorySecret secret =
-<<<<<<< HEAD
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
-=======
                 ProtectedMemorySecret.FromCharArray(
                     (char[])secretChars.Clone(),
                     protectedMemoryAllocator,
                     SystemInterface.GetInstance(),
                     configuration))
->>>>>>> 727d35d... Start moving allocators to SystemInterface
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {

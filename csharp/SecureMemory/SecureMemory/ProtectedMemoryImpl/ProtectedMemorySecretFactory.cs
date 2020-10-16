@@ -34,7 +34,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                 }
 
                 allocator = DetectViaRuntimeInformation(configuration)
-                         ?? DetectViaOsVersionPlatform(configuration)
+                         ?? DetectViaOsVersionPlatform()
                          ?? DetectOsDescription(configuration);
 
                 if (allocator == null)
@@ -92,7 +92,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
+        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform()
         {
             switch (Environment.OSVersion.Platform)
             {

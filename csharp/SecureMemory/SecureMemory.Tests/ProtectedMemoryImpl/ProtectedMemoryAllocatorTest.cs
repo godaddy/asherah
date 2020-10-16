@@ -34,7 +34,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }).Build();
 
             Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
-            protectedMemoryAllocator = GetPlatformAllocator(configuration);
+            protectedMemoryAllocator = GetPlatformAllocator();
         }
 
         public void Dispose()
@@ -43,7 +43,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocator.Dispose();
         }
 
-        internal IProtectedMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
+        internal IProtectedMemoryAllocator GetPlatformAllocator()
         {
             var systemInterface = SystemInterface.GetInstance();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -75,8 +75,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestTwoAllocatorInstances()
         {
-            var allocator1 = GetPlatformAllocator(configuration);
-            var allocator2 = GetPlatformAllocator(configuration);
+            var allocator1 = GetPlatformAllocator();
+            var allocator2 = GetPlatformAllocator();
             Assert.NotNull(allocator1);
             Assert.NotNull(allocator2);
             allocator1.Dispose();

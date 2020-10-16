@@ -21,19 +21,15 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
 
     internal class MacOSProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
     {
-        private readonly MacOSLibcLP64 libc;
-
         public MacOSProtectedMemoryAllocatorLP64(SystemInterface systemInterface)
             : base(new MacOSLibcLP64(), systemInterface)
         {
-            libc = (MacOSLibcLP64)GetLibc();
             DisableCoreDumpGlobally();
         }
 
         public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc, SystemInterface systemInterface)
             : base(libc, systemInterface)
         {
-            this.libc = libc;
         }
 
         public override void Dispose()

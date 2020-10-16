@@ -11,11 +11,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
     {
         private readonly ulong pageSize = (ulong)Environment.SystemPageSize;
         private OpenSSLCrypto openSSLCrypto;
-        private IntPtr encryptCtx = IntPtr.Zero;
-        private IntPtr decryptCtx = IntPtr.Zero;
-        private IntPtr evpCipher = IntPtr.Zero;
-        private IntPtr key = IntPtr.Zero;
-        private IntPtr iv = IntPtr.Zero;
+        private IntPtr encryptCtx;
+        private IntPtr decryptCtx;
+        private IntPtr evpCipher;
+        private IntPtr key;
+        private IntPtr iv;
         private int blockSize;
         private bool disposedValue;
         private LinuxOpenSSL11LP64 openSSL11;
@@ -207,7 +207,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             if (!disposedValue)
             {
-                LinuxOpenSSL11LP64 openSSL11ref = null;
+                LinuxOpenSSL11LP64 openSSL11ref;
                 try
                 {
                     if (disposing)

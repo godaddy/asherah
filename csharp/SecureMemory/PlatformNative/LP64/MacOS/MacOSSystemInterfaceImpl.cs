@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS
 {
