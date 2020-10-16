@@ -22,12 +22,30 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
             : this(configuration, SystemInterface.GetInstance())
         {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
         }
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
             : base(new LinuxOpenSSL11LP64(), systemInterface)
         {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            if (systemInterface == null)
+            {
+                throw new ArgumentNullException(nameof(systemInterface));
+            }
+
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
+            if (openSSL11 == null)
+            {
+                throw new InvalidOperationException("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: GetLibc returned null!");
+            }
 
             ulong heapSize;
             var heapSizeConfig = configuration["heapSize"];

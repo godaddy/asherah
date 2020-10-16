@@ -35,6 +35,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
         public MacOSProtectedMemoryAllocatorLP64(MacOSLibcLP64 libc, SystemInterface systemInterface)
             : base(libc, systemInterface)
         {
+            if (libc == null)
+            {
+                throw new ArgumentNullException(nameof(libc));
+            }
         }
 
         public override void Dispose()
