@@ -119,7 +119,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
             try
             {
-                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretByteArray");
+                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestCreateSecretIntPtr");
                 using (var factory = new ProtectedMemorySecretFactory(configuration))
                 {
                     using Secret secret = factory.CreateSecret(handle.AddrOfPinnedObject(), (ulong)bytes.LongLength);

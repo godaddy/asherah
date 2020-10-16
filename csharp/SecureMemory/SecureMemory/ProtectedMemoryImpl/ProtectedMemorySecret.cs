@@ -34,7 +34,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             SystemInterface systemInterface,
             IConfiguration configuration)
         {
-            Debug.WriteLine("ProtectedMemorySecret ctor");
+            Debug.WriteLine("ProtectedMemorySecret ctor IntPtr");
 
             if (sourcePtr == IntPtr.Zero)
             {
@@ -89,9 +89,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                 throw;
             }
-
-            // Only clear the client's source buffer if we're successful
-            systemInterface.ZeroMemory(pointer, length);
         }
 
         internal ProtectedMemorySecret(
