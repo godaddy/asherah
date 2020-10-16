@@ -57,6 +57,17 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         }
 
         [Fact]
+        private void CheckZeroException()
+        {
+            var exception = Assert.Throws<LibcOperationFailedException>(() =>
+            {
+                Check.Zero(10, "CheckBadZero", new Exception("Exception in progress to set as inner exception"));
+            });
+
+            Assert.NotNull(exception.InnerException);
+        }
+
+        [Fact]
         private void CheckBadZero()
         {
             Assert.Throws<LibcOperationFailedException>(() =>

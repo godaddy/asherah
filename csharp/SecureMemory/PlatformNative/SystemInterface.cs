@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
@@ -10,6 +11,7 @@ namespace GoDaddy.Asherah.PlatformNative
     {
         private static readonly SystemInterface Interface;
 
+        [ExcludeFromCodeCoverage]
         static SystemInterface()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -28,6 +30,7 @@ namespace GoDaddy.Asherah.PlatformNative
             }
         }
 
+        [ExcludeFromCodeCoverage]
         public static SystemInterface GetInstance()
         {
             if (Interface == null)

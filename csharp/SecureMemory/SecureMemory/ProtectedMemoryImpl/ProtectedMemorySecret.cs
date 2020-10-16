@@ -35,6 +35,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecret ctor");
+
+            if (sourcePtr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(sourcePtr));
+            }
+
             this.allocator = allocator;
             this.configuration = configuration;
             this.systemInterface = systemInterface;
