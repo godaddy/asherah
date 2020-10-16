@@ -22,6 +22,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
+            systemInterface = SystemInterface.GetInstance();
+
             configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"heapSize", "32000"},
