@@ -35,16 +35,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             Debug.WriteLine("LinuxProtectedMemoryAllocatorLP64 ctor");
             libc = (LinuxLibcLP64)GetLibc();
-            if (libc == null)
-            {
-                throw new InvalidOperationException("LinuxProtectedMemoryAllocatorLP64: GetLibc returned null");
-            }
         }
 
         public LinuxProtectedMemoryAllocatorLP64(LinuxLibcLP64 libc, SystemInterface systemInterface)
             : base(libc, systemInterface)
         {
-            this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
+            this.libc = libc;
             if (systemInterface == null)
             {
                 throw new ArgumentNullException(nameof(systemInterface));
