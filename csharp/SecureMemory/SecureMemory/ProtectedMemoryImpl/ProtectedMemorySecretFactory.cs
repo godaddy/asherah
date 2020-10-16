@@ -135,7 +135,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     case Architecture.Arm:
                         throw new PlatformNotSupportedException("Unsupported architecture Linux ARM");
                     default:
-                        throw new ArgumentOutOfRangeException("Unknown OSArchitecture");
+                        throw new PlatformNotSupportedException("Unknown OSArchitecture");
                 }
             }
 
@@ -156,7 +156,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     case Architecture.Arm:
                         throw new PlatformNotSupportedException("Unsupported architecture macOS ARM");
                     default:
-                        throw new ArgumentOutOfRangeException("Unknown OSArchitecture");
+                        throw new PlatformNotSupportedException("Unknown OSArchitecture");
                 }
             }
 
