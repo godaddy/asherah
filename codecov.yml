@@ -73,6 +73,8 @@ ignore:
   # Non-linux native paths. Ideally, be nice to setup separate OS-specific builds.
   - "**/com/godaddy/asherah/securememory/protectedmemoryimpl/macos" # java macOS path
   - "**/SecureMemory/ProtectedMemoryImpl/MacOS" # C# macOS path
+  - "**/SecureMemory/PlatformNative/LP64/MacOS" # C# macOS path
+  - "**/SecureMemory/PlatformNative/LLP64/Windows" # C# Windows path
   - "**/SecureMemory/ProtectedMemoryImpl/Windows" # C# Windows path
   # gRPC auto-generated file
   - "**/target/generated-sources/protobuf" # Java auto-generated files

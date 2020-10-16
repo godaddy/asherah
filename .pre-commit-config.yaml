@@ -9,7 +9,6 @@ repos:
     -   id: check-xml
     -   id: check-toml
     -   id: detect-private-key
-    -   id: end-of-file-fixer
     -   id: forbid-new-submodules
     -   id: mixed-line-ending
     -   id: check-added-large-files
