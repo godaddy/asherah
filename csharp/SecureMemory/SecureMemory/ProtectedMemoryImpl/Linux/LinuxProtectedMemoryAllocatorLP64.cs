@@ -25,6 +25,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private readonly int pageSize = Environment.SystemPageSize;
         private readonly LinuxLibcLP64 libc;
 
+        public LinuxProtectedMemoryAllocatorLP64()
+            : base(new LinuxLibcLP64(), SystemInterface.GetInstance())
+        {
+        }
+
         public LinuxProtectedMemoryAllocatorLP64(SystemInterface systemInterface)
             : base(new LinuxLibcLP64(), systemInterface)
         {

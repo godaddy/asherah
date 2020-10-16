@@ -21,6 +21,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS
 
     internal class MacOSProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
     {
+        public MacOSProtectedMemoryAllocatorLP64()
+            : base(new MacOSLibcLP64(), SystemInterface.GetInstance())
+        {
+        }
+
         public MacOSProtectedMemoryAllocatorLP64(SystemInterface systemInterface)
             : base(new MacOSLibcLP64(), systemInterface)
         {

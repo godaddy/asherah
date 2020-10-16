@@ -19,6 +19,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         private OpenSSLCryptProtectMemory cryptProtectMemory;
         private bool disposedValue;
 
+        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
+            : this(configuration, SystemInterface.GetInstance())
+        {
+        }
+
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
             : base(new LinuxOpenSSL11LP64(), systemInterface)
         {
