@@ -177,5 +177,30 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 }
             }
         }
+
+        [Fact]
+        private void TestRequiredDisposeIntPtrSuccess()
+        {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"requireSecretDisposal", "true"}
+            }).Build();
+
+            var bytes = new byte[] {0, 1};
+            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestRequiredDisposeIntPtrSuccess");
+                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                {
+                    using Secret secret = factory.CreateSecret(handle.AddrOfPinnedObject(), (ulong)bytes.LongLength);
+                    Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
     }
 }
