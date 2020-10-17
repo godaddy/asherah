@@ -143,6 +143,16 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
         [SkippableFact]
+        private void TestHugeAllocShouldFail()
+        {
+            Skip.If(libc == null);
+
+            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestHugeAllocShouldFail");
+
+            Assert.Throws<MemoryLimitException>(() => libcProtectedMemoryAllocator.Alloc((ulong)Int32.MaxValue + 1));
+        }
+
+        [SkippableFact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
             Skip.If(libc == null);
