@@ -33,14 +33,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     return;
                 }
 
-                allocator = DetectViaRuntimeInformation(configuration)
-                         ?? DetectViaOsVersionPlatform()
-                         ?? DetectOsDescription(configuration);
-
-                if (allocator == null)
-                {
-                    throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
-                }
+                allocator = DetectAllocator(configuration);
 
                 Debug.WriteLine("ProtectedMemorySecretFactory: Created new allocator");
                 refCount++;
@@ -89,6 +82,21 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     Debug.WriteLine($"ProtectedMemorySecretFactory: New refCount is {refCount}");
                 }
             }
+        }
+
+        [ExcludeFromCodeCoverage]
+        private static IProtectedMemoryAllocator DetectAllocator(IConfiguration configuration)
+        {
+            var platformAllocator = DetectViaRuntimeInformation(configuration)
+                        ?? DetectViaOsVersionPlatform()
+                        ?? DetectOsDescription(configuration);
+
+            if (platformAllocator == null)
+            {
+                throw new PlatformNotSupportedException("Could not detect supported platform for protected memory");
+            }
+
+            return platformAllocator;
         }
 
         [ExcludeFromCodeCoverage]
