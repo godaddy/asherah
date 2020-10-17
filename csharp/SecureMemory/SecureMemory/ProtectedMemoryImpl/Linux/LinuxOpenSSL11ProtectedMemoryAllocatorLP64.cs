@@ -32,11 +32,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            if (systemInterface == null)
-            {
-                throw new ArgumentNullException(nameof(systemInterface));
-            }
-
             openSSL11 = (LinuxOpenSSL11LP64)GetLibc();
 
             ulong heapSize;
