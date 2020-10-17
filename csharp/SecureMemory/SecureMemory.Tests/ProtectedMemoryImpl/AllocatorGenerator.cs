@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Microsoft.Extensions.Configuration;
 
@@ -49,7 +49,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface) });
+                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface) });
             }
         }
 

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 

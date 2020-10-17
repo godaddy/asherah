@@ -4,16 +4,16 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using size_t = System.UInt64;
 
-namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
+namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
-    public class LinuxOpenSSL11LP64
+    public class OpenSSL11LP64
     {
         public const string LibraryName = "libcrypto.so.1.1";
 
-        public LinuxOpenSSL11LP64()
+        public OpenSSL11LP64()
         {
             // ReSharper disable once VirtualMemberCallInConstructor
             LibraryCheck();
@@ -40,7 +40,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
                 return 1;
             }
 
-            // CRYPTO_secure_malloc_init() returns 0 on failure, 1 if successful, and 2 if successful but the heap could not be protected by memory mapping.
+            // CRYPTO_secure_malloc_init() returns 0 on failure, 1 if successful, and 2 if
+            // successful but the heap could not be protected by memory mapping.
             return _CRYPTO_secure_malloc_init(size, minsize);
         }
 
@@ -49,7 +50,9 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 
         public static int CRYPTO_secure_malloc_initialized()
         {
-            // CRYPTO_secure_malloc_initialized() returns 1 if the secure heap is available (that is, if CRYPTO_secure_malloc_init() has been called, but CRYPTO_secure_malloc_done() has not been called or failed) or 0 if not.
+            // CRYPTO_secure_malloc_initialized() returns 1 if the secure heap is available
+            // (that is, if CRYPTO_secure_malloc_init() has been called, but CRYPTO_secure_malloc_done()
+            // has not been called or failed) or 0 if not.
             return _CRYPTO_secure_malloc_initialized();
         }
 
@@ -68,7 +71,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 
         public IntPtr CRYPTO_secure_malloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
-            // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap of the requested size, or NULL if memory could not be allocated.
+            // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure
+            // heap of the requested size, or NULL if memory could not be allocated.
             return _CRYPTO_secure_malloc(num, file, line);
         }
 
@@ -78,7 +82,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         [ExcludeFromCodeCoverage]
         public IntPtr CRYPTO_secure_zalloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
-            // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap of the requested size, or NULL if memory could not be allocated.
+            // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap
+            // of the requested size, or NULL if memory could not be allocated.
             return _CRYPTO_secure_zalloc(num, file, line);
         }
 

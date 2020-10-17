@@ -1,35 +1,35 @@
 using System;
 using System.Diagnostics;
 using GoDaddy.Asherah.PlatformNative;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using Microsoft.Extensions.Configuration;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
+namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
 {
     internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
     {
         private const ulong DefaultHeapSize = 32768;
         private const int DefaultMinimumAllocationSize = 32;
-        private readonly ulong blockSize;
-        private readonly LinuxOpenSSL11LP64 openSSL11;
-        private readonly OpenSSLCryptProtectMemory cryptProtectMemory;
+        private readonly ulong encryptedMemoryBlockSize;
+        private readonly OpenSSL11LP64 openSSL11;
+        private readonly SystemInterface systemInterface;
         private bool disposedValue;
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
-            : this(configuration, SystemInterface.GetInstance(), new LinuxOpenSSL11LP64())
+            : this(configuration, SystemInterface.GetInstance(), new OpenSSL11LP64())
         {
         }
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
-            : this(configuration, systemInterface, new LinuxOpenSSL11LP64())
+            : this(configuration, systemInterface, new OpenSSL11LP64())
         {
         }
 
         public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(
             IConfiguration configuration,
             SystemInterface systemInterface,
-            LinuxOpenSSL11LP64 libc)
+            OpenSSL11LP64 libc)
             : base(systemInterface)
         {
             if (configuration == null)
@@ -43,6 +43,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             }
 
             openSSL11 = libc;
+            this.systemInterface = systemInterface;
+            encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
 
             ulong heapSize;
             var heapSizeConfig = configuration["heapSize"];
@@ -71,8 +73,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
             Check.Result(openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
 
-            cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
-            blockSize = (ulong)cryptProtectMemory.GetBlockSize();
+            systemInterface.GetEncryptedMemoryBlockSize();
+
+            // cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
+            // blockSize = (ulong)cryptProtectMemory.GetBlockSize();
         }
 
         ~LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
@@ -94,7 +98,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             // NOTE: No rounding for encrypt!
             Debug.WriteLine($"SetNoAccess: Length {length}");
 
-            cryptProtectMemory.CryptProtectMemory(pointer, (int)length);
+            systemInterface.ProcessEncryptMemory(pointer, length);
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
@@ -109,10 +113,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // Round up allocation size to nearest block size
             Debug.WriteLine($"SetReadAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
             Debug.WriteLine($"SetReadAccess: New length {length}");
 
-            cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
+            systemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
@@ -127,10 +131,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // Round up allocation size to nearest block size
             Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
             Debug.WriteLine($"SetReadWriteAccess: New length {length}");
 
-            cryptProtectMemory.CryptUnprotectMemory(pointer, (int)length);
+            systemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         // ************************************
@@ -145,7 +149,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             // Round up allocation size to nearest block size
             Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
 
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
@@ -173,7 +177,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             }
 
             // Round up allocation size to nearest block size
-            length = (length + (blockSize - 1)) & ~(blockSize - 1);
+            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
 
             Check.IntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
@@ -189,7 +193,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 if (!disposedValue)
                 {
                     disposedValue = true;
-                    cryptProtectMemory.Dispose();
                 }
             }
         }

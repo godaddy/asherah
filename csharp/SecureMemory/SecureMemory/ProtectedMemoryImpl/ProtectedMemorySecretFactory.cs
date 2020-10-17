@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Microsoft.Extensions.Configuration;
 
@@ -186,14 +186,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                         if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface);
+                            return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface);
                         }
 
                         throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
                     }
                 }
 
-                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration, systemInterface);
+                return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface);
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried

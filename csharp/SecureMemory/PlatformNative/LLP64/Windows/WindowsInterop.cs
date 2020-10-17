@@ -18,6 +18,9 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
         public static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, AllocationType dwFreeType);
 
+        [DllImport("kernel32.dll", SetLastError=true, ExactSpelling=true)]
+        public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         public static extern IntPtr GetCurrentProcess();
 

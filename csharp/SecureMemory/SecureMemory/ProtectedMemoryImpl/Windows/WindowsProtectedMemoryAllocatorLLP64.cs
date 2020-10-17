@@ -1,31 +1,64 @@
 using System;
 using GoDaddy.Asherah.PlatformNative;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
-    internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
+    internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
-        private ulong encryptedMemoryBlockSize;
+        private const int DefaultMaximumWorkingSetSize = 67108860;
+        private const int DefaultMinimumWorkingSetSize = 33554430;
+        private readonly ulong encryptedMemoryBlockSize;
+        private readonly SystemInterface systemInterface;
 
-        protected WindowsProtectedMemoryAllocatorLLP64(SystemInterface systemInterface)
+        public WindowsProtectedMemoryAllocatorLLP64(IConfiguration configuration, SystemInterface systemInterface)
         {
             if (systemInterface == null)
             {
                 throw new ArgumentNullException(nameof(systemInterface));
             }
 
-            SystemInterface = systemInterface;
+            this.systemInterface = systemInterface;
             encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
-        }
 
-        protected SystemInterface SystemInterface { get; }
+            ulong min = 0;
+
+            var minConfig = configuration["minimumWorkingSetSize"];
+            if (!string.IsNullOrWhiteSpace(minConfig))
+            {
+                min = ulong.Parse(minConfig);
+            }
+            else
+            {
+                if (min < DefaultMinimumWorkingSetSize)
+                {
+                    min = DefaultMinimumWorkingSetSize;
+                }
+            }
+
+            ulong max = 0;
+            var maxConfig = configuration["maximumWorkingSetSize"];
+            if (!string.IsNullOrWhiteSpace(maxConfig))
+            {
+                max = ulong.Parse(maxConfig);
+            }
+            else
+            {
+                if (max < DefaultMaximumWorkingSetSize)
+                {
+                    max = DefaultMaximumWorkingSetSize;
+                }
+            }
+
+            systemInterface.SetMemoryLockLimit(max);
+        }
 
         public virtual IntPtr Alloc(ulong length)
         {
             // Adjust length to CryptProtect block size
             length = AdjustLength(length);
 
-            return SystemInterface.PageAlloc(length);
+            return systemInterface.PageAlloc(length);
         }
 
         public virtual void Free(IntPtr pointer, ulong length)
@@ -33,39 +66,39 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             // Adjust length to CryptProtect block size
             length = AdjustLength(length);
 
-            SystemInterface.ZeroMemory(pointer, length);
-            SystemInterface.PageFree(pointer, length);
+            systemInterface.ZeroMemory(pointer, length);
+            systemInterface.PageFree(pointer, length);
         }
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            SystemInterface.ProcessEncryptMemory(pointer, length);
-            SystemInterface.UnlockMemory(pointer, length);
+            systemInterface.ProcessEncryptMemory(pointer, length);
+            systemInterface.UnlockMemory(pointer, length);
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            SystemInterface.LockMemory(pointer, length);
+            systemInterface.LockMemory(pointer, length);
 
-            SystemInterface.ProcessDecryptMemory(pointer, length);
+            systemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             length = AdjustLength(length);
 
-            SystemInterface.LockMemory(pointer, length);
+            systemInterface.LockMemory(pointer, length);
 
-            SystemInterface.ProcessDecryptMemory(pointer, length);
+            systemInterface.ProcessDecryptMemory(pointer, length);
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)
         {
-            SystemInterface.ZeroMemory(pointer, length);
+            systemInterface.ZeroMemory(pointer, length);
         }
 
         public void Dispose()

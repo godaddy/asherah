@@ -19,6 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ProtectedMemoryImpl\MacOS\**" />
+    <EmbeddedResource Remove="ProtectedMemoryImpl\MacOS\**" />
+    <None Remove="ProtectedMemoryImpl\MacOS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
@@ -31,10 +37,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlatformNative\PlatformNative.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ProtectedMemoryImpl\MacOS\" />
   </ItemGroup>
 
 </Project>

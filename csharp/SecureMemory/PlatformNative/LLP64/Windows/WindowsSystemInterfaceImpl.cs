@@ -7,6 +7,12 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
     internal class WindowsSystemInterfaceImpl : SystemInterface
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
+        private readonly IntPtr hProcess;
+
+        public WindowsSystemInterfaceImpl()
+        {
+            hProcess = WindowsInterop.GetCurrentProcess();
+        }
 
         public override void CopyMemory(IntPtr source, IntPtr dest, ulong length)
         {
@@ -30,22 +36,51 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override void SetNoAccess(IntPtr pointer, ulong length)
         {
-            throw new NotImplementedException();
+            var result = WindowsInterop.VirtualProtectEx(
+                hProcess,
+                pointer,
+                (UIntPtr)length,
+                (uint)MemoryProtection.PAGE_NOACCESS,
+                out uint oldProtect);
+            if (!result)
+            {
+                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+            }
         }
 
         public override void SetReadAccess(IntPtr pointer, ulong length)
         {
-            throw new NotImplementedException();
+            var result = WindowsInterop.VirtualProtectEx(
+                hProcess,
+                pointer,
+                (UIntPtr)length,
+                (uint)MemoryProtection.PAGE_READONLY,
+                out uint oldProtect);
+
+            if (!result)
+            {
+                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+            }
         }
 
         public override void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            throw new NotImplementedException();
+            var result = WindowsInterop.VirtualProtectEx(
+                hProcess,
+                pointer,
+                (UIntPtr)length,
+                (uint)MemoryProtection.PAGE_READWRITE,
+                out uint oldProtect);
+
+            if (!result)
+            {
+                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+            }
         }
 
         public override void SetNoDump(IntPtr protectedMemory, ulong length)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Windows does not support flagging memory not to be dumped");
         }
 
         public override IntPtr PageAlloc(ulong length)
@@ -94,7 +129,16 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override ulong GetMemoryLockLimit()
         {
-            throw new NotImplementedException();
+            UIntPtr min = UIntPtr.Zero;
+            UIntPtr max = UIntPtr.Zero;
+            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
+            var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
+            if (!result)
+            {
+                throw new Exception("GetProcessWorkingSetSize failed");
+            }
+
+            return (ulong)max;
         }
 
         public override void SetMemoryLockLimit(ulong limit)

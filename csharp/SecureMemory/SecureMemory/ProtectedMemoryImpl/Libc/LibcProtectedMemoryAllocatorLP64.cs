@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
             IntPtr protectedMemory = SystemInterface.PageAlloc(length);
 
-            Check.IntPtr(protectedMemory, "mmap");
+            Check.IntPtr(protectedMemory, "PageAlloc");
             try
             {
                 SystemInterface.LockMemory(protectedMemory, length);

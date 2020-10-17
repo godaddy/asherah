@@ -2,12 +2,10 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using GoDaddy.Asherah.PlatformNative;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
+namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 {
-    public class OpenSSLCryptProtectMemory : IDisposable
+    internal class OpenSSLCryptProtectMemory : IDisposable
     {
         private readonly OpenSSLCrypto openSSLCrypto;
         private readonly object cryptProtectLock = new object();
@@ -39,7 +37,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             Debug.WriteLine("IV length: " + ivSize);
 
             key = systemInterface.PageAlloc((ulong)systemInterface.PageSize);
-            Check.IntPtr(key, "mmap");
+            Check.IntPtr(key, "PageAlloc");
 
             systemInterface.LockMemory(key, (ulong)systemInterface.PageSize);
             systemInterface.SetNoDump(key, (ulong)systemInterface.PageSize);
