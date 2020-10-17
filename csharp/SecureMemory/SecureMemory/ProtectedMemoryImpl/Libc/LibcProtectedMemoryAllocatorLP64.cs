@@ -22,14 +22,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             SystemInterface = systemInterface;
 
             libc.getrlimit(GetMemLockLimit(), out var rlim);
-            if (rlim.rlim_max == rlimit.UNLIMITED)
-            {
-                resourceLimit = 0;
-            }
-            else
-            {
-                resourceLimit = (long)rlim.rlim_max;
-            }
+            resourceLimit = rlim.rlim_max == rlimit.UNLIMITED ? 0 : (long) rlim.rlim_max;
         }
 
         protected SystemInterface SystemInterface { get; }
