@@ -1,17 +1,29 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
+using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
 
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     internal class WindowsSystemInterfaceImpl : SystemInterface
     {
+        private const string ProcessEncryptionCipher = "aes-256-gcm";
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
+        private readonly Lazy<OpenSSLCryptProtectMemory> openSSLCryptProtectMemory;
         private readonly IntPtr hProcess;
 
         public WindowsSystemInterfaceImpl()
         {
             hProcess = WindowsInterop.GetCurrentProcess();
+
+            // IntPtr library = WindowsInterop.LoadLibrary("C:\\OpenSSL\\libcrypto-1_1-x64.dll");
+            openSSLCryptProtectMemory =
+                new Lazy<OpenSSLCryptProtectMemory>(
+                    () =>
+                    {
+                        return new OpenSSLCryptProtectMemory(ProcessEncryptionCipher, this);
+                    }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public override void CopyMemory(IntPtr source, IntPtr dest, ulong length)
@@ -80,7 +92,6 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override void SetNoDump(IntPtr protectedMemory, ulong length)
         {
-            throw new NotSupportedException("Windows does not support flagging memory not to be dumped");
         }
 
         public override IntPtr PageAlloc(ulong length)
@@ -168,25 +179,34 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override ulong GetEncryptedMemoryBlockSize()
         {
-            return CryptProtect.BLOCKSIZE;
+            return (ulong)openSSLCryptProtectMemory.Value.GetBlockSize();
+
+            // return CryptProtect.BLOCKSIZE;
         }
 
         public override void ProcessEncryptMemory(IntPtr pointer, ulong length)
         {
+            openSSLCryptProtectMemory.Value.CryptProtectMemory(pointer, (int)length);
+
+            /*
             if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
             }
+            */
         }
 
         public override void ProcessDecryptMemory(IntPtr pointer, ulong length)
         {
+            openSSLCryptProtectMemory.Value.CryptProtectMemory(pointer, (int)length);
+            /*
             if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
+            */
         }
     }
 }

@@ -180,8 +180,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     {
                         if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            throw new PlatformNotSupportedException(
-                                "OpenSSL 1.1 selected for secureHeapEngine but not supported on Windows");
+                            return new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
                         }
 
                         if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
@@ -211,7 +210,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     {
                         try
                         {
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                            return new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
                         }
                         catch (DllNotFoundException)
                         {

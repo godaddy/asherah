@@ -1,49 +1,55 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
-using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
 {
-    internal class LinuxOpenSSL11ProtectedMemoryAllocatorLP64 : LibcProtectedMemoryAllocatorLP64
+    internal class OpenSSL11ProtectedMemoryAllocatorLP64 : IProtectedMemoryAllocator
     {
         private const ulong DefaultHeapSize = 32768;
         private const int DefaultMinimumAllocationSize = 32;
         private readonly ulong encryptedMemoryBlockSize;
-        private readonly OpenSSL11LP64 openSSL11;
+        private readonly IOpenSSLCrypto openSSL11;
         private readonly SystemInterface systemInterface;
         private bool disposedValue;
 
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration)
-            : this(configuration, SystemInterface.GetInstance(), new OpenSSL11LP64())
-        {
-        }
-
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(IConfiguration configuration, SystemInterface systemInterface)
-            : this(configuration, systemInterface, new OpenSSL11LP64())
-        {
-        }
-
-        public LinuxOpenSSL11ProtectedMemoryAllocatorLP64(
+        public OpenSSL11ProtectedMemoryAllocatorLP64(
             IConfiguration configuration,
             SystemInterface systemInterface,
-            OpenSSL11LP64 libc)
-            : base(systemInterface)
+            IOpenSSLCrypto openSSL11 = null)
         {
             if (configuration == null)
             {
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            if (systemInterface == null)
+            if (openSSL11 != null)
             {
-                throw new ArgumentNullException(nameof(systemInterface));
+                this.openSSL11 = openSSL11;
+            }
+            else
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    this.openSSL11 = new OpenSSLCryptoWindows();
+                }
+                else
+                {
+                    this.openSSL11 = new OpenSSLCryptoLibc();
+                }
             }
 
-            openSSL11 = libc;
-            this.systemInterface = systemInterface;
+            if (this.openSSL11 == null)
+            {
+                throw new ArgumentNullException(nameof(openSSL11));
+            }
+
+            this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
+
             encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
 
             ulong heapSize;
@@ -71,7 +77,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
 
             Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
-            Check.Result(openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
+            Check.Result(this.openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
 
             systemInterface.GetEncryptedMemoryBlockSize();
 
@@ -79,13 +85,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             // blockSize = (ulong)cryptProtectMemory.GetBlockSize();
         }
 
-        ~LinuxOpenSSL11ProtectedMemoryAllocatorLP64()
+        ~OpenSSL11ProtectedMemoryAllocatorLP64()
         {
-            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Finalizer");
-            Dispose(disposing: false);
+            ReleaseUnmanagedResources();
         }
 
-        public override void SetNoAccess(IntPtr pointer, ulong length)
+        public void SetNoAccess(IntPtr pointer, ulong length)
         {
             if (disposedValue)
             {
@@ -101,7 +106,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             systemInterface.ProcessEncryptMemory(pointer, length);
         }
 
-        public override void SetReadAccess(IntPtr pointer, ulong length)
+        public void SetReadAccess(IntPtr pointer, ulong length)
         {
             if (disposedValue)
             {
@@ -119,7 +124,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             systemInterface.ProcessDecryptMemory(pointer, length);
         }
 
-        public override void SetReadWriteAccess(IntPtr pointer, ulong length)
+        public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             if (disposedValue)
             {
@@ -140,7 +145,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
         // ************************************
         // alloc / free
         // ************************************
-        public override IntPtr Alloc(ulong length)
+        public IntPtr Alloc(ulong length)
         {
             if (disposedValue)
             {
@@ -158,7 +163,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
-                SystemInterface.SetNoDump(protectedMemory, length);
+                systemInterface.SetNoDump(protectedMemory, length);
             }
             catch (Exception)
             {
@@ -169,32 +174,32 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             return protectedMemory;
         }
 
-        public override void Free(IntPtr pointer, ulong length)
+        public void Free(IntPtr pointer, ulong length)
         {
             if (disposedValue)
             {
-                throw new Exception("Called Free on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64");
+                throw new Exception("Called Free on disposed OpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
             // Round up allocation size to nearest block size
             length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
 
-            Check.IntPtr(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
+            Check.IntPtr(pointer, "OpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
-            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
+            Debug.WriteLine($"OpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose({disposing})");
-            if (disposing)
-            {
-                if (!disposedValue)
-                {
-                    disposedValue = true;
-                }
-            }
+            disposedValue = true;
+            ReleaseUnmanagedResources();
+            GC.SuppressFinalize(this);
+        }
+
+        private void ReleaseUnmanagedResources()
+        {
+            // TODO release unmanaged resources here
         }
     }
 }

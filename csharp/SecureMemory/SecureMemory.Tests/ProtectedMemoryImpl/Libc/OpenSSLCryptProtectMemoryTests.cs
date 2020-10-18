@@ -14,7 +14,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
     [Collection("Logger Fixture collection")]
     public class OpenSSLCryptProtectMemoryTests : IDisposable
     {
-        private readonly LinuxOpenSSL11ProtectedMemoryAllocatorLP64 linuxOpenSSL11ProtectedMemoryAllocatorLP64;
+        private readonly OpenSSL11ProtectedMemoryAllocatorLP64 linuxOpenSSL11ProtectedMemoryAllocatorLP64;
         private readonly SystemInterface systemInterface;
 
         public OpenSSLCryptProtectMemoryTests()
@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
-                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
             }
         }
 
@@ -40,21 +40,17 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestProtectAfterDispose()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
             cryptProtectMemory.Dispose();
-            Assert.Throws<Exception>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
+            Assert.Throws<LibcOperationFailedException>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
         }
 
         [SkippableFact]
         private void TestUnprotectAfterDispose()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
             cryptProtectMemory.Dispose();
-            Assert.Throws<Exception>(() => cryptProtectMemory.CryptUnprotectMemory(IntPtr.Zero, 0));
+            Assert.Throws<LibcOperationFailedException>(() => cryptProtectMemory.CryptUnprotectMemory(IntPtr.Zero, 0));
         }
     }
 }

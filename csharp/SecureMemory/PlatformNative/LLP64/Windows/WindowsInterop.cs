@@ -44,5 +44,8 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         [DllImport("kernel32.dll", EntryPoint = "RtlCopyMemory", SetLastError = false)]
         internal static extern void CopyMemory(IntPtr dest, IntPtr src, UIntPtr count);
+
+        [DllImport("Kernel32.dll")]
+        internal static extern IntPtr LoadLibrary(string path);
     }
 }

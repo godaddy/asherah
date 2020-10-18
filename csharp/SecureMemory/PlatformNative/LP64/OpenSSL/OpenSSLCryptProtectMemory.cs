@@ -2,12 +2,14 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 {
     internal class OpenSSLCryptProtectMemory : IDisposable
     {
-        private readonly OpenSSLCrypto openSSLCrypto;
+        private readonly IOpenSSLCrypto openSSLCrypto;
         private readonly object cryptProtectLock = new object();
         private readonly IntPtr iv;
         private readonly int blockSize;
@@ -20,7 +22,15 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 
         internal OpenSSLCryptProtectMemory(string cipher, SystemInterface systemInterface)
         {
-            openSSLCrypto = new OpenSSLCrypto();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                openSSLCrypto = new OpenSSLCryptoWindows();
+            }
+            else
+            {
+                openSSLCrypto = new OpenSSLCryptoLibc();
+            }
+
             this.systemInterface = systemInterface;
 
             evpCipher = openSSLCrypto.EVP_get_cipherbyname(cipher);
@@ -40,7 +50,10 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
             Check.IntPtr(key, "PageAlloc");
 
             systemInterface.LockMemory(key, (ulong)systemInterface.PageSize);
-            systemInterface.SetNoDump(key, (ulong)systemInterface.PageSize);
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                systemInterface.SetNoDump(key, (ulong)systemInterface.PageSize);
+            }
 
             iv = IntPtr.Add(key, keySize);
 
@@ -72,48 +85,71 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 
         public void CryptProtectMemory(IntPtr memory, int length)
         {
-            Debug.WriteLine($"CryptProtectMemory({memory}, {length}");
+            Check.IntPtr(memory, "CryptProtectMemory");
+            if (length <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), length, "CryptProtectMemory length must be > 0");
+            }
+
+            Debug.WriteLine($"CryptProtectMemory({memory}, {length}) " + IntPtrStr(memory, length));
 
             if (disposedValue)
             {
                 throw new Exception("Called CryptProtectMemory on disposed OpenSSLCryptProtectMemory object");
             }
 
-            Debug.WriteLine("AllocHGlobal for tmpBuffer: " + length + blockSize);
-            IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
+            ulong tmpBufferLen = (ulong)(length + blockSize);
+            Debug.WriteLine("AllocHGlobal for tmpBuffer: " + tmpBufferLen);
+            IntPtr tmpBuffer = Marshal.AllocHGlobal((int)tmpBufferLen);
             try
             {
-                systemInterface.LockMemory(tmpBuffer, (ulong)length + (ulong)blockSize);
-                systemInterface.SetNoDump(tmpBuffer, (ulong)length + (ulong)blockSize);
+                systemInterface.LockMemory(tmpBuffer, tmpBufferLen);
+                systemInterface.SetNoDump(tmpBuffer, tmpBufferLen);
 
                 lock (cryptProtectLock)
                 {
                     int finalOutputLength;
                     systemInterface.SetReadAccess(key, (ulong)systemInterface.PageSize);
-
                     try
                     {
+                        int result;
+                        int outputLength;
                         Debug.WriteLine("EVP_EncryptInit_ex");
                         Check.IntPtr(encryptCtx, "CryptProtectMemory encryptCtx");
                         Check.IntPtr(key, "CryptProtectMemory key");
                         Check.IntPtr(iv, "CryptProtectMemory iv");
-                        int result = openSSLCrypto.EVP_EncryptInit_ex(encryptCtx, evpCipher, IntPtr.Zero, key, iv);
-                        Check.Result(result, 1, "EVP_EncryptInit_ex");
+                        try
+                        {
+                            result = openSSLCrypto.EVP_EncryptInit_ex(encryptCtx, evpCipher, IntPtr.Zero, key, iv);
+                            Check.Result(result, 1, "EVP_EncryptInit_ex");
 
-                        int outputLength;
-                        Debug.WriteLine("EVP_EncryptUpdate");
-                        result = openSSLCrypto.EVP_EncryptUpdate(encryptCtx, tmpBuffer, out outputLength, memory, length);
-                        Check.Result(result, 1, "EVP_EncryptUpdate");
+                            Debug.WriteLine("EVP_EncryptUpdate");
+                            result = openSSLCrypto.EVP_EncryptUpdate(
+                                encryptCtx,
+                                tmpBuffer,
+                                out outputLength,
+                                memory,
+                                length);
+                            Check.Result(result, 1, "EVP_EncryptUpdate");
 
-                        Debug.WriteLine($"EVP_EncryptUpdate outputLength = {outputLength}");
+                            Debug.WriteLine($"EVP_EncryptUpdate outputLength = {outputLength}");
 
-                        IntPtr finalOutput = IntPtr.Add(tmpBuffer, outputLength);
+                            IntPtr finalOutput = IntPtr.Add(tmpBuffer, outputLength);
 
-                        Debug.WriteLine("EVP_EncryptFinal_ex");
-                        result = openSSLCrypto.EVP_EncryptFinal_ex(encryptCtx, finalOutput, out finalOutputLength);
+                            Debug.WriteLine("EVP_EncryptFinal_ex");
+                            result = openSSLCrypto.EVP_EncryptFinal_ex(encryptCtx, finalOutput, out finalOutputLength);
+                            Check.Result(result, 1, "EVP_EncryptFinal_ex");
+                        }
+                        finally
+                        {
+                            result = openSSLCrypto.EVP_CIPHER_CTX_reset(encryptCtx);
+                            Check.Result(result, 1, "EVP_CIPHER_CTX_reset");
+                        }
+
                         Check.Result(result, 1, "EVP_EncryptFinal_ex");
                         finalOutputLength += outputLength;
                         Debug.WriteLine($"EVP_EncryptFinal_ex outputLength = {finalOutputLength}");
+                        Debug.WriteLine("CryptProtectMemory output " + IntPtrStr(tmpBuffer, finalOutputLength));
                     }
                     finally
                     {
@@ -132,7 +168,18 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 
         public void CryptUnprotectMemory(IntPtr memory, int length)
         {
-            Debug.WriteLine($"CryptUnprotectMemory({memory}, {length})");
+            Check.IntPtr(memory, "CryptUnprotectMemory");
+            if (length <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), length, "CryptUnprotectMemory length must be > 0");
+            }
+
+            if (length % blockSize != 0)
+            {
+                throw new ArgumentException($"CryptUnprotectMemory length must be multiple of blockSize {blockSize}", nameof(length));
+            }
+
+            Debug.WriteLine($"CryptUnprotectMemory({memory}, {length})" + IntPtrStr(memory, length));
 
             if (disposedValue)
             {
@@ -156,18 +203,35 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                         Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
                         Check.IntPtr(key, "CryptUnprotectMemory key is invalid");
                         Check.IntPtr(iv, "CryptUnprotectMemory iv is invalid");
-                        int result = openSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
-                        Check.Result(result, 1, "EVP_DecryptInit_ex");
-
                         int decryptedLength;
-                        Debug.WriteLine("EVP_DecryptUpdate");
-                        result = openSSLCrypto.EVP_DecryptUpdate(decryptCtx, tmpBuffer, out decryptedLength, memory, length);
-                        Check.Result(result, 1, "EVP_DecryptUpdate");
-                        Debug.WriteLine($"EVP_DecryptUpdate decryptedLength = {decryptedLength}");
+                        int result;
+                        try
+                        {
+                            result = openSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
+                            Check.Result(result, 1, "EVP_DecryptInit_ex");
 
-                        IntPtr finalDecrypted = IntPtr.Add(tmpBuffer, decryptedLength);
-                        Debug.WriteLine("EVP_DecryptFinal_ex");
-                        result = openSSLCrypto.EVP_DecryptFinal_ex(decryptCtx, finalDecrypted, out finalDecryptedLength);
+                            Debug.WriteLine("EVP_DecryptUpdate");
+                            result = openSSLCrypto.EVP_DecryptUpdate(
+                                decryptCtx,
+                                tmpBuffer,
+                                out decryptedLength,
+                                memory,
+                                length);
+                            Check.Result(result, 1, "EVP_DecryptUpdate");
+                            Debug.WriteLine($"EVP_DecryptUpdate decryptedLength = {decryptedLength}");
+
+                            IntPtr finalDecrypted = IntPtr.Add(tmpBuffer, decryptedLength);
+                            Debug.WriteLine("EVP_DecryptFinal_ex");
+                            result = openSSLCrypto.EVP_DecryptFinal_ex(
+                                decryptCtx,
+                                finalDecrypted,
+                                out finalDecryptedLength);
+                        }
+                        finally
+                        {
+                            result = openSSLCrypto.EVP_CIPHER_CTX_reset(decryptCtx);
+                        }
+
                         Check.Result(result, 1, "EVP_DecryptFinal_ex");
                         finalDecryptedLength += decryptedLength;
                         Debug.WriteLine($"EVP_DecryptFinal_ex finalDecryptedLength = {finalDecryptedLength}");
@@ -186,6 +250,30 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                 Debug.WriteLine("FreeHGlobal");
                 Marshal.FreeHGlobal(tmpBuffer);
             }
+        }
+
+        public string IntPtrStr(IntPtr pointer, int length)
+        {
+            var sb = new System.Text.StringBuilder(" IntPtr { ");
+            for (var i = 0; i < length; i++)
+            {
+                sb.Append(Marshal.ReadByte(pointer, i) + ", ");
+            }
+
+            sb.Append("}");
+            return sb.ToString();
+        }
+
+        public void PrintByteArray(byte[] bytes)
+        {
+            var sb = new System.Text.StringBuilder(" byte[] { ");
+            foreach (var b in bytes)
+            {
+                sb.Append(b + ", ");
+            }
+
+            sb.Append("}");
+            Debug.WriteLine(sb.ToString());
         }
 
         public int GetBlockSize()

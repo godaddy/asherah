@@ -31,10 +31,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                LinuxOpenSSL11ProtectedMemoryAllocatorLP64 openSSLAllocator;
+                OpenSSL11ProtectedMemoryAllocatorLP64 openSSLAllocator;
                 try
                 {
-                    openSSLAllocator = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                    openSSLAllocator = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
                 }
                 catch (PlatformNotSupportedException)
                 {
