@@ -145,42 +145,19 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         {
             UIntPtr min = UIntPtr.Zero;
             UIntPtr max = UIntPtr.Zero;
-            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
             var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
             if (!result)
             {
                 throw new Exception("GetProcessWorkingSetSize failed");
             }
 
-            /*
-            var minConfig = configuration["minimumWorkingSetSize"];
-            if (!string.IsNullOrWhiteSpace(minConfig))
+            if (limit < (ulong)max)
             {
-                min = new UIntPtr(ulong.Parse(minConfig));
-            }
-            else
-            {
-                if (min.ToUInt64() < DefaultMinimumWorkingSetSize)
-                {
-                    min = new UIntPtr(DefaultMinimumWorkingSetSize);
-                }
+                // Already sufficiently large limit
+                return;
             }
 
-            var maxConfig = configuration["maximumWorkingSetSize"];
-            if (!string.IsNullOrWhiteSpace(maxConfig))
-            {
-                max = new UIntPtr(ulong.Parse(maxConfig));
-            }
-            else
-            {
-                if (max.ToUInt64() < DefaultMaximumWorkingSetSize)
-                {
-                    max = new UIntPtr(DefaultMaximumWorkingSetSize);
-                }
-            }
-            */
             max = (UIntPtr)limit;
-            min = (UIntPtr)(limit / 2);
 
             result = WindowsInterop.SetProcessWorkingSetSize(hProcess, min, max);
             if (!result)

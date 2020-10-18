@@ -52,18 +52,32 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                     Interlocked.Add(ref memoryLocked, (long)length);
                     SystemInterface.SetNoDump(protectedMemory, length);
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    // TODO: Restore inner exceptions
-                    SystemInterface.UnlockMemory(protectedMemory, length);
-                    Interlocked.Add(ref memoryLocked, 0 - (long)length);
+                    try
+                    {
+                        SystemInterface.UnlockMemory(protectedMemory, length);
+                        Interlocked.Add(ref memoryLocked, 0 - (long)length);
+                    }
+                    catch (Exception unlockException)
+                    {
+                        throw new AggregateException(exception, unlockException);
+                    }
+
                     throw;
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // TODO: Restore inner exceptions
-                SystemInterface.PageFree(protectedMemory, length);
+                try
+                {
+                    SystemInterface.PageFree(protectedMemory, length);
+                }
+                catch (Exception pageFreeException)
+                {
+                    throw new AggregateException(exception, pageFreeException);
+                }
+
                 throw;
             }
 
