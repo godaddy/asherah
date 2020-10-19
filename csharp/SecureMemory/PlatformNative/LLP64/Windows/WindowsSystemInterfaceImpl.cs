@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
 using Microsoft.Extensions.Configuration;
@@ -11,20 +10,24 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
     {
         private const string ProcessEncryptionCipher = "aes-256-gcm";
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
-        private readonly Lazy<OpenSSLCryptProtectMemory> openSSLCryptProtectMemory;
+        private readonly OpenSSLCryptProtectMemory openSSLCryptProtectMemory;
         private readonly IntPtr hProcess;
 
         public WindowsSystemInterfaceImpl(IConfiguration configuration)
         {
             hProcess = WindowsInterop.GetCurrentProcess();
 
-            openSSLCryptProtectMemory =
-                new Lazy<OpenSSLCryptProtectMemory>(
-                    () => new OpenSSLCryptProtectMemory(
-                        ProcessEncryptionCipher,
-                        this,
-                        configuration),
-                    LazyThreadSafetyMode.ExecutionAndPublication);
+            try
+            {
+                openSSLCryptProtectMemory = new OpenSSLCryptProtectMemory(
+                    ProcessEncryptionCipher,
+                    this,
+                    configuration);
+            }
+            catch (Exception)
+            {
+                openSSLCryptProtectMemory = null;
+            }
         }
 
         public override void CopyMemory(IntPtr source, IntPtr dest, ulong length)
@@ -180,34 +183,41 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override ulong GetEncryptedMemoryBlockSize()
         {
-            return (ulong)openSSLCryptProtectMemory.Value.GetBlockSize();
-
-            // return CryptProtect.BLOCKSIZE;
+            return openSSLCryptProtectMemory != null
+                ? (ulong)openSSLCryptProtectMemory.GetBlockSize()
+                : CryptProtect.BLOCKSIZE;
         }
 
         public override void ProcessEncryptMemory(IntPtr pointer, ulong length)
         {
-            openSSLCryptProtectMemory.Value.CryptProtectMemory(pointer, (int)length);
-
-            /*
-            if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+            if (openSSLCryptProtectMemory != null)
             {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
+                openSSLCryptProtectMemory.CryptProtectMemory(pointer, (int)length);
             }
-            */
+            else
+            {
+                if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+                {
+                    var errno = Marshal.GetLastWin32Error();
+                    throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
+                }
+            }
         }
 
         public override void ProcessDecryptMemory(IntPtr pointer, ulong length)
         {
-            openSSLCryptProtectMemory.Value.CryptProtectMemory(pointer, (int)length);
-            /*
-            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+            if (openSSLCryptProtectMemory != null)
             {
-                var errno = Marshal.GetLastWin32Error();
-                throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
+                openSSLCryptProtectMemory.CryptProtectMemory(pointer, (int)length);
             }
-            */
+            else
+            {
+                if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+                {
+                    var errno = Marshal.GetLastWin32Error();
+                    throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
+                }
+            }
         }
     }
 }
