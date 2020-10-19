@@ -1,10 +1,16 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
+using Microsoft.Extensions.Configuration;
 using size_t = System.UInt64;
 
+// ReSharper disable InconsistentNaming
+
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
@@ -15,11 +21,20 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
     {
         private const string LibraryName = "libcrypto.so.1.1";
         private const int EVP_MAX_BLOCK_LENGTH = 32;
+
+        // ReSharper disable UnusedMember.Local
         private const int EVP_MAX_KEY_LENGTH = 64;
         private const int EVP_MAX_IV_LENGTH = 16;
 
-        public OpenSSLCryptoLibc()
+        // ReSharper restore UnusedMember.Local
+        public OpenSSLCryptoLibc(IConfiguration configuration)
         {
+            var openSSLPath = configuration["openSSLPath"];
+            if (!string.IsNullOrWhiteSpace(openSSLPath))
+            {
+                _ = WindowsInterop.LoadLibrary(Path.Combine(openSSLPath, LibraryName));
+            }
+
             // ReSharper disable once VirtualMemberCallInConstructor
             LibraryCheck();
         }

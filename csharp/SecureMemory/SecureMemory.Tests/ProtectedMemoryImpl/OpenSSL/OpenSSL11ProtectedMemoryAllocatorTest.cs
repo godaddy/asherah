@@ -7,7 +7,7 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
+namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
 {
     [Collection("Logger Fixture collection")]
     public class OpenSSL11ProtectedMemoryAllocatorTest : IDisposable
@@ -22,18 +22,16 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            systemInterface = SystemInterface.GetInstance();
-
             configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
-                {"heapSize", "32000"},
-                {"minimumAllocationSize", "128"},
+                {"heapSize", "4096"},
+                {"minimumAllocationSize", "64"},
             }).Build();
+
+            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
             openSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
-
-            systemInterface = SystemInterface.GetInstance();
         }
 
         public void Dispose()
@@ -147,8 +145,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
         [SkippableFact]
         private void TestFreeAfterDispose()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-
             Debug.WriteLine("TestFreeAfterDispose");
             var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
 

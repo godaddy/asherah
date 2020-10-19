@@ -9,22 +9,26 @@ using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
+namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
 {
     [Collection("Logger Fixture collection")]
     public class OpenSSLCryptProtectMemoryTests : IDisposable
     {
         private readonly OpenSSL11ProtectedMemoryAllocatorLP64 linuxOpenSSL11ProtectedMemoryAllocatorLP64;
         private readonly SystemInterface systemInterface;
+        private readonly IConfiguration configuration;
 
         public OpenSSLCryptProtectMemoryTests()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},
+#if DEBUG
+                {"openSSLPath", @"C:\Program Files\OpenSSL"},
+#endif
             }).Build();
-            systemInterface = SystemInterface.GetInstance();
+            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
@@ -40,7 +44,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestProtectAfterDispose()
         {
-            var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
+            var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, configuration);
             cryptProtectMemory.Dispose();
             Assert.Throws<LibcOperationFailedException>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
         }
@@ -48,7 +52,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestUnprotectAfterDispose()
         {
-            var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
+            var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, configuration);
             cryptProtectMemory.Dispose();
             Assert.Throws<LibcOperationFailedException>(() => cryptProtectMemory.CryptUnprotectMemory(IntPtr.Zero, 0));
         }

@@ -31,7 +31,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            systemInterface = SystemInterface.GetInstance();
             var configDictionary = new Dictionary<string,string>();
             configDictionary["debugSecrets"] = "true";
             configDictionary["requireSecretDisposal"] = "true";
@@ -40,6 +39,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)
                 .Build();
+
+            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
 
             Debug.WriteLine("\nProtectedMemorySecretTest ctor");
         }
@@ -54,13 +55,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestNullConfiguration(IProtectedMemoryAllocator protectedMemoryAllocator)
         {
             Debug.WriteLine("TestNullConfiguration");
-            using (var secret = new ProtectedMemorySecret(
-                new byte[] { 0, 1 },
+            using var _ = new ProtectedMemorySecret(
+                new byte[] {0, 1},
                 protectedMemoryAllocator,
                 systemInterface,
-                null))
-            {
-            }
+                null);
         }
 
         [Fact]
@@ -70,13 +69,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocatorMock.Setup(x => x.Alloc(It.IsAny<ulong>())).Returns(IntPtr.Zero);
             Assert.Throws<ProtectedMemoryAllocationFailedException>(() =>
             {
-                using (var secret = new ProtectedMemorySecret(
-                    new byte[] { 0, 1 },
+                using var _ = new ProtectedMemorySecret(
+                    new byte[] {0, 1},
                     protectedMemoryAllocatorMock.Object,
                     systemInterface,
-                    configuration))
-                {
-                }
+                    configuration);
             });
         }
 
@@ -470,45 +467,42 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestWithSecretBytesMultiThreadedAccess()
         {
             Debug.WriteLine("TestWithSecretBytesMultiThreadedAccess start");
-            using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
+            using ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration);
+            byte[] secretBytes = { 0, 1, 2, 3 };
+            Debug.WriteLine("Creating secret");
+            using Secret secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]);
+            // Submit large number of tasks to a reasonably sized thread pool to verify concurrency
+            // semantics around the protected memory management
+            const int numThreads = 100;
+
+            // Get the current settings and try to force minWorkers
+            ThreadPool.GetMinThreads(out _, out var currentMinCompletionPortThreads);
+            Assert.True(ThreadPool.SetMinThreads(numThreads, currentMinCompletionPortThreads));
+
+            const int numTasks = numThreads * 1000;
+            long completedTasks = 0;
+            CountdownEvent countdown = new CountdownEvent(numTasks);
+
+            Parallel.ForEach(Enumerable.Range(0, numTasks), i =>
             {
-                byte[] secretBytes = { 0, 1, 2, 3 };
-                Debug.WriteLine("Creating secret");
-                using (Secret secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
-                {
-                    // Submit large number of tasks to a reasonably sized thread pool to verify concurrency
-                    // semantics around the protected memory management
-                    const int numThreads = 100;
-
-                    // Get the current settings and try to force minWorkers
-                    ThreadPool.GetMinThreads(out _, out var currentMinIOC);
-                    Assert.True(ThreadPool.SetMinThreads(numThreads, currentMinIOC));
-
-                    const int numTasks = numThreads * 1000;
-                    long completedTasks = 0;
-                    CountdownEvent countdown = new CountdownEvent(numTasks);
-
-                    Parallel.ForEach(Enumerable.Range(0, numTasks), i =>
+                ThreadPool.QueueUserWorkItem(
+                    state =>
                     {
-                        ThreadPool.QueueUserWorkItem(
-                            state =>
-                            {
-                                secret.WithSecretBytes(decryptedBytes =>
-                                {
-                                    Assert.Equal(secretBytes, decryptedBytes);
-                                });
-                                Interlocked.Increment(ref completedTasks);
-                                countdown.Signal();
-                            }, null);
-                    });
+                        // ReSharper disable once AccessToDisposedClosure
+                        secret.WithSecretBytes(decryptedBytes =>
+                        {
+                            Assert.Equal(secretBytes, decryptedBytes);
+                        });
+                        Interlocked.Increment(ref completedTasks);
+                        countdown.Signal();
+                    }, null);
+            });
 
-                    // Wait for all threads to complete
-                    Debug.WriteLine("Waiting for threads");
-                    countdown.Wait();
-                    Debug.WriteLine("Threads finished");
-                    Assert.Equal(numTasks, completedTasks);
-                }
-            }
+            // Wait for all threads to complete
+            Debug.WriteLine("Waiting for threads");
+            countdown.Wait();
+            Debug.WriteLine("Threads finished");
+            Assert.Equal(numTasks, completedTasks);
 
             Debug.WriteLine("TestWithSecretBytesMultiThreadedAccess end");
         }

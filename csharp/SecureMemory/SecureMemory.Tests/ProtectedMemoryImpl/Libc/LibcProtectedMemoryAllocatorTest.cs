@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
@@ -7,6 +8,7 @@ using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -28,7 +30,16 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            systemInterface = SystemInterface.GetInstance();
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"heapSize", "32000"},
+                {"minimumAllocationSize", "128"},
+#if DEBUG
+                {"openSSLPath", @"C:\Program Files\OpenSSL"},
+#endif
+            }).Build();
+
+            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
             libcProtectedMemoryAllocator = new LibcProtectedMemoryAllocatorLP64(systemInterface);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest ctor");

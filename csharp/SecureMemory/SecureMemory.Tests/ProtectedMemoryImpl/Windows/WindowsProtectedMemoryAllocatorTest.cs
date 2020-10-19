@@ -20,13 +20,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            var systemInterface = SystemInterface.GetInstance();
-
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 { "minimumWorkingSetSize", "33554430"},
                 { "maximumWorkingSetSize", "67108860"},
             }).Build();
+
+            var systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
 {
@@ -20,15 +21,15 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
         private IntPtr key;
         private bool disposedValue;
 
-        internal OpenSSLCryptProtectMemory(string cipher, SystemInterface systemInterface)
+        internal OpenSSLCryptProtectMemory(string cipher, SystemInterface systemInterface, IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                openSSLCrypto = new OpenSSLCryptoWindows();
+                openSSLCrypto = new OpenSSLCryptoWindows(configuration);
             }
             else
             {
-                openSSLCrypto = new OpenSSLCryptoLibc();
+                openSSLCrypto = new OpenSSLCryptoLibc(configuration);
             }
 
             this.systemInterface = systemInterface;
@@ -91,7 +92,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                 throw new ArgumentOutOfRangeException(nameof(length), length, "CryptProtectMemory length must be > 0");
             }
 
-            Debug.WriteLine($"CryptProtectMemory({memory}, {length}) " + IntPtrStr(memory, length));
+            PrintIntPtr($"CryptProtectMemory({memory}, {length}) ", memory, length);
 
             if (disposedValue)
             {
@@ -149,7 +150,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                         Check.Result(result, 1, "EVP_EncryptFinal_ex");
                         finalOutputLength += outputLength;
                         Debug.WriteLine($"EVP_EncryptFinal_ex outputLength = {finalOutputLength}");
-                        Debug.WriteLine("CryptProtectMemory output " + IntPtrStr(tmpBuffer, finalOutputLength));
+                        PrintIntPtr("CryptProtectMemory output ", tmpBuffer, finalOutputLength);
                     }
                     finally
                     {
@@ -179,7 +180,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                 throw new ArgumentException($"CryptUnprotectMemory length must be multiple of blockSize {blockSize}", nameof(length));
             }
 
-            Debug.WriteLine($"CryptUnprotectMemory({memory}, {length})" + IntPtrStr(memory, length));
+            PrintIntPtr($"CryptUnprotectMemory({memory}, {length})", memory, length);
 
             if (disposedValue)
             {
@@ -226,6 +227,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                                 decryptCtx,
                                 finalDecrypted,
                                 out finalDecryptedLength);
+                            Check.Result(result, 1, "EVP_DecryptFinal_ex");
                         }
                         finally
                         {
@@ -241,7 +243,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                         systemInterface.SetNoAccess(key, (ulong)systemInterface.PageSize);
                     }
 
-                    Debug.WriteLine("memcpy");
+                    Debug.WriteLine("CopyMemory");
                     systemInterface.CopyMemory(tmpBuffer, memory, (ulong)finalDecryptedLength);
                 }
             }
@@ -252,7 +254,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
             }
         }
 
-        public string IntPtrStr(IntPtr pointer, int length)
+        [Conditional("DEBUG")]
+        public void PrintIntPtr(string desc, IntPtr pointer, int length)
         {
             var sb = new System.Text.StringBuilder(" IntPtr { ");
             for (var i = 0; i < length; i++)
@@ -261,10 +264,11 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
             }
 
             sb.Append("}");
-            return sb.ToString();
+            Debug.WriteLine(desc + sb);
         }
 
-        public void PrintByteArray(byte[] bytes)
+        [Conditional("DEBUG")]
+        public void PrintByteArray(string desc, byte[] bytes)
         {
             var sb = new System.Text.StringBuilder(" byte[] { ");
             foreach (var b in bytes)
@@ -273,7 +277,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
             }
 
             sb.Append("}");
-            Debug.WriteLine(sb.ToString());
+            Debug.WriteLine(desc + sb);
         }
 
         public int GetBlockSize()
@@ -285,9 +289,9 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
         {
             if (!disposedValue)
             {
-                SystemInterface disposeSystemInterface;
                 try
                 {
+                    SystemInterface disposeSystemInterface;
                     if (disposing)
                     {
                         disposeSystemInterface = systemInterface;
@@ -295,7 +299,8 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.OpenSSL
                     }
                     else
                     {
-                        disposeSystemInterface = SystemInterface.GetInstance();
+                        // NOTE: GetExistingInstance is only used in finalizer
+                        disposeSystemInterface = SystemInterface.GetExistingInstance();
                     }
 
                     Debug.WriteLine("EVP_CIPHER_CTX_free encryptCtx");

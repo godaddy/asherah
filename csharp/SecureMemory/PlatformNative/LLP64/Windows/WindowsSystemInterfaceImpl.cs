@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
@@ -13,17 +14,17 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         private readonly Lazy<OpenSSLCryptProtectMemory> openSSLCryptProtectMemory;
         private readonly IntPtr hProcess;
 
-        public WindowsSystemInterfaceImpl()
+        public WindowsSystemInterfaceImpl(IConfiguration configuration)
         {
             hProcess = WindowsInterop.GetCurrentProcess();
 
-            // IntPtr library = WindowsInterop.LoadLibrary("C:\\OpenSSL\\libcrypto-1_1-x64.dll");
             openSSLCryptProtectMemory =
                 new Lazy<OpenSSLCryptProtectMemory>(
-                    () =>
-                    {
-                        return new OpenSSLCryptProtectMemory(ProcessEncryptionCipher, this);
-                    }, LazyThreadSafetyMode.ExecutionAndPublication);
+                    () => new OpenSSLCryptProtectMemory(
+                        ProcessEncryptionCipher,
+                        this,
+                        configuration),
+                    LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public override void CopyMemory(IntPtr source, IntPtr dest, ulong length)
@@ -53,10 +54,11 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
                 pointer,
                 (UIntPtr)length,
                 (uint)MemoryProtection.PAGE_NOACCESS,
-                out uint oldProtect);
+                out uint _);
+
             if (!result)
             {
-                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+                throw new WindowsOperationFailedException("VirtualProtectEx", 0, Marshal.GetLastWin32Error());
             }
         }
 
@@ -67,11 +69,11 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
                 pointer,
                 (UIntPtr)length,
                 (uint)MemoryProtection.PAGE_READONLY,
-                out uint oldProtect);
+                out uint _);
 
             if (!result)
             {
-                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+                throw new WindowsOperationFailedException("VirtualProtectEx", 0, Marshal.GetLastWin32Error());
             }
         }
 
@@ -82,11 +84,11 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
                 pointer,
                 (UIntPtr)length,
                 (uint)MemoryProtection.PAGE_READWRITE,
-                out uint oldProtect);
+                out uint _);
 
             if (!result)
             {
-                throw new WindowsOperationFailedException("VirtualProtectEx", result ? -1 : 0, Marshal.GetLastWin32Error());
+                throw new WindowsOperationFailedException("VirtualProtectEx", 0, Marshal.GetLastWin32Error());
             }
         }
 
@@ -96,7 +98,7 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public override IntPtr PageAlloc(ulong length)
         {
-            var result = WindowsInterop.VirtualAlloc(IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_EXECUTE_READWRITE);
+            var result = WindowsInterop.VirtualAlloc(IntPtr.Zero, (UIntPtr)length, AllocationType.COMMIT | AllocationType.RESERVE, MemoryProtection.PAGE_READWRITE);
             if (result == IntPtr.Zero || result == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
@@ -142,7 +144,6 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         {
             UIntPtr min = UIntPtr.Zero;
             UIntPtr max = UIntPtr.Zero;
-            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
             var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
             if (!result)
             {

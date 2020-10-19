@@ -27,7 +27,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             {
                 if (systemInterface == null)
                 {
-                    systemInterface = SystemInterface.GetInstance();
+                    systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
                 }
 
                 this.configuration = configuration;

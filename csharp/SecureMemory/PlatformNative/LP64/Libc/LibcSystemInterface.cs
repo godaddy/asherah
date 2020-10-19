@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
+using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
 {
@@ -10,13 +11,13 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Libc
         private readonly Lazy<OpenSSLCryptProtectMemory> openSSLCryptProtectMemory;
         private bool globallyDisabledCoreDumps;
 
-        internal LibcSystemInterface()
+        internal LibcSystemInterface(IConfiguration configuration)
         {
             openSSLCryptProtectMemory =
                 new Lazy<OpenSSLCryptProtectMemory>(
                     () =>
                     {
-                        return new OpenSSLCryptProtectMemory(ProcessEncryptionCipher, this);
+                        return new OpenSSLCryptProtectMemory(ProcessEncryptionCipher, this, configuration);
                     }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 

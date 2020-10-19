@@ -18,7 +18,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
         private readonly IProtectedMemoryAllocator protectedMemoryAllocator;
-        private IConfiguration configuration;
+        private readonly IConfiguration configuration;
+        private readonly SystemInterface systemInterface;
 
         public ProtectedMemoryAllocatorTest()
         {
@@ -32,6 +33,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 {"minimumAllocationSize", "128"},
             }).Build();
 
+            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
+
             Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
             protectedMemoryAllocator = GetPlatformAllocator();
         }
@@ -44,7 +47,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         internal IProtectedMemoryAllocator GetPlatformAllocator()
         {
-            var systemInterface = SystemInterface.GetInstance();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 return new LibcProtectedMemoryAllocatorLP64(systemInterface);

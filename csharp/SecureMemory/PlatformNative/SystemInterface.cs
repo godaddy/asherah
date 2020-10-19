@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
+using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -13,26 +14,8 @@ namespace GoDaddy.Asherah.PlatformNative
 {
     public abstract class SystemInterface
     {
-        private static readonly SystemInterface Interface;
-
-        [ExcludeFromCodeCoverage]
-        static SystemInterface()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Interface = new LinuxSystemInterfaceImpl();
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Interface = new MacOSSystemInterfaceImpl();
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Interface = new WindowsSystemInterfaceImpl();
-            }
-        }
+        private static readonly object SystemInterfaceLock = new object();
+        private static SystemInterface systemInterface;
 
         protected SystemInterface()
         {
@@ -42,14 +25,46 @@ namespace GoDaddy.Asherah.PlatformNative
         public int PageSize { get; }
 
         [ExcludeFromCodeCoverage]
-        public static SystemInterface GetInstance()
+        public static SystemInterface GetExistingInstance()
         {
-            if (Interface == null)
+            lock (SystemInterfaceLock)
             {
-                throw new PlatformNotSupportedException("Unknown platform");
+                if (systemInterface == null)
+                {
+                    throw new Exception("SystemInterface not configured");
+                }
             }
 
-            return Interface;
+            return systemInterface;
+        }
+
+        [ExcludeFromCodeCoverage]
+        public static SystemInterface ConfigureSystemInterface(IConfiguration configuration)
+        {
+            lock (SystemInterfaceLock)
+            {
+                if (systemInterface == null)
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        systemInterface = new LinuxSystemInterfaceImpl(configuration);
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        systemInterface = new MacOSSystemInterfaceImpl(configuration);
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        systemInterface = new WindowsSystemInterfaceImpl(configuration);
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException("Unknown platform");
+                    }
+                }
+            }
+
+            return systemInterface;
         }
 
         public abstract void CopyMemory(IntPtr source, IntPtr dest, ulong length);

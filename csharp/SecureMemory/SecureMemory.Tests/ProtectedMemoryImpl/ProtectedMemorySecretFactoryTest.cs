@@ -54,9 +54,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }).Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestOpenSSLConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(config))
-            {
-            }
+            using var _ = new ProtectedMemorySecretFactory(config);
         }
 
         [Fact]
@@ -68,9 +66,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }).Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(config))
-            {
-            }
+            using var _ = new ProtectedMemorySecretFactory(config);
         }
 
         [Fact]
@@ -84,9 +80,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestMmapConfiguration");
             Assert.Throws<PlatformNotSupportedException>(() =>
             {
-                using (var factory = new ProtectedMemorySecretFactory(config))
-                {
-                }
+                using var _ = new ProtectedMemorySecretFactory(config);
             });
         }
 
@@ -169,12 +163,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void TestMultipleRefCount()
         {
-            using (var factory = new ProtectedMemorySecretFactory(configuration))
-            {
-                using (var factory2 = new ProtectedMemorySecretFactory(configuration))
-                {
-                }
-            }
+            using var _ = new ProtectedMemorySecretFactory(configuration);
+            using var __ = new ProtectedMemorySecretFactory(configuration);
         }
 
         [Fact]

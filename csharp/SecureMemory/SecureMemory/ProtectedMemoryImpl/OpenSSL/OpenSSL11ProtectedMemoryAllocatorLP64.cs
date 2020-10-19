@@ -35,11 +35,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    this.openSSL11 = new OpenSSLCryptoWindows();
+                    this.openSSL11 = new OpenSSLCryptoWindows(configuration);
                 }
                 else
                 {
-                    this.openSSL11 = new OpenSSLCryptoLibc();
+                    this.openSSL11 = new OpenSSLCryptoLibc(configuration);
                 }
             }
 

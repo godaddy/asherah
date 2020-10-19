@@ -1,9 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Configuration;
 using size_t = System.UInt64;
+
+// ReSharper disable InconsistentNaming
 #pragma warning disable 414
 
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
@@ -18,11 +22,18 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         private const string LibraryName = "libcrypto-1_1-x64.dll";
 
         private const int EVP_MAX_BLOCK_LENGTH = 32;
+
         private int EVP_MAX_KEY_LENGTH = 64;
         private int EVP_MAX_IV_LENGTH = 16;
 
-        public OpenSSLCryptoWindows()
+        public OpenSSLCryptoWindows(IConfiguration configuration)
         {
+            var openSSLPath = configuration["openSSLPath"];
+            if (!string.IsNullOrWhiteSpace(openSSLPath))
+            {
+                _ = WindowsInterop.LoadLibrary(Path.Combine(openSSLPath, LibraryName));
+            }
+
             // ReSharper disable once VirtualMemberCallInConstructor
             LibraryCheck();
         }

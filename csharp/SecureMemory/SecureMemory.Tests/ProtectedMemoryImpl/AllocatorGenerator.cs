@@ -22,7 +22,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 {"minimumAllocationSize", "128"},
             }).Build();
 
-            var systemInterface = SystemInterface.GetInstance();
+            var systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
 
             allocators = new List<object[]>();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

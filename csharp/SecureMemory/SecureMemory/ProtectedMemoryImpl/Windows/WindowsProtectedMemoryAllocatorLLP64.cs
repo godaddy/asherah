@@ -7,20 +7,17 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
     internal class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
     {
         private const int DefaultMaximumWorkingSetSize = 67108860;
-        private const int DefaultMinimumWorkingSetSize = 33554430;
+
+        // private const int DefaultMinimumWorkingSetSize = 33554430;
         private readonly ulong encryptedMemoryBlockSize;
         private readonly SystemInterface systemInterface;
 
         public WindowsProtectedMemoryAllocatorLLP64(IConfiguration configuration, SystemInterface systemInterface)
         {
-            if (systemInterface == null)
-            {
-                throw new ArgumentNullException(nameof(systemInterface));
-            }
-
-            this.systemInterface = systemInterface;
+            this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
             encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
 
+            /*
             ulong min = 0;
 
             var minConfig = configuration["minimumWorkingSetSize"];
@@ -35,6 +32,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
                     min = DefaultMinimumWorkingSetSize;
                 }
             }
+            */
 
             ulong max = 0;
             var maxConfig = configuration["maximumWorkingSetSize"];
