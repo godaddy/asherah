@@ -1,9 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 
-namespace GoDaddy.Asherah.PlatformNative
+namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     public class WindowsMemoryEncryption : IMemoryEncryption
     {

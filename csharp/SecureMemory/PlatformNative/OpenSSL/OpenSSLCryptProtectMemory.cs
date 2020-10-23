@@ -190,8 +190,8 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
             IntPtr tmpBuffer = Marshal.AllocHGlobal((int)length + blockSize);
             try
             {
-                systemInterface.LockMemory(tmpBuffer, (ulong)length + (ulong)blockSize);
-                systemInterface.SetNoDump(tmpBuffer, (ulong)length + (ulong)blockSize);
+                systemInterface.LockMemory(tmpBuffer, length + (ulong)blockSize);
+                systemInterface.SetNoDump(tmpBuffer, length + (ulong)blockSize);
 
                 lock (cryptProtectLock)
                 {
@@ -203,7 +203,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                         Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
                         Check.IntPtr(key, "CryptUnprotectMemory key is invalid");
                         Check.IntPtr(iv, "CryptUnprotectMemory iv is invalid");
-                        int decryptedLength = 0;
+                        int decryptedLength;
                         int result;
                         try
                         {
@@ -237,7 +237,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                         }
                         finally
                         {
-                            result = openSSLCrypto.EVP_CIPHER_CTX_reset(decryptCtx);
+                            openSSLCrypto.EVP_CIPHER_CTX_reset(decryptCtx);
                         }
 
                         finalDecryptedLength += decryptedLength;
