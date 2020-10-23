@@ -1,17 +1,11 @@
 using System;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums;
-using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS
 {
     internal class MacOSSystemInterfaceImpl : LibcSystemInterface
     {
-        public MacOSSystemInterfaceImpl(IConfiguration configuration)
-            : base(configuration)
-        {
-        }
-
         public override void ZeroMemory(IntPtr ptr, ulong length)
         {
             LibcLP64.memset_s(ptr, length, 0, length);

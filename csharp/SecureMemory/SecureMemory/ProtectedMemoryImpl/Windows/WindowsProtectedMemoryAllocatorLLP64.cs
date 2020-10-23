@@ -11,11 +11,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         // private const int DefaultMinimumWorkingSetSize = 33554430;
         private readonly ulong encryptedMemoryBlockSize;
         private readonly SystemInterface systemInterface;
+        private readonly IMemoryEncryption memoryEncryption;
 
-        public WindowsProtectedMemoryAllocatorLLP64(IConfiguration configuration, SystemInterface systemInterface)
+        public WindowsProtectedMemoryAllocatorLLP64(IConfiguration configuration, SystemInterface systemInterface, IMemoryEncryption memoryEncryption)
         {
             this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
-            encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
+            this.memoryEncryption = memoryEncryption;
+            encryptedMemoryBlockSize = memoryEncryption.GetEncryptedMemoryBlockSize();
 
             /*
             ulong min = 0;
@@ -72,7 +74,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             length = AdjustLength(length);
 
-            systemInterface.ProcessEncryptMemory(pointer, length);
+            memoryEncryption.ProcessEncryptMemory(pointer, length);
             systemInterface.UnlockMemory(pointer, length);
         }
 
@@ -82,7 +84,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
             systemInterface.LockMemory(pointer, length);
 
-            systemInterface.ProcessDecryptMemory(pointer, length);
+            memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
@@ -91,7 +93,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
             systemInterface.LockMemory(pointer, length);
 
-            systemInterface.ProcessDecryptMemory(pointer, length);
+            memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
         public void ZeroMemory(IntPtr pointer, ulong length)

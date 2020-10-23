@@ -88,7 +88,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         {
             try
             {
-                // Wipe the protected memory (assumes memory was made writeable)
+                // Make memory writable if needed
+                SetReadWriteAccess(pointer, length);
+
+                // Wipe the protected memory
                 SystemInterface.ZeroMemory(pointer, length);
             }
             finally

@@ -47,15 +47,15 @@ namespace GoDaddy.Asherah.PlatformNative
                 {
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
-                        systemInterface = new LinuxSystemInterfaceImpl(configuration);
+                        systemInterface = new LinuxSystemInterfaceImpl();
                     }
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     {
-                        systemInterface = new MacOSSystemInterfaceImpl(configuration);
+                        systemInterface = new MacOSSystemInterfaceImpl();
                     }
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        systemInterface = new WindowsSystemInterfaceImpl(configuration);
+                        systemInterface = new WindowsSystemInterfaceImpl();
                     }
                     else
                     {
@@ -94,11 +94,5 @@ namespace GoDaddy.Asherah.PlatformNative
         public abstract ulong GetMemoryLockLimit();
 
         public abstract void SetMemoryLockLimit(ulong limit);
-
-        public abstract ulong GetEncryptedMemoryBlockSize();
-
-        public abstract void ProcessEncryptMemory(IntPtr pointer, ulong length);
-
-        public abstract void ProcessDecryptMemory(IntPtr pointer, ulong length);
     }
 }

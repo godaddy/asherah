@@ -2,8 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
-using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.OpenSSL;
 using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
@@ -16,16 +15,25 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
         private readonly IOpenSSLCrypto openSSL11;
         private readonly SystemInterface systemInterface;
         private bool disposedValue;
+        private IMemoryEncryption memoryEncryption;
 
         public OpenSSL11ProtectedMemoryAllocatorLP64(
             IConfiguration configuration,
             SystemInterface systemInterface,
-            IOpenSSLCrypto openSSL11 = null)
+            IMemoryEncryption memoryEncryption,
+            IOpenSSLCrypto openSSL11)
         {
             if (configuration == null)
             {
                 throw new ArgumentNullException(nameof(configuration));
             }
+
+            var heapSizeConfig = configuration["heapSize"];
+            var heapSize = !string.IsNullOrWhiteSpace(heapSizeConfig) ? ulong.Parse(heapSizeConfig) : DefaultHeapSize;
+
+            var minimumAllocationSizeConfig = configuration["minimumAllocationSize"];
+            var minimumAllocationSize = !string.IsNullOrWhiteSpace(minimumAllocationSizeConfig)
+                ? int.Parse(minimumAllocationSizeConfig) : DefaultMinimumAllocationSize;
 
             if (openSSL11 != null)
             {
@@ -48,41 +56,22 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
                 throw new ArgumentNullException(nameof(openSSL11));
             }
 
+            int result = this.openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize);
+            switch (result)
+            {
+                case 0:
+                    throw new OpenSSLSecureHeapUnavailableException("Unable to initialize OpenSSL secure heap");
+                case 1:
+                    break;
+                case 2:
+                    throw new OpenSSLSecureHeapUnavailableException("OpenSSL indicated insecure heap");
+                default:
+                    throw new OpenSSLSecureHeapUnavailableException("Unknown result from CRYPTO_secure_malloc_init");
+            }
+
             this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
-
-            encryptedMemoryBlockSize = systemInterface.GetEncryptedMemoryBlockSize();
-
-            ulong heapSize;
-            var heapSizeConfig = configuration["heapSize"];
-            if (!string.IsNullOrWhiteSpace(heapSizeConfig))
-            {
-                heapSize = ulong.Parse(heapSizeConfig);
-            }
-            else
-            {
-                heapSize = DefaultHeapSize;
-            }
-
-            int minimumAllocationSize;
-            var minimumAllocationSizeConfig = configuration["minimumAllocationSize"];
-            if (!string.IsNullOrWhiteSpace(minimumAllocationSizeConfig))
-            {
-                minimumAllocationSize = int.Parse(minimumAllocationSizeConfig);
-            }
-            else
-            {
-                minimumAllocationSize = DefaultMinimumAllocationSize;
-            }
-
-            Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorLP64: openSSL11 is not null");
-
-            Debug.WriteLine($"*** LinuxOpenSSL11ProtectedMemoryAllocatorLP64: CRYPTO_secure_malloc_init ***");
-            Check.Result(this.openSSL11.CRYPTO_secure_malloc_init(heapSize, minimumAllocationSize), 1, "CRYPTO_secure_malloc_init");
-
-            systemInterface.GetEncryptedMemoryBlockSize();
-
-            // cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface);
-            // blockSize = (ulong)cryptProtectMemory.GetBlockSize();
+            this.memoryEncryption = memoryEncryption;
+            encryptedMemoryBlockSize = this.memoryEncryption.GetEncryptedMemoryBlockSize();
         }
 
         ~OpenSSL11ProtectedMemoryAllocatorLP64()
@@ -103,7 +92,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             // NOTE: No rounding for encrypt!
             Debug.WriteLine($"SetNoAccess: Length {length}");
 
-            systemInterface.ProcessEncryptMemory(pointer, length);
+            memoryEncryption.ProcessEncryptMemory(pointer, length);
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
@@ -117,11 +106,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
 
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // Round up allocation size to nearest block size
-            Debug.WriteLine($"SetReadAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
-            Debug.WriteLine($"SetReadAccess: New length {length}");
-
-            systemInterface.ProcessDecryptMemory(pointer, length);
+            // Debug.WriteLine($"SetReadAccess: Rounding length {length} to nearest blocksize");
+            // length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
+            // Debug.WriteLine($"SetReadAccess: New length {length}");
+            memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
@@ -139,7 +127,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
             Debug.WriteLine($"SetReadWriteAccess: New length {length}");
 
-            systemInterface.ProcessDecryptMemory(pointer, length);
+            memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
         // ************************************

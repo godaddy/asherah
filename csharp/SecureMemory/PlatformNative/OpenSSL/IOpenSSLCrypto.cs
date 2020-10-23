@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using size_t = System.UInt64;
 
-namespace GoDaddy.Asherah.PlatformNative
+namespace GoDaddy.Asherah.PlatformNative.OpenSSL
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
@@ -12,6 +12,14 @@ namespace GoDaddy.Asherah.PlatformNative
     public interface IOpenSSLCrypto
     {
         void LibraryCheck();
+
+        void CheckResult(IntPtr ptr, string function);
+
+        void CheckResult(int result, int expected, string function);
+
+        ulong ERR_get_error();
+
+        string ERR_error_string_n(ulong e);
 
         int CRYPTO_secure_malloc_init(size_t size, int minsize);
 

@@ -309,15 +309,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 #endif
 
                     // accessLock isn't needed here since we are holding the pointer lock in write
-                    try
-                    {
-                        allocator.SetReadWriteAccess(pointer, length);
-                    }
-                    finally
-                    {
-                        allocator.Free(pointer, length);
-                        pointer = IntPtr.Zero;
-                    }
+                    allocator.Free(pointer, length);
+                    pointer = IntPtr.Zero;
                 }
                 finally
                 {

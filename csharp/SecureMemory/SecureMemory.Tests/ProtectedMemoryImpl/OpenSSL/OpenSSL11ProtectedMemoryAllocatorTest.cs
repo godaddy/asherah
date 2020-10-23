@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -15,7 +18,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         private readonly OpenSSL11ProtectedMemoryAllocatorLP64 openSSL11ProtectedMemoryAllocatorLP64;
         private readonly IConfiguration configuration;
         private readonly SystemInterface systemInterface;
-
+        private readonly IOpenSSLCrypto crypto;
         public OpenSSL11ProtectedMemoryAllocatorTest()
         {
             Trace.Listeners.Clear();
@@ -26,23 +29,44 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
             {
                 {"heapSize", "4096"},
                 {"minimumAllocationSize", "64"},
+#if DEBUG
+                {"openSSLPath", @"C:\Program Files\OpenSSL\bin"},
+#endif
             }).Build();
 
             systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
-
+            crypto = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? (IOpenSSLCrypto) new OpenSSLCryptoWindows(configuration)
+                : new OpenSSLCryptoLibc(configuration);
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
-            openSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            try
+            {
+                openSSL11ProtectedMemoryAllocatorLP64 =
+                    new OpenSSL11ProtectedMemoryAllocatorLP64(
+                        configuration,
+                        systemInterface,
+                        new OpenSSLCryptProtectMemory("aes-256-gcm",
+                            systemInterface,
+                            crypto),
+                        crypto);
+            }
+            catch (OpenSSLSecureHeapUnavailableException)
+            {
+                openSSL11ProtectedMemoryAllocatorLP64 = null;
+            }
         }
 
         public void Dispose()
         {
-            openSSL11ProtectedMemoryAllocatorLP64.Dispose();
+            openSSL11ProtectedMemoryAllocatorLP64?.Dispose();
             Debug.WriteLine("LinuxOpenSSL11ProtectedMemoryAllocatorTest Dispose\n");
         }
 
         [SkippableFact]
         private void TestAllocFree()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             byte[] origValue = { 1, 2, 3, 4 };
             ulong length = (ulong)origValue.Length;
 
@@ -65,9 +89,19 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         [SkippableFact]
         private void TestSetNoAccessAfterDispose()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestSetNoAccessAfterDispose");
 
-            var tempOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            var tempOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                configuration,
+                systemInterface,
+                new OpenSSLCryptProtectMemory(
+                    "aes-256-gcm",
+                    systemInterface,
+                    crypto),
+                crypto);
+
 
             tempOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
@@ -80,9 +114,18 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         [SkippableFact]
         private void TestReadAccessAfterDispose()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestReadAccessAfterDispose");
 
-            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                configuration,
+                systemInterface,
+                new OpenSSLCryptProtectMemory(
+                    "aes-256-gcm",
+                    systemInterface,
+                    crypto),
+                crypto);
 
             tmpOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
@@ -95,8 +138,17 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         [SkippableFact]
         private void TestReadWriteAccessAfterDispose()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestReadWriteAccessAfterDispose");
-            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                configuration,
+                systemInterface,
+                new OpenSSLCryptProtectMemory(
+                    "aes-256-gcm",
+                    systemInterface,
+                    crypto),
+                crypto);
 
             tmpOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
@@ -109,30 +161,47 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         [SkippableFact]
         private void TestNullConfiguration()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestNullConfiguration");
 
             Assert.Throws<ArgumentNullException>(() =>
             {
-                _ = new OpenSSL11ProtectedMemoryAllocatorLP64(null, systemInterface);
+                _ = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                    null,
+                    systemInterface,
+                    null,
+                    null
+                    );
             });
         }
 
         [SkippableFact]
         private void TestNullSystemInterface()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestNullSystemInterface");
             Assert.Throws<ArgumentNullException>(() =>
             {
-                _ = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, null);
+                _ = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                    configuration,
+                    null,
+                    new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, crypto), crypto);
             });
         }
 
         [SkippableFact]
         private void TestAllocAfterDispose()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestAllocAfterDispose");
 
-            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                configuration,
+                systemInterface,
+                new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, crypto), crypto);
 
             tmpOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
@@ -145,8 +214,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
         [SkippableFact]
         private void TestFreeAfterDispose()
         {
+            Skip.If(openSSL11ProtectedMemoryAllocatorLP64 == null);
+
             Debug.WriteLine("TestFreeAfterDispose");
-            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+            var tmpOpenSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                configuration,
+                systemInterface,
+                new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, crypto),
+                null);
 
             tmpOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 

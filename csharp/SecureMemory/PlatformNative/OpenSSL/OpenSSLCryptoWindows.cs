@@ -4,13 +4,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using Microsoft.Extensions.Configuration;
 using size_t = System.UInt64;
 
 // ReSharper disable InconsistentNaming
 #pragma warning disable 414
 
-namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
+namespace GoDaddy.Asherah.PlatformNative.OpenSSL
 {
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
     [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
@@ -28,10 +30,17 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 
         public OpenSSLCryptoWindows(IConfiguration configuration)
         {
-            var openSSLPath = configuration["openSSLPath"];
-            if (!string.IsNullOrWhiteSpace(openSSLPath))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _ = WindowsInterop.LoadLibrary(Path.Combine(openSSLPath, LibraryName));
+                var openSSLPath = configuration["openSSLPath"];
+                if (!string.IsNullOrWhiteSpace(openSSLPath))
+                {
+                    var libraryFullPath = Path.Combine(openSSLPath, LibraryName);
+                    if (WindowsInterop.LoadLibrary(libraryFullPath) == IntPtr.Zero)
+                    {
+                        throw new Exception($"Could not find OpenSSL library {LibraryName} at {libraryFullPath}");
+                    }
+                }
             }
 
             // ReSharper disable once VirtualMemberCallInConstructor
@@ -43,6 +52,44 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
         public virtual void LibraryCheck()
         {
             CRYPTO_secure_malloc_initialized();
+        }
+
+        public void CheckResult(int result, int expected, string function)
+        {
+            if (result != expected)
+            {
+                ulong err = ERR_get_error();
+                throw new Exception($"{function}: {ERR_error_string_n(err)}");
+            }
+        }
+
+        public void CheckResult(IntPtr result, string function)
+        {
+            if (result == IntPtr.Zero)
+            {
+                ulong err = ERR_get_error();
+                throw new Exception($"{function}: {ERR_error_string_n(err)}");
+            }
+        }
+
+        [DllImport(LibraryName, EntryPoint = "ERR_get_error", SetLastError = true)]
+        private static extern UIntPtr _ERR_get_error();
+
+        public ulong ERR_get_error()
+        {
+            return (ulong)_ERR_get_error();
+        }
+
+        [DllImport(LibraryName, EntryPoint = "ERR_error_string_n", SetLastError = true)]
+        private static extern void _ERR_error_string_n(ulong e, [MarshalAs(UnmanagedType.LPArray)] byte[] buffer, size_t len);
+
+        public string ERR_error_string_n(ulong e)
+        {
+            var buffer = new byte[256];
+            _ERR_error_string_n(e, buffer, (ulong)buffer.LongLength);
+
+            int end = Array.FindIndex(buffer, 0, x => x == 0);
+            return Encoding.UTF8.GetString(buffer, 0, end);
         }
 
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_init", SetLastError = true)]

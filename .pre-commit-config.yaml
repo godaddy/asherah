@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
+    rev: v3.3.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
@@ -14,7 +14,7 @@ repos:
     -   id: check-added-large-files
     -   id: check-symlinks
     -   id: check-merge-conflict
-    -   id: check-byte-order-marker
+    -   id: fix-byte-order-marker
 - repo: https://github.com/godaddy/tartufo
   rev: v1.1.2
   hooks:

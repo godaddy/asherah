@@ -21,6 +21,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             var configDictionary = new Dictionary<string, string>();
             configDictionary["debugSecrets"] = "true";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                configDictionary["openSSLPath"] = @"C:\Program Files\OpenSSL\bin";
+            }
 
             configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configDictionary)

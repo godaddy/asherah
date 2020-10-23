@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
@@ -180,19 +183,23 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     {
                         if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            return new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                            return new OpenSSL11ProtectedMemoryAllocatorLP64(
+                                configuration,
+                                systemInterface,
+                                new WindowsMemoryEncryption(),
+                                new OpenSSLCryptoWindows(configuration));
                         }
 
                         if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface);
+                            return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface, new WindowsMemoryEncryption());
                         }
 
                         throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
                     }
                 }
 
-                return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface);
+                return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface, new WindowsMemoryEncryption());
             }
 
             // We return null if we don't know what the OS is, so other methods can be tried
@@ -201,6 +208,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         private static IProtectedMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
         {
+            var openSSL11 = new OpenSSLCryptoLibc(configuration);
             if (configuration != null)
             {
                 var secureHeapEngine = configuration["secureHeapEngine"];
@@ -210,7 +218,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                     {
                         try
                         {
-                            return new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                            var memoryEncryption = new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, openSSL11);
+                            return new OpenSSL11ProtectedMemoryAllocatorLP64(
+                                configuration,
+                                systemInterface,
+                                memoryEncryption,
+                                openSSL11);
                         }
                         catch (DllNotFoundException)
                         {

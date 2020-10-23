@@ -1,33 +1,17 @@
 using System;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
-using GoDaddy.Asherah.PlatformNative.LP64.OpenSSL;
-using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
     internal class WindowsSystemInterfaceImpl : SystemInterface
     {
-        private const string ProcessEncryptionCipher = "aes-256-gcm";
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
-        private readonly OpenSSLCryptProtectMemory openSSLCryptProtectMemory;
         private readonly IntPtr hProcess;
 
-        public WindowsSystemInterfaceImpl(IConfiguration configuration)
+        public WindowsSystemInterfaceImpl()
         {
             hProcess = WindowsInterop.GetCurrentProcess();
-
-            try
-            {
-                openSSLCryptProtectMemory = new OpenSSLCryptProtectMemory(
-                    ProcessEncryptionCipher,
-                    this,
-                    configuration);
-            }
-            catch (Exception)
-            {
-                openSSLCryptProtectMemory = null;
-            }
         }
 
         public override void CopyMemory(IntPtr source, IntPtr dest, ulong length)
@@ -178,45 +162,6 @@ namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
             if (!result)
             {
                 throw new Exception($"SetProcessWorkingSetSize({min.ToUInt64()},{max.ToUInt64()}) failed");
-            }
-        }
-
-        public override ulong GetEncryptedMemoryBlockSize()
-        {
-            return openSSLCryptProtectMemory != null
-                ? (ulong)openSSLCryptProtectMemory.GetBlockSize()
-                : CryptProtect.BLOCKSIZE;
-        }
-
-        public override void ProcessEncryptMemory(IntPtr pointer, ulong length)
-        {
-            if (openSSLCryptProtectMemory != null)
-            {
-                openSSLCryptProtectMemory.CryptProtectMemory(pointer, (int)length);
-            }
-            else
-            {
-                if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
-                {
-                    var errno = Marshal.GetLastWin32Error();
-                    throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
-                }
-            }
-        }
-
-        public override void ProcessDecryptMemory(IntPtr pointer, ulong length)
-        {
-            if (openSSLCryptProtectMemory != null)
-            {
-                openSSLCryptProtectMemory.CryptProtectMemory(pointer, (int)length);
-            }
-            else
-            {
-                if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
-                {
-                    var errno = Marshal.GetLastWin32Error();
-                    throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
-                }
             }
         }
     }

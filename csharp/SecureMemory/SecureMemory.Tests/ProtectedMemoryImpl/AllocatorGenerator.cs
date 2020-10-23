@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.PlatformNative.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
@@ -13,6 +15,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
     public class AllocatorGenerator : IEnumerable<object[]>, IDisposable
     {
         private readonly List<object[]> allocators;
+        private readonly OpenSSLCryptProtectMemory cryptProtectMemory;
 
         public AllocatorGenerator()
         {
@@ -20,6 +23,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},
+                {"openSSLPath", @"C:\Program Files\OpenSSL\bin"},
             }).Build();
 
             var systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
@@ -34,7 +38,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 OpenSSL11ProtectedMemoryAllocatorLP64 openSSLAllocator;
                 try
                 {
-                    openSSLAllocator = new OpenSSL11ProtectedMemoryAllocatorLP64(configuration, systemInterface);
+                    var openSSLCryptoLibc = new OpenSSLCryptoLibc(configuration);
+
+                    cryptProtectMemory = new OpenSSLCryptProtectMemory(
+                        "aes-256-gcm",
+                        systemInterface,
+                        openSSLCryptoLibc
+                    );
+
+                    openSSLAllocator = new OpenSSL11ProtectedMemoryAllocatorLP64(
+                        configuration,
+                        systemInterface,
+                        cryptProtectMemory,
+                        openSSLCryptoLibc
+                        );
                 }
                 catch (PlatformNotSupportedException)
                 {
@@ -49,7 +66,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface) });
+                allocators.Add(new object[] { new WindowsProtectedMemoryAllocatorLLP64(
+                    configuration,
+                    systemInterface,
+                    new WindowsMemoryEncryption()
+                    ) });
             }
         }
 
@@ -59,6 +80,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 ((IDisposable)objArray[0]).Dispose();
             }
+
+            cryptProtectMemory?.Dispose();
         }
 
         public IEnumerator<object[]> GetEnumerator() => allocators.GetEnumerator();

@@ -57,7 +57,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return new WindowsProtectedMemoryAllocatorLLP64(configuration, systemInterface);
+                return new WindowsProtectedMemoryAllocatorLLP64(
+                    configuration,
+                    systemInterface,
+                    new WindowsMemoryEncryption());
             }
             else
             {

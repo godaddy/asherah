@@ -35,7 +35,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},
 #if DEBUG
-                {"openSSLPath", @"C:\Program Files\OpenSSL"},
+                {"openSSLPath", @"C:\Program Files\OpenSSL\bin"},
 #endif
             }).Build();
 
