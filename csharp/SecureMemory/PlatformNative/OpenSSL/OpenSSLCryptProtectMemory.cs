@@ -10,7 +10,8 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         private const int TagSize = 16;
         private static long counter;
         private readonly IOpenSSLCrypto openSSLCrypto;
-        private readonly object cryptProtectLock = new object();
+        private readonly object encryptContextLock = new object();
+        private readonly object decryptContextLock = new object();
         private readonly int ivSize;
         private readonly int blockSize;
         private readonly IntPtr evpCipher;
@@ -100,7 +101,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                 systemInterface.LockMemory(tmpBuffer, bufferLength);
                 systemInterface.SetNoDump(tmpBuffer, bufferLength);
 
-                lock (cryptProtectLock)
+                lock (encryptContextLock)
                 {
                     int finalOutputLength;
                     systemInterface.SetReadAccess(key, (ulong)systemInterface.PageSize);
@@ -204,7 +205,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                 systemInterface.LockMemory(tmpBuffer, bufferLength);
                 systemInterface.SetNoDump(tmpBuffer, bufferLength);
 
-                lock (cryptProtectLock)
+                lock (decryptContextLock)
                 {
                     int finalDecryptedLength;
                     systemInterface.SetReadAccess(key, (ulong)systemInterface.PageSize);
@@ -288,7 +289,8 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                     if (disposing)
                     {
                         disposeSystemInterface = systemInterface;
-                        Monitor.Enter(cryptProtectLock);
+                        Monitor.Enter(encryptContextLock);
+                        Monitor.Enter(decryptContextLock);
                     }
                     else
                     {
@@ -326,7 +328,8 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
                 {
                     if (disposing)
                     {
-                        Monitor.Exit(cryptProtectLock);
+                        Monitor.Exit(decryptContextLock);
+                        Monitor.Exit(encryptContextLock);
                     }
                 }
 
