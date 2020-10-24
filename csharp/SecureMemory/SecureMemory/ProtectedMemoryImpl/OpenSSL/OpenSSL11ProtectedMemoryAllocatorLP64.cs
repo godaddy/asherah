@@ -11,11 +11,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
     {
         private const ulong DefaultHeapSize = 32768;
         private const int DefaultMinimumAllocationSize = 32;
-        private readonly ulong encryptedMemoryBlockSize;
         private readonly IOpenSSLCrypto openSSL11;
         private readonly SystemInterface systemInterface;
+        private readonly IMemoryEncryption memoryEncryption;
         private bool disposedValue;
-        private IMemoryEncryption memoryEncryption;
 
         public OpenSSL11ProtectedMemoryAllocatorLP64(
             IConfiguration configuration,
@@ -70,8 +69,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             }
 
             this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
-            this.memoryEncryption = memoryEncryption;
-            encryptedMemoryBlockSize = this.memoryEncryption.GetEncryptedMemoryBlockSize();
+            this.memoryEncryption = memoryEncryption ?? throw new ArgumentNullException(nameof(memoryEncryption));
         }
 
         ~OpenSSL11ProtectedMemoryAllocatorLP64()
@@ -87,11 +85,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             }
 
             Check.IntPtr(pointer, "SetNoAccess");
-
-            // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            // NOTE: No rounding for encrypt!
-            Debug.WriteLine($"SetNoAccess: Length {length}");
-
             memoryEncryption.ProcessEncryptMemory(pointer, length);
         }
 
@@ -103,12 +96,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             }
 
             Check.IntPtr(pointer, "SetReadAccess");
-
-            // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            // Round up allocation size to nearest block size
-            // Debug.WriteLine($"SetReadAccess: Rounding length {length} to nearest blocksize");
-            // length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
-            // Debug.WriteLine($"SetReadAccess: New length {length}");
             memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
@@ -120,13 +107,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
             }
 
             Check.IntPtr(pointer, "SetReadWriteAccess");
-
-            // Per page-protections aren't possible with the OpenSSL secure heap implementation
-            // Round up allocation size to nearest block size
-            Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
-            Debug.WriteLine($"SetReadWriteAccess: New length {length}");
-
             memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
@@ -140,11 +120,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
                 throw new Exception("Called Alloc on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
-            // Round up allocation size to nearest block size
-            Debug.WriteLine($"SetReadWriteAccess: Rounding length {length} to nearest blocksize");
-            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
-
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
+            length = (ulong)memoryEncryption.GetBufferSizeForAlloc((int)length);
+
             IntPtr protectedMemory = openSSL11.CRYPTO_secure_malloc(length);
 
             Check.IntPtr(protectedMemory, "CRYPTO_secure_malloc");
@@ -169,12 +147,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
                 throw new Exception("Called Free on disposed OpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
+            Debug.WriteLine($"OpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
+
             // Round up allocation size to nearest block size
-            length = (length + (encryptedMemoryBlockSize - 1)) & ~(encryptedMemoryBlockSize - 1);
+            length = (ulong)memoryEncryption.GetBufferSizeForAlloc((int)length);
 
             Check.IntPtr(pointer, "OpenSSL11ProtectedMemoryAllocatorLP64.Free");
-
-            Debug.WriteLine($"OpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             openSSL11.CRYPTO_secure_clear_free(pointer, length);
         }
 
@@ -187,7 +165,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.OpenSSL
 
         private void ReleaseUnmanagedResources()
         {
-            // TODO release unmanaged resources here
+            memoryEncryption?.Dispose();
         }
     }
 }

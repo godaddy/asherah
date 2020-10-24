@@ -4,29 +4,38 @@ using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
 
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
-    public class WindowsMemoryEncryption : IMemoryEncryption
+    public class WindowsMemoryEncryption : CryptProtectMemory, IMemoryEncryption
     {
-        public ulong GetEncryptedMemoryBlockSize()
+        public void ProcessEncryptMemory(IntPtr pointer, ulong dataLength)
         {
-            return CryptProtect.BLOCKSIZE;
-        }
-
-        public void ProcessEncryptMemory(IntPtr pointer, ulong length)
-        {
-            if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+            // CryptProtectMemory expects the dataLength to be a multiple of blocksize
+            dataLength = (ulong)GetBufferSizeForAlloc((int)dataLength);
+            if (!WindowsInterop.CryptProtectMemory(pointer, (UIntPtr)dataLength, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new WindowsOperationFailedException("CryptProtectMemory", 0L, errno);
             }
         }
 
-        public void ProcessDecryptMemory(IntPtr pointer, ulong length)
+        public void ProcessDecryptMemory(IntPtr pointer, ulong dataLength)
         {
-            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)length, CryptProtectMemoryOptions.SAME_PROCESS))
+            // CryptUnprotectMemory expects the dataLength to be a multiple of blocksize
+            dataLength = (ulong)GetBufferSizeForAlloc((int)dataLength);
+            if (!WindowsInterop.CryptUnprotectMemory(pointer, (UIntPtr)dataLength, CryptProtectMemoryOptions.SAME_PROCESS))
             {
                 var errno = Marshal.GetLastWin32Error();
                 throw new WindowsOperationFailedException("CryptUnprotectMemory", 0L, errno);
             }
+        }
+
+        public int GetBufferSizeForAlloc(int dataLength)
+        {
+            // Windows CryptProtectMemory only needs to be rounded up to block size
+            return (int)RoundToBlockSize((ulong)dataLength, CryptProtect.BLOCKSIZE);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

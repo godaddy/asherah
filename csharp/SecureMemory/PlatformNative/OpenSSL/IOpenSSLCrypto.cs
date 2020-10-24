@@ -21,6 +21,8 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
 
         string ERR_error_string_n(ulong e);
 
+        int ERR_load_EVP_strings();
+
         int CRYPTO_secure_malloc_init(size_t size, int minsize);
 
         int CRYPTO_secure_malloc_initialized();
@@ -64,5 +66,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         int EVP_CIPHER_iv_length(IntPtr e);
 
         int EVP_CIPHER_CTX_reset(IntPtr ctx);
+
+        int EVP_CIPHER_CTX_ctrl(IntPtr ctx, int type, int arg, IntPtr ptr);
     }
 }

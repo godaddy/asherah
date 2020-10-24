@@ -9,7 +9,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         private const int DefaultMaximumWorkingSetSize = 67108860;
 
         // private const int DefaultMinimumWorkingSetSize = 33554430;
-        private readonly ulong encryptedMemoryBlockSize;
         private readonly SystemInterface systemInterface;
         private readonly IMemoryEncryption memoryEncryption;
 
@@ -17,7 +16,6 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
             this.systemInterface = systemInterface ?? throw new ArgumentNullException(nameof(systemInterface));
             this.memoryEncryption = memoryEncryption;
-            encryptedMemoryBlockSize = memoryEncryption.GetEncryptedMemoryBlockSize();
 
             /*
             ulong min = 0;
@@ -55,61 +53,37 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public virtual IntPtr Alloc(ulong length)
         {
-            // Adjust length to CryptProtect block size
-            length = AdjustLength(length);
-
+            length = (ulong)memoryEncryption.GetBufferSizeForAlloc((int)length);
             return systemInterface.PageAlloc(length);
         }
 
         public virtual void Free(IntPtr pointer, ulong length)
         {
-            // Adjust length to CryptProtect block size
-            length = AdjustLength(length);
-
+            length = (ulong)memoryEncryption.GetBufferSizeForAlloc((int)length);
             systemInterface.ZeroMemory(pointer, length);
             systemInterface.PageFree(pointer, length);
         }
 
         public void SetNoAccess(IntPtr pointer, ulong length)
         {
-            length = AdjustLength(length);
-
             memoryEncryption.ProcessEncryptMemory(pointer, length);
             systemInterface.UnlockMemory(pointer, length);
         }
 
         public void SetReadAccess(IntPtr pointer, ulong length)
         {
-            length = AdjustLength(length);
-
             systemInterface.LockMemory(pointer, length);
-
             memoryEncryption.ProcessDecryptMemory(pointer, length);
         }
 
         public void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            length = AdjustLength(length);
-
             systemInterface.LockMemory(pointer, length);
-
             memoryEncryption.ProcessDecryptMemory(pointer, length);
-        }
-
-        public void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            systemInterface.ZeroMemory(pointer, length);
         }
 
         public void Dispose()
         {
-        }
-
-        protected ulong AdjustLength(ulong length)
-        {
-            return length % encryptedMemoryBlockSize != 0
-                ? ((length / encryptedMemoryBlockSize) + 1) * encryptedMemoryBlockSize
-                : length;
         }
     }
 }

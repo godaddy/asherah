@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -22,11 +21,6 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
     public class OpenSSLCryptoWindows : IOpenSSLCrypto
     {
         private const string LibraryName = "libcrypto-1_1-x64.dll";
-
-        private const int EVP_MAX_BLOCK_LENGTH = 32;
-
-        private int EVP_MAX_KEY_LENGTH = 64;
-        private int EVP_MAX_IV_LENGTH = 16;
 
         public OpenSSLCryptoWindows(IConfiguration configuration)
         {
@@ -292,13 +286,6 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         {
             int blockSize = _EVP_CIPHER_block_size(e);
 
-            // BUG: EVP_CIPHER_block_size returns 1
-            if (blockSize == 1)
-            {
-                blockSize = OpenSSLCryptoWindows.EVP_MAX_BLOCK_LENGTH;
-                Debug.WriteLine("BUG: Adjusted block size: " + blockSize);
-            }
-
             return blockSize;
         }
 
@@ -324,6 +311,22 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         public int EVP_CIPHER_CTX_reset(IntPtr ctx)
         {
             return _EVP_CIPHER_CTX_reset(ctx);
+        }
+
+        [DllImport(LibraryName, EntryPoint = "ERR_load_EVP_strings", SetLastError = true)]
+        private static extern int _ERR_load_EVP_strings();
+
+        public int ERR_load_EVP_strings()
+        {
+            return _ERR_load_EVP_strings();
+        }
+
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_ctrl", SetLastError = true)]
+        private static extern int _EVP_CIPHER_CTX_ctrl(IntPtr ctx, int type, int arg, IntPtr ptr);
+
+        public int EVP_CIPHER_CTX_ctrl(IntPtr ctx, int type, int arg, IntPtr ptr)
+        {
+            return _EVP_CIPHER_CTX_ctrl(ctx, type, arg, ptr);
         }
     }
 }

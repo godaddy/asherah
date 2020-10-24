@@ -15,14 +15,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
     public class OpenSSLCryptProtectMemoryTests : IDisposable
     {
         private readonly OpenSSL11ProtectedMemoryAllocatorLP64 openSSL11ProtectedMemoryAllocatorLP64;
-        private readonly SystemInterface systemInterface;
-        private readonly IConfiguration configuration;
         private readonly IOpenSSLCrypto crypto;
-        private OpenSSLCryptProtectMemory openSSLCryptProtectMemory;
+        private readonly OpenSSLCryptProtectMemory openSSLCryptProtectMemory;
 
         public OpenSSLCryptProtectMemoryTests()
         {
-            configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"heapSize", "32000"},
                 {"minimumAllocationSize", "128"},
@@ -30,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
                 {"openSSLPath", @"C:\Program Files\OpenSSL\bin"},
 #endif
             }).Build();
-            systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
+            var systemInterface = SystemInterface.ConfigureSystemInterface(configuration);
 
             try
             {
@@ -49,7 +47,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.OpenSSL
                 openSSL11ProtectedMemoryAllocatorLP64 = new OpenSSL11ProtectedMemoryAllocatorLP64(
                     configuration,
                     systemInterface,
-                    new OpenSSLCryptProtectMemory("aes-256-gcm", systemInterface, crypto),
+                    openSSLCryptProtectMemory,
                     crypto);
             }
             catch (OpenSSLSecureHeapUnavailableException)

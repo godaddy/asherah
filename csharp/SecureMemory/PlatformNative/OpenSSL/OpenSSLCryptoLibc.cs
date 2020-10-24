@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -21,13 +20,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
     public class OpenSSLCryptoLibc : IOpenSSLCrypto
     {
         private const string LibraryName = "libcrypto.so.1.1";
-        private const int EVP_MAX_BLOCK_LENGTH = 32;
 
-        // ReSharper disable UnusedMember.Local
-        private const int EVP_MAX_KEY_LENGTH = 64;
-        private const int EVP_MAX_IV_LENGTH = 16;
-
-        // ReSharper restore UnusedMember.Local
         public OpenSSLCryptoLibc(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -55,7 +48,7 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
             if (result != expected)
             {
                 ulong err = ERR_get_error();
-                throw new Exception($"{function}: {ERR_error_string_n(err)}");
+                throw new Exception($"{function}: {err}: {ERR_error_string_n(err)}");
             }
         }
 
@@ -288,13 +281,6 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         {
             int blockSize = _EVP_CIPHER_block_size(e);
 
-            // BUG: EVP_CIPHER_block_size returns 1
-            if (blockSize == 1)
-            {
-                blockSize = OpenSSLCryptoLibc.EVP_MAX_BLOCK_LENGTH;
-                Debug.WriteLine("BUG: Adjusted block size: " + blockSize);
-            }
-
             return blockSize;
         }
 
@@ -320,6 +306,22 @@ namespace GoDaddy.Asherah.PlatformNative.OpenSSL
         public int EVP_CIPHER_CTX_reset(IntPtr ctx)
         {
             return _EVP_CIPHER_CTX_reset(ctx);
+        }
+
+        [DllImport(LibraryName, EntryPoint = "ERR_load_EVP_strings", SetLastError = true)]
+        private static extern int _ERR_load_EVP_strings();
+
+        public int ERR_load_EVP_strings()
+        {
+            return _ERR_load_EVP_strings();
+        }
+
+        [DllImport(LibraryName, EntryPoint = "EVP_CIPHER_CTX_ctrl", SetLastError = true)]
+        private static extern int _EVP_CIPHER_CTX_ctrl(IntPtr ctx, int type, int arg, IntPtr ptr);
+
+        public int EVP_CIPHER_CTX_ctrl(IntPtr ctx, int type, int arg, IntPtr ptr)
+        {
+            return _EVP_CIPHER_CTX_ctrl(ctx, type, arg, ptr);
         }
     }
 }

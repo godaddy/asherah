@@ -13,9 +13,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void EndToEndTest()
         {
-            Trace.Listeners.Clear();
-            var consoleListener = new ConsoleTraceListener();
-            Trace.Listeners.Add(consoleListener);
+            TraceListenerConfig.ConfigureTraceListener();
 
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection()
@@ -43,9 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void EndToEndOpenSSLTest()
         {
-            Trace.Listeners.Clear();
-            var consoleListener = new ConsoleTraceListener();
-            Trace.Listeners.Add(consoleListener);
+            TraceListenerConfig.ConfigureTraceListener();
 
             var dictionary = new Dictionary<string,string>
             {

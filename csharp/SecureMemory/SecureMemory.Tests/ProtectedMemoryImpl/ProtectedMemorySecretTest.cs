@@ -6,10 +6,12 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.PlatformNative;
+using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -27,9 +29,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
         public ProtectedMemorySecretTest()
         {
-            Trace.Listeners.Clear();
-            var consoleListener = new ConsoleTraceListener();
-            Trace.Listeners.Add(consoleListener);
+            TraceListenerConfig.ConfigureTraceListener();
 
             var configDictionary = new Dictionary<string,string>();
             configDictionary["debugSecrets"] = "true";
@@ -286,37 +286,36 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestCloseWithClosedSecretShouldNoop");
             byte[] secretBytes = { 0, 1 };
 
-            // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+                Mock<WindowsProtectedMemoryAllocatorLLP64> protectedMemoryAllocatorWindowsMock =
+                    new Mock<WindowsProtectedMemoryAllocatorLLP64>(systemInterface) {CallBase = true};
 
                 ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(
                         secretBytes,
-                        protectedMemoryAllocatorMacOSMock.Object,
+                        protectedMemoryAllocatorWindowsMock.Object,
                         systemInterface,
                         configuration);
                 secret.Close();
                 secret.Close();
-                protectedMemoryAllocatorMacOSMock.Verify(
+                protectedMemoryAllocatorWindowsMock.Verify(
                     x => x.Free(It.IsAny<IntPtr>(), It.IsAny<ulong>()), Times.Exactly(1));
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else
             {
-                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLibcMock =
+                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) {CallBase = true};
 
                 ProtectedMemorySecret secret =
                     new ProtectedMemorySecret(
                         secretBytes,
-                        protectedMemoryAllocatorLinuxMock.Object,
+                        protectedMemoryAllocatorLibcMock.Object,
                         systemInterface,
                         configuration);
                 secret.Close();
                 secret.Close();
-                protectedMemoryAllocatorLinuxMock.Verify(
+                protectedMemoryAllocatorLibcMock.Verify(
                     x => x.Free(It.IsAny<IntPtr>(), It.IsAny<ulong>()), Times.Exactly(1));
             }
         }
@@ -328,30 +327,25 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             byte[] secretBytes = { 0, 1 };
             IProtectedMemoryAllocator allocator;
 
-            // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+                Mock<WindowsProtectedMemoryAllocatorLLP64> protectedMemoryAllocatorWindowsMock =
+                    new Mock<WindowsProtectedMemoryAllocatorLLP64>(systemInterface) { CallBase = true };
 
-                protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                protectedMemoryAllocatorWindowsMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
 
-                allocator = protectedMemoryAllocatorMacOSMock.Object;
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
-
-                protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new Exception());
-
-                allocator = protectedMemoryAllocatorLinuxMock.Object;
+                allocator = protectedMemoryAllocatorWindowsMock.Object;
             }
             else
             {
-                return;
+                Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLibcMock =
+                    new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+
+                protectedMemoryAllocatorLibcMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                    .Throws(new Exception());
+
+                allocator = protectedMemoryAllocatorLibcMock.Object;
             }
 
             Assert.Throws<Exception>(() =>
@@ -375,30 +369,25 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             var handle = GCHandle.Alloc(secretBytes, GCHandleType.Pinned);
             try
             {
-                // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                        new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+                    Mock<WindowsProtectedMemoryAllocatorLLP64> protectedMemoryAllocatorWindowsMock =
+                        new Mock<WindowsProtectedMemoryAllocatorLLP64>(systemInterface) { CallBase = true };
 
-                    protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                    protectedMemoryAllocatorWindowsMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                         .Throws(new Exception());
 
-                    allocator = protectedMemoryAllocatorMacOSMock.Object;
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                        new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
-
-                    protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                        .Throws(new Exception());
-
-                    allocator = protectedMemoryAllocatorLinuxMock.Object;
+                    allocator = protectedMemoryAllocatorWindowsMock.Object;
                 }
                 else
                 {
-                    return;
+                    Mock<LibcProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLibcMock =
+                        new Mock<LibcProtectedMemoryAllocatorLP64>(systemInterface) { CallBase = true };
+
+                    protectedMemoryAllocatorLibcMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                        .Throws(new Exception());
+
+                    allocator = protectedMemoryAllocatorLibcMock.Object;
                 }
 
                 Assert.Throws<Exception>(() =>
@@ -424,31 +413,39 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             Debug.WriteLine("TestAllocatorSetNoDumpFailure");
             byte[] secretBytes = { 0, 1 };
 
-            Mock<LinuxSystemInterfaceImpl> mockSystemInterfaceLinux;
-            Mock<MacOSSystemInterfaceImpl> mockSystemInterfaceMacOS;
             SystemInterface mockedSystemInterface;
             IProtectedMemoryAllocator allocator;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                mockSystemInterfaceMacOS = new Mock<MacOSSystemInterfaceImpl> { CallBase = true };
-                mockSystemInterfaceMacOS.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                var mockSystemInterfaceWindows = new Mock<WindowsSystemInterfaceImpl> { CallBase = true };
+                mockSystemInterfaceWindows.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception("IGNORE_INTENTIONAL_ERROR"));
-                mockedSystemInterface = mockSystemInterfaceMacOS.Object;
-                allocator = new LibcProtectedMemoryAllocatorLP64(mockSystemInterfaceMacOS.Object);
+                mockedSystemInterface = mockSystemInterfaceWindows.Object;
+                allocator = new WindowsProtectedMemoryAllocatorLLP64(configuration, mockedSystemInterface, new WindowsMemoryEncryption());
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                mockSystemInterfaceLinux = new Mock<LinuxSystemInterfaceImpl> { CallBase = true };
+                var mockSystemInterfaceLinux = new Mock<LinuxSystemInterfaceImpl> { CallBase = true };
                 mockSystemInterfaceLinux.Setup(x =>
                         x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()
                         ))
                     .Throws(new Exception("IGNORE_INTENTIONAL_ERROR"));
                 mockedSystemInterface = mockSystemInterfaceLinux.Object;
-                allocator = new LibcProtectedMemoryAllocatorLP64(mockSystemInterfaceLinux.Object);
+                allocator = new LibcProtectedMemoryAllocatorLP64(mockedSystemInterface);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var mockSystemInterfaceMacOS = new Mock<MacOSSystemInterfaceImpl> { CallBase = true };
+                mockSystemInterfaceMacOS.Setup(x =>
+                        x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()
+                        ))
+                    .Throws(new Exception("IGNORE_INTENTIONAL_ERROR"));
+                mockedSystemInterface = mockSystemInterfaceMacOS.Object;
+                allocator = new LibcProtectedMemoryAllocatorLP64(mockedSystemInterface);
             }
             else
             {
-                return;
+                throw new Exception("Unknown platform: " + RuntimeInformation.OSDescription);
             }
 
             Assert.Throws<Exception>(() =>

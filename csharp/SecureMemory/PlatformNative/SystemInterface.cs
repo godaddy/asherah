@@ -59,7 +59,7 @@ namespace GoDaddy.Asherah.PlatformNative
                     }
                     else
                     {
-                        throw new PlatformNotSupportedException("Unknown platform");
+                        throw new PlatformNotSupportedException("Unknown platform: " + RuntimeInformation.OSDescription);
                     }
                 }
             }
