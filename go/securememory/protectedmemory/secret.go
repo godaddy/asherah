@@ -4,8 +4,10 @@ package protectedmemory
 import (
 	"crypto/rand"
 	"crypto/subtle"
+	"fmt"
 	"io"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/godaddy/asherah/go/securememory"
 	"github.com/godaddy/asherah/go/securememory/internal/memcall"
 	"github.com/godaddy/asherah/go/securememory/internal/secrets"
+	"github.com/godaddy/asherah/go/securememory/log"
 )
 
 // AllocTimer is used to record the time taken to allocate a secret.
@@ -46,6 +49,11 @@ type secretInternal struct {
 	c       *sync.Cond
 	closing bool
 	closed  bool
+
+	// stack contains a formatted stack trace collected when the secret was created, only set if DebugEnabled.
+	stack        []byte
+	externalAddr string
+
 	//nolint:structcheck // False positive of being unused, see https://github.com/golangci/golangci-lint/issues/572
 	accessCounter int
 }
@@ -154,6 +162,16 @@ func (s *secretInternal) isClosed() bool {
 	defer s.rw.RUnlock()
 
 	return s.closed
+}
+
+func (s *secretInternal) Finalize() {
+	s.rw.Lock()
+	if !s.closing {
+		log.Debugf("finalized before closed: secret(%s){inner(%p)}\n%s\n", s.externalAddr, s, s.stack)
+	}
+	s.rw.Unlock()
+
+	s.Close()
 }
 
 // Close closes the data container and frees any associated memory.
@@ -324,15 +342,21 @@ func newSecret(size int, mc memcall.Interface) (*secret, error) {
 		mc:    mc,
 		bytes: bytes,
 	}
+
 	secret := &secret{
 		secretInternal: internal,
 		dummy:          new(bool),
 	}
 
+	if log.DebugEnabled() {
+		internal.externalAddr = fmt.Sprintf("%p", secret)
+		internal.stack = debug.Stack()
+	}
+
 	// Finalizer attaches to dummy reference so we can cleanup secret when it goes out of scope. We have to use
 	// secretInternal to call close to avoid keeping the secret in scope by virtue of the finalizer setup.
 	runtime.SetFinalizer(secret.dummy, func(_ *bool) {
-		go internal.Close()
+		go internal.Finalize()
 	})
 
 	return secret, nil
