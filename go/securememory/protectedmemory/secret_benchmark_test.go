@@ -32,24 +32,25 @@ func BenchmarkProtectedMemorySecret_WithBytes(b *testing.B) {
 
 func BenchmarkProtectedMemorySecret_WithBytesFunc(b *testing.B) {
 	orig := []byte("thisismy32bytesecretthatiwilluse")
+
 	copyBytes := make([]byte, len(orig))
 	copy(copyBytes, orig)
 
-	s, err := factory.New(orig)
-	if assert.NoError(b, err) {
-		defer s.Close()
+	s, err := factory.New(copyBytes)
+	require.NoError(b, err)
 
-		b.ResetTimer()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				_, err := s.WithBytesFunc(func(bytes []byte) ([]byte, error) {
-					assert.Equal(b, copyBytes, bytes)
-					return bytes, nil
-				})
-				assert.NoError(b, err)
-			}
-		})
-	}
+	defer s.Close()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := s.WithBytesFunc(func(bytes []byte) ([]byte, error) {
+				assert.Equal(b, orig, bytes)
+				return bytes, nil
+			})
+			assert.NoError(b, err)
+		}
+	})
 }
 
 func BenchmarkProtectedMemoryReader_ReadAll(b *testing.B) {
