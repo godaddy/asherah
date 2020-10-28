@@ -170,15 +170,15 @@ var _ keyReloader = (*reloader)(nil)
 type reloader struct {
 	loadedKeys    []*internal.CryptoKey
 	mu            sync.Mutex
-	loadFunc      func() (*internal.CryptoKey, error)
+	loader        keyLoader
 	isInvalidFunc func(key *internal.CryptoKey) bool
 	keyID         string
 	isCached      bool
 }
 
-// Load implements keyLoader
+// Load implements keyLoader.
 func (r *reloader) Load() (*internal.CryptoKey, error) {
-	k, err := r.loadFunc()
+	k, err := r.loader.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,9 @@ func (r *reloader) Close() {
 	defer r.mu.Unlock()
 
 	for k := range r.loadedKeys {
-		maybeCloseKey(r.isCached, r.loadedKeys[k])
+		key := r.loadedKeys[k]
+
+		maybeCloseKey(r.isCached, key)
 	}
 }
 
@@ -246,9 +248,9 @@ func (e *envelopeEncryption) newKeyReloader(
 	return &reloader{
 		keyID:    id,
 		isCached: isCached,
-		loadFunc: func() (*internal.CryptoKey, error) {
+		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
 			return loader(ctx, id)
-		},
+		}),
 		isInvalidFunc: e.isKeyInvalid,
 	}
 }
@@ -302,7 +304,7 @@ func (e *envelopeEncryption) mustLoadLatest(ctx context.Context, id string) (*En
 }
 
 // createIntermediateKey creates a new IK and attempts to persist the new key to the metastore.
-// If unsuccessful createIntermediateKey will attempt to fetch the latest IK from the metastore
+// If unsuccessful createIntermediateKey will attempt to fetch the latest IK from the metastore.
 func (e *envelopeEncryption) createIntermediateKey(ctx context.Context) (*internal.CryptoKey, error) {
 	r := e.newSystemKeyReloader(ctx)
 	defer r.Close()

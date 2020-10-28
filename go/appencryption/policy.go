@@ -37,11 +37,14 @@ type CryptoPolicy struct {
 	// if session caching is enabled.
 	SessionCacheDuration time.Duration
 	// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
-	// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+	// if session caching is enabled.
+	//
+	// Deprecated: multiple cache implementations are no longer supported and this option will be removed
+	// in a future release.
 	SessionCacheEngine string
 }
 
-// PolicyOption is used to configure a CryptoPolicy
+// PolicyOption is used to configure a CryptoPolicy.
 type PolicyOption func(*CryptoPolicy)
 
 // WithRevokeCheckInterval sets the interval to check for revoked keys in the cache.
@@ -90,9 +93,10 @@ func WithSessionCacheDuration(d time.Duration) PolicyOption {
 }
 
 // WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
-// if session caching is enabled. Supported values are "default", "mango", "ristretto".
+// if session caching is enabled.
 //
-// Note this policy option will likely be deprecated once a permanent engine has been identified.
+// Deprecated: multiple cache implementations are no longer supported and this option will be removed
+// in a future release.
 func WithSessionCacheEngine(engine string) PolicyOption {
 	return func(policy *CryptoPolicy) {
 		policy.SessionCacheEngine = engine

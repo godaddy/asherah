@@ -2,7 +2,9 @@ package appencryption_test
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -31,15 +33,22 @@ var (
 		Service: service,
 	}
 	metastore = persistence.NewMemoryMetastore()
-	caches    = [...]string{
-		"mango",
-		"ristretto",
-	}
+	zipfSeed  = time.Now().UnixNano()
 )
 
-func BenchmarkSession_Encrypt(b *testing.B) {
+func TestMain(m *testing.M) {
+	log.Printf("random seed: %d\n", zipfSeed)
+
+	code := m.Run()
+
+	os.Exit(code)
+}
+
+func Benchmark_Encrypt(b *testing.B) {
 	km, err := kms.NewStatic(staticKey, c)
 	assert.NoError(b, err)
+
+	defer km.Close()
 
 	factory := appencryption.NewSessionFactory(
 		config,
@@ -47,6 +56,7 @@ func BenchmarkSession_Encrypt(b *testing.B) {
 		km,
 		c,
 	)
+	defer factory.Close()
 
 	randomBytes := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
@@ -54,6 +64,7 @@ func BenchmarkSession_Encrypt(b *testing.B) {
 	}
 
 	sess, _ := factory.GetSession(partitionID)
+	defer sess.Close()
 
 	b.ResetTimer()
 
@@ -69,6 +80,8 @@ func BenchmarkSession_Encrypt(b *testing.B) {
 func Benchmark_EncryptDecrypt_MultiFactorySamePartition(b *testing.B) {
 	km, err := kms.NewStatic(staticKey, c)
 	assert.NoError(b, err)
+
+	defer km.Close()
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -99,8 +112,10 @@ func Benchmark_EncryptDecrypt_MultiFactoryUniquePartition(b *testing.B) {
 	km, err := kms.NewStatic(staticKey, c)
 	assert.NoError(b, err)
 
+	defer km.Close()
+
 	b.RunParallel(func(pb *testing.PB) {
-		zipf := newZipf(10, appencryption.DefaultSessionCacheMaxSize*16)
+		zipf := newZipf()
 
 		for i := 0; i < b.N && pb.Next(); i++ {
 			factory := appencryption.NewSessionFactory(
@@ -130,6 +145,10 @@ func Benchmark_EncryptDecrypt_SameFactoryUniquePartition(b *testing.B) {
 	km, err := kms.NewStatic(staticKey, c)
 	assert.NoError(b, err)
 
+	defer km.Close()
+
+	metastore := persistence.NewMemoryMetastore()
+
 	factory := appencryption.NewSessionFactory(
 		config,
 		metastore,
@@ -139,7 +158,7 @@ func Benchmark_EncryptDecrypt_SameFactoryUniquePartition(b *testing.B) {
 	defer factory.Close()
 
 	b.RunParallel(func(pb *testing.PB) {
-		zipf := newZipf(10, appencryption.DefaultSessionCacheMaxSize*16)
+		zipf := newZipf()
 
 		for pb.Next() {
 			partition := fmt.Sprintf(partitionID+"_%d", zipf())
@@ -160,68 +179,69 @@ func Benchmark_EncryptDecrypt_SameFactoryUniquePartition(b *testing.B) {
 	})
 }
 
-func newZipf(v float64, n uint64) func() uint64 {
-	zipfS := 1.7
-	z := rand.NewZipf(rand.New(rand.NewSource(time.Now().UnixNano())), zipfS, v, n)
+func newZipf() func() uint64 {
+	cap := uint64(appencryption.DefaultSessionCacheMaxSize)
+	zipfS := 1.0001
+	v := 10.0
+	n := cap * 32
+
+	z := rand.NewZipf(rand.New(rand.NewSource(zipfSeed)), zipfS, v, n)
 
 	return z.Uint64
 }
 
 func Benchmark_EncryptDecrypt_SameFactoryUniquePartition_WithSessionCache(b *testing.B) {
-	capacity := appencryption.DefaultSessionCacheMaxSize
+	km, err := kms.NewStatic(staticKey, c)
+	assert.NoError(b, err)
 
-	for i := range caches {
-		engine := caches[i]
+	defer km.Close()
 
-		subtest := fmt.Sprintf("WithEngine %s", engine)
-		b.Run(subtest, func(bb *testing.B) {
-			conf := &appencryption.Config{
-				Policy: appencryption.NewCryptoPolicy(
-					appencryption.WithSessionCache(),
-					appencryption.WithSessionCacheEngine(engine),
-				),
-				Product: product,
-				Service: service,
-			}
+	factory := appencryption.NewSessionFactory(
+		&appencryption.Config{
+			Policy: appencryption.NewCryptoPolicy(
+				appencryption.WithSessionCache(),
+				appencryption.WithSessionCacheMaxSize(1000),
+			),
+			Product: product,
+			Service: service,
+		},
+		metastore,
+		km,
+		c,
+	)
 
-			km, err := kms.NewStatic(staticKey, c)
-			assert.NoError(bb, err)
+	defer factory.Close()
 
-			factory := appencryption.NewSessionFactory(
-				conf,
-				metastore,
-				km,
-				c,
-			)
-			defer factory.Close()
+	b.RunParallel(func(pb *testing.PB) {
+		zipf := newZipf()
 
-			bb.RunParallel(func(pb *testing.PB) {
-				zipf := newZipf(10, uint64(capacity)*16)
+		for pb.Next() {
+			func() {
+				partition := fmt.Sprintf("%d", zipf())
 
-				for pb.Next() {
-					partition := fmt.Sprintf(partitionID+"_%d", zipf())
-					randomBytes := internal.GetRandBytes(payloadSizeBytes)
+				randomBytes := internal.GetRandBytes(payloadSizeBytes)
 
-					sess, _ := factory.GetSession(partition)
+				sess, _ := factory.GetSession(partition)
 
-					drr, err := sess.Encrypt(randomBytes)
-					if err != nil {
-						bb.Error(err)
-					}
-
-					data, _ := sess.Decrypt(*drr)
-					assert.Equal(bb, randomBytes, data)
-
-					sess.Close()
+				drr, err := sess.Encrypt(randomBytes)
+				if err != nil {
+					b.Error(err)
 				}
-			})
-		})
-	}
+
+				data, _ := sess.Decrypt(*drr)
+				assert.Equal(b, randomBytes, data)
+
+				sess.Close()
+			}()
+		}
+	})
 }
 
 func Benchmark_EncryptDecrypt_SameFactorySamePartition(b *testing.B) {
 	km, err := kms.NewStatic(staticKey, c)
 	assert.NoError(b, err)
+
+	defer km.Close()
 
 	factory := appencryption.NewSessionFactory(
 		config,
@@ -251,47 +271,42 @@ func Benchmark_EncryptDecrypt_SameFactorySamePartition(b *testing.B) {
 }
 
 func Benchmark_EncryptDecrypt_SameFactorySamePartition_WithSessionCache(b *testing.B) {
-	for i := range caches {
-		engine := caches[i]
+	km, err := kms.NewStatic(staticKey, c)
+	assert.NoError(b, err)
 
-		b.Run(fmt.Sprintf("WithEngine %s", engine), func(bb *testing.B) {
-			km, err := kms.NewStatic(staticKey, c)
-			assert.NoError(bb, err)
+	defer km.Close()
 
-			conf := &appencryption.Config{
-				Policy: appencryption.NewCryptoPolicy(
-					appencryption.WithSessionCache(),
-					appencryption.WithSessionCacheEngine(engine),
-				),
-				Product: product,
-				Service: service,
+	conf := &appencryption.Config{
+		Policy: appencryption.NewCryptoPolicy(
+			appencryption.WithSessionCache(),
+		),
+		Product: product,
+		Service: service,
+	}
+
+	factory := appencryption.NewSessionFactory(
+		conf,
+		metastore,
+		km,
+		c,
+	)
+	defer factory.Close()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			randomBytes := internal.GetRandBytes(payloadSizeBytes)
+
+			sess, _ := factory.GetSession(partitionID)
+
+			drr, err := sess.Encrypt(randomBytes)
+			if err != nil {
+				b.Error(err)
 			}
 
-			factory := appencryption.NewSessionFactory(
-				conf,
-				metastore,
-				km,
-				c,
-			)
-			defer factory.Close()
+			data, _ := sess.Decrypt(*drr)
+			assert.Equal(b, randomBytes, data)
 
-			bb.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
-					randomBytes := internal.GetRandBytes(payloadSizeBytes)
-
-					sess, _ := factory.GetSession(partitionID)
-
-					drr, err := sess.Encrypt(randomBytes)
-					if err != nil {
-						bb.Error(err)
-					}
-
-					data, _ := sess.Decrypt(*drr)
-					assert.Equal(bb, randomBytes, data)
-
-					sess.Close()
-				}
-			})
-		})
-	}
+			sess.Close()
+		}
+	})
 }
