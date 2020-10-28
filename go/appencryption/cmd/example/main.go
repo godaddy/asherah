@@ -18,6 +18,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/godaddy/asherah/go/securememory"
+	smlog "github.com/godaddy/asherah/go/securememory/log"
 	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/jessevdk/go-flags"
 	"github.com/logrusorgru/aurora"
@@ -27,6 +28,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
+	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 )
 
@@ -74,6 +76,12 @@ func init() {
 
 	go metrics.CaptureDebugGCStats(metrics.DefaultRegistry, time.Second*1)
 	go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, time.Second*1)
+}
+
+type loggerFunc func(format string, v ...interface{})
+
+func (f loggerFunc) Debugf(format string, v ...interface{}) {
+	f(format, v...)
 }
 
 func EncryptAndStore(s *appencryption.Session, b []byte) *appencryption.DataRowRecord {
@@ -171,6 +179,29 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	stopch := make(chan bool)
+	if opts.Verbose {
+		smlog.SetLogger(loggerFunc(log.Printf))
+		aelog.SetLogger(loggerFunc(log.Printf))
+
+		go func() {
+			ticker := time.NewTicker(1 * time.Second)
+			for {
+				select {
+				case <-stopch:
+					ticker.Stop()
+					return
+				case <-ticker.C:
+					log.Printf(
+						"secrets: allocs=%d, inuse=%d\n",
+						securememory.AllocCounter.Count(),
+						securememory.InUseCounter.Count())
+
+				}
+			}
+		}()
+	}
+
 	crypto := aead.NewAES256GCM()
 
 	var (
@@ -202,26 +233,31 @@ func main() {
 		return func(*appencryption.CryptoPolicy) { /* noop */ }
 	}
 
+	keyManager := CreateKMS()
+
+	conf := &appencryption.Config{
+		Service: "exampleService",
+		Product: "productId",
+		Policy: appencryption.NewCryptoPolicy(
+			appencryption.WithExpireAfterDuration(expireAfter),
+			appencryption.WithRevokeCheckInterval(checkInterval),
+			withCacheOption(),
+			withSessionCacheOption(),
+		),
+	}
+
+	secrets := new(memguard.SecretFactory)
+	// secrets := new(protectedmemory.SecretFactory)
+
 	factory := appencryption.NewSessionFactory(
-		&appencryption.Config{
-			Service: "exampleService",
-			Product: "productId",
-			Policy: appencryption.NewCryptoPolicy(
-				appencryption.WithExpireAfterDuration(expireAfter),
-				appencryption.WithRevokeCheckInterval(checkInterval),
-				withCacheOption(),
-				withSessionCacheOption(),
-			),
-		},
+		conf,
 		CreateMetastore(),
-		CreateKMS(),
+		keyManager,
 		crypto,
 		// optional step(s)
-		appencryption.WithSecretFactory(new(memguard.SecretFactory)),
-		// appencryption.WithSecretFactory(new(protectedmemory.SecretFactory)),
+		appencryption.WithSecretFactory(secrets),
 		appencryption.WithMetrics(opts.Metrics),
 	)
-	defer factory.Close()
 
 	done := make(chan bool, 1)
 
@@ -259,13 +295,18 @@ func main() {
 	}
 
 	for i := 0; i < opts.Iterations; i++ {
-		RunSessionIteration(start, factory)
+		log.Println("Run iteration:", i)
+		RunSessionIteration(time.Now(), factory)
 	}
 
 	done <- true
 	close(done)
 
-	//factory.Close()
+	factory.Close()
+	if k, ok := keyManager.(*kms.StaticKMS); ok {
+		k.Close()
+	}
+
 	end := time.Since(start)
 
 	if opts.Metrics {
@@ -274,6 +315,13 @@ func main() {
 		PrintMetrics("encryption", encryptTimer)
 		PrintMetrics("decryption", decryptTimer)
 		PrintColoredJSON("Metrics:", metrics.DefaultRegistry)
+	}
+
+	if opts.Verbose {
+		log.Printf(
+			"[run complete] secrets: allocs=%d, inuse=%d\n",
+			securememory.AllocCounter.Count(),
+			securememory.InUseCounter.Count())
 	}
 
 	if opts.Profile == "mem" {
@@ -302,6 +350,18 @@ func main() {
 		fmt.Println("Refusing to exit as per the no-exit flag (send SIGINT or SIGTERM to close)")
 		<-done
 		fmt.Println("Exiting")
+	} else if opts.Verbose {
+		log.Println("sleeping 5 seconds...")
+		time.Sleep(5 * time.Second)
+	}
+
+	if opts.Verbose {
+		stopch <- true
+
+		log.Printf(
+			"[final] secrets: allocs=%d, inuse=%d\n",
+			securememory.AllocCounter.Count(),
+			securememory.InUseCounter.Count())
 	}
 }
 
@@ -334,13 +394,11 @@ func RunSessionIteration(start time.Time, factory *appencryption.SessionFactory)
 			}
 
 			if opts.Duration > 0 {
-				log.Printf("Running for %s", opts.Duration)
+				shopper := shopperID + strconv.Itoa(i)
+
+				log.Printf("Running for %s with shopper ID: %s", opts.Duration, shopper)
 
 				for time.Since(start) < opts.Duration {
-					shopper := shopperID + strconv.Itoa(i)
-
-					log.Printf("Starting session with shopper ID: %s", shopper)
-
 					runFunc(shopper)
 				}
 			} else {
