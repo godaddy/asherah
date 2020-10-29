@@ -403,6 +403,13 @@ func (suite *CacheTestSuite) TestKeyCache_Close_MultipleCallsNoError() {
 	assert.NoError(suite.T(), err)
 }
 
+func (suite *CacheTestSuite) TestKeyCache_String() {
+	cache := newKeyCache(NewCryptoPolicy())
+	defer cache.Close()
+
+	assert.Contains(suite.T(), cache.String(), "keyCache(")
+}
+
 func (suite *CacheTestSuite) TestNeverCache_GetOrLoad() {
 	var cache neverCache
 	key, err := cache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {

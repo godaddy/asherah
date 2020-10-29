@@ -127,8 +127,15 @@ func TestNewSessionFactory_WithSessionCache(t *testing.T) {
 		Policy: policy,
 	}, nil, nil, nil)
 
+	defer factory.Close()
+
 	require.NotNil(t, factory)
 	assert.NotNil(t, factory.sessionCache)
+
+	sess, err := factory.GetSession("testing")
+	require.NoError(t, err)
+	assert.IsType(t, new(sharedEncryption), sess.encryption)
+	sess.Close()
 }
 
 func TestNewSessionFactory_NoSKCache(t *testing.T) {

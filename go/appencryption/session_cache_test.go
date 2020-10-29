@@ -1,7 +1,9 @@
 package appencryption
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -9,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
 type closeSpy struct {
@@ -255,6 +259,35 @@ func TestSessionCacheDuration(t *testing.T) {
 	}, time.Second*10, time.Millisecond*10)
 }
 
+type testLogger struct {
+	strings.Builder
+}
+
+func (t *testLogger) Debugf(f string, v ...interface{}) {
+	t.Builder.WriteString(fmt.Sprintf(f, v...))
+}
+
+func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
+	b := newSessionBucket()
+
+	cache := newSessionCache(b.load, NewCryptoPolicy())
+	require.NotNil(t, cache)
+
+	l := new(testLogger)
+	assert.Equal(t, 0, l.Len())
+
+	// enable debug logging and caputure
+	log.SetLogger(l)
+
+	cache.Close()
+
+	// assert additional debug info was written to log
+	assert.NotEqual(t, 0, l.Len())
+	assert.Contains(t, l.String(), "session cache stash len = 0")
+
+	log.SetLogger(nil)
+}
+
 func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 	b := newSessionBucket()
 
@@ -351,4 +384,52 @@ func TestSharedSessionCloseDoesNotCloseUnderlyingSession(t *testing.T) {
 
 	// shared sessions aren't actually closed until evicted from the cache
 	assert.False(t, b.IsClosed(s1))
+}
+
+func TestCacheStash(t *testing.T) {
+	id := "stashed item"
+	stash := newCacheStash()
+
+	complete := make(chan bool)
+
+	go func() {
+		stash.process()
+
+		complete <- true
+	}()
+
+	// stash is empty
+	s, ok := stash.get(id)
+	assert.Nil(t, s)
+	assert.False(t, ok)
+	assert.Equal(t, 0, stash.len())
+
+	// create a new session and stash it
+	sess := new(Session)
+	stash.add(id, sess)
+
+	// stash now contains the session we just added
+	s, ok = stash.get(id)
+	assert.Equal(t, sess, s)
+	assert.True(t, ok)
+	assert.Equal(t, 1, stash.len())
+
+	// now remove the stashed session
+	stash.remove(id)
+
+	// remove events are queued asynchronously
+	assert.Eventually(t, func() bool {
+		_, ok := stash.get(id)
+
+		return !ok
+	}, 500*time.Millisecond, 10*time.Millisecond)
+
+	// and verify it's gone
+	s, ok = stash.get(id)
+	assert.Nil(t, s)
+	assert.False(t, ok)
+	assert.Equal(t, 0, stash.len())
+
+	stash.close()
+	assert.True(t, <-complete)
 }

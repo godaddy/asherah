@@ -16,7 +16,9 @@ func SetLogger(l Interface) {
 
 // Debugf writes to the log using the configured logger.
 func Debugf(format string, v ...interface{}) {
-	logger.Debugf(format, v...)
+	if logger != nil {
+		logger.Debugf(format, v...)
+	}
 }
 
 // DebugEnabled returns true if a logger has been supplied via SetLogger.
