@@ -129,22 +129,12 @@ func (c *keyCache) get(id KeyMeta) (*internal.CryptoKey, bool) {
 func (c *keyCache) load(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
 	key := cacheKey(id.ID, id.Created)
 
-	e, ok := c.read(key)
-	if ok {
-		if !isReloadRequired(e, c.policy.RevokeCheckInterval) {
-			log.Debugf("read key is fresh: %v entry.Created: %d\n", id, e.key.Created())
-
-			return e.key, nil
-		}
-
-		log.Debugf("reload required: %v entry.Created: %d\n", id, e.key.Created())
-	}
-
 	k, err := loader.Load()
 	if err != nil {
 		return nil, err
 	}
 
+	e, ok := c.read(key)
 	if ok && e.key.Created() == k.Created() {
 		// existing key in cache. update revoked status and last loaded time and close key
 		// we just loaded since we don't need it
