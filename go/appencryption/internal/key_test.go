@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 const keySize = 32
@@ -119,6 +121,17 @@ func TestCryptoKey_Close(t *testing.T) {
 			key.Close()
 		})
 	}
+}
+
+func TestCryptoKey_String(t *testing.T) {
+	sec, err := secretFactory.New([]byte("testing"))
+	require.NoError(t, err)
+
+	key := &CryptoKey{secret: sec}
+	defer key.Close()
+
+	expected := fmt.Sprintf("CryptoKey(%p){secret(%p)}", key, sec)
+	assert.Equal(t, expected, key.String())
 }
 
 func TestNewCryptoKey(t *testing.T) {
