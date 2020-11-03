@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -48,6 +49,10 @@ func (k *CryptoKey) close() {
 // IsClosed returns true if the underlying buffer has been closed.
 func (k *CryptoKey) IsClosed() bool {
 	return k.secret.IsClosed()
+}
+
+func (k *CryptoKey) String() string {
+	return fmt.Sprintf("CryptoKey(%p){secret(%p)}", k, k.secret)
 }
 
 // NewCryptoKey creates a CryptoKey using the given key. Note that the underlying array will be wiped after the function
