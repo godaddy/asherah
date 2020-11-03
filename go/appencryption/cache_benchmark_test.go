@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory/memguard"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
@@ -20,7 +21,7 @@ var (
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 	c := newKeyCache(NewCryptoPolicy())
 
-	c.keys[cacheKey(testKey, created)] = &cacheEntry{
+	c.keys[cacheKey(testKey, created)] = cacheEntry{
 		key:      internal.NewCryptoKeyForTest(created, false),
 		loadedAt: time.Now(),
 	}
@@ -75,9 +76,11 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 			assert.NoError(b, err)
 
 			// ensure we have a "latest" entry for this key as well
-			latest, ok := c.get(KeyMeta{ID: cacheKey(testKey, curr)})
+			latest, err := c.GetOrLoadLatest(cacheKey(testKey, curr), keyLoaderFunc(func() (*internal.CryptoKey, error) {
+				return nil, errors.New("loader should not be executed")
+			}))
+			assert.NoError(b, err)
 			assert.NotNil(b, latest)
-			assert.True(b, ok)
 		}
 	})
 	assert.NotNil(b, c.keys)
@@ -94,7 +97,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadRevokedKey(b *testing.B) {
 
 	assert.NoError(b, err)
 
-	cacheEntry := &cacheEntry{
+	cacheEntry := cacheEntry{
 		key:      key,
 		loadedAt: time.Unix(created, 0),
 	}
@@ -131,7 +134,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 	)
 
 	for ; i < int64(b.N); i++ {
-		c.keys[cacheKey(fmt.Sprintf(testKey+"-%d", i), created)] = &cacheEntry{
+		c.keys[cacheKey(fmt.Sprintf(testKey+"-%d", i), created)] = cacheEntry{
 			key:      internal.NewCryptoKeyForTest(created, false),
 			loadedAt: time.Now(),
 		}
@@ -158,7 +161,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing.B) {
 	c := newKeyCache(NewCryptoPolicy())
 
-	c.keys[cacheKey(testKey, 0)] = &cacheEntry{
+	c.keys[cacheKey(testKey, 0)] = cacheEntry{
 		key:      internal.NewCryptoKeyForTest(created, false),
 		loadedAt: time.Now(),
 	}
@@ -206,14 +209,17 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteUniqueKey(b *testing.
 			_, err := c.GetOrLoadLatest(cacheKey(testKey, curr), keyLoaderFunc(func() (*internal.CryptoKey, error) {
 				// Add a delay to simulate time spent in performing a metastore read
 				time.Sleep(5 * time.Millisecond)
+
 				return internal.NewCryptoKeyForTest(created, false), nil
 			}))
 			assert.NoError(b, err)
 
-			// ensure we have a "latest" entry for this key as well
-			latest, ok := c.get(KeyMeta{ID: cacheKey(testKey, curr)})
+			// ensure we actually have a "latest" entry for this key in the cache
+			latest, err := c.GetOrLoadLatest(cacheKey(testKey, curr), keyLoaderFunc(func() (*internal.CryptoKey, error) {
+				return nil, errors.New("loader should not be executed")
+			}))
+			assert.NoError(b, err)
 			assert.NotNil(b, latest)
-			assert.True(b, ok)
 		}
 	})
 	assert.NotNil(b, c.keys)
@@ -227,7 +233,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadRevokedKey(b *testing.
 	)
 
 	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("testing"))
-	cacheEntry := &cacheEntry{
+	cacheEntry := cacheEntry{
 		key:      key,
 		loadedAt: time.Unix(created, 0),
 	}
@@ -262,7 +268,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.
 	)
 
 	for ; i < int64(b.N); i++ {
-		c.keys[cacheKey(fmt.Sprintf(testKey+"-%d", i), 0)] = &cacheEntry{
+		c.keys[cacheKey(fmt.Sprintf(testKey+"-%d", i), 0)] = cacheEntry{
 			key:      internal.NewCryptoKeyForTest(created, false),
 			loadedAt: time.Now(),
 		}

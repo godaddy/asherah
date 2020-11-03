@@ -833,10 +833,10 @@ func (suite *EnvelopeSuite) Test_KeyReloader_Load() {
 	called := false
 
 	reloader := &reloader{
-		loadFunc: func() (*internal.CryptoKey, error) {
+		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
 			called = true
 			return nil, nil
-		},
+		}),
 	}
 
 	k, err := reloader.Load()
@@ -865,10 +865,10 @@ func (suite *EnvelopeSuite) Test_KeyReloader_IsInvalid() {
 
 func (suite *EnvelopeSuite) Test_KeyReloader_Close() {
 	reloader := &reloader{
-		loadFunc: func() (*internal.CryptoKey, error) {
+		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
 			k, _ := getKeyAndKeyBytes(suite.T())
 			return k, nil
-		},
+		}),
 	}
 	loadTestKey := func() *internal.CryptoKey {
 		k, _ := reloader.Load()
@@ -928,7 +928,7 @@ func TestEnvelopeEncryption_Close(t *testing.T) {
 		cache := newKeyCache(NewCryptoPolicy())
 		key, _ := internal.NewCryptoKey(m, 123456, false, data)
 
-		cache.keys["testing"] = &cacheEntry{
+		cache.keys["testing"] = cacheEntry{
 			key: key,
 		}
 

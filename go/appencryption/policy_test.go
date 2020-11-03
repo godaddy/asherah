@@ -28,7 +28,7 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 	expireAfterDuration := time.Second * 100
 	sessionCacheMaxSize := 42
 	sessionCacheDuration := time.Second * 42
-	sessionCacheEngine := "ristretto"
+	sessionCacheEngine := "deprecated"
 
 	policy := NewCryptoPolicy(
 		WithRevokeCheckInterval(revokeCheckInterval),

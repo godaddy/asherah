@@ -3,11 +3,12 @@ package appencryption
 import (
 	"context"
 
+	"github.com/godaddy/asherah/go/securememory"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
-	"github.com/godaddy/asherah/go/securememory"
-	"github.com/godaddy/asherah/go/securememory/memguard"
+	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
 // SessionFactory is used to create new encryption sessions and manage
@@ -50,6 +51,7 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 	var skCache cache
 	if config.Policy.CacheSystemKeys {
 		skCache = newKeyCache(config.Policy)
+		log.Debugf("new skCache: %v\n", skCache)
 	} else {
 		skCache = new(neverCache)
 	}
@@ -64,7 +66,9 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 	}
 
 	if config.Policy.CacheSessions {
-		factory.sessionCache = newSessionCache(factory.newSession, config.Policy)
+		factory.sessionCache = newSessionCache(func(id string) (*Session, error) {
+			return newSession(factory, id)
+		}, config.Policy)
 	}
 
 	for _, opt := range opts {
@@ -77,6 +81,10 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 // Close will close any open resources owned by this factory (e.g. cache of system keys). It should be called
 // when the factory is no longer required
 func (f *SessionFactory) Close() error {
+	if f.Config.Policy.CacheSessions {
+		f.sessionCache.Close()
+	}
+
 	return f.systemKeys.Close()
 }
 
@@ -90,11 +98,11 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 		return f.sessionCache.Get(id)
 	}
 
-	return f.newSession(id)
+	return newSession(f, id)
 }
 
-func (f *SessionFactory) newSession(id string) (*Session, error) {
-	return &Session{
+func newSession(f *SessionFactory, id string) (*Session, error) {
+	s := &Session{
 		encryption: &envelopeEncryption{
 			partition:        f.newPartition(id),
 			Metastore:        f.Metastore,
@@ -104,7 +112,12 @@ func (f *SessionFactory) newSession(id string) (*Session, error) {
 			SecretFactory:    f.SecretFactory,
 			systemKeys:       f.systemKeys,
 			intermediateKeys: f.newIKCache(),
-		}}, nil
+		},
+	}
+
+	log.Debugf("[newSession] for id %s. Session(%p){Encryption(%p)}", id, s, s.encryption)
+
+	return s, nil
 }
 
 func (f *SessionFactory) newPartition(id string) partition {

@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
@@ -77,4 +78,16 @@ func TestStaticKMS_DecryptKey_ReturnsErrorOnFail(t *testing.T) {
 func TestStaticKMS_NewStatic_ReturnsErrorOnInvalidKey(t *testing.T) {
 	_, err := NewStatic("bbsPfQTZsmw", aead.NewAES256GCM())
 	assert.Error(t, err)
+}
+
+func TestStaticKMS_Close(t *testing.T) {
+	crypto := aead.NewAES256GCM()
+	m, err := NewStatic("bbsPfQTZsmwEcSRKND87WpoC9umuuuOo", crypto)
+	require.NoError(t, err)
+
+	assert.False(t, m.key.IsClosed())
+
+	m.Close()
+
+	assert.True(t, m.key.IsClosed())
 }

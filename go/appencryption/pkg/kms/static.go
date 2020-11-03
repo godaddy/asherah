@@ -70,3 +70,11 @@ func (s *StaticKMS) DecryptKey(ctx context.Context, encKey []byte) ([]byte, erro
 
 	return keyBytes, nil
 }
+
+// Close frees the memory locked by the static key. It should be called
+// as soon as its no longer in use.
+func (s *StaticKMS) Close() {
+	if s.key != nil {
+		s.key.Close()
+	}
+}
