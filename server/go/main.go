@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/jessevdk/go-flags"
 	"google.golang.org/grpc"
 
@@ -46,6 +47,8 @@ func main() {
 
 		return
 	}
+
+	configureLogging(opts.Asherah.Verbose)
 
 	log.Println("configuration options parsed successfully")
 	printOptions(parser)
@@ -95,6 +98,20 @@ func validateOptions(opts *Options) error {
 	}
 
 	return nil
+}
+
+type loggerFunc func(format string, v ...interface{})
+
+func (l loggerFunc) Debugf(format string, v ...interface{}) {
+	l(format, v...)
+}
+
+func configureLogging(verbose bool) {
+	if verbose {
+		aelog.SetLogger(loggerFunc(func(f string, v ...interface{}) {
+			log.Printf("AppEncryption DEBUG: %s", fmt.Sprintf(f, v...))
+		}))
+	}
 }
 
 func printOptions(parser *flags.Parser) {

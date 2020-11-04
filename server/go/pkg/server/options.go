@@ -24,6 +24,7 @@ type Options struct {
 	KMS                  string        `long:"kms" choice:"aws" choice:"static" default:"aws" description:"Configures the master key management service" env:"ASHERAH_KMS_MODE"`
 	RegionMap            RegionMap     `long:"region-map" description:"A comma separated list of key-value pairs in the form of REGION1=ARN1[,REGION2=ARN2] (required if --kms=aws)" env:"ASHERAH_REGION_MAP"`
 	PreferredRegion      string        `long:"preferred-region" description:"The preferred AWS region (required if --kms=aws)" env:"ASHERAH_PREFERRED_REGION"`
+	Verbose              bool          `short:"v" long:"verbose" description:"Enable verbose logging output" env:"ASHERAH_VERBOSE"`
 }
 
 type RegionMap map[string]string
