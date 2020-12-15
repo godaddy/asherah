@@ -5,6 +5,11 @@ namespace GoDaddy.Asherah.Crypto.BufferUtils
 {
     public static class ManagedBufferUtils
     {
+        /// <summary>
+        /// Clears the byte array.
+        /// </summary>
+        ///
+        /// <param name="sensitiveData">An array of <see cref="byte"/> objects that needs to be cleared.</param>
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static void WipeByteArray(byte[] sensitiveData)
         {
