@@ -1,5 +1,7 @@
 using System;
+using System.Text;
 using LanguageExt;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -13,6 +15,26 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
         public JsonTest()
         {
             testDocument = new Asherah.AppEncryption.Util.Json();
+        }
+
+        [Fact]
+        public void TestJsonDateParsing()
+        {
+            string time = DateTime.UtcNow.ToString("o");
+            JObject jObject = new JObject
+            {
+                { "Created", 1541461380 },
+                { "Time", time },
+            };
+
+            // Get json bytes
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jObject));
+
+            // Convert to JObject using the Asherah.AppEncryption.Util.Json class. This in turn calls the
+            // ConvertUtf8ToJson method which sets the DateParseHandling to None
+            JObject json = new Asherah.AppEncryption.Util.Json(jsonBytes).ToJObject();
+
+            Assert.Equal(time, json.GetValue("Time").ToString());
         }
 
         [Fact]
@@ -32,7 +54,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
         private void TestGetDateTimeOffsetWithDateTimeKindLocal()
         {
             string key = "testDateTime";
-            DateTimeOffset expectedDateTime = new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Local));
+            DateTimeOffset expectedDateTime =
+                new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Local));
 
             testDocument.Put(key, expectedDateTime);
             DateTimeOffset actualDateTime = testDocument.GetDateTimeOffset(key);
@@ -44,7 +67,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
         private void TestGetDateTimeOffsetWithDateTimeKindUnspecified()
         {
             string key = "testDateTime";
-            DateTimeOffset expectedDateTime = new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Unspecified));
+            DateTimeOffset expectedDateTime =
+                new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Unspecified));
 
             testDocument.Put(key, expectedDateTime);
             DateTimeOffset actualDateTime = testDocument.GetDateTimeOffset(key);
@@ -57,7 +81,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
         {
             string key = "testDateTime";
 
-            DateTimeOffset expectedDateTime = new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Utc));
+            DateTimeOffset expectedDateTime =
+                new DateTimeOffset(new DateTime(2019, 3, 21, 23, 24, 0, DateTimeKind.Utc));
 
             testDocument.Put(key, expectedDateTime);
             DateTimeOffset actualDateTime = testDocument.GetDateTimeOffset(key);
