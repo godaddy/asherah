@@ -121,4 +121,4 @@ spec:
       capabilities:
         add: ["IPC_LOCK"]
   restartPolicy: Never
-```  
+```
