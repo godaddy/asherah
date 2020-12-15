@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using App.Metrics.Timer;
 using LanguageExt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,6 +19,7 @@ namespace GoDaddy.Asherah.AppEncryption.Util
     /// </summary>
     public class Json
     {
+        private static readonly TimerOptions JsonTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".json.ConvertUtf8ToJson" };
         private readonly JObject document;
 
         /// <summary>
@@ -244,10 +248,10 @@ namespace GoDaddy.Asherah.AppEncryption.Util
 
         private static JObject ConvertUtf8ToJson(byte[] utf8)
         {
-            string bytesAsString = Encoding.UTF8.GetString(utf8);
+            JsonReader jsonReader = new JsonTextReader(new StreamReader(new MemoryStream(utf8), Encoding.UTF8));
+            jsonReader.DateParseHandling = DateParseHandling.None;
 
-            // JObject.Parse appears to be more efficient than JsonConvert.DeserializeObject
-            return JObject.Parse(bytesAsString);
+            return JObject.Load(jsonReader);
         }
     }
 }
