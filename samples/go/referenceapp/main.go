@@ -14,6 +14,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
+	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 	"github.com/google/logger"
 	"github.com/jessevdk/go-flags"
@@ -30,6 +31,7 @@ type Options struct {
 	Payload            string `short:"p" long:"payload-to-encrypt" description:"payload to be encrypted"`
 	Metastore          string `short:"m" long:"metastore" description:"Configure what metastore to use (DYNAMODB/SQL/MEMORY)"`
 	EnableRegionSuffix bool   `short:"x" long:"enable-region-suffix" description:"Configure the metastore to use regional suffixes (only supported by DYNAMODB)"`
+	Verbose            bool   `short:"v" long:"verbose" description:"Enables verbose output"`
 	ConnectionString   string `short:"c" long:"conn" description:"MySQL connection String"`
 	DynamoDBEndpoint   string `long:"dynamodb-endpoint" description:"An optional endpoint URL (hostname only or fully qualified URI) (only supported by DYNAMODB)"`
 	DynamoDBRegion     string `long:"dynamodb-region" description:"The AWS region for DynamoDB requests (only supported by DYNAMODB)" default:"us-west-2"`
@@ -38,6 +40,12 @@ type Options struct {
 	PreferredRegion    string `long:"preferred-region" description:"Preferred region to use for KMS if using AWS KMS. Required for AWS KMS."`
 	RegionTuples       string `long:"region-arn-tuples" description:"Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS."`
 	PartitionID        string `long:"partition-id" description:"The partition id to use for client sessions"`
+}
+
+type debugFunc func(format string, v ...interface{})
+
+func (f debugFunc) Debugf(format string, v ...interface{}) {
+	f(format, v...)
 }
 
 // connectSQL connects to the mysql instance with the provided connection string.
@@ -78,7 +86,13 @@ func createMetastore() appencryption.Metastore {
 
 		awsConfig := &aws.Config{
 			Region: aws.String(opts.DynamoDBRegion),
-			//LogLevel: aws.LogLevel(aws.LogDebug),
+		}
+
+		if opts.Verbose {
+			awsConfig.LogLevel = aws.LogLevel(aws.LogDebug)
+			awsConfig.Logger = aws.Logger(aws.LoggerFunc(func(v ...interface{}) {
+				logger.Infof("AWS %s", fmt.Sprint(v...))
+			}))
 		}
 
 		if len(opts.DynamoDBEndpoint) > 0 {
@@ -98,6 +112,7 @@ func createMetastore() appencryption.Metastore {
 		)
 	default:
 		logger.Info("using in-memory metastore")
+
 		return persistence.NewMemoryMetastore()
 	}
 }
@@ -123,20 +138,26 @@ func createKMS(crypto appencryption.AEAD) (appencryption.KeyManagementService, e
 		return kms.NewAWS(crypto, opts.PreferredRegion, regionArnMap)
 	default:
 		logger.Info("using static kms")
+
 		return kms.NewStatic("thisIsAStaticMasterKeyForTesting", crypto)
 	}
 }
 
 func main() {
-	logger.Init("Default", true, false, new(bytes.Buffer))
-
-	_, err := flags.Parse(&opts)
-	if err != nil {
+	if _, err := flags.Parse(&opts); err != nil {
 		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
 			return
 		}
 
 		panic(err)
+	}
+
+	logger.Init("Default", opts.Verbose, false, new(bytes.Buffer))
+
+	if opts.Verbose {
+		aelog.SetLogger(debugFunc(func(f string, v ...interface{}) {
+			logger.Infof("AppEncryption DEBUG: %s", fmt.Sprintf(f, v...))
+		}))
 	}
 
 	if opts.Payload != "" && opts.Drr != "" {

@@ -1,0 +1,72 @@
+name: Draft release
+
+on:
+  push:
+    tags:
+      - '*/*/v[01].[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    name: Draft release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Format release title
+        id: format-release-title
+        run: |
+          REGEX="refs/tags/(.*)/(.*)/(v.*)"
+
+          if [[ $GITHUB_REF =~ $REGEX ]]
+          then
+              lang="${BASH_REMATCH[1]}"
+              lib="${BASH_REMATCH[2]}"
+              ver="${BASH_REMATCH[3]}"
+
+              case $lang in
+
+                  csharp)
+                      lang="C#"
+                      ;;
+
+                  go)
+                      lang="Go"
+                      ;;
+
+                  java)
+                      lang="Java"
+                      ;;
+              esac
+
+              case $lib in
+
+                  appencryption)
+                      lib="AppEncryption"
+                      ;;
+
+                  securememory)
+                      lib="SecureMemory"
+                      ;;
+              esac
+
+              title="[${lang}] ${lib} ${ver}"
+              echo "::set-output name=release-title::${title}"
+          else
+              echo "unrecognized github.ref: ${GITHUB_REF}"
+              exit 1
+          fi
+        shell: bash
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ steps.format-release-title.outputs.release-title }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
