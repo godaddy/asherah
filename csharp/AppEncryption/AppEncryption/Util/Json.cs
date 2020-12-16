@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using LanguageExt;
@@ -244,10 +245,10 @@ namespace GoDaddy.Asherah.AppEncryption.Util
 
         private static JObject ConvertUtf8ToJson(byte[] utf8)
         {
-            string bytesAsString = Encoding.UTF8.GetString(utf8);
+            JsonReader jsonReader = new JsonTextReader(new StreamReader(new MemoryStream(utf8), Encoding.UTF8));
+            jsonReader.DateParseHandling = DateParseHandling.None;
 
-            // JObject.Parse appears to be more efficient than JsonConvert.DeserializeObject
-            return JObject.Parse(bytesAsString);
+            return JObject.Load(jsonReader);
         }
     }
 }
