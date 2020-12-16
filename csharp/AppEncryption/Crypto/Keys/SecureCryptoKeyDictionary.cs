@@ -14,11 +14,24 @@ namespace GoDaddy.Asherah.Crypto.Keys
         private readonly long revokeCheckPeriodMillis;
         private volatile int isClosed = 0; // using volatile int as 0/1 value to mimic Java's AtomicBoolean functionality
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureCryptoKeyDictionary{TKey}"/> class.
+        /// </summary>
+        ///
+        /// <param name="revokeCheckPeriodMillis">The time, in milliseconds, after which the key revocation
+        /// status should be checked.</param>
         public SecureCryptoKeyDictionary(long revokeCheckPeriodMillis)
         {
             this.revokeCheckPeriodMillis = revokeCheckPeriodMillis;
         }
 
+        /// <summary>
+        /// Retrieves the provided key from the cache.
+        /// </summary>
+        ///
+        /// <param name="key">The key to retrieve.</param>
+        /// <returns>A <see cref="CryptoKey"/> object.</returns>
+        /// <exception cref="InvalidOperationException">If a closed key is accessed.</exception>
         public virtual CryptoKey Get(TKey key)
         {
             if (!Convert.ToBoolean(isClosed))
@@ -41,6 +54,12 @@ namespace GoDaddy.Asherah.Crypto.Keys
             throw new InvalidOperationException("Attempted to get CryptoKey after close");
         }
 
+        /// <summary>
+        /// Retrieves the last key from the cache.
+        /// </summary>
+        ///
+        /// <returns>A <see cref="CryptoKey"/> object.</returns>
+        /// <exception cref="InvalidOperationException">If a closed key is accessed.</exception>
         public virtual CryptoKey GetLast()
         {
             if (!Convert.ToBoolean(isClosed))
@@ -132,6 +151,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
             throw new InvalidOperationException("Attempted to get CryptoKey after close");
         }
 
+        /// <inheritdoc />
         public virtual void Dispose()
         {
             // Will return 0 on the first and only successful compare and set
