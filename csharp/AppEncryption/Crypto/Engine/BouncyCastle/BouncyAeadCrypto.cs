@@ -10,10 +10,12 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
 {
+    /// <inheritdoc />
     public abstract class BouncyAeadCrypto : AeadEnvelopeCrypto
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<BouncyAeadCrypto>();
 
+        /// <inheritdoc />
         public override byte[] Encrypt(byte[] input, CryptoKey key)
         {
             byte[] nonce = GenerateNonce();
@@ -44,6 +46,7 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
             }
         }
 
+        /// <inheritdoc />
         public override byte[] Decrypt(byte[] input, CryptoKey key)
         {
             byte[] nonce = GetAppendedNonce(input);
