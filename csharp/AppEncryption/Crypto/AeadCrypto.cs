@@ -25,51 +25,79 @@ namespace GoDaddy.Asherah.Crypto
             nonceGenerator = new NonceGenerator();
         }
 
+        /// <summary>
+        /// Encrypts the provided payload.
+        /// </summary>
+        ///
+        /// <param name="input">Payload bytes to be encrypted.</param>
+        /// <param name="key">The <see cref="CryptoKey"/> to encrypt the payload with.</param>
+        /// <returns>An encrypted payload.</returns>
         public abstract byte[] Encrypt(byte[] input, CryptoKey key);
 
+        /// <summary>
+        /// Decrypts an encrypted payload.
+        /// </summary>
+        ///
+        /// <param name="input">The encrypted payload.</param>
+        /// <param name="key">The <see cref="CryptoKey"/> to decrypt the payload with.</param>
+        /// <returns>An decrypted payload.</returns>
         public abstract byte[] Decrypt(byte[] input, CryptoKey key);
 
+        /// <summary>
+        /// Generates a new <see cref="CryptoKey"/>.
+        /// </summary>
+        ///
+        /// <returns>A newly generated <see cref="CryptoKey"/>.</returns>
         public virtual CryptoKey GenerateKey()
         {
             return GenerateRandomCryptoKey();
         }
 
+        /// <summary>
+        /// Generates a new <see cref="CryptoKey"/>.
+        /// </summary>
+        ///
+        /// <param name="created">The timestamp to be used for key creation.</param>
+        /// <returns>A newly generated <see cref="CryptoKey"/>.</returns>
         public virtual CryptoKey GenerateKey(DateTimeOffset created)
         {
             return GenerateRandomCryptoKey(created);
         }
 
         /// <summary>
-        /// Generates a CryptoKey using the provided source bytes. NOTE: you MUST wipe out the source bytes after
-        /// the completion of this call!
+        /// Generates a CryptoKey using the provided source bytes.
+        /// NOTE: you MUST wipe out the source bytes after the completion of this call!.
         /// </summary>
-        /// <param name="sourceBytes">Bytes used to generate the key</param>
-        /// <returns>A CryptoKey generated using the sourceBytes</returns>
+        ///
+        /// <param name="sourceBytes">Bytes used to generate the key.</param>
+        /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
         public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes)
         {
             return GenerateKeyFromBytes(sourceBytes, DateTimeOffset.UtcNow);
         }
 
         /// <summary>
-        /// Generates a CryptoKey using the provided source bytes and created time. NOTE: you MUST wipe out the
-        /// source bytes after the completion of this call!
+        /// Generates a <see cref="CryptoKey"/> using the provided source bytes and created time.
+        /// NOTE: you MUST wipe out the source bytes after the completion of this call!.
         /// </summary>
-        /// <param name="sourceBytes">Bytes used to generate the key</param>
-        /// <param name="created">Time of creation of key</param>
-        /// <returns>A CryptoKey generated using the sourceBytes</returns>
+        ///
+        /// <param name="sourceBytes">Bytes used to generate the key.</param>
+        /// <param name="created">Time of creation of key.</param>
+        /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
         public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes, DateTimeOffset created)
         {
             return GenerateKeyFromBytes(sourceBytes, created, false);
         }
 
         /// <summary>
-        /// Generates a CryptoKey using the provided source bytes, created time, and revoked flag. NOTE: you MUST
-        /// wipe out the source bytes after the completion of this call!
+        /// Generates a <see cref="CryptoKey"/> using the provided source bytes, created time, and revoked flag.
+        /// NOTE: you MUST wipe out the source bytes after the completion of this call!.
         /// </summary>
-        /// <param name="sourceBytes">Bytes used to generate the key</param>
-        /// <param name="created">Time of creation of key</param>
-        /// <param name="revoked">Specifies if the key is revoked or not</param>
-        /// <returns>A CryptoKey generated using the sourceBytes</returns>
+        ///
+        /// <param name="sourceBytes">Bytes used to generate the key.</param>
+        /// <param name="created">Time of creation of key.</param>
+        /// <param name="revoked">Specifies if the key is revoked or not.</param>
+        /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
         public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes, DateTimeOffset created, bool revoked)
         {
             byte[] clonedBytes = sourceBytes.Clone() as byte[];
@@ -79,20 +107,22 @@ namespace GoDaddy.Asherah.Crypto
         }
 
         /// <summary>
-        /// Generates a random CryptoKey using the current time as the created time.
+        /// Generates a random <see cref="CryptoKey"/> using the current time as the created time.
         /// </summary>
-        /// <returns>a generated random CryptoKey</returns>
+        ///
+        /// <returns>A generated random <see cref="CryptoKey"/>.</returns>
         protected internal virtual CryptoKey GenerateRandomCryptoKey()
         {
             return GenerateRandomCryptoKey(DateTimeOffset.UtcNow);
         }
 
         /// <summary>
-        /// Generates a random <code>CryptoKey</code> using the given time as the created time.
+        /// Generates a random <see cref="CryptoKey"/> using the given time as the created time.
         /// </summary>
-        /// <param name="created">created the time to associate the generated <code>CryptoKey</code> with</param>
-        /// <returns>a generated random <code>CryptoKey</code></returns>
-        /// <exception cref="ArgumentException">Throws an exception if key length is invalid</exception>
+        ///
+        /// <param name="created"> The time to associate the generated <see cref="CryptoKey"/> with.</param>
+        /// <returns>A generated random <see cref="CryptoKey"/>.</returns>
+        /// <exception cref="ArgumentException">Throws an exception if key length is invalid.</exception>
         protected internal virtual CryptoKey GenerateRandomCryptoKey(DateTimeOffset created)
         {
             int keyLengthBits = GetKeySizeBits();
