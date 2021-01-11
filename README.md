@@ -21,6 +21,7 @@ Table of Contents
 
    * [Introduction](#introduction)
    * [Getting Started](#getting-started)
+   * [Sample Applications](#sample-applications)
    * [Further Reading](#further-reading)
    * [Supported Languages](#supported-languages)
        * [Feature Support](#feature-support)
@@ -132,6 +133,11 @@ String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPe
 // Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
 Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
 ```
+
+## Sample Applications
+
+The [samples](/samples) directory includes sample applications that demonstrate use of Asherah SDK using various
+languages and platforms.
 
 ## Further Reading
 
