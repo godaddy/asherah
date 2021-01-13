@@ -38,6 +38,69 @@ Enable the AWS CLI v2 to load JSON events from a file (matching the v1 behavior)
 $ export AWS_CLI_BINARY_FORMAT=raw-in-base64-out
 ```
 
+Create the `lambda-exec` role, if needed.
+
+```console
+$ aws iam create-role --role-name lambda-exec --assume-role-policy-document file://policy.json
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "lambda-exec",
+        "RoleId": "AROAWOYE3S3E7IEJN54CD",
+        "Arn": "arn:aws:iam::123456789012:role/lambda-exec",
+        "CreateDate": "2021-01-10T20:05:52+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+    }
+}
+```
+
+The file `policy.json` is a JSON document in the current directory that defines the trust policy for the role. In this
+case the policy allows Lambda to use the role's permissions via the `AssumeRole` action.
+
+Example `policy.json`
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+```
+
+Now you can add permissions to the role, starting with the `AWSLambdaBasicExecutionRole` managed policy.
+
+```console
+$ aws iam attach-role-policy \
+    --role-name lambda-exec \
+    --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+```
+
+The above command will need to be repeated for any additional permissions. The sample application will also need
+permissions granted by the following policies:
+* `arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess`: a managed policy granting write only permissions to AWS X-Ray
+* `arn:aws:iam::123456789012:policy/asherah-kms-access`: a customer managed policy granting access to a customer master
+key, see [KMS Permissions](/docs/KeyManagementService.md#creating-an-aws-kms-key).
+* `arn:aws:iam::123456789012:policy/asherah-dynamodb-access`: a customer managed policy granting access to a DynamoDB
+table, see [Metastore: DynamoDB](/docs/Metastore.md#dynamodb)
+
 Create a new bucket for deployment artifacts, run `1-create-bucket.sh`.
 
 ```console
