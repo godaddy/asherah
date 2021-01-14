@@ -82,7 +82,7 @@ $ aws iam create-policy --policy-name asherah-kms-access --policy-document file:
     "Policy": {
         "PolicyName": "asherah-kms-access",
         "PolicyId": "ZXR6A36LTYANPAI7NJ5UV",
-        "Arn": "arn:aws:iam::123456789012:policy/asherah-kms-policy",
+        "Arn": "arn:aws:iam::123456789012:policy/asherah-kms-access",
         "Path": "/",
         "DefaultVersionId": "v1",
         "AttachmentCount": 0,
