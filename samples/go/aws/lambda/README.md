@@ -32,10 +32,12 @@ $ git clone git@github.com:godaddy/asherah.git
 $ cd asherah/samples/go/aws/lambda
 ```
 
-Enable the AWS CLI v2 to load JSON events from a file (matching the v1 behavior).
+Add the following to your
+[configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) (`~/.aws/config`) to
+enable loading of raw JSON events with the AWS CLI v2:
 
-```console
-$ export AWS_CLI_BINARY_FORMAT=raw-in-base64-out
+```
+cli_binary_format=raw-in-base64-out
 ```
 
 Create the `lambda-exec` role, if needed.
