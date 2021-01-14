@@ -4,6 +4,7 @@ Asherah handles the storage of Intermediate and System Keys in its "Metastore" w
 * [Metastore Implementations](#metastore-implementations)
   * [RDBMS](#rdbms)
   * [AWS DynamoDB](#dynamodb)
+    * [Permissions](#permissions)
   * [In-memory](#in-memory)
 * [Disaster Recovery](#disaster-recovery)
 * [Revoking Keys](#revoking-keys)
@@ -55,6 +56,59 @@ aws dynamodb create-table \
    AttributeName=Created,AttributeType=N \
 <billing mode / provisioned throughput setup>
 ```
+
+##### Permissions
+
+Next, you'll need to ensure Asherah has sufficient permissions to interact with the table. The following example creates
+a new customer managed policy that allows any attached user access to the above table.
+
+```console
+$ aws iam create-policy --policy-name asherah-dynamodb-access --policy-document file://policy.json
+{
+    "Policy": {
+        "PolicyName": "asherah-dynamodb-access",
+        "PolicyId": "ANPAWOYE3S3ESQKWJRFZW",
+        "Arn": "arn:aws:iam::123456789012:policy/asherah-dynamodb-access",
+        "Path": "/",
+        "DefaultVersionId": "v1",
+        "AttachmentCount": 0,
+        "PermissionsBoundaryUsageCount": 0,
+        "IsAttachable": true,
+        "CreateDate": "2021-01-12T21:57:05+00:00",
+        "UpdateDate": "2021-01-12T21:57:05+00:00"
+    }
+}
+```
+
+The file `policy.json` provided as the policy document is a JSON document in the current directory:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:PutItem",
+                "dynamodb:DescribeTable",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:*:12345789012:table/EncryptionKey",
+            "Effect": "Allow"
+        }
+    ]
+}
+```
+
+For more information on creating policies using the AWS CLI, see
+[create-policy](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/create-policy.html) in
+AWS CLI Command Reference.
 
 ##### Item Data Size Estimates
 The estimates provided are based on examples using product id, system id, and partition id with lengths of 11, 13, and 10 bytes respectively.
