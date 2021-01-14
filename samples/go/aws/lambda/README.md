@@ -103,6 +103,31 @@ key, see [KMS Permissions](/docs/KeyManagementService.md#creating-an-aws-kms-key
 * `arn:aws:iam::123456789012:policy/asherah-dynamodb-access`: a customer managed policy granting access to a DynamoDB
 table, see [Metastore: DynamoDB](/docs/Metastore.md#dynamodb)
 
+Modify the provided [template.yml](template.yml) file by replacing the placeholder KMS Key and Role ARNs. Your updated
+`template.yml` file should now resemble the following:
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that demonstrates Asherah encrypt/decrypt operations.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          ASHERAH_KMS_KEY_ARN: arn:aws:kms:us-west-2:123456789012:key/1234abcd-56ef-78ab-90cd-1a2b3c4d5e6f
+          ASHERAH_METASTORE_TABLE_NAME: EncryptionKey
+      Handler: main
+      Runtime: go1.x
+      CodeUri: function/.
+      Description: Performs encrypt/decrypt operations via the Asherah SDK
+      Timeout: 5
+      # Function's execution role
+      Role: arn:aws:iam::123456789012:role/lambda-exec
+      Tracing: Active
+```
+
 Create a new bucket for deployment artifacts, run `1-create-bucket.sh`.
 
 ```console
