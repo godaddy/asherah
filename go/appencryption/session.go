@@ -153,6 +153,28 @@ func (s *Session) Decrypt(ctx context.Context, d DataRowRecord) ([]byte, error) 
 	return s.encryption.DecryptDataRowRecord(ctx, d)
 }
 
+// Load uses a persistence key to load a DataRowRecord from the provided data persistence store, if any,
+// and returns the decrypted payload. It also takes a context used for cancellation.
+func (s *Session) Load(ctx context.Context, key string, store Loader) ([]byte, error) {
+	drr, err := store.Load(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Decrypt(ctx, *drr)
+}
+
+// Store encrypts a payload, stores the resulting DataRowRecord into the provided data persistence store with
+// given key. It also takes a context used for cancellation.
+func (s *Session) Store(ctx context.Context, key string, payload []byte, store Storer) error {
+	drr, err := s.Encrypt(ctx, payload)
+	if err != nil {
+		return err
+	}
+
+	return store.Store(ctx, key, *drr)
+}
+
 // Close will close any open resources owned by this session (e.g. cache of keys). It should be called
 // as soon as it's no longer in use.
 func (s *Session) Close() error {
