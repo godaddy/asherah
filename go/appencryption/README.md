@@ -285,6 +285,53 @@ if err != nil {
 }
 ```
 
+#### Custom Persistence via Store/Load methods
+
+Asherah supports a key-value/document storage model. Use custom `Storer` and `Loader` implementations to hook into the
+session's `Store` and `Load` methods.
+
+An example map-backed implementation:
+
+```go
+type storage map[string][]byte
+
+func (s storage) Store(_ context.Context, key string, d appencryption.DataRowRecord) error {
+    b, err := json.Marshal(d)
+    if err != nil {
+      return err
+    }
+
+    s[key] = b
+
+    return nil
+}
+
+func (s storage) Load(_ context.Context, key string) (*appencryption.DataRowRecord, error) {
+    var d appencryption.DataRowRecord
+    err := json.Unmarshal(s[key], &d)
+
+    return &d, err
+}
+```
+
+An example end-to-end use of the session `Store` and `Load` calls:
+
+```go
+mystore := make(storage)
+
+persistenceKey := "some key"
+originalPayloadData := []byte("mysupersecretpayload")
+
+// Encrypts the payload and stores it in the map
+err := sess.Store(persistenceKey, originalPayloadData, mystore)
+if err != nil {
+    panic(err)
+}
+
+// Uses the persistenceKey to look-up the payload in the map, then decrypts the payload and returns it
+payload, err := sess.Load(persistenceKey, mystore)
+```
+
 ## Documentation
 
 **appencryption package:** See the [godocs](https://godoc.org/github.com/godaddy/asherah/go/appencryption) for api documentation.
