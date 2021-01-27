@@ -168,7 +168,7 @@ languages and platforms.
 | DynamoDB Metastore         | Yes  | Yes  | Yes |
 | Session caching            | Yes  | Yes  | Yes |
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
-| Store/Load pattern.        | Yes  | Yes  | No  |
+| Store/Load pattern.        | Yes  | Yes  | Yes |
 
 
 ## Current Status
