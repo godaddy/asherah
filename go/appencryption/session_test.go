@@ -235,28 +235,7 @@ func TestSession_Encrypt(t *testing.T) {
 	session.encryption = mockEnvelopeEncryption
 	mockEnvelopeEncryption.On("EncryptPayload", context.Background(), someBytes).Return(dataRowRecord, nil)
 
-	record, e := session.Encrypt(someBytes)
-
-	assert.NoError(t, e)
-	assert.Equal(t, encryptedBytes, record.Data)
-}
-
-func TestSession_EncryptContext(t *testing.T) {
-	someBytes := []byte("somePayload")
-	encryptedBytes := []byte("hdfjskahfkjdsahkjfdhsaklfhdsakl")
-	dataRowRecord := &DataRowRecord{
-		Data: encryptedBytes,
-	}
-	factory := NewSessionFactory(new(Config), nil, nil, nil)
-	session, _ := factory.GetSession("testing")
-
-	mockEnvelopeEncryption := new(MockEncryption)
-	session.encryption = mockEnvelopeEncryption
-	// Using an un-exported struct to avoid accidental collisions and linting errors
-	ctx := context.WithValue(context.Background(), new(neverCache), "someValue")
-	mockEnvelopeEncryption.On("EncryptPayload", ctx, someBytes).Return(dataRowRecord, nil)
-
-	record, e := session.EncryptContext(ctx, someBytes)
+	record, e := session.Encrypt(context.Background(), someBytes)
 
 	assert.NoError(t, e)
 	assert.Equal(t, encryptedBytes, record.Data)
@@ -274,26 +253,7 @@ func TestSession_Decrypt(t *testing.T) {
 	session.encryption = mockEnvelopeEncryption
 	mockEnvelopeEncryption.On("DecryptDataRowRecord", context.Background(), dataRowRecord).Return(someBytes, nil)
 
-	result, e := session.Decrypt(dataRowRecord)
-	assert.NoError(t, e)
-	assert.Equal(t, someBytes, result)
-}
-
-func TestSession_DecryptContext(t *testing.T) {
-	someBytes := []byte("somePayload")
-	dataRowRecord := DataRowRecord{
-		Data: []byte("hdfjskahfkjdsahkjfdhsaklfhdsakl"),
-	}
-	factory := NewSessionFactory(new(Config), nil, nil, nil)
-	session, _ := factory.GetSession("testing")
-
-	mockEnvelopeEncryption := new(MockEncryption)
-	session.encryption = mockEnvelopeEncryption
-	// Using an un-exported struct to avoid accidental collisions and linting errors
-	ctx := context.WithValue(context.Background(), new(neverCache), "someValue")
-	mockEnvelopeEncryption.On("DecryptDataRowRecord", ctx, dataRowRecord).Return(someBytes, nil)
-
-	result, e := session.DecryptContext(ctx, dataRowRecord)
+	result, e := session.Decrypt(context.Background(), dataRowRecord)
 	assert.NoError(t, e)
 	assert.Equal(t, someBytes, result)
 }

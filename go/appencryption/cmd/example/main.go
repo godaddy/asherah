@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -85,8 +86,7 @@ func (f loggerFunc) Debugf(format string, v ...interface{}) {
 }
 
 func EncryptAndStore(s *appencryption.Session, b []byte) *appencryption.DataRowRecord {
-
-	dr, err := s.Encrypt(b)
+	dr, err := s.Encrypt(context.Background(), b)
 	if err != nil {
 		panic(err)
 	}
@@ -125,8 +125,7 @@ func GenerateData(session *appencryption.Session, count int) []appencryption.Dat
 }
 
 func Decrypt(session *appencryption.Session, drr appencryption.DataRowRecord) {
-
-	result, err := session.Decrypt(drr)
+	result, err := session.Decrypt(context.Background(), drr)
 	if err != nil {
 		panic(err)
 	}

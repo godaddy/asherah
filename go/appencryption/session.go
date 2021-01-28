@@ -142,25 +142,14 @@ type Session struct {
 }
 
 // Encrypt encrypts a provided slice of bytes and returns a DataRowRecord, which contains required
-// information to decrypt the data in the future.
-func (s *Session) Encrypt(data []byte) (*DataRowRecord, error) {
-	return s.EncryptContext(context.Background(), data)
-}
-
-// EncryptContext encrypts a provided slice of bytes and returns a DataRowRecord, which contains required
 // information to decrypt the data in the future. It also takes a context used for cancellation.
-func (s *Session) EncryptContext(ctx context.Context, data []byte) (*DataRowRecord, error) {
+func (s *Session) Encrypt(ctx context.Context, data []byte) (*DataRowRecord, error) {
 	return s.encryption.EncryptPayload(ctx, data)
 }
 
-// Decrypt decrypts a DataRowRecord key and returns the original byte slice provided to the encrypt function.
-func (s *Session) Decrypt(d DataRowRecord) ([]byte, error) {
-	return s.DecryptContext(context.Background(), d)
-}
-
-// DecryptContext decrypts a DataRowRecord and returns the original byte slice provided to the encrypt function.
+// Decrypt decrypts a DataRowRecord and returns the original byte slice provided to the encrypt function.
 // It also accepts a context for cancellation.
-func (s *Session) DecryptContext(ctx context.Context, d DataRowRecord) ([]byte, error) {
+func (s *Session) Decrypt(ctx context.Context, d DataRowRecord) ([]byte, error) {
 	return s.encryption.DecryptDataRowRecord(ctx, d)
 }
 

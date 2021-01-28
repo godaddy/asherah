@@ -1,6 +1,7 @@
 package appencryption_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -53,11 +54,13 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 	session, _ := factory.GetSession(partitionID)
 	defer session.Close()
 
-	dr, err := session.Encrypt([]byte(original))
+	ctx := context.Background()
+
+	dr, err := session.Encrypt(ctx, []byte(original))
 	if verify.NoError(err) && verify.NotNil(dr) {
 		verify.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), dr.Key.ParentKeyMeta.ID)
 
-		if after, err := session.Decrypt(*dr); verify.NoError(err) {
+		if after, err := session.Decrypt(ctx, *dr); verify.NoError(err) {
 			verify.Equal(original, string(after))
 		}
 	}
@@ -81,11 +84,13 @@ func (suite *IntegrationTestSuite) TestCrossPartitionDecryptShouldFail() {
 
 	defer session.Close()
 
-	dr, err := session.Encrypt([]byte(original))
+	ctx := context.Background()
+
+	dr, err := session.Encrypt(ctx, []byte(original))
 	must.NoError(err)
 	must.NotNil(dr)
 
-	after, err := session.Decrypt(*dr)
+	after, err := session.Decrypt(ctx, *dr)
 	must.NoError(err)
 	verify.Equal(original, string(after), "decrypted value does not match the original")
 
@@ -97,7 +102,7 @@ func (suite *IntegrationTestSuite) TestCrossPartitionDecryptShouldFail() {
 
 	defer altSession.Close()
 
-	_, err = altSession.Decrypt(*dr)
+	_, err = altSession.Decrypt(ctx, *dr)
 	must.Error(err, "decrypt expected to return error")
 }
 
@@ -131,11 +136,13 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibilit
 
 		defer session.Close()
 
-		drr, err = session.Encrypt([]byte(original))
+		ctx := context.Background()
+
+		drr, err = session.Encrypt(ctx, []byte(original))
 		if verify.NoError(err) && verify.NotNil(drr) {
 			verify.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), drr.Key.ParentKeyMeta.ID)
 
-			if after, err := session.Decrypt(*drr); verify.NoError(err) {
+			if after, err := session.Decrypt(ctx, *drr); verify.NoError(err) {
 				verify.Equal(original, string(after))
 			}
 		}
@@ -155,7 +162,7 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibilit
 
 	defer session.Close()
 
-	if after, err := session.Decrypt(*drr); verify.NoError(err) {
+	if after, err := session.Decrypt(context.Background(), *drr); verify.NoError(err) {
 		verify.Equal(original, string(after))
 	}
 }
@@ -193,9 +200,11 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 
 		defer session.Close()
 
-		drr, err = session.Encrypt([]byte(original))
+		ctx := context.Background()
+
+		drr, err = session.Encrypt(ctx, []byte(original))
 		if verify.NoError(err) && verify.NotNil(drr) {
-			if after, err := session.Decrypt(*drr); verify.NoError(err) {
+			if after, err := session.Decrypt(ctx, *drr); verify.NoError(err) {
 				verify.Equal(original, string(after))
 			}
 		}
@@ -207,7 +216,7 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 
 	defer session.Close()
 
-	if after, err := session.Decrypt(*drr); verify.NoError(err) {
+	if after, err := session.Decrypt(context.Background(), *drr); verify.NoError(err) {
 		verify.Equal(original, string(after))
 	}
 }
