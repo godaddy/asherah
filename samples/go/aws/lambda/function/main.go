@@ -229,7 +229,7 @@ func handleEncrypt(ctx context.Context, event MyEvent) (*MyResponse, error) {
 	}()
 
 	printMetrics("encrypt.encryptcontext")
-	encData, err := session.EncryptContext(ctx, event.Payload)
+	encData, err := session.Encrypt(ctx, event.Payload)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func handleDecrypt(ctx context.Context, event MyEvent) (*MyResponse, error) {
 	}()
 
 	printMetrics("decrypt.decryptcontext")
-	plaintext, err := session.DecryptContext(ctx, *event.DRR)
+	plaintext, err := session.Decrypt(ctx, *event.DRR)
 	if err != nil {
 		return nil, err
 	}

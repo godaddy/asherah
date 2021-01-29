@@ -305,7 +305,7 @@ func handleEncrypt(ctx context.Context, event MyEvent) (*MyResponse, error) {
   session, _ := factory.GetSession(event.Partition)
   defer session.Close()
 
-  encData, _ := session.EncryptContext(ctx, event.Payload)
+  encData, _ := session.Encrypt(ctx, event.Payload)
 
   return &MyResponse{
     DRR:  encData,
@@ -316,7 +316,7 @@ func handleDecrypt(ctx context.Context, event MyEvent) (*MyResponse, error) {
   session, _ := factory.GetSession(event.Partition)
   defer session.Close()
 
-  plaintext, _ := session.DecryptContext(ctx, *event.DRR)
+  plaintext, _ := session.Decrypt(ctx, *event.DRR)
 
   return &MyResponse{
     PlainText: string(plaintext),
