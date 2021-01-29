@@ -263,12 +263,12 @@ type MockPersistenceStore struct {
 	mock.Mock
 }
 
-func (s *MockPersistenceStore) Store(ctx context.Context, key string, d DataRowRecord) error {
-	ret := s.Called(ctx, key, d)
-	return ret.Error(0)
+func (s *MockPersistenceStore) Store(ctx context.Context, d DataRowRecord) (interface{}, error) {
+	ret := s.Called(ctx, d)
+	return ret.Get(0), ret.Error(1)
 }
 
-func (s *MockPersistenceStore) Load(ctx context.Context, key string) (*DataRowRecord, error) {
+func (s *MockPersistenceStore) Load(ctx context.Context, key interface{}) (*DataRowRecord, error) {
 	ret := s.Called(ctx, key)
 	return ret.Get(0).(*DataRowRecord), ret.Error(1)
 }
@@ -301,10 +301,12 @@ func TestSession_Store(t *testing.T) {
 			mockPersistenceStore := new(MockPersistenceStore)
 
 			if tc.encryptError == nil {
-				mockPersistenceStore.On("Store", ctx, persistenceKey, *encryptedPayload).Return(tc.persistenceError)
+				mockPersistenceStore.On(
+					"Store", ctx, *encryptedPayload,
+				).Return(persistenceKey, tc.persistenceError)
 			}
 
-			err := session.Store(ctx, persistenceKey, payload, mockPersistenceStore)
+			key, err := session.Store(ctx, payload, mockPersistenceStore)
 
 			switch {
 			case tc.encryptError != nil:
@@ -313,6 +315,7 @@ func TestSession_Store(t *testing.T) {
 				assert.Equal(t, tc.persistenceError, err)
 			default:
 				require.NoError(t, err)
+				assert.Equal(t, persistenceKey, key)
 			}
 
 			mockEnvelopeEncryption.AssertExpectations(t)

@@ -3,9 +3,11 @@ package persistence_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -21,22 +23,29 @@ var payloads = [][]byte{
 	[]byte("床前明月光，疑是地上霜。举头望明月，低头思故乡。"),
 }
 
-type testStore map[string][]byte
+type testStore map[uuid.UUID][]byte
 
-func (s testStore) Store(_ context.Context, key string, d appencryption.DataRowRecord) error {
+func (s testStore) Store(_ context.Context, d appencryption.DataRowRecord) (interface{}, error) {
 	b, err := json.Marshal(d)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	key := uuid.New()
 	s[key] = b
 
-	return nil
+	return key, nil
 }
 
-func (s testStore) Load(_ context.Context, key string) (*appencryption.DataRowRecord, error) {
+func (s testStore) Load(_ context.Context, key interface{}) (*appencryption.DataRowRecord, error) {
 	var d appencryption.DataRowRecord
-	err := json.Unmarshal(s[key], &d)
+
+	data, ok := s[key.(uuid.UUID)]
+	if !ok {
+		return nil, fmt.Errorf("could not load value for key %s", key)
+	}
+
+	err := json.Unmarshal(data, &d)
 
 	return &d, err
 }
@@ -52,10 +61,9 @@ func TestPersistence(t *testing.T) {
 
 	store := make(testStore)
 
-	for i, payload := range payloads {
-		key := strconv.Itoa(i)
-
-		require.NoError(t, sess.Store(context.Background(), key, payload, store))
+	for _, payload := range payloads {
+		key, err := sess.Store(context.Background(), payload, store)
+		require.NoError(t, err)
 
 		loaded, err := sess.Load(context.Background(), key, store)
 		require.NoError(t, err)
@@ -75,16 +83,17 @@ func TestPersistenceFuncs(t *testing.T) {
 	store := make(map[string]appencryption.DataRowRecord)
 
 	for i, payload := range payloads {
-		err := sess.Store(
+		persistenceKey, err := sess.Store(
 			context.Background(),
-			strconv.Itoa(i),
 			payload,
-			persistence.StorerFunc(func(_ context.Context, key string, d appencryption.DataRowRecord) error {
+			persistence.StorerFunc(func(_ context.Context, d appencryption.DataRowRecord) (interface{}, error) {
+				key := strconv.Itoa(i)
 				store[key] = d
-				return nil
+				return key, nil
 			}),
 		)
 		require.NoError(t, err)
+		assert.Equal(t, strconv.Itoa(i), persistenceKey)
 	}
 
 	assert.Equal(t, len(payloads), len(store), "exptected store to contain one element for each payload")
@@ -93,8 +102,8 @@ func TestPersistenceFuncs(t *testing.T) {
 		loaded, err := sess.Load(
 			context.Background(),
 			strconv.Itoa(i),
-			persistence.LoaderFunc(func(_ context.Context, key string) (*appencryption.DataRowRecord, error) {
-				d := store[key]
+			persistence.LoaderFunc(func(_ context.Context, key interface{}) (*appencryption.DataRowRecord, error) {
+				d := store[key.(string)]
 				return &d, nil
 			}),
 		)

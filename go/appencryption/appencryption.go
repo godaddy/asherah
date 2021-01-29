@@ -64,13 +64,13 @@ type AEAD interface {
 // Loader declares the behavior for loading data from a persistence store.
 type Loader interface {
 	// Load returns a DataRowRecord corresponding to the specified key, if found, along with any errors encountered.
-	Load(ctx context.Context, key string) (*DataRowRecord, error)
+	Load(ctx context.Context, key interface{}) (*DataRowRecord, error)
 }
 
 // Storer declares the behavior for storing data in a persistence store.
 type Storer interface {
-	// Store persists the DataRowRecord using the specified key.
-	Store(ctx context.Context, key string, d DataRowRecord) error
+	// Store persists the DataRowRecord and returns its associated key for future lookup (e.g. UUID, etc.).
+	Store(ctx context.Context, d DataRowRecord) (interface{}, error)
 }
 
 // AES256KeySize is the size of the AES key used by the AEAD implementation

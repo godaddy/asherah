@@ -297,15 +297,16 @@ An example map-backed implementation:
 ```go
 type storage map[string][]byte
 
-func (s storage) Store(_ context.Context, key string, d appencryption.DataRowRecord) error {
+func (s storage) Store(_ context.Context, d appencryption.DataRowRecord) (interface{}, error) {
     b, err := json.Marshal(d)
     if err != nil {
-      return err
+      return nil, err
     }
 
+    key := uuid.NewString()
     s[key] = b
 
-    return nil
+    return key, nil
 }
 
 func (s storage) Load(_ context.Context, key string) (*appencryption.DataRowRecord, error) {
@@ -321,17 +322,16 @@ An example end-to-end use of the session `Store` and `Load` calls:
 ```go
 mystore := make(storage)
 
-persistenceKey := "some key"
 originalPayloadData := []byte("mysupersecretpayload")
 
 // Encrypts the payload and stores it in the map
-err := sess.Store(context.Background(), persistenceKey, originalPayloadData, mystore)
+key, err := sess.Store(context.Background(), originalPayloadData, mystore)
 if err != nil {
     panic(err)
 }
 
 // Uses the persistenceKey to look-up the payload in the map, then decrypts the payload and returns it
-payload, err := sess.Load(context.Background(), persistenceKey, mystore)
+payload, err := sess.Load(context.Background(), key, mystore)
 ```
 
 ## Documentation

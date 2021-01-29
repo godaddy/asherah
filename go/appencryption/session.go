@@ -142,20 +142,19 @@ type Session struct {
 }
 
 // Encrypt encrypts a provided slice of bytes and returns a DataRowRecord, which contains required
-// information to decrypt the data in the future. It also takes a context used for cancellation.
+// information to decrypt the data in the future.
 func (s *Session) Encrypt(ctx context.Context, data []byte) (*DataRowRecord, error) {
 	return s.encryption.EncryptPayload(ctx, data)
 }
 
 // Decrypt decrypts a DataRowRecord and returns the original byte slice provided to the encrypt function.
-// It also accepts a context for cancellation.
 func (s *Session) Decrypt(ctx context.Context, d DataRowRecord) ([]byte, error) {
 	return s.encryption.DecryptDataRowRecord(ctx, d)
 }
 
 // Load uses a persistence key to load a DataRowRecord from the provided data persistence store, if any,
-// and returns the decrypted payload. It also takes a context used for cancellation.
-func (s *Session) Load(ctx context.Context, key string, store Loader) ([]byte, error) {
+// and returns the decrypted payload.
+func (s *Session) Load(ctx context.Context, key interface{}, store Loader) ([]byte, error) {
 	drr, err := store.Load(ctx, key)
 	if err != nil {
 		return nil, err
@@ -164,15 +163,16 @@ func (s *Session) Load(ctx context.Context, key string, store Loader) ([]byte, e
 	return s.Decrypt(ctx, *drr)
 }
 
-// Store encrypts a payload, stores the resulting DataRowRecord into the provided data persistence store with
-// given key. It also takes a context used for cancellation.
-func (s *Session) Store(ctx context.Context, key string, payload []byte, store Storer) error {
+// Store encrypts a payload, stores the resulting DataRowRecord into the provided data persistence store.
+// It returns the key that serves as a unique identifier for the stored payload as well as any error encountered along
+// the way.
+func (s *Session) Store(ctx context.Context, payload []byte, store Storer) (interface{}, error) {
 	drr, err := s.Encrypt(ctx, payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return store.Store(ctx, key, *drr)
+	return store.Store(ctx, *drr)
 }
 
 // Close will close any open resources owned by this session (e.g. cache of keys). It should be called
