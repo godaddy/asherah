@@ -1,6 +1,7 @@
 package appencryption_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -68,10 +69,12 @@ func Benchmark_Encrypt(b *testing.B) {
 
 	b.ResetTimer()
 
+	ctx := context.Background()
+
 	for i := 0; i < b.N; i++ {
 		bytes := randomBytes[i]
 
-		if _, err := sess.Encrypt(bytes); err != nil {
+		if _, err := sess.Encrypt(ctx, bytes); err != nil {
 			b.Error(err)
 		}
 	}
@@ -93,13 +96,14 @@ func Benchmark_EncryptDecrypt_MultiFactorySamePartition(b *testing.B) {
 			)
 			sess, _ := factory.GetSession(partitionID)
 			randomBytes := internal.GetRandBytes(payloadSizeBytes)
+			ctx := context.Background()
 
-			drr, err := sess.Encrypt(randomBytes)
+			drr, err := sess.Encrypt(ctx, randomBytes)
 			if err != nil {
 				b.Error(err)
 			}
 
-			data, _ := sess.Decrypt(*drr)
+			data, _ := sess.Decrypt(ctx, *drr)
 			assert.Equal(b, randomBytes, data)
 
 			sess.Close()
@@ -126,13 +130,14 @@ func Benchmark_EncryptDecrypt_MultiFactoryUniquePartition(b *testing.B) {
 			)
 			sess, _ := factory.GetSession(fmt.Sprintf(partitionID+"_%d", zipf()))
 			randomBytes := internal.GetRandBytes(payloadSizeBytes)
+			ctx := context.Background()
 
-			drr, err := sess.Encrypt(randomBytes)
+			drr, err := sess.Encrypt(ctx, randomBytes)
 			if err != nil {
 				b.Error(err)
 			}
 
-			data, _ := sess.Decrypt(*drr)
+			data, _ := sess.Decrypt(ctx, *drr)
 			assert.Equal(b, randomBytes, data)
 
 			sess.Close()
@@ -165,13 +170,14 @@ func Benchmark_EncryptDecrypt_SameFactoryUniquePartition(b *testing.B) {
 			randomBytes := internal.GetRandBytes(payloadSizeBytes)
 
 			sess, _ := factory.GetSession(partition)
+			ctx := context.Background()
 
-			drr, err := sess.Encrypt(randomBytes)
+			drr, err := sess.Encrypt(ctx, randomBytes)
 			if err != nil {
 				b.Error(err)
 			}
 
-			data, _ := sess.Decrypt(*drr)
+			data, _ := sess.Decrypt(ctx, *drr)
 			assert.Equal(b, randomBytes, data)
 
 			sess.Close()
@@ -222,13 +228,14 @@ func Benchmark_EncryptDecrypt_SameFactoryUniquePartition_WithSessionCache(b *tes
 				randomBytes := internal.GetRandBytes(payloadSizeBytes)
 
 				sess, _ := factory.GetSession(partition)
+				ctx := context.Background()
 
-				drr, err := sess.Encrypt(randomBytes)
+				drr, err := sess.Encrypt(ctx, randomBytes)
 				if err != nil {
 					b.Error(err)
 				}
 
-				data, _ := sess.Decrypt(*drr)
+				data, _ := sess.Decrypt(ctx, *drr)
 				assert.Equal(b, randomBytes, data)
 
 				sess.Close()
@@ -256,13 +263,14 @@ func Benchmark_EncryptDecrypt_SameFactorySamePartition(b *testing.B) {
 			randomBytes := internal.GetRandBytes(payloadSizeBytes)
 
 			sess, _ := factory.GetSession(partitionID)
+			ctx := context.Background()
 
-			drr, err := sess.Encrypt(randomBytes)
+			drr, err := sess.Encrypt(ctx, randomBytes)
 			if err != nil {
 				b.Error(err)
 			}
 
-			data, _ := sess.Decrypt(*drr)
+			data, _ := sess.Decrypt(ctx, *drr)
 			assert.Equal(b, randomBytes, data)
 
 			sess.Close()
@@ -297,13 +305,14 @@ func Benchmark_EncryptDecrypt_SameFactorySamePartition_WithSessionCache(b *testi
 			randomBytes := internal.GetRandBytes(payloadSizeBytes)
 
 			sess, _ := factory.GetSession(partitionID)
+			ctx := context.Background()
 
-			drr, err := sess.Encrypt(randomBytes)
+			drr, err := sess.Encrypt(ctx, randomBytes)
 			if err != nil {
 				b.Error(err)
 			}
 
-			data, _ := sess.Decrypt(*drr)
+			data, _ := sess.Decrypt(ctx, *drr)
 			assert.Equal(b, randomBytes, data)
 
 			sess.Close()

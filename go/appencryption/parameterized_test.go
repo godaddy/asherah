@@ -68,7 +68,7 @@ func runParameterizedTest(t *testing.T, cacheIK, metaIK, cacheSK, metaSK string)
 		sessionEncrypt := createSession(crypto, metastore, km, secretFactory, policy, partition, ikCacheEncrypt, skCacheEncrypt)
 		defer sessionEncrypt.Close() // closing the session closes the ikCache
 
-		record, err := sessionEncrypt.Encrypt(payload)
+		record, err := sessionEncrypt.Encrypt(context.Background(), payload)
 
 		if assert.NoError(t, err) && assert.NotNil(t, record) {
 			ekStates := &encryptKeyStates{
@@ -86,7 +86,7 @@ func runParameterizedTest(t *testing.T, cacheIK, metaIK, cacheSK, metaSK string)
 			sessionDecrypt := createSession(crypto, metastore, km, secretFactory, policy, partition, ikCacheDecrypt, skCacheDecrypt)
 			defer sessionDecrypt.Close() // closing the session closes the ikCache
 
-			bytes, err := sessionDecrypt.Decrypt(*record)
+			bytes, err := sessionDecrypt.Decrypt(context.Background(), *record)
 
 			if assert.NoError(t, err) && assert.NotNil(t, bytes) {
 				assert.Equal(t, payload, bytes)

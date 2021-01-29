@@ -1,6 +1,7 @@
 package cltf
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -66,7 +67,7 @@ func iDecryptTheEncryptedData() error {
 		return err
 	}
 
-	data, err := sess.Decrypt(dataRow)
+	data, err := sess.Decrypt(context.Background(), dataRow)
 	if err != nil {
 		return err
 	}
