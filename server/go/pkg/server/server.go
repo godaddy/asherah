@@ -186,8 +186,8 @@ type sessionFactory interface {
 }
 
 type session interface {
-	EncryptContext(ctx context.Context, data []byte) (*appencryption.DataRowRecord, error)
-	DecryptContext(ctx context.Context, d appencryption.DataRowRecord) ([]byte, error)
+	Encrypt(ctx context.Context, data []byte) (*appencryption.DataRowRecord, error)
+	Decrypt(ctx context.Context, d appencryption.DataRowRecord) ([]byte, error)
 	Close() error
 }
 
@@ -202,7 +202,7 @@ func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.
 
 	drr := fromProtobufDRR(r.GetDecrypt().GetDataRowRecord())
 
-	data, err := h.session.DecryptContext(ctx, *drr)
+	data, err := h.session.Decrypt(ctx, *drr)
 	if err != nil {
 		return newErrorResponse(err.Error())
 	}
@@ -233,7 +233,7 @@ func fromProtobufDRR(drr *pb.DataRowRecord) *appencryption.DataRowRecord {
 func (h *defaultHandler) Encrypt(ctx context.Context, r *pb.SessionRequest) *pb.SessionResponse {
 	log.Println("handling encrypt for", h.partition)
 
-	drr, err := h.session.EncryptContext(ctx, r.GetEncrypt().GetData())
+	drr, err := h.session.Encrypt(ctx, r.GetEncrypt().GetData())
 	if err != nil {
 		return newErrorResponse(err.Error())
 	}

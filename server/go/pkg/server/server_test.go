@@ -446,7 +446,7 @@ func (m *mockSession) Close() error {
 	return ret.Error(0)
 }
 
-func (m *mockSession) EncryptContext(
+func (m *mockSession) Encrypt(
 	ctx context.Context,
 	data []byte,
 ) (*appencryption.DataRowRecord, error) {
@@ -459,7 +459,7 @@ func (m *mockSession) EncryptContext(
 	return ret.Get(0).(*appencryption.DataRowRecord), nil
 }
 
-func (m *mockSession) DecryptContext(
+func (m *mockSession) Decrypt(
 	ctx context.Context,
 	d appencryption.DataRowRecord,
 ) ([]byte, error) {
@@ -498,7 +498,7 @@ func Test_DefaultHandler_Encrypt(t *testing.T) {
 	drr := newAEDRR()
 
 	m := new(mockSession)
-	m.On("EncryptContext", ctx, data).Return(drr, nil)
+	m.On("Encrypt", ctx, data).Return(drr, nil)
 
 	h := &defaultHandler{
 		session: m,
@@ -540,7 +540,7 @@ func Test_DefaultHandler_EncryptError(t *testing.T) {
 	ctx := context.Background()
 
 	m := new(mockSession)
-	m.On("EncryptContext", ctx, data).Return(nil, errors.New("encryption error"))
+	m.On("Encrypt", ctx, data).Return(nil, errors.New("encryption error"))
 
 	h := &defaultHandler{
 		session: m,
@@ -573,7 +573,7 @@ func Test_DefaultHandler_Decrypt(t *testing.T) {
 	decryptedData := []byte(`some decrypted data`)
 
 	m := new(mockSession)
-	m.On("DecryptContext", ctx, *drrAE).Return(decryptedData, nil)
+	m.On("Decrypt", ctx, *drrAE).Return(decryptedData, nil)
 
 	h := &defaultHandler{
 		session: m,
@@ -600,7 +600,7 @@ func Test_DefaultHandler_DecryptError(t *testing.T) {
 	ctx := context.Background()
 
 	m := new(mockSession)
-	m.On("DecryptContext", ctx, *drrAE).Return(nil, errors.New("decryption error"))
+	m.On("Decrypt", ctx, *drrAE).Return(nil, errors.New("decryption error"))
 
 	h := &defaultHandler{
 		session: m,
