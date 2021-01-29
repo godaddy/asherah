@@ -44,11 +44,23 @@ namespace GoDaddy.Asherah.Crypto
 
         public interface IKeyExpirationDaysStep
         {
+            /// <summary>
+            /// Specifies the number of days after which the keys expire.
+            /// </summary>
+            ///
+            /// <param name="days">The expiration limit of keys.</param>
+            /// <returns>The current <see cref="IRevokeCheckMinutesStep"/> instance.</returns>
             IRevokeCheckMinutesStep WithKeyExpirationDays(int days);
         }
 
         public interface IRevokeCheckMinutesStep
         {
+            /// <summary>
+            /// Specifies the revoke check limit (in minutes) for keys.
+            /// </summary>
+            ///
+            /// <param name="minutes">The revoke check limit (in minutes) for keys.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithRevokeCheckMinutes(int minutes);
         }
 
@@ -121,11 +133,17 @@ namespace GoDaddy.Asherah.Crypto
             BasicExpiringCryptoPolicy Build();
         }
 
+        /// <summary>
+        /// Initialize a <see cref="BasicExpiringCryptoPolicy"/> builder.
+        /// </summary>
+        ///
+        /// <returns>The current <see cref="IKeyExpirationDaysStep"/> object.</returns>
         public static IKeyExpirationDaysStep NewBuilder()
         {
             return new Builder();
         }
 
+        /// <inheritdoc />
         public override bool IsKeyExpired(DateTimeOffset keyCreationDate)
         {
             long currentUnixTimeMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -133,46 +151,55 @@ namespace GoDaddy.Asherah.Crypto
             return currentUnixTimeMillis > expiredMillis;
         }
 
+        /// <inheritdoc />
         public override long GetRevokeCheckPeriodMillis()
         {
             return revokeCheckMillis;
         }
 
+        /// <inheritdoc />
         public override bool CanCacheSystemKeys()
         {
             return canCacheSystemKeys;
         }
 
+        /// <inheritdoc />
         public override bool CanCacheIntermediateKeys()
         {
             return canCacheIntermediateKeys;
         }
 
+        /// <inheritdoc />
         public override bool CanCacheSessions()
         {
             return canCacheSessions;
         }
 
+        /// <inheritdoc />
         public override long GetSessionCacheMaxSize()
         {
             return sessionCacheMaxSize;
         }
 
+        /// <inheritdoc />
         public override long GetSessionCacheExpireMillis()
         {
             return sessionCacheExpireMillis;
         }
 
+        /// <inheritdoc />
         public override bool NotifyExpiredIntermediateKeyOnRead()
         {
             return notifyExpiredIntermediateKeyOnRead;
         }
 
+        /// <inheritdoc />
         public override bool NotifyExpiredSystemKeyOnRead()
         {
             return notifyExpiredSystemKeyOnRead;
         }
 
+        /// <inheritdoc />
         public override KeyRotationStrategy GetKeyRotationStrategy()
         {
             return keyRotationStrategy;

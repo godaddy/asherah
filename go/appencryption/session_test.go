@@ -2,6 +2,7 @@ package appencryption
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/godaddy/asherah/go/securememory"
@@ -235,28 +236,7 @@ func TestSession_Encrypt(t *testing.T) {
 	session.encryption = mockEnvelopeEncryption
 	mockEnvelopeEncryption.On("EncryptPayload", context.Background(), someBytes).Return(dataRowRecord, nil)
 
-	record, e := session.Encrypt(someBytes)
-
-	assert.NoError(t, e)
-	assert.Equal(t, encryptedBytes, record.Data)
-}
-
-func TestSession_EncryptContext(t *testing.T) {
-	someBytes := []byte("somePayload")
-	encryptedBytes := []byte("hdfjskahfkjdsahkjfdhsaklfhdsakl")
-	dataRowRecord := &DataRowRecord{
-		Data: encryptedBytes,
-	}
-	factory := NewSessionFactory(new(Config), nil, nil, nil)
-	session, _ := factory.GetSession("testing")
-
-	mockEnvelopeEncryption := new(MockEncryption)
-	session.encryption = mockEnvelopeEncryption
-	// Using an un-exported struct to avoid accidental collisions and linting errors
-	ctx := context.WithValue(context.Background(), new(neverCache), "someValue")
-	mockEnvelopeEncryption.On("EncryptPayload", ctx, someBytes).Return(dataRowRecord, nil)
-
-	record, e := session.EncryptContext(ctx, someBytes)
+	record, e := session.Encrypt(context.Background(), someBytes)
 
 	assert.NoError(t, e)
 	assert.Equal(t, encryptedBytes, record.Data)
@@ -274,28 +254,119 @@ func TestSession_Decrypt(t *testing.T) {
 	session.encryption = mockEnvelopeEncryption
 	mockEnvelopeEncryption.On("DecryptDataRowRecord", context.Background(), dataRowRecord).Return(someBytes, nil)
 
-	result, e := session.Decrypt(dataRowRecord)
+	result, e := session.Decrypt(context.Background(), dataRowRecord)
 	assert.NoError(t, e)
 	assert.Equal(t, someBytes, result)
 }
 
-func TestSession_DecryptContext(t *testing.T) {
-	someBytes := []byte("somePayload")
-	dataRowRecord := DataRowRecord{
-		Data: []byte("hdfjskahfkjdsahkjfdhsaklfhdsakl"),
+type MockPersistenceStore struct {
+	mock.Mock
+}
+
+func (s *MockPersistenceStore) Store(ctx context.Context, d DataRowRecord) (interface{}, error) {
+	ret := s.Called(ctx, d)
+	return ret.Get(0), ret.Error(1)
+}
+
+func (s *MockPersistenceStore) Load(ctx context.Context, key interface{}) (*DataRowRecord, error) {
+	ret := s.Called(ctx, key)
+	return ret.Get(0).(*DataRowRecord), ret.Error(1)
+}
+
+func TestSession_Store(t *testing.T) {
+	tests := map[string]struct {
+		encryptError     error
+		persistenceError error
+	}{
+		"success":             {encryptError: nil, persistenceError: nil},
+		"encryption failure":  {encryptError: fmt.Errorf("some encryption error"), persistenceError: nil},
+		"persistence failure": {encryptError: nil, persistenceError: fmt.Errorf("some storage error")},
 	}
-	factory := NewSessionFactory(new(Config), nil, nil, nil)
-	session, _ := factory.GetSession("testing")
 
-	mockEnvelopeEncryption := new(MockEncryption)
-	session.encryption = mockEnvelopeEncryption
-	// Using an un-exported struct to avoid accidental collisions and linting errors
-	ctx := context.WithValue(context.Background(), new(neverCache), "someValue")
-	mockEnvelopeEncryption.On("DecryptDataRowRecord", ctx, dataRowRecord).Return(someBytes, nil)
+	for name := range tests {
+		tc := tests[name]
 
-	result, e := session.DecryptContext(ctx, dataRowRecord)
-	assert.NoError(t, e)
-	assert.Equal(t, someBytes, result)
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+
+			payload := []byte("some secret data")
+			encryptedPayload := new(DataRowRecord)
+
+			mockEnvelopeEncryption := new(MockEncryption)
+			mockEnvelopeEncryption.On("EncryptPayload", ctx, payload).Return(encryptedPayload, tc.encryptError)
+
+			persistenceKey := "some-unique-id"
+			session := &Session{encryption: mockEnvelopeEncryption}
+
+			mockPersistenceStore := new(MockPersistenceStore)
+
+			if tc.encryptError == nil {
+				mockPersistenceStore.On(
+					"Store", ctx, *encryptedPayload,
+				).Return(persistenceKey, tc.persistenceError)
+			}
+
+			key, err := session.Store(ctx, payload, mockPersistenceStore)
+
+			switch {
+			case tc.encryptError != nil:
+				assert.Equal(t, tc.encryptError, err)
+			case tc.persistenceError != nil:
+				assert.Equal(t, tc.persistenceError, err)
+			default:
+				require.NoError(t, err)
+				assert.Equal(t, persistenceKey, key)
+			}
+
+			mockEnvelopeEncryption.AssertExpectations(t)
+			mockPersistenceStore.AssertExpectations(t)
+		})
+	}
+}
+
+func TestSession_Load(t *testing.T) {
+	tests := map[string]struct {
+		expected         []byte
+		decryptError     error
+		persistenceError error
+	}{
+		"success":             {expected: []byte("some secret"), decryptError: nil, persistenceError: nil},
+		"persistence failure": {decryptError: nil, persistenceError: fmt.Errorf("some storage error")},
+		"decryption failure":  {decryptError: fmt.Errorf("some decryption error"), persistenceError: nil},
+	}
+
+	for name := range tests {
+		tc := tests[name]
+
+		t.Run(name, func(t *testing.T) {
+			persistenceKey := "some-unique-id"
+			encryptedPayload := new(DataRowRecord)
+			mockPersistenceStore := new(MockPersistenceStore)
+			mockEnvelopeEncryption := new(MockEncryption)
+			session := &Session{encryption: mockEnvelopeEncryption}
+			ctx := context.Background()
+
+			mockPersistenceStore.On("Load", ctx, persistenceKey).Return(encryptedPayload, tc.persistenceError)
+			if tc.persistenceError == nil {
+				mockEnvelopeEncryption.On("DecryptDataRowRecord", ctx, *encryptedPayload).Return(tc.expected, tc.decryptError)
+			}
+
+			data, err := session.Load(ctx, persistenceKey, mockPersistenceStore)
+			assert.Equal(t, tc.expected, data)
+
+			switch {
+			case tc.decryptError != nil:
+				assert.Equal(t, tc.decryptError, err)
+			case tc.persistenceError != nil:
+				assert.Equal(t, tc.persistenceError, err)
+			default:
+				require.NoError(t, err)
+			}
+
+			mockPersistenceStore.AssertExpectations(t)
+			mockEnvelopeEncryption.AssertExpectations(t)
+		})
+	}
 }
 
 type MockDynamoDBMetastore struct {

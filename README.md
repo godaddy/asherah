@@ -21,6 +21,7 @@ Table of Contents
 
    * [Introduction](#introduction)
    * [Getting Started](#getting-started)
+   * [Sample Applications](#sample-applications)
    * [Further Reading](#further-reading)
    * [Supported Languages](#supported-languages)
        * [Feature Support](#feature-support)
@@ -133,6 +134,11 @@ String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPe
 Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
 ```
 
+## Sample Applications
+
+The [samples](/samples) directory includes sample applications that demonstrate use of Asherah SDK using various
+languages and platforms.
+
 ## Further Reading
 
 * [Design And Architecture](docs/DesignAndArchitecture.md)
@@ -162,7 +168,7 @@ Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence)
 | DynamoDB Metastore         | Yes  | Yes  | Yes |
 | Session caching            | Yes  | Yes  | Yes |
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
-| Store/Load pattern.        | Yes  | Yes  | No  |
+| Store/Load pattern.        | Yes  | Yes  | Yes |
 
 
 ## Current Status

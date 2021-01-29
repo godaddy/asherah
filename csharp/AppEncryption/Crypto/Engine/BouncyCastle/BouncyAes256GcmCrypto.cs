@@ -5,6 +5,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
 {
+    /// <inheritdoc />
     public class BouncyAes256GcmCrypto : BouncyAeadCrypto
     {
         private const int NonceSizeBits = 96;

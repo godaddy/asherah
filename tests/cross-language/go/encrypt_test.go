@@ -1,6 +1,7 @@
 package cltf
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -53,7 +54,7 @@ func iEncryptTheData() error {
 	}
 	defer sess.Close()
 
-	dataRow, err := sess.Encrypt([]byte(payloadString))
+	dataRow, err := sess.Encrypt(context.Background(), []byte(payloadString))
 	if err != nil {
 		return err
 	}

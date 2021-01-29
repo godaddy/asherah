@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that demonstrates Asherah encrypt/decrypt operations.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          ASHERAH_KMS_KEY_ARN: arn:aws:kms:<region>:<account>:key/<id>
+          ASHERAH_METASTORE_TABLE_NAME: EncryptionKey
+      Handler: main
+      Runtime: go1.x
+      CodeUri: function/.
+      Description: Performs encrypt/decrypt operations via the Asherah SDK
+      Timeout: 5
+      # Function's execution role
+      Role: arn:aws:iam::<account>:role/lambda-exec
+      Tracing: Active

@@ -21,6 +21,8 @@ Application level envelope encryption SDK for Golang with support for cloud-agno
 package main
 
 import (
+    "context"
+
     "github.com/godaddy/asherah/go/appencryption"
     "github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
     "github.com/godaddy/asherah/go/appencryption/pkg/kms"
@@ -53,13 +55,13 @@ func main() {
     defer sess.Close()
 
     // Now encrypt some data
-    dataRow, err := sess.Encrypt([]byte("mysupersecretpayload"))
+    dataRow, err := sess.Encrypt(context.Background(), []byte("mysupersecretpayload"))
     if err != nil {
         panic(err)
     }
 
     //Decrypt the data
-    data, err := sess.Decrypt(*dataRow)
+    data, err := sess.Decrypt(context.Background(), *dataRow)
     if err != nil {
         panic(err)
     }
@@ -273,16 +275,63 @@ completely up to the calling application for storage responsibility.
 originalPayloadString := "mysupersecretpayload";
 
 // encrypt the payload
-dataRowRecord, err := sess.Encrypt([]byte(originalPayloadString))
+dataRowRecord, err := sess.Encrypt(context.Background(), []byte(originalPayloadString))
 if err != nil {
     panic(err)
 }
 
 // decrypt the payload
-decryptedPayload, err := sess.Decrypt(*dataRowRecord)
+decryptedPayload, err := sess.Decrypt(context.Background(), *dataRowRecord)
 if err != nil {
     panic(err)
 }
+```
+
+#### Custom Persistence via Store/Load methods
+
+Asherah supports a key-value/document storage model. Use custom `Storer` and `Loader` implementations to hook into the
+session's `Store` and `Load` methods.
+
+An example map-backed implementation:
+
+```go
+type storage map[string][]byte
+
+func (s storage) Store(_ context.Context, d appencryption.DataRowRecord) (interface{}, error) {
+    b, err := json.Marshal(d)
+    if err != nil {
+      return nil, err
+    }
+
+    key := uuid.NewString()
+    s[key] = b
+
+    return key, nil
+}
+
+func (s storage) Load(_ context.Context, key string) (*appencryption.DataRowRecord, error) {
+    var d appencryption.DataRowRecord
+    err := json.Unmarshal(s[key], &d)
+
+    return &d, err
+}
+```
+
+An example end-to-end use of the session `Store` and `Load` calls:
+
+```go
+mystore := make(storage)
+
+originalPayloadData := []byte("mysupersecretpayload")
+
+// Encrypts the payload and stores it in the map
+key, err := sess.Store(context.Background(), originalPayloadData, mystore)
+if err != nil {
+    panic(err)
+}
+
+// Uses the persistenceKey to look-up the payload in the map, then decrypts the payload and returns it
+payload, err := sess.Load(context.Background(), key, mystore)
 ```
 
 ## Documentation

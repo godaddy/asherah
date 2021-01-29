@@ -6,6 +6,16 @@ system requirements to note.
 Unless otherwise stated in language-specific Secure Memory documentation, the below information should apply to all
 language implementations of Asherah.
 
+  * [Supported Platforms and Required Libraries](#supported-platforms-and-required-libraries)
+  * [Memory Usage](#memory-usage)
+  * [Resource Limits](#resource-limits)
+    * [Current User Session](#current-user-session)
+    * [System-wide Setting](#permanent-setting)
+    * [Systemd](#systemd)
+    * [Docker](#running-docker-containers)
+    * [Kubernetes](#kubernetes)
+    * [AWS Lambda](#aws-lambda)
+
 ## Supported Platforms and Required Libraries
 
 The following platforms are supported:
@@ -28,7 +38,7 @@ on processor architecture and is typically 4KiB. As a result, you should expect 
 memory and account for it in your memory requirements. Note that in languages calling `mlock` via an unmanaged native
 interface, the memory usage will be off-heap.
 
-## System Limits
+## Resource Limits
 
 The amount of memory a user can lock is limited by the system's memlock resource limits. If that limit is reached, the
 SDK will throw an exception the next time it tries to lock memory. Below we provide some examples of setting memlock
@@ -122,3 +132,8 @@ spec:
         add: ["IPC_LOCK"]
   restartPolicy: Never
 ```
+
+### AWS Lambda
+
+See [Encrypt/decrypt sample application for AWS Lambda](/samples/go/aws/lambda/README.md) for a detailed walkthrough,
+best practices, and more.
