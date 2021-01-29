@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -215,7 +216,7 @@ func main() {
 		dataRowString = opts.Drr
 	} else {
 		// Encrypt the payload
-		dataRow, e := sess.Encrypt([]byte(payload))
+		dataRow, e := sess.Encrypt(context.Background(), []byte(payload))
 		if e != nil {
 			panic(e)
 		}
@@ -234,7 +235,7 @@ func main() {
 	_ = json.Unmarshal(dataRowBytes, &dataRow)
 
 	// Decrypt the payload
-	data, err := sess.Decrypt(dataRow)
+	data, err := sess.Decrypt(context.Background(), dataRow)
 	if err != nil {
 		panic(err)
 	}
