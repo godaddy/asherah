@@ -83,6 +83,7 @@ func TestPersistenceFuncs(t *testing.T) {
 	store := make(map[string]appencryption.DataRowRecord)
 
 	for i, payload := range payloads {
+		i := i
 		persistenceKey, err := sess.Store(
 			context.Background(),
 			payload,
