@@ -1,4 +1,5 @@
 .*/go.mod
 .*/go.sum
-go/appencryption/integration_test.go
-samples/go/aws/lambda/README.md
+.*/package.json
+.*/package-lock.json
+tartufo.toml

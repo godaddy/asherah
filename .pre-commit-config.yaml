@@ -17,6 +17,6 @@ repos:
     -   id: check-merge-conflict
     -   id: check-byte-order-marker
 - repo: https://github.com/godaddy/tartufo
-  rev: v1.1.2
+  rev: v2.3.0
   hooks:
   - id: tartufo
