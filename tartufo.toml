@@ -62,4 +62,8 @@ exclude-signatures = [
     # Reference to GitHub issues and commit SHAs in code comments
     "512997ded2fc06da7219e6f482bf36924e859cd93daede3af25b4c8155940676",
     "dabb2b93e6cc3250841fd1badd3f7d6a77de6c98aea8a9d699d7917fa8299f7b",
+
+    # High entropy findings in C# tutorial for Amazon ECS
+    "8cde955170a11afe8859722e054a593c096c41c3d4941336f6ae116f6d71fcc9",
+    "81cf261e99da4bff783e7fcddb2ed25d90fab710f8e52b2f35c289a5ecbcd2bd",
     ]

@@ -3,4 +3,4 @@
 # dump the resource limits for this process
 ulimit -a
 
-exec dotnet ReferenceApp.dll "$@"
+exec dotnet myapp.dll "$@"

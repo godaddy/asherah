@@ -1,0 +1,9 @@
+version: '3'
+services:
+  myapp:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: asherah-samples
+        awslogs-region: us-west-2
+        awslogs-stream-prefix: ecs-csharp
