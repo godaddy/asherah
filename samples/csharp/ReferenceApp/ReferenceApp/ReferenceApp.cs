@@ -157,9 +157,6 @@ namespace GoDaddy.Asherah.ReferenceApp
                 .NewBuilder()
                 .WithKeyExpirationDays(KeyExpirationDays)
                 .WithRevokeCheckMinutes(CacheCheckMinutes)
-                .WithCanCacheSessions(true)            // Enable session cache
-                .WithSessionCacheMaxSize(10)           // Define the number of maximum sessions to cache
-                .WithSessionCacheExpireMillis(5000)    // Evict the session from cache after some milliseconds
                 .Build();
 
             // Setup metrics reporters and always include console.
@@ -185,58 +182,47 @@ namespace GoDaddy.Asherah.ReferenceApp
                 .WithMetrics(metrics)
                 .Build())
             {
-
-                Parallel.ForEach(Enumerable.Range(1, options.Partitions), i =>
+                // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
+                // for a transaction and is disposed automatically after use due to the IDisposable implementation.
+                using (Session<byte[], byte[]> sessionBytes =
+                    sessionFactory.GetSessionBytes("shopper123"))
                 {
-                    // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
-                    // for a transaction and is disposed automatically after use due to the IDisposable implementation.
-                    RunSession(sessionFactory, options, "shopper" + i.ToString("0000"));
-                });
+                    const string originalPayloadString = "mysupersecretpayload";
+                    foreach (int i in Enumerable.Range(0, options.Iterations))
+                    {
+                        string dataRowString;
+
+                        // If we get a DRR as a command line argument, we want to directly decrypt it
+                        if (options.Drr != null)
+                        {
+                            dataRowString = options.Drr;
+                        }
+                        else
+                        {
+                            // Encrypt the payload
+                            byte[] dataRowRecordBytes =
+                                sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+
+                            // Consider this us "persisting" the DRR
+                            dataRowString = Convert.ToBase64String(dataRowRecordBytes);
+                        }
+
+                        logger.LogInformation("dataRowRecord as string = {dataRow}", dataRowString);
+
+                        byte[] newDataRowRecordBytes = Convert.FromBase64String(dataRowString);
+
+                        // Decrypt the payload
+                        string decryptedPayloadString =
+                            Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
+
+                        logger.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
+                        logger.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));
+                    }
+                }
             }
 
             // Force final publish of metrics
             await Task.WhenAll(((IMetricsRoot)metrics).ReportRunner.RunAllAsync());
-        }
-
-        private static void RunSession(SessionFactory sessionFactory, Options options, string partition)
-        {
-            logger.LogInformation("creating session for partition {}", partition);
-
-            using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes(partition))
-            {
-                const string originalPayloadString = "mysupersecretpayload";
-                foreach (int i in Enumerable.Range(0, options.Iterations))
-                {
-                    string dataRowString;
-
-                    // If we get a DRR as a command line argument, we want to directly decrypt it
-                    if (options.Drr != null)
-                    {
-                        dataRowString = options.Drr;
-                    }
-                    else
-                    {
-                        // Encrypt the payload
-                        byte[] dataRowRecordBytes =
-                            sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
-
-                        // Consider this us "persisting" the DRR
-                        dataRowString = Convert.ToBase64String(dataRowRecordBytes);
-                    }
-
-                    logger.LogInformation("dataRowRecord as string = {dataRow}", dataRowString);
-
-                    byte[] newDataRowRecordBytes = Convert.FromBase64String(dataRowString);
-
-                    // Decrypt the payload
-                    string decryptedPayloadString =
-                        Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
-
-                    logger.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
-                    logger.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));
-                }
-            }
         }
     }
 }

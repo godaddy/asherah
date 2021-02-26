@@ -36,9 +36,6 @@ namespace GoDaddy.Asherah.ReferenceApp
         [Option('i', "iterations", Required = false, HelpText = "Number of encrypt/decrypt iterations to run", Default = 1)]
         public int Iterations { get; set; }
 
-        [Option('n', "partitions", Required = false, HelpText = "Number of partitions to run concurrently", Default = 1)]
-        public int Partitions { get; set; }
-
         [Option('c', "enable-cw", Required = false, HelpText = "Enable CloudWatch Metrics output")]
         public bool EnableCloudWatch { get; set; }
 
