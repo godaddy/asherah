@@ -1,6 +1,6 @@
 # Encrypt/decrypt sample application on Amazon ECS
 
-This sample application and tutorial demonstrates the use of Asherah SDK to perform application-level encryption
+This sample application and tutorial demonstrates the use of Asherah SDK to perform application-layer encryption
 operations in a web API built with ASP.NET Core and launched as a Fargate task on Amazon ECS.
 
 > This example is based on the excellent ECS tutorial found [here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html)
@@ -123,7 +123,7 @@ retrieved with the following
 sg-0123456789abcdef0
 ```
 
-Your modified `ecs-params.yaml` file should now look something this:
+Your modified `ecs-params.yml` file should now look something this:
 
 ```yaml
 version: 1
@@ -184,7 +184,7 @@ Use `ecs-cli logs` to view the container logs for the running task
     --follow
 ```
 
->Note that the `task-id` value can be found in the `ecs-cli compose service ps` output above and the
+> Note that the `task-id` value can be found in the `ecs-cli compose service ps` output above and the
 `--follow` option instructs the ECS CLI to continuously poll for logs.
 
 ## Test
@@ -197,8 +197,8 @@ First open a new terminal and use `curl` to retrieve the list of customers (whic
 []
 ```
 
->If you experience issues connecting to the service, ensure the security group has been configured to allow inbound
-access as described [above](#configure-the-security-group).
+> :exclamation: If you experience issues connecting to the service, ensure the security group has been configured to
+allow inbound access as described [above](#configure-the-security-group).
 
 Add a new customer via a POST to the same API endpoint. First, create a file named `customer.json` with the following
 content:
@@ -242,12 +242,11 @@ hidden in plain sight (hint: `secretInfo`).
 
 The sample application uses application-layer encryption to safeguard this sensitive customer information. Upon creating
 a new customer, the API extracts these fields from the original request, encrypts the sensitive data using the Asherah
-SDK, and stores the encrypted result in the `secretInfo` field. Check out the [full implemenation](./myapp) for more
-detail.
+SDK, and stores the encrypted result in the `secretInfo` field. Check out the [code](./myapp) for the full
+implementation.
 
-For demonstration purposes, the sample application does implement a method for decrypting this data.
-
-The full customer record can be retrieved as follows:
+For demonstration purposes, the sample application includes a method for decrypting this data. The full customer
+resource can be retrieved via a GET to the `/api/customers/{id}/full` endpoint
 
 ```console
 [user@machine ~]$ curl http://34.212.31.202:8000/api/customers/181141cd-090a-488b-9e5a-2bd1948046cd/full
