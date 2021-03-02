@@ -1,0 +1,70 @@
+name: Run WS Scans
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: >
+          The branch, tag or SHA to checkout and scan. When checking out the repository
+          that triggered a workflow, this defaults to the reference or SHA for that event.
+          Otherwise, uses the default branch.
+        default: ${{ github.ref }}
+      path:
+        description: >
+          The path of the specific project to scan. This defaults to empty string, triggering
+          a scan for all projects.
+        default: ''
+  schedule:
+  - cron: "0 19 * * 1" # Run at 12:00 PST on Monday
+
+jobs:
+  run-wss-scans:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - uses: ./.github/actions/setup-wss-env
+
+    - name: Run WS Scan - Java SecureMemory
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'java/secure-memory' }}
+      with:
+        path: java/secure-memory
+        wss-project: asherah-java-secure-memory
+
+    - name: Run WS Scan - Java AppEncryption
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs || github.event.inputs.path == 'java/app-encryption' }}
+      with:
+        path: java/app-encryption
+        wss-project: asherah-java-app-encryption
+
+    - name: Run WS Scan - C# SecureMemory
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'csharp/SecureMemory' }}
+      with:
+        path: csharp/SecureMemory
+        wss-project: asherah-csharp-secure-memory
+
+    - name: Run WS Scan - C# AppEncryption
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'csharp/AppEncryption' }}
+      with:
+        path: csharp/AppEncryption
+        wss-project: asherah-csharp-app-encryption
+
+    - name: Run WS Scan - Go SecureMemory
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'go/securememory' }}
+      with:
+        path: go/securememory
+        wss-project: asherah-go-secure-memory
+
+    - name: Run WS Scan - Go AppEncryption
+      uses: ./.github/actions/run-wss-scan
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'go/appencryption' }}
+      with:
+        path: go/appencryption
+        wss-project: asherah-go-app-encryption
