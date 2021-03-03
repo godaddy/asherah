@@ -29,7 +29,7 @@ jobs:
 
     - name: Run WS Scan - Java AppEncryption
       uses: ./.github/actions/run-wss-scan
-      if: ${{ !github.event.inputs || github.event.inputs.path == 'java/app-encryption' }}
+      if: ${{ !github.event.inputs.path || github.event.inputs.path == 'java/app-encryption' }}
       with:
         path: java/app-encryption
         wssProject: asherah-java-app-encryption
