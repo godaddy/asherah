@@ -39,19 +39,19 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <slf4j.version>1.7.30</slf4j.version>
-    <guava.version>29.0-jre</guava.version>
-    <aws.sdk.version>1.11.871</aws.sdk.version>
-    <micrometer.version>1.5.5</micrometer.version>
-    <caffeine.version>2.8.5</caffeine.version>
+    <guava.version>30.1-jre</guava.version>
+    <aws.sdk.version>1.11.966</aws.sdk.version>
+    <micrometer.version>1.6.4</micrometer.version>
+    <caffeine.version>3.0.0</caffeine.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <mockito.core.version>3.5.13</mockito.core.version>
+    <mockito.core.version>3.8.0</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
     <jacoco.version>0.8.6</jacoco.version>
-    <amazonaws.version>1.13.4</amazonaws.version>
-    <jackson.version>2.11.2</jackson.version>
+    <amazonaws.version>1.15.0</amazonaws.version>
+    <jackson.version>2.12.1</jackson.version>
     <apache.commons.version>1.9</apache.commons.version>
-    <zaxxer.version>3.4.5</zaxxer.version>
+    <zaxxer.version>4.0.3</zaxxer.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
   </properties>
@@ -256,14 +256,14 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20200518</version>
+      <version>20201115</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.67</version>
+      <version>1.68</version>
     </dependency>
 
     <dependency>
