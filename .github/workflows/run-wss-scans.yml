@@ -3,12 +3,6 @@ name: Run WS Scans
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: >
-          The branch, tag or SHA to checkout and scan. When checking out the repository
-          that triggered a workflow, this defaults to the reference or SHA for that event.
-          Otherwise, uses the default branch.
-        default: ''
       path:
         description: >
           The path of the specific project to scan. This defaults to empty string, triggering
@@ -22,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.ref }}
 
     - uses: ./.github/actions/setup-wss-env
 
