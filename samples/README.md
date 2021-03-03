@@ -5,12 +5,13 @@ of the Asherah SDK.
 
 ### Reference Apps
 >Sample applications developed using the same language/platform as the targeted Asherah SDK.
-  * [C#](/samples/csharp/ReferenceApp/README.md)
-  * [Java](/samples/java/reference-app/README.md)
-  * [Go](/samples/go/referenceapp/README.md)
+  * [C#](/samples/csharp/ReferenceApp)
+  * [Java](/samples/java/reference-app)
+  * [Go](/samples/go/referenceapp)
 
 ### Additional Resources
 
-  * [Encrypt/decrypt sample application for AWS Lambda](/samples/go/aws/lambda/README.md)
-  * [Documentation and sample code to develop with Asherah Server](/server/README.md) - a light-weight gRPC-based
+  * [Encrypt/decrypt sample application for AWS Lambda](/samples/go/aws/lambda)
+  * [Encrypt/decrypt sample application for Amazon ECS on AWS Fargate](/samples/csharp/aws/ecs)
+  * [Documentation and sample code to develop with Asherah Server](/server) - a light-weight gRPC-based
     service layer built atop the Asherah SDK

@@ -1,0 +1,13 @@
+version: '3'
+services:
+  myapp:
+    build:
+      context: ./myapp
+      dockerfile: Dockerfile
+    image: "${MYAPP_IMAGE}"
+    ports:
+      - "8000:8000"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
