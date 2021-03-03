@@ -15,7 +15,7 @@ on:
           a scan for all projects.
         default: ''
   schedule:
-  - cron: "0 19 * * 1" # Run at 12:00 PST on Monday
+  - cron: "0 19 * * 1" # Run at 11:00 AM PST on Monday
 
 jobs:
   run-wss-scans:

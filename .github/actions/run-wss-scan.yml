@@ -22,7 +22,7 @@ runs:
         echo "Scanning ${{ inputs.path }}"
         export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
-        sed -i "s/scanComment.*/scanComment=Scan initiated by CircleCI on `date`/g" \
+        sed -i "s/scanComment.*/scanComment=Scan initiated by GitHub (Actions) on `date`/g" \
           ${{ github.action_path }}/wss-unified-agent.config
 
         java -jar wss-unified-agent.jar \
