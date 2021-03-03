@@ -3,7 +3,7 @@ description: "Runs a WS scan against the target using the Unified Agent"
 inputs:
   path:
     required: true
-  wss-project:
+  wssProject:
     required: true
   gopath:
     default: "/go"
@@ -14,6 +14,8 @@ runs:
   using: "composite"
   steps:
   - shell: bash
+    with:
+      wssApiKey: ${{ secrets.WSS_API_KEY }}
     env:
       GOROOT: ${{ inputs.goroot }}
       GOPATH: ${{ inputs.gopath }}
@@ -27,7 +29,7 @@ runs:
 
         java -jar wss-unified-agent.jar \
             -c ${{ github.action_path }}/wss-unified-agent.config \
-            -d ${{ inputs.path }} -apiKey ${{ secrets.WSS_API_KEY}} -project ${{ inputs.wss-project }}
+            -d ${{ inputs.path }} -apiKey ${{ inputs.wssApiKey }} -project ${{ inputs.wssProject }}
       else
         echo "WhiteSource scans will only run in the original repository"
       fi
