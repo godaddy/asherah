@@ -82,9 +82,9 @@ Push the image to the remote repository
 Create a cluster configuration
 ```console
 [user@machine ecs]$ ecs-cli configure \
-    --cluster ecs-demo \
+    --cluster ecsdemo \
     --default-launch-type FARGATE \
-    --config-name ecs-demo \
+    --config-name ecsdemo \
     --region us-west-2
 ```
 
