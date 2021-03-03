@@ -5,6 +5,8 @@ inputs:
     required: true
   wssProject:
     required: true
+  wssApiKey:
+    required: true
   gopath:
     default: "/go"
   goroot:
@@ -14,8 +16,6 @@ runs:
   using: "composite"
   steps:
   - shell: bash
-    with:
-      wssApiKey: ${{ secrets.WSS_API_KEY }}
     env:
       GOROOT: ${{ inputs.goroot }}
       GOPATH: ${{ inputs.gopath }}

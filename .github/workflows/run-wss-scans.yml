@@ -32,39 +32,45 @@ jobs:
       if: ${{ !github.event.inputs.path || github.event.inputs.path == 'java/secure-memory' }}
       with:
         path: java/secure-memory
-        wss-project: asherah-java-secure-memory
+        wssProject: asherah-java-secure-memory
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
 
     - name: Run WS Scan - Java AppEncryption
       uses: ./.github/actions/run-wss-scan
       if: ${{ !github.event.inputs || github.event.inputs.path == 'java/app-encryption' }}
       with:
         path: java/app-encryption
-        wss-project: asherah-java-app-encryption
+        wssProject: asherah-java-app-encryption
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
 
     - name: Run WS Scan - C# SecureMemory
       uses: ./.github/actions/run-wss-scan
       if: ${{ !github.event.inputs.path || github.event.inputs.path == 'csharp/SecureMemory' }}
       with:
         path: csharp/SecureMemory
-        wss-project: asherah-csharp-secure-memory
+        wssProject: asherah-csharp-secure-memory
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
 
     - name: Run WS Scan - C# AppEncryption
       uses: ./.github/actions/run-wss-scan
       if: ${{ !github.event.inputs.path || github.event.inputs.path == 'csharp/AppEncryption' }}
       with:
         path: csharp/AppEncryption
-        wss-project: asherah-csharp-app-encryption
+        wssProject: asherah-csharp-app-encryption
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
 
     - name: Run WS Scan - Go SecureMemory
       uses: ./.github/actions/run-wss-scan
       if: ${{ !github.event.inputs.path || github.event.inputs.path == 'go/securememory' }}
       with:
         path: go/securememory
-        wss-project: asherah-go-secure-memory
+        wssProject: asherah-go-secure-memory
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
 
     - name: Run WS Scan - Go AppEncryption
       uses: ./.github/actions/run-wss-scan
       if: ${{ !github.event.inputs.path || github.event.inputs.path == 'go/appencryption' }}
       with:
         path: go/appencryption
-        wss-project: asherah-go-app-encryption
+        wssProject: asherah-go-app-encryption
+        wssApiKey: ${{ secrets.WSS_API_KEY }}
