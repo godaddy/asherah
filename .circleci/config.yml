@@ -92,27 +92,6 @@ commands:
           paths:
             - /go/pkg/mod
           key: v5-go-mod-{{ .Branch }}-{{ .BuildNum }}
-  run-wss-scan:
-    description: Run WhiteSource scans
-    parameters:
-      project:
-        type: string
-      path:
-        type: string
-      wss-project:
-        type: string
-    steps:
-      - run:
-          name: Run WSS scan
-          command: |
-            if [ "${CIRCLE_REPOSITORY_URL}" == "git@github.com:godaddy/asherah.git" ]; then
-              echo "Scanning <<parameters.project>>"
-              export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-              sed -i "s/scanComment.*/scanComment=Scan initiated by CircleCI on `date`/g" .circleci/wss-unified-agent.config
-              java -jar wss-unified-agent.jar -c .circleci/wss-unified-agent.config -d <<parameters.path>> -apiKey ${WSS_API_KEY} -project <<parameters.wss-project>>
-            else
-              echo "WhiteSource scans will only run in the original repository"
-            fi
   upload-coverage:
     parameters:
       file:
@@ -192,15 +171,6 @@ workflows:
             - java-app-encryption
             - server-go
             - server-java
-  run-wss-scans:
-    triggers:
-      - schedule:
-          cron: "0 19 * * 1" # Run at 12:00 PST on Monday
-          filters:
-            branches:
-              only: master
-    jobs:
-      - run-wss-scans
 
 jobs:
   java-secure-memory:
@@ -750,50 +720,3 @@ jobs:
             - ~/.nuget
             - /go/pkg/mod
           key: v5-cltf-{{ .Branch }}-{{ .BuildNum }}
-  run-wss-scans:
-    docker:
-      - image: ubuntu:18.04
-        environment:
-          GOROOT: /usr/local/go
-          GOPATH: /go
-    steps:
-      - checkout
-      - run:
-          name: Setup Environment
-          command: |
-            apt-get update -y
-            apt-get install -y curl openjdk-8-jdk maven
-            apt-get install -y wget curl
-            wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-            dpkg -i packages-microsoft-prod.deb
-            apt-get install -y apt-transport-https
-            apt-get update -y
-            apt-get install -y dotnet-sdk-3.1 git
-            apt-get install -y build-essential
-            wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
-            tar -C /usr/local/ -xzf go*.tar.gz
-            curl -LJO https://github.com/whitesource/unified-agent-distribution/releases/latest/download/wss-unified-agent.jar
-      - run-wss-scan:
-          project: Java SecureMemory
-          path: java/secure-memory
-          wss-project: asherah-java-secure-memory
-      - run-wss-scan:
-          project: Java AppEncryption
-          path: java/app-encryption
-          wss-project: asherah-java-app-encryption
-      - run-wss-scan:
-          project: C# SecureMemory
-          path: csharp/SecureMemory
-          wss-project: asherah-csharp-secure-memory
-      - run-wss-scan:
-          project: C# AppEncryption
-          path: csharp/AppEncryption
-          wss-project: asherah-csharp-app-encryption
-      - run-wss-scan:
-          project: Go SecureMemory
-          path: go/securememory
-          wss-project: asherah-go-secure-memory
-      - run-wss-scan:
-          project: Go AppEncryption
-          path: go/appencryption
-          wss-project: asherah-go-app-encryption

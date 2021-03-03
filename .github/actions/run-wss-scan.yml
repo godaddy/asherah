@@ -1,0 +1,33 @@
+name: "Run WSS Scan"
+description: "Runs a WS scan against the target using the Unified Agent"
+inputs:
+  path:
+    required: true
+  wss-project:
+    required: true
+  gopath:
+    default: "/go"
+  goroot:
+    default: "/usr/local/go"
+
+runs:
+  using: "composite"
+  steps:
+  - shell: bash
+    env:
+      GOROOT: ${{ inputs.goroot }}
+      GOPATH: ${{ inputs.gopath }}
+    run: |
+      if [ "${{ github.repository }}" == "godaddy/asherah" ]; then
+        echo "Scanning ${{ inputs.path }}"
+        export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+        sed -i "s/scanComment.*/scanComment=Scan initiated by GitHub (Actions) on `date`/g" \
+          ${{ github.action_path }}/wss-unified-agent.config
+
+        java -jar wss-unified-agent.jar \
+            -c ${{ github.action_path }}/wss-unified-agent.config \
+            -d ${{ inputs.path }} -apiKey ${{ secrets.WSS_API_KEY}} -project ${{ inputs.wss-project }}
+      else
+        echo "WhiteSource scans will only run in the original repository"
+      fi
