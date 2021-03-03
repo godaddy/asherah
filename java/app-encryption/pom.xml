@@ -266,6 +266,15 @@
       <version>1.68</version>
     </dependency>
 
+    <!-- not used directly but need to override the version used by aws-java-sdk-core to remediate security concerns -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-cbor</artifactId>
+        <version>${jackson.version}</version>
+        <type>jar</type>
+        <scope>compile</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-kms</artifactId>
