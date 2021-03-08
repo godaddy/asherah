@@ -6,26 +6,26 @@ runs:
   steps:
   - shell: bash
     run: |
-      apt-get update -y
-      apt-get install -y curl
+      sudo apt-get update -y
+      sudo apt-get install -y curl
 
       # trust the Microsoft package repo
       curl -sSLJO https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
-      dpkg -i packages-microsoft-prod.deb
+      sudo dpkg -i packages-microsoft-prod.deb
 
-      apt-get update -y
-      apt-get install -y \
+      sudo apt-get update -y
+      sudo apt-get install -y \
         openjdk-8-jdk \
         maven \
         build-essential \
         apt-transport-https
 
-      apt-get update -y
-      apt-get install -y dotnet-sdk-3.1 git
+      sudo apt-get update -y
+      sudo apt-get install -y dotnet-sdk-2.1 dotnet-sdk-3.1 git
 
       # download/install Go
       curl -sSLJO https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
-      tar -C /usr/local/ -xzf go*.tar.gz
+      sudo tar -C /usr/local/ -xzf go*.tar.gz
 
       # download the WS Unified Agent
       curl -sSLJ \
