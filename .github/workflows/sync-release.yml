@@ -5,7 +5,7 @@ on:
     inputs:
       target:
         description: 'Release branch to target'
-        default: 'release-0.1.x'
+        default: 'release-0.x'
         required: true
 
 jobs:

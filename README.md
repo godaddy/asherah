@@ -1,23 +1,16 @@
-# Asherah
-
 [![Join Slack](https://img.shields.io/badge/Join%20us%20on-Slack-e01563.svg)](https://godaddy-oss-slack.herokuapp.com/)
 [![License](https://img.shields.io/github/license/godaddy/asherah.svg)](https://github.com/godaddy/asherah/blob/master/LICENSE)
 [![CircleCI](https://img.shields.io/circleci/build/gh/godaddy/asherah.svg)](https://circleci.com/gh/godaddy/asherah)
 [![Codecov](https://codecov.io/gh/godaddy/asherah/graph/badge.svg)](https://codecov.io/gh/godaddy/asherah)
 
-Asherah is an application-layer encryption SDK, currently in incubator status, that provides advanced encryption
-features and defense in depth against compromise.
+# Asherah
 
-### NOTICE: This is an alpha product
+An application-layer encryption SDK that provides advanced encryption features and defense in depth against compromise.
 
-Internally, we are preparing this for production workloads and have a high degree of confidence in it, but we want to
-be clear that this should still be considered an incubator project. We have **not** yet had any formal external
-security audits of this product. We do not yet consider Asherah as validated for production use. As we receive more
-feedback, both internally and externally, APIs and features may be subject to change. Once we have cleared external
-audits and hit feature and testing milestones, we will release languages and versions into production status.
+Its goal is to provide an easy-to-use library which abstracts away internal complexity and provides rapid, frequent key
+rotation with enterprise scale in mind.
 
-Table of Contents
-=================
+## Table of Contents
 
    * [Introduction](#introduction)
    * [Getting Started](#getting-started)
@@ -25,16 +18,11 @@ Table of Contents
    * [Further Reading](#further-reading)
    * [Supported Languages](#supported-languages)
        * [Feature Support](#feature-support)
-   * [Current Status](#current-status)
-   * [Contributing](CONTRIBUTING.md)
+   * [Contributing](#contributing)
 
 ## Introduction
 
-The Asherah SDK provides advanced encryption techniques exposed via simple APIs for application-layer encryption.
-Its goal is to provide an easy-to-use library which abstracts away internal complexity and provides rapid, frequent key rotation
-with enterprise scale in mind.
-
-Multiple layers of keys are used in conjunction with a technique known as "envelope encryption". Envelope encryption is a
+Asherah makes use of multiple layers of keys in conjunction with a technique known as "envelope encryption". Envelope encryption is a
 practice where a key used to encrypt data is itself encrypted by a higher-order key and stored alongside the encrypted data, hence forming an
 envelope structure. The master key used at the root of the key hierarchy is typically managed by a Hardware Security Module (HSM)
 or Key Management Service (KMS).
@@ -148,7 +136,6 @@ languages and platforms.
 * [Key Caching](docs/KeyCaching.md)
 * [Code Structure](docs/CodeStructure.md)
 * [SDK Internals](docs/Internals.md)
-* [Roadmap](docs/ROADMAP.md)
 * [Testing Approach](docs/TestingApproach.md)
 * [FAQ](docs/FAQ.md)
 
@@ -170,7 +157,7 @@ languages and platforms.
 | Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
 | Store/Load pattern.        | Yes  | Yes  | Yes |
 
+## Contributing
 
-## Current Status
-
-Asherah is currently in incubator status. Please refer to our [Roadmap](docs/ROADMAP.md) for additional information.
+All contributors and contributions are welcome! Please see our [contributing docs](CONTRIBUTING.md) for more
+information.
