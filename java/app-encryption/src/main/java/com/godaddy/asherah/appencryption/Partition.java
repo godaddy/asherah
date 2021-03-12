@@ -5,7 +5,7 @@ package com.godaddy.asherah.appencryption;
  * It uses a {@code partitionId} to uniquely identify a {@link Session}, i.e. every partition id should have its own
  * session. A payload encrypted using some partition id, cannot be decrypted using a different one.
  */
-public class Partition {
+public abstract class Partition {
   private final String partitionId;
   private final String serviceId;
   private final String productId;
@@ -17,7 +17,7 @@ public class Partition {
    * @param serviceId A unique identifier for a service, used to create a {@link SessionFactory} object.
    * @param productId A unique identifier for a product, used to create a {@link SessionFactory} object.
    */
-  public Partition(final String partitionId, final String serviceId, final String productId) {
+  protected Partition(final String partitionId, final String serviceId, final String productId) {
     this.partitionId = partitionId;
     this.serviceId = serviceId;
     this.productId = productId;
@@ -54,9 +54,13 @@ public class Partition {
     return "_IK_" + partitionId + "_" + serviceId + "_" + productId;
   }
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "[partitionId=" + partitionId +
-      ", serviceId=" + serviceId + ", productId=" + productId + "]";
+  /**
+  * Validates an {@code IntermediateKey} id.
+  *
+  * @param id The {@code IntermediateKey} id to validate.
+  * @return Returns {@code true} if the {@code id} is a valid {@code IntermediateKey} id for this partition.
+  */
+  public boolean isValidIntermediateKeyId(final String id) {
+    return id.equals(getIntermediateKeyId());
   }
 }

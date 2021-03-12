@@ -77,10 +77,15 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
       EnvelopeKeyRecord dataRowKeyRecord = new EnvelopeKeyRecord(keyDocument);
 
+      KeyMeta keyMeta = dataRowKeyRecord.getParentKeyMeta().orElseThrow(
+          () -> new MetadataMissingException("Could not find parentKeyMeta (IK) for dataRowKey"));
+
+      if (!partition.isValidIntermediateKeyId(keyMeta.getKeyId())) {
+        throw new MetadataMissingException("Could not find parentKeyMeta (IK) for dataRowKey");
+      }
+
       byte[] decryptedPayload = withIntermediateKeyForRead(
-          dataRowKeyRecord.getParentKeyMeta().orElseThrow(
-              () -> new MetadataMissingException("Could not find parentKeyMeta (IK) for dataRowKey")
-          ),
+          keyMeta,
           (intermediateCryptoKey) -> crypto.envelopeDecrypt(payloadEncrypted, dataRowKeyRecord.getEncryptedKey(),
               dataRowKeyRecord.getCreated(), intermediateCryptoKey));
 
@@ -131,7 +136,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     // Get from cache or lookup previously used key
     CryptoKey intermediateKey = intermediateKeyCache.get(intermediateKeyMeta.getCreated());
     if (intermediateKey == null) {
-      intermediateKey = getIntermediateKey(intermediateKeyMeta.getCreated());
+      intermediateKey = getIntermediateKey(intermediateKeyMeta);
 
       // Put the key into our cache if allowed
       if (cryptoPolicy.canCacheIntermediateKeys()) {
@@ -402,13 +407,12 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
 
   /**
    * Fetches a known intermediate key from the metastore and decrypts it using its associated system key.
-   *
-   * @param intermediateKeyCreated Creation time of intermediate key.
+   * @param keyMeta intermediate key meta of intermediate key
    * @return The decrypted intermediate key.
    * @throws MetadataMissingException If the intermediate key is not found, or it has missing system key info.
    */
-  CryptoKey getIntermediateKey(final Instant intermediateKeyCreated) {
-    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(partition.getIntermediateKeyId(), intermediateKeyCreated);
+  CryptoKey getIntermediateKey(final KeyMeta keyMeta) {
+    EnvelopeKeyRecord intermediateKeyRecord = loadKeyRecord(keyMeta.getKeyId(), keyMeta.getCreated());
 
     return withExistingSystemKey(
         intermediateKeyRecord.getParentKeyMeta().orElseThrow(

@@ -272,13 +272,20 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testBuilderPathWithRegionSuffix() {
+  void testBuilderPathWithKeySuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
       .withKeySuffix()
       .build();
 
-    assertFalse(dynamoDbMetastoreImpl.hasKeySuffix());
-    assertTrue(dynamoDbMetastore.hasKeySuffix());
+    assertEquals(REGION, dynamoDbMetastore.getKeySuffix());
+  }
+
+  @Test
+  void testBuilderPathWithoutKeySuffix() {
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .build();
+
+    assertEquals("", dynamoDbMetastore.getKeySuffix());
   }
 
   @Test

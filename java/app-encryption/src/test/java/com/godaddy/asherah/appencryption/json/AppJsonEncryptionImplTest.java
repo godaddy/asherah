@@ -2,6 +2,7 @@ package com.godaddy.asherah.appencryption.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.godaddy.asherah.appencryption.DefaultPartition;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionJsonImpl;
@@ -39,7 +40,7 @@ class AppJsonEncryptionImplTest {
 
   @BeforeEach
   void setUp() {
-    partition = new Partition("PARTITION", "SERVICE",  "PRODUCT");
+    partition = new DefaultPartition("PARTITION", "SERVICE",  "PRODUCT");
 
     memoryPersistence = new HashMap<>();
     dataPersistence = new AdhocPersistence<>(key -> Optional.ofNullable(memoryPersistence.get(key)),
