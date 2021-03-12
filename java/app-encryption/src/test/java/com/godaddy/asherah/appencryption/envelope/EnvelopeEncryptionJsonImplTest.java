@@ -95,7 +95,7 @@ class EnvelopeEncryptionJsonImplTest {
   }
 
   @Test
-  void testDecryptDataRowRecordWithoutParentKeyMetaShouldFail() {
+  void testDecryptDataRowRecordWithInvalidParentKeyMetaShouldFail() {
     KeyMeta intermediateKeyMeta = new KeyMeta("some_invalid_key_id", ikInstant);
     EnvelopeKeyRecord dataRowKey = new EnvelopeKeyRecord(drkInstant, intermediateKeyMeta, new byte[]{0, 1, 2, 3});
     byte[] encryptedData = new byte[]{4, 5, 6, 7};
@@ -108,7 +108,7 @@ class EnvelopeEncryptionJsonImplTest {
   }
 
   @Test
-  void testDecryptDataRowRecordWithInvalidParentKeyMetaShouldFail() {
+  void testDecryptDataRowRecordWithoutParentKeyMetaShouldFail() {
     EnvelopeKeyRecord dataRowKey = new EnvelopeKeyRecord(drkInstant, null, new byte[]{0, 1, 2, 3});
     byte[] encryptedData = new byte[]{4, 5, 6, 7};
     JSONObject dataRowRecord = new JSONObject(ImmutableMap.of(
