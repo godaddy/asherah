@@ -96,6 +96,19 @@ class EnvelopeEncryptionJsonImplTest {
 
   @Test
   void testDecryptDataRowRecordWithoutParentKeyMetaShouldFail() {
+    KeyMeta intermediateKeyMeta = new KeyMeta("some_invalid_key_id", ikInstant);
+    EnvelopeKeyRecord dataRowKey = new EnvelopeKeyRecord(drkInstant, intermediateKeyMeta, new byte[]{0, 1, 2, 3});
+    byte[] encryptedData = new byte[]{4, 5, 6, 7};
+    JSONObject dataRowRecord = new JSONObject(ImmutableMap.of(
+      "Key", dataRowKey.toJson(),
+      "Data", Base64.getEncoder().encodeToString(encryptedData)
+    ));
+
+    assertThrows(MetadataMissingException.class, () -> envelopeEncryptionJson.decryptDataRowRecord(dataRowRecord));
+  }
+
+  @Test
+  void testDecryptDataRowRecordWithInvalidParentKeyMetaShouldFail() {
     EnvelopeKeyRecord dataRowKey = new EnvelopeKeyRecord(drkInstant, null, new byte[]{0, 1, 2, 3});
     byte[] encryptedData = new byte[]{4, 5, 6, 7};
     JSONObject dataRowRecord = new JSONObject(ImmutableMap.of(
