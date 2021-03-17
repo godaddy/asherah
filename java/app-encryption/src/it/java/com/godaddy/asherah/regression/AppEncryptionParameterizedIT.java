@@ -1,6 +1,7 @@
 package com.godaddy.asherah.regression;
 
 import com.godaddy.asherah.TestSetup;
+import com.godaddy.asherah.appencryption.DefaultPartition;
 import com.godaddy.asherah.appencryption.Partition;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionJsonImpl;
@@ -175,7 +176,7 @@ public class AppEncryptionParameterizedIT {
   private static Arguments generateMocks(final KeyState cacheIK, final KeyState metaIK, final KeyState cacheSK,
       final KeyState metaSK) {
 
-    Partition partition = new Partition(
+    Partition partition = new DefaultPartition(
       cacheIK.toString() + "CacheIK_" + metaIK.toString() + "MetaIK_" +
         DateTimeUtils.getCurrentTimeAsUtcIsoOffsetDateTime() + "_" + RANDOM.nextInt(),
       cacheSK.toString() + "CacheSK_" + metaSK.toString() + "MetaSK_" +
