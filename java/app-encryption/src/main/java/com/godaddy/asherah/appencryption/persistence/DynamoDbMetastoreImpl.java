@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
  * Creation time is stored in unix time seconds.
  */
 public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
+  static final String DEFAULT_KEY_SUFFIX = "";
+
   private static final Logger logger = LoggerFactory.getLogger(DynamoDbMetastoreImpl.class);
 
   static final String PARTITION_KEY = "Id";
@@ -72,22 +74,6 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     this.table = client.getTable(tableName);
   }
 
-  /**
-   * Checks if the metastore has key suffixes enabled, and adds a region suffix to the {@code key} if it does.
-   * A key suffix is needed to enable Global Table support. Adding a suffix to keys prevents multi-region writes from
-   * clobbering each other.
-   *
-   * @param key The keyId part of the lookup key.
-   * @return The region-suffixed key, if the metastore has that enabled, else returns the same input {@code key}.
-   */
-  private String getHashKey(final String key) {
-    if (this.hasKeySuffix) {
-      return key + "_" + this.preferredRegion;
-    }
-
-    return key;
-  }
-
   @Override
   public Optional<JSONObject> load(final String keyId, final Instant created) {
     return loadTimer.record(() -> {
@@ -113,8 +99,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   /**
-   * Lookup the latest value associated with the keyId. The DynamoDB partition key is formed using the
-   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   * Lookup the latest value associated with the keyId.
    *
    * @param keyId The keyId part of the lookup key.
    * @return The latest value associated with the keyId, if any.
@@ -125,7 +110,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       try {
         // Have to use query api to use limit and reverse sort order
         ItemCollection<QueryOutcome> itemCollection = table.query(new QuerySpec()
-            .withHashKey(PARTITION_KEY, getHashKey(keyId))
+            .withHashKey(PARTITION_KEY, keyId)
             .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
             .withScanIndexForward(false) // sorts descending
             .withMaxResultSize(1) // limit 1
@@ -146,8 +131,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   /**
-   * Stores the value using the specified keyId and created time. The DynamoDB partition key is formed using the
-   * {@link DynamoDbMetastoreImpl#getHashKey(String)} method, which may or may not add a region suffix to it.
+   * Stores the value using the specified keyId and created time.
    *
    * @param keyId The keyId part of the lookup key.
    * @param created The created time part of the lookup key.
@@ -165,7 +149,7 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         // required.
         Item item = new Item()
             .withPrimaryKey(
-                PARTITION_KEY, getHashKey(keyId),
+                PARTITION_KEY, keyId,
                 SORT_KEY, created.getEpochSecond())
             .withMap(ATTRIBUTE_KEY_RECORD, value.toMap());
         table.putItem(new PutItemSpec()
@@ -186,6 +170,14 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     });
   }
 
+  @Override
+  public String getKeySuffix() {
+    if (hasKeySuffix) {
+      return preferredRegion;
+    }
+    return DEFAULT_KEY_SUFFIX;
+  }
+
   String getTableName() {
     return tableName;
   }
@@ -194,14 +186,11 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return client;
   }
 
-  boolean hasKeySuffix() {
-    return hasKeySuffix;
-  }
-
   public static final class Builder implements BuildStep, EndPointStep, RegionStep {
     static final String DEFAULT_TABLE_NAME = "EncryptionKey";
 
     private AmazonDynamoDB client;
+
     private final String preferredRegion;
     private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
 

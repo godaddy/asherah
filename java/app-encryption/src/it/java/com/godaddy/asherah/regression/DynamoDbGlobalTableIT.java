@@ -71,24 +71,46 @@ class DynamoDbGlobalTableIT {
     byte[] decryptedBytes;
     byte[] dataRowRecordBytes;
 
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder("us-west-2")
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-      .build();
-
     // Encrypt originalPayloadString with metastore without region suffix
-    SessionFactory sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(), dynamoDbMetastore);
-
+    SessionFactory sessionFactory = getSessionFactory(false);
     try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
       dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
     }
 
-    DynamoDbMetastoreImpl dynamoDbMetastoreWithSuffix = DynamoDbMetastoreImpl.newBuilder("us-west-2")
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-      .withKeySuffix()
-      .build();
+    // Decrypt dataRowString with metastore with region suffix
+    sessionFactory = getSessionFactory(true);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+    }
+    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
+  }
+
+  private SessionFactory getSessionFactory(boolean withKeySuffix) {
+    DynamoDbMetastoreImpl.BuildStep builder = DynamoDbMetastoreImpl.newBuilder("us-west-2")
+      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
+
+    if (withKeySuffix) {
+      builder = builder.withKeySuffix();
+    }
+
+    DynamoDbMetastoreImpl dynamoDbMetastore = builder.build();
+    return SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(), dynamoDbMetastore);
+  }
+
+  @Test
+  void testRegionSuffix() {
+    byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
+    byte[] decryptedBytes;
+    byte[] dataRowRecordBytes;
+
+    // Encrypt originalPayloadString with metastore with region suffix
+    SessionFactory sessionFactory = getSessionFactory(true);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
+    }
 
     // Decrypt dataRowString with metastore with region suffix
-    sessionFactory = SessionFactoryGenerator.createDefaultSessionFactory(TestSetup.createKeyManagemementService(), dynamoDbMetastoreWithSuffix);
+    sessionFactory = getSessionFactory(true);
     try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
       decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
     }
