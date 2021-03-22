@@ -41,7 +41,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             Created = sourceJson.GetDateTimeOffset("Created");
         }
 
-        internal string KeyId { get; }
+        public string KeyId { get; }
 
         internal virtual DateTimeOffset Created { get; }
 

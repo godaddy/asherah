@@ -312,8 +312,18 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
-            Assert.True(dbMetastoreImpl.HasKeySuffix);
-            Assert.False(dynamoDbMetastoreImpl.HasKeySuffix);
+            Assert.Equal(Region, dbMetastoreImpl.GetKeySuffix());
+        }
+
+        [Fact]
+        private void TestBuilderPathWithoutKeySuffix()
+        {
+            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, Region)
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+            Assert.Equal(string.Empty, dbMetastoreImpl.GetKeySuffix());
         }
 
         [Fact]
