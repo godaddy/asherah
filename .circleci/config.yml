@@ -435,7 +435,6 @@ jobs:
       - image: circleci/dynamodb
       - image: mysql:5.7
         environment:
-          MYSQL_USER: <<pipeline.parameters.db-user>>
           MYSQL_ROOT_PASSWORD: <<pipeline.parameters.db-password>>
     steps:
       - checkout
