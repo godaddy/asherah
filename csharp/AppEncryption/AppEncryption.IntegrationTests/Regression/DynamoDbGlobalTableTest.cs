@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -10,7 +11,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     [Collection("Configuration collection")]
-    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>
+    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
     {
         private const string PartitionKey = "Id";
         private const string SortKey = "Created";
@@ -19,6 +20,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private readonly ConfigFixture configFixture;
         private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
         private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImplWithKeySuffix;
+
+        private IAmazonDynamoDB tempDynamoDbClient;
 
         public DynamoDbGlobalTableTest(DynamoDBContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
         {
@@ -30,7 +33,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 ServiceURL = dynamoDbContainerFixture.ServiceUrl,
                 AuthenticationRegion = "us-west-2",
             };
-            IAmazonDynamoDB tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
+            tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
             CreateTableRequest request = new CreateTableRequest
             {
                 TableName = DefaultTableName,
@@ -58,6 +61,52 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
                 .WithKeySuffix()
                 .Build();
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                DeleteTableResponse deleteTableResponse = tempDynamoDbClient
+                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
+                    .Result;
+            }
+            catch (AggregateException)
+            {
+                // There is no such table.
+            }
+        }
+
+        [Fact]
+        private void TestRegionSuffix()
+        {
+            byte[] originalPayload = PayloadGenerator.CreateDefaultRandomBytePayload();
+            byte[] decryptedBytes;
+            byte[] dataRowRecordBytes;
+
+            // Encrypt originalPayloadString with metastore with key suffix
+            using (SessionFactory sessionFactory = SessionFactoryGenerator
+                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+            {
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
+                {
+                    dataRowRecordBytes = sessionBytes.Encrypt(originalPayload);
+                }
+            }
+
+            // Decrypt dataRowString with metastore with key suffix
+            using (SessionFactory sessionFactory = SessionFactoryGenerator
+                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+            {
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
+                {
+                    // Decrypt the payload
+                    decryptedBytes = sessionBytes.Decrypt(dataRowRecordBytes);
+                }
+            }
+
+            // Verify that we were able to decrypt with a suffixed builder
+            Assert.Equal(decryptedBytes, originalPayload);
         }
 
         [Fact]
