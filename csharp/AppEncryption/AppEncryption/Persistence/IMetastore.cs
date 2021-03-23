@@ -38,5 +38,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <returns><value>True</value> if the store succeeded, false is the store failed for a known condition e.g., trying to save
         /// a duplicate value should return false, not throw an exception.</returns>
         bool Store(string keyId, DateTimeOffset created, T value);
+
+        /// <summary>
+        /// Returns the key suffix or "" if key suffix option is disabled.
+        /// </summary>
+        ///
+        /// <returns>
+        /// The key suffix.
+        /// </returns>
+        string GetKeySuffix();
     }
 }
