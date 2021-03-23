@@ -96,5 +96,10 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 return true;
             }
         }
+
+        public string GetKeySuffix()
+        {
+            return string.Empty;
+        }
     }
 }

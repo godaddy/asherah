@@ -44,7 +44,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         // Create a connection string with incorrect user id. This is used to force generate a DbException while setting up a connection
         private readonly DbConnectionStringBuilder fakeDbConnectionStringBuilder = new DbConnectionStringBuilder
         {
-            ["server"] = "localhost", ["user id"] = "some_id_",
+            ["server"] = "localhost",
+            ["user id"] = "some_id_",
         };
 
         public AdoMetastoreImplTest(MySqlContainerFixture fixture)
@@ -57,7 +58,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             adoMetastoreImplSpy = new Mock<AdoMetastoreImpl>(
                 dbProviderFactory,
-                connectionString) { CallBase = true };
+                connectionString)
+            { CallBase = true };
             SetupDatabase();
         }
 
@@ -334,6 +336,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             // Verify that DbConnection is closed at the end of the function call
             Assert.Equal(ConnectionState.Closed, dbConnection.State);
+        }
+
+        [Fact]
+        private void TestKeySuffixIsEmpty()
+        {
+            AdoMetastoreImpl.Builder adoMetastoreServicePrimaryBuilder =
+                NewBuilder(dbProviderFactory, dbConnection.ConnectionString);
+            AdoMetastoreImpl adoMetastoreServiceBuilder =
+                adoMetastoreServicePrimaryBuilder.Build();
+            Assert.Equal(adoMetastoreServiceBuilder.GetKeySuffix(), string.Empty);
         }
     }
 }

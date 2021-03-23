@@ -92,9 +92,16 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
                 EnvelopeKeyRecord dataRowKeyRecord = new EnvelopeKeyRecord(keyDocument);
 
+                KeyMeta keyMeta = dataRowKeyRecord.ParentKeyMeta.IfNone(() =>
+                    throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey"));
+
+                if (!partition.IsValidIntermediateKeyId(keyMeta.KeyId))
+                {
+                    throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey");
+                }
+
                 byte[] decryptedPayload = WithIntermediateKeyForRead(
-                    dataRowKeyRecord.ParentKeyMeta.IfNone(() =>
-                        throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey")),
+                    keyMeta,
                     intermediateCryptoKey =>
                         crypto.EnvelopeDecrypt(
                             payloadEncrypted, dataRowKeyRecord.EncryptedKey, dataRowKeyRecord.Created, intermediateCryptoKey));
@@ -160,7 +167,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
             if (intermediateKey == null)
             {
-                intermediateKey = GetIntermediateKey(intermediateKeyMeta.Created);
+                intermediateKey = GetIntermediateKey(intermediateKeyMeta);
 
                 // Put the key into our cache if allowed
                 if (cryptoPolicy.CanCacheIntermediateKeys())
@@ -509,12 +516,12 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         ///
         /// <returns>The decrypted intermediate key.</returns>
         ///
-        /// <param name="intermediateKeyCreated">The creation time of intermediate key.</param>
+        /// <param name="intermediateKeyMeta">The <see cref="KeyMeta"/> of intermediate key.</param>
         /// <exception cref="MetadataMissingException">If the intermediate key is not found, or it has missing system
         /// key info.</exception>
-        internal virtual CryptoKey GetIntermediateKey(DateTimeOffset intermediateKeyCreated)
+        internal virtual CryptoKey GetIntermediateKey(KeyMeta intermediateKeyMeta)
         {
-            EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(partition.IntermediateKeyId, intermediateKeyCreated);
+            EnvelopeKeyRecord intermediateKeyRecord = LoadKeyRecord(intermediateKeyMeta.KeyId, intermediateKeyMeta.Created);
 
             return WithExistingSystemKey(
                 intermediateKeyRecord.ParentKeyMeta.IfNone(() =>
