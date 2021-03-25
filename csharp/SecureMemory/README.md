@@ -15,7 +15,7 @@ This class provides a way for applications to keep secret information (like cryp
 You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.SecureMemory/):
 ```xml
 <ItemGroup>
-    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.1" />
+    <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.1.10" />
 </ItemGroup>
 ```
 
