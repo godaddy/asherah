@@ -23,7 +23,7 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.2.1" />
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.2.2" />
 </ItemGroup>
 ```
 
