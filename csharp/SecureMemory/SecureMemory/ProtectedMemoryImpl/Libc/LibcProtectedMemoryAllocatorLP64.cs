@@ -18,15 +18,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc)
         {
             this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
-
-            libc.getrlimit(GetMemLockLimit(), out var rlim);
-            if (rlim.rlim_max == rlimit.UNLIMITED)
+            var rlim = GetMemlockResourceLimit();
+            if (rlim == rlimit.UNLIMITED || rlim > long.MaxValue)
             {
-                resourceLimit = 0;
+                resourceLimit = long.MaxValue;
             }
             else
             {
-                resourceLimit = (long)rlim.rlim_max;
+                resourceLimit = (long)rlim;
             }
         }
 
@@ -151,6 +150,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         internal abstract int GetPrivateAnonymousFlags();
 
         internal abstract int GetMemLockLimit();
+
+        internal virtual ulong GetMemlockResourceLimit()
+        {
+            libc.getrlimit(GetMemLockLimit(), out var rlim);
+            return rlim.rlim_max;
+        }
 
         protected abstract void ZeroMemory(IntPtr pointer, ulong length);
 
