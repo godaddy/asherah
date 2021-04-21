@@ -85,6 +85,45 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
         [SkippableFact]
+        private void TestAlocWithResourceLimitZero()
+        {
+            Skip.If(libc == null);
+
+            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
+
+            var allocator = allocatorMock.Object;
+            Assert.Throws<MemoryLimitException>(() =>
+            {
+                allocator.Alloc(1);
+            });
+        }
+
+        [SkippableFact]
+        private void TestAlocWithResourceLimitMaxValue()
+        {
+            Skip.If(libc == null);
+
+            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
+
+            var allocator = allocatorMock.Object;
+            allocator.Alloc(1);
+        }
+
+        [SkippableFact]
+        private void TestAlocWithResourceLimitLargeValue()
+        {
+            Skip.If(libc == null);
+
+            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+
+            var allocator = allocatorMock.Object;
+            allocator.Alloc(1);
+        }
+
+        [SkippableFact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
             Skip.If(libc == null);
