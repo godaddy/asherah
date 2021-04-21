@@ -202,7 +202,11 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 	}
 
 	if d.disableTestContainers {
-		host = "localhost"
+		host = os.Getenv("DYNAMODB_HOSTNAME")
+		if len(host) == 0 {
+			host = "localhost"
+		}
+
 		dynamodbNatPort = portProtocolDynamoDB
 	} else {
 		request := testcontainers.ContainerRequest{

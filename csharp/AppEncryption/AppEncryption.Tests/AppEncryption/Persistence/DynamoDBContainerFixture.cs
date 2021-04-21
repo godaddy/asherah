@@ -8,7 +8,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class DynamoDBContainerFixture : IAsyncLifetime
     {
-        private const string LocalServiceUrl = "http://localhost:8000";
         private readonly bool disableTestContainers;
 
         public DynamoDBContainerFixture()
@@ -17,7 +16,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             if (disableTestContainers)
             {
-                ServiceUrl = LocalServiceUrl;
+                string hostname = Environment.GetEnvironmentVariable("DYNAMODB_HOSTNAME");
+                if (hostname == null)
+                {
+                    HostName = "localhost";
+                }
+                else
+                {
+                    HostName = hostname;
+                }
+
+                ServiceUrl = $"http://{HostName}:8000";
             }
             else
             {
@@ -25,6 +34,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Begin()
                     .WithImage("amazon/dynamodb-local:latest")
                     .WithExposedPorts(8000)
+                    .WithPortBindings((8000, 8000))
                     .Build();
 
                 ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
@@ -32,6 +42,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         public string ServiceUrl { get; }
+
+        public string HostName { get; }
 
         private Container DynamoDbContainer { get; }
 

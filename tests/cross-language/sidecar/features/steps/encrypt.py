@@ -13,6 +13,8 @@ from google.protobuf.json_format import MessageToDict
 from appencryption_client import SessionClient
 
 
+ASHERAH_SOCKET = os.getenv('ASHERAH_SOCKET_FILE', '/tmp/appencryption.sock')
+
 @given(u'I have "{data}"')
 def step_impl(context, data):
     assert data != ""
@@ -21,7 +23,7 @@ def step_impl(context, data):
 
 @when(u'I encrypt the data')
 def step_impl(context):
-    with SessionClient('/tmp/appencryption.sock', 'partition') as client:
+    with SessionClient(ASHERAH_SOCKET, 'partition') as client:
         server_drr = client.encrypt(context.payloadString.encode())
         data_row_record = MessageToDict(server_drr)
         parent_key_meta_json = {'KeyId': data_row_record['key']['parentKeyMeta']['keyId'],

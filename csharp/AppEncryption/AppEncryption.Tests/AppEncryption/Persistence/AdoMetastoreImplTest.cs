@@ -41,15 +41,18 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private readonly Mock<AdoMetastoreImpl> adoMetastoreImplSpy;
         private readonly string connectionString;
 
-        // Create a connection string with incorrect user id. This is used to force generate a DbException while setting up a connection
-        private readonly DbConnectionStringBuilder fakeDbConnectionStringBuilder = new DbConnectionStringBuilder
-        {
-            ["server"] = "localhost",
-            ["user id"] = "some_id_",
-        };
+        private readonly DbConnectionStringBuilder fakeDbConnectionStringBuilder;
 
         public AdoMetastoreImplTest(MySqlContainerFixture fixture)
         {
+            string hostname = Environment.GetEnvironmentVariable("MYSQL_HOSTNAME");
+
+            // Create a connection string with incorrect user id. This is used to force generate a DbException while setting up a connection
+            fakeDbConnectionStringBuilder = new DbConnectionStringBuilder
+            {
+                ["server"] = hostname == null ? "localhost" : hostname,
+                ["user id"] = "some_id_",
+            };
             dbProviderFactory = MySqlClientFactory.Instance;
             connectionString = fixture.ConnectionString + "Initial Catalog=testdb;";
             dbConnection = dbProviderFactory.CreateConnection();

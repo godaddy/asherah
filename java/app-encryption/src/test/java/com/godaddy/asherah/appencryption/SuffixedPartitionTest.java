@@ -47,6 +47,10 @@ class SuffixedPartitionTest {
         "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId + "_" + testRegionSuffix;
       assertTrue(partition.isValidIntermediateKeyId(intermediateKeyIdStringSuffixed));
 
+      String intermediateKeyIdStringSuffixedOther =
+        "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId + "_" + "other_suffix";
+      assertTrue(partition.isValidIntermediateKeyId(intermediateKeyIdStringSuffixedOther));
+
       String intermediateKeyIdString =
         "_IK_" + testPartitionId + "_" + testServiceId + "_" + testProductId;
       assertTrue(partition.isValidIntermediateKeyId(intermediateKeyIdString));

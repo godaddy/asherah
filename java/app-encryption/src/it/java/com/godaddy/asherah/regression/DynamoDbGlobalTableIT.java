@@ -31,6 +31,7 @@ class DynamoDbGlobalTableIT {
   private static final String PARTITION_KEY = "Id";
   private static final String SORT_KEY = "Created";
   private static final String DYNAMO_DB_PORT = "8000";
+  private static final String REGION_SUFFIX = "us-west-2";
   private static DynamoDBProxyServer server;
 
   @BeforeEach
@@ -65,28 +66,8 @@ class DynamoDbGlobalTableIT {
     server.stop();
   }
 
-  @Test
-  void testRegionSuffixBackwardCompatibility() {
-    byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
-    byte[] decryptedBytes;
-    byte[] dataRowRecordBytes;
-
-    // Encrypt originalPayloadString with metastore without region suffix
-    SessionFactory sessionFactory = getSessionFactory(false);
-    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
-      dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
-    }
-
-    // Decrypt dataRowString with metastore with region suffix
-    sessionFactory = getSessionFactory(true);
-    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
-      decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
-    }
-    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
-  }
-
-  private SessionFactory getSessionFactory(boolean withKeySuffix) {
-    DynamoDbMetastoreImpl.BuildStep builder = DynamoDbMetastoreImpl.newBuilder("us-west-2")
+  private SessionFactory getSessionFactory(boolean withKeySuffix, String region) {
+    DynamoDbMetastoreImpl.BuildStep builder = DynamoDbMetastoreImpl.newBuilder(region)
       .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
 
     if (withKeySuffix) {
@@ -98,19 +79,59 @@ class DynamoDbGlobalTableIT {
   }
 
   @Test
+  void testRegionSuffixBackwardCompatibility() {
+    byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
+    byte[] decryptedBytes;
+    byte[] dataRowRecordBytes;
+
+    // Encrypt originalPayloadString with metastore without region suffix
+    SessionFactory sessionFactory = getSessionFactory(false, REGION_SUFFIX);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
+    }
+
+    // Decrypt dataRowString with metastore with region suffix
+    sessionFactory = getSessionFactory(true, REGION_SUFFIX);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+    }
+    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
+  }
+
+  @Test
   void testRegionSuffix() {
     byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
     byte[] decryptedBytes;
     byte[] dataRowRecordBytes;
 
     // Encrypt originalPayloadString with metastore with region suffix
-    SessionFactory sessionFactory = getSessionFactory(true);
+    SessionFactory sessionFactory = getSessionFactory(true, REGION_SUFFIX);
     try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
       dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
     }
 
     // Decrypt dataRowString with metastore with region suffix
-    sessionFactory = getSessionFactory(true);
+    sessionFactory = getSessionFactory(true, REGION_SUFFIX);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
+    }
+    assertTrue(Arrays.equals(decryptedBytes, originalBytes));
+  }
+
+  @Test
+  void testCrossRegionDecryption() {
+    byte[] originalBytes = PayloadGenerator.createDefaultRandomBytePayload();
+    byte[] decryptedBytes;
+    byte[] dataRowRecordBytes;
+
+    // Encrypt originalPayloadString with metastore with us-west-2 region suffix
+    SessionFactory sessionFactory = getSessionFactory(true, REGION_SUFFIX);
+    try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
+      dataRowRecordBytes = sessionBytes.encrypt(originalBytes);
+    }
+
+    // Decrypt dataRowString with metastore with us-east-1 region suffix
+    sessionFactory = getSessionFactory(true, "us-east-1");
     try (Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper12345")) {
       decryptedBytes = sessionBytes.decrypt(dataRowRecordBytes);
     }
