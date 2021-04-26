@@ -58,9 +58,9 @@ func TestSuffixPartition_IsValidIntermediateKeyID(t *testing.T) {
 		"key IDs without suffixes should be valid to maintain backwards compatibility",
 	)
 
-    assert.True(
-        t,
-        partition.IsValidIntermediateKeyID("_IK_partid_service_product_othersuffix"),
-        "key IDs with differing suffixes should be valid to allow cross-region operations",
-    )
+	assert.True(
+		t,
+		partition.IsValidIntermediateKeyID("_IK_partid_service_product_othersuffix"),
+		"key IDs with differing suffixes should be valid to allow cross-region operations",
+	)
 }

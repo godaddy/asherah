@@ -2,7 +2,7 @@ package appencryption
 
 import (
 	"fmt"
-    "strings"
+	"strings"
 )
 
 func newPartition(partition, service, product string) defaultPartition {
