@@ -25,6 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     .Begin()
                     .WithImage("amazon/dynamodb-local:latest")
                     .WithExposedPorts(8000)
+                    .WithPortBindings((8000, 8000))
                     .Build();
 
                 ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";

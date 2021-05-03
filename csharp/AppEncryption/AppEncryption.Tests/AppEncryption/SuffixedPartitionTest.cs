@@ -72,6 +72,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             const string intermediateKeyIdStringSuffixed = "_IK_" + TestPartitionId + "_" + TestServiceId + "_" + TestProductId + "_" + TestSuffixRegion;
             Assert.True(partition.IsValidIntermediateKeyId(intermediateKeyIdStringSuffixed));
 
+            const string intermediateKeyIdStringSuffixedOther = "_IK_" + TestPartitionId + "_" + TestServiceId + "_" + TestProductId + "_" + "other_suffix";
+            Assert.True(partition.IsValidIntermediateKeyId(intermediateKeyIdStringSuffixedOther));
+
             const string intermediateKeyIdString = "_IK_" + TestPartitionId + "_" + TestServiceId + "_" + TestProductId;
             Assert.True(partition.IsValidIntermediateKeyId(intermediateKeyIdString));
 
