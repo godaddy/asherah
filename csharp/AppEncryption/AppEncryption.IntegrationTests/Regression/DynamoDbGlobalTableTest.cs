@@ -68,17 +68,17 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         private SessionFactory GetSessionFactory(bool withKeySuffix, string region)
         {
-        DynamoDbMetastoreImpl.IBuildStep builder = DynamoDbMetastoreImpl.NewBuilder(region)
-          .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2");
+            DynamoDbMetastoreImpl.IBuildStep builder = DynamoDbMetastoreImpl.NewBuilder(region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2");
 
-        if (withKeySuffix)
-        {
-          builder = builder.WithKeySuffix();
+            if (withKeySuffix)
+            {
+                builder = builder.WithKeySuffix();
+            }
+
+            DynamoDbMetastoreImpl dynamoDbMetastore = builder.Build();
+            return SessionFactoryGenerator.CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastore);
         }
-
-        DynamoDbMetastoreImpl dynamoDbMetastore = builder.Build();
-        return SessionFactoryGenerator.CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastore);
-      }
 
         [Fact]
         private void TestRegionSuffix()
