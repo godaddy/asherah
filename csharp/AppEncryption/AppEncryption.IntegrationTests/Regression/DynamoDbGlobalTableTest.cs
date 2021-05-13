@@ -16,10 +16,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private const string PartitionKey = "Id";
         private const string SortKey = "Created";
         private const string DefaultTableName = "EncryptionKey";
+        private const string DefaultRegion = "us-west-2";
+        private const string DynamoDbPort = "8000";
 
         private readonly ConfigFixture configFixture;
-        private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
-        private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImplWithKeySuffix;
 
         private IAmazonDynamoDB tempDynamoDbClient;
 
@@ -50,17 +50,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
             };
             tempDynamoDbClient.CreateTableAsync(request).Wait();
-
-            // Use a builder without the suffix
-            dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .Build();
-
-            // Connect to the same metastore but initialize it with a key suffix
-            dynamoDbMetastoreImplWithKeySuffix = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, "us-west-2")
-                .WithKeySuffix()
-                .Build();
         }
 
         public void Dispose()
@@ -68,13 +57,27 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             try
             {
                 DeleteTableResponse deleteTableResponse = tempDynamoDbClient
-                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
+                    .DeleteTableAsync(DefaultTableName)
                     .Result;
             }
             catch (AggregateException)
             {
                 // There is no such table.
             }
+        }
+
+        private SessionFactory GetSessionFactory(bool withKeySuffix, string region)
+        {
+            DynamoDbMetastoreImpl.IBuildStep builder = DynamoDbMetastoreImpl.NewBuilder(region)
+                .WithEndPointConfiguration("http://localhost:" + DynamoDbPort, "us-west-2");
+
+            if (withKeySuffix)
+            {
+                builder = builder.WithKeySuffix();
+            }
+
+            DynamoDbMetastoreImpl dynamoDbMetastore = builder.Build();
+            return SessionFactoryGenerator.CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastore);
         }
 
         [Fact]
@@ -85,8 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             byte[] dataRowRecordBytes;
 
             // Encrypt originalPayloadString with metastore with key suffix
-            using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+            using (SessionFactory sessionFactory = GetSessionFactory(true, DefaultRegion))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {
@@ -95,8 +97,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
 
             // Decrypt dataRowString with metastore with key suffix
-            using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+            using (SessionFactory sessionFactory = GetSessionFactory(true, DefaultRegion))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {
@@ -117,8 +118,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             byte[] dataRowRecordBytes;
 
             // Encrypt originalPayloadString with metastore without key suffix
-            using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImpl))
+            using (SessionFactory sessionFactory = GetSessionFactory(false, DefaultRegion))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {
@@ -127,8 +127,37 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
 
             // Decrypt dataRowString with metastore with key suffix
-            using (SessionFactory sessionFactory = SessionFactoryGenerator
-                .CreateDefaultSessionFactory(configFixture.KeyManagementService, dynamoDbMetastoreImplWithKeySuffix))
+            using (SessionFactory sessionFactory = GetSessionFactory(true, DefaultRegion))
+            {
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
+                {
+                    // Decrypt the payload
+                    decryptedBytes = sessionBytes.Decrypt(dataRowRecordBytes);
+                }
+            }
+
+            // Verify that we were able to decrypt with a suffixed builder
+            Assert.Equal(decryptedBytes, originalPayload);
+        }
+
+        [Fact]
+        private void TestCrossRegionDecryption()
+        {
+            byte[] originalPayload = PayloadGenerator.CreateDefaultRandomBytePayload();
+            byte[] decryptedBytes;
+            byte[] dataRowRecordBytes;
+
+            // Encrypt originalPayloadString with metastore without key suffix
+            using (SessionFactory sessionFactory = GetSessionFactory(true, DefaultRegion))
+            {
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
+                {
+                    dataRowRecordBytes = sessionBytes.Encrypt(originalPayload);
+                }
+            }
+
+            // Decrypt dataRowString with metastore with key suffix
+            using (SessionFactory sessionFactory = GetSessionFactory(true, "us-east-1"))
             {
                 using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123"))
                 {

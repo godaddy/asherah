@@ -37,6 +37,6 @@ public class SuffixedPartition extends Partition {
 
   @Override
   public boolean isValidIntermediateKeyId(final String id) {
-    return id.equals(getIntermediateKeyId()) || id.equals(super.getIntermediateKeyId());
+    return id.equals(getIntermediateKeyId()) || id.startsWith(super.getIntermediateKeyId());
   }
 }
