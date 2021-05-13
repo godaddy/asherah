@@ -611,7 +611,7 @@ jobs:
           key: v5-clients-{{ .Branch }}-{{ .BuildNum }}
   tests-cross-language:
     docker:
-      - image: ubuntu:18.04
+      - image: ubuntu
         environment:
           GOROOT: /usr/local/go
           GOPATH: /go
@@ -646,7 +646,8 @@ jobs:
       - run:
           name: Setup java environment
           command: |
-            apt-get install -y openjdk-8-jdk openjdk-11-jdk
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+            apt-get install -y openjdk-8-jdk openjdk-11-jre-headless=11.0.7+10-3ubuntu1 openjdk-11-jdk-headless=11.0.7+10-3ubuntu1 openjdk-11-jre=11.0.7+10-3ubuntu1 openjdk-11-jdk=11.0.7+10-3ubuntu1
             apt-get install -y maven
             # Delete Java appencryption & gRPC server from local maven repo/cache and build from the current branch
             rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
@@ -674,9 +675,9 @@ jobs:
       - run:
           name: Setup python environment
           command: |
-            apt-get install -y python3.7 python3-distutils
+            apt-get install -y python3.8 python3-distutils
             curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-            python3.7 get-pip.py
+            python3.8 get-pip.py
       - run:
           name: Build
           command: |
