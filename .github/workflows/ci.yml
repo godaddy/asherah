@@ -210,7 +210,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget
     - name: Build
@@ -257,7 +257,7 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-secure-memory:
     name: Build C# Secure Memory
@@ -273,7 +273,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget
     - name: Build
@@ -292,6 +292,8 @@ jobs:
         path: |
           csharp/SecureMemory/SecureMemory/bin/**
           csharp/SecureMemory/SecureMemory/obj/**
+          csharp/SecureMemory/PlatformNative/bin/**
+          csharp/SecureMemory/PlatformNative/obj/**
 
   release-csharp-secure-memory:
     if: contains( github.ref, 'release-' )
@@ -307,7 +309,9 @@ jobs:
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
           name: csharp-secure-memory
-          path: ${{ github.workspace }}/csharp/SecureMemory/SecureMemory
+          path: |
+            ${{ github.workspace }}/csharp/SecureMemory/SecureMemory
+            ${{ github.workspace }}/csharp/SecureMemory/PlatformNative
       - name: Publish C# Secure Memory
         run: |
           cd csharp/SecureMemory
@@ -320,7 +324,7 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-app-encryption:
     name: Build C# Application Encryption
@@ -343,7 +347,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget
     - name: Build
@@ -366,6 +370,8 @@ jobs:
         path: |
           csharp/AppEncryption/AppEncryption/bin/**
           csharp/AppEncryption/AppEncryption/obj/**
+          csharp/AppEncryption/Crypto/bin/**
+          csharp/AppEncryption/Crypto/obj/**
 
   release-csharp-app-encryption:
     if: contains( github.ref, 'release-' )
@@ -394,7 +400,7 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-reference-app:
     name: C# Reference Application
@@ -410,7 +416,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget
     - name: Build
@@ -474,7 +480,7 @@ jobs:
             ./scripts/release_prod.sh
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   go-app-encryption:
     name: Go Application Encryption
@@ -538,7 +544,7 @@ jobs:
             ./scripts/release_prod.sh
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   go-reference-app:
     name: Go Reference Application
