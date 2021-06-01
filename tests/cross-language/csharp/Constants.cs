@@ -21,13 +21,16 @@ namespace GoDaddy.Asherah.Cltf
         private static readonly string AdoDatabaseName;
         private static readonly string AdoUsername;
         private static readonly string AdoPassword;
+        private static readonly string AdoPort;
 
         static Constants()
         {
             AdoDatabaseName = Environment.GetEnvironmentVariable("TEST_DB_NAME");
             AdoUsername = Environment.GetEnvironmentVariable("TEST_DB_USER");
             AdoPassword = Environment.GetEnvironmentVariable("TEST_DB_PASSWORD");
+            AdoPort = Environment.GetEnvironmentVariable("TEST_DB_PORT");
             AdoConnectionString = "server=localhost" +
+                                  ";port=" + AdoPort +
                                   ";uid=" + AdoUsername +
                                   ";pwd=" + AdoPassword +
                                   ";sslmode=none;" +

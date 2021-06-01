@@ -477,9 +477,7 @@ func (suite *CacheTestSuite) TestSharedKeyCache_GetOrLoad() {
 
 	meta := KeyMeta{ID: "testing", Created: time.Now().Unix()}
 
-	startTime := time.Now()
-
-	for ; time.Since(startTime) < time.Second*5; i++ {
+	for ; i < 100; i++ {
 		wg.Add(1)
 
 		go func() {
