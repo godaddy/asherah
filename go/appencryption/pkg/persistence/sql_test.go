@@ -86,7 +86,11 @@ func (suite *SQLSuite) SetupSuite() {
 	// If not using testcontainers, manually set host and port
 	suite.disableTestContainers, _ = strconv.ParseBool(os.Getenv("DISABLE_TESTCONTAINERS"))
 	if suite.disableTestContainers {
-		suite.host = localHost
+		suite.host = os.Getenv("MYSQL_HOSTNAME")
+		if len(suite.host) == 0 {
+			suite.host = localHost
+		}
+
 		suite.port = portProtocolSQL
 	} else {
 		request := testcontainers.ContainerRequest{

@@ -37,7 +37,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public override bool IsValidIntermediateKeyId(string keyId)
         {
-            return keyId.Equals(IntermediateKeyId) || keyId.Equals(base.IntermediateKeyId);
+            return keyId.Equals(IntermediateKeyId) || keyId.StartsWith(base.IntermediateKeyId);
         }
     }
 }

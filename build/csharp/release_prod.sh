@@ -14,7 +14,7 @@ if [[ "$RESULT" != ${TAG} ]]; then
 
     # Create tag
     git tag -f ${TAG} ${CIRCLE_SHA1}
-    ssh-agent sh -c 'ssh-add ~/.ssh/id_rsa_git; git push origin --tags'
+    git push origin --tags
     echo "Created tag ${TAG}"
 else
     echo "${TAG} exists for ${ARTIFACT_NAME} v${BASE_VERSION}"

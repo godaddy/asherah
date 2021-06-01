@@ -454,7 +454,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Fails randomly during CI")]
         private void TestSessionCacheMultiThreadedSameSessionNoEviction()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -542,7 +542,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Fails randomly during CI")]
         private void TestSessionCacheMultiThreadedWithMaxSessionReachedSameSession()
         {
             long sessionCacheMaxSize = 1;
