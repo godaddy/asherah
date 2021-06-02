@@ -251,6 +251,7 @@ jobs:
           path: ${{ github.workspace }}/csharp/Logging/Logging
       - name: Publish C# Logging
         run: |
+          sudo apt-get install -y libxml2-utils
           cd csharp/Logging
           BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
           VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
@@ -318,6 +319,7 @@ jobs:
             ${{ github.workspace }}/csharp/SecureMemory/PlatformNative
       - name: Publish C# Secure Memory
         run: |
+          sudo apt-get install -y libxml2-utils
           cd csharp/SecureMemory
           BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
           VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
@@ -394,6 +396,7 @@ jobs:
           path: ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
       - name: Publish App Encryption
         run: |
+          sudo apt-get install -y libxml2-utils
           cd csharp/AppEncryption
           BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
           VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
