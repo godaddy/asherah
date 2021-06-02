@@ -53,7 +53,7 @@ jobs:
         ./scripts/test.sh
 
   release-java-secure-memory:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release Java Secure Memory
     needs: java-secure-memory
     runs-on: ubuntu-latest
@@ -118,7 +118,7 @@ jobs:
         ./scripts/integration_test.sh
 
   release-java-app-Encryption:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release Java App Encryption
     needs: java-app-encryption
     runs-on: ubuntu-latest
@@ -235,7 +235,7 @@ jobs:
           csharp/Logging/Logging/obj/**
 
   release-csharp-logging:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release C# Logging
     needs: csharp-logging
     runs-on: ubuntu-latest
@@ -300,7 +300,7 @@ jobs:
           csharp/SecureMemory/PlatformNative/obj/**
 
   release-csharp-secure-memory:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release C# Secure Memory
     needs: csharp-secure-memory
     runs-on: ubuntu-latest
@@ -378,7 +378,7 @@ jobs:
           csharp/AppEncryption/Crypto/obj/**
 
   release-csharp-app-encryption:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release C# App Encryption
     needs: csharp-app-encryption
     runs-on: ubuntu-latest
@@ -465,7 +465,7 @@ jobs:
         ./scripts/lint.sh
 
   release-go-secure-memory:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release Go Secure Memory
     needs: go-secure-memory
     runs-on: ubuntu-latest
@@ -529,7 +529,7 @@ jobs:
         ./scripts/lint.sh
 
   release-go-app-encryption:
-    if: startsWith( github.ref, 'release-' )
+    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
     name: Release Go App Encryption
     needs: go-app-encryption
     runs-on: ubuntu-latest
