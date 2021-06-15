@@ -60,6 +60,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Maven Central Repository
@@ -72,6 +74,12 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+      - name: Cache Java packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
       - name: Publish Java SecureMemory
         run: |
           cd java/secure-memory
@@ -85,7 +93,6 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          GITHUB_TOKEN: ${{ github.token }}
 
   java-app-encryption:
     name: Build Java Application Encryption
@@ -125,6 +132,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Maven Central Repository
@@ -137,6 +146,12 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+      - name: Cache Java packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
       - name: Publish Java AppEncryption
         run: |
           cd java/app-encryption
@@ -150,7 +165,6 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          GITHUB_TOKEN: ${{ github.token }}
 
   java-reference-app:
     name: Java Reference Application
@@ -242,8 +256,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
+      - name: Cache dotnet packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -262,7 +285,6 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-secure-memory:
     name: Build C# Secure Memory
@@ -308,8 +330,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
+      - name: Cache dotnet packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -330,7 +361,6 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-app-encryption:
     name: Build C# Application Encryption
@@ -387,8 +417,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
+      - name: Cache dotnet packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -407,7 +446,6 @@ jobs:
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
           NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-          GITHUB_TOKEN: ${{ github.token }}
 
   csharp-reference-app:
     name: C# Reference Application
@@ -475,8 +513,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
+      - name: Cache Go packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: /go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
       - name: Publish Go Secure Memory
         run: |
           cd go/securememory
@@ -486,8 +532,6 @@ jobs:
           if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
             ./scripts/release_prod.sh
           fi
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 
   go-app-encryption:
     name: Build Go Application Encryption
@@ -539,8 +583,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
+      - name: Cache Go packages
+        uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+        with:
+          path: /go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
       - name: Publish Go App Encryption
         run: |
           cd go/appencryption
@@ -550,8 +602,6 @@ jobs:
           if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
             ./scripts/release_prod.sh
           fi
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 
   go-reference-app:
     name: Go Reference Application

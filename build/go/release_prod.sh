@@ -9,7 +9,7 @@ RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG}  ]]; then
     # Create tag
     echo "Releasing ${ARTIFACT_NAME} artifact"
-    git tag -f ${TAG} ${CIRCLE_SHA1}
+    git tag -f ${TAG} ${GITHUB_SHA}
     git push origin --tags
     echo "Created tag ${TAG}"
 else

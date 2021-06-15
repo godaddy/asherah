@@ -13,7 +13,7 @@ if [[ "$RESULT" != ${TAG} ]]; then
     find . -name *${BASE_VERSION}.nupkg  | xargs -L1 -I '{}' dotnet nuget push {} -k ${NUGET_KEY} -s ${NUGET_SOURCE}
 
     # Create tag
-    git tag -f ${TAG} ${CIRCLE_SHA1}
+    git tag -f ${TAG} ${GITHUB_SHA}
     git push origin --tags
     echo "Created tag ${TAG}"
 else

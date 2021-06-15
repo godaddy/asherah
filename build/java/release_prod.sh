@@ -12,7 +12,7 @@ if [[ "$RESULT" != ${TAG} ]]; then
     mvn -DskipTests deploy -Prelease
 
     # Create tag
-    git tag -f ${TAG} ${CIRCLE_SHA1}
+    git tag -f ${TAG} ${GITHUB_SHA}
     git push origin --tags
     echo "Created tag ${TAG}"
 else
