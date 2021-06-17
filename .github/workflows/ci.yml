@@ -40,8 +40,8 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+        restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd java/secure-memory
@@ -78,8 +78,8 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+          restore-keys: ${{ runner.os }}-m2-
       - name: Publish Java SecureMemory
         run: |
           cd java/secure-memory
@@ -108,8 +108,8 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+        restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd java/app-encryption
@@ -150,8 +150,8 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+          restore-keys: ${{ runner.os }}-m2-
       - name: Publish Java AppEncryption
         run: |
           cd java/app-encryption
@@ -180,8 +180,8 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+        restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd samples/java/reference-app
@@ -202,8 +202,8 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+        restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd server/java
@@ -228,9 +228,9 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
         restore-keys: |
-          ${{ runner.os }}-nuget
+          ${{ runner.os }}-nuget-
     - name: Build
       run: |
         cd csharp/Logging
@@ -264,9 +264,9 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
           restore-keys: |
-            ${{ runner.os }}-nuget
+            ${{ runner.os }}-nuget-
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -300,9 +300,9 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
         restore-keys: |
-          ${{ runner.os }}-nuget
+          ${{ runner.os }}-nuget-
     - name: Build
       run: |
         cd csharp/SecureMemory
@@ -338,9 +338,9 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
           restore-keys: |
-            ${{ runner.os }}-nuget
+            ${{ runner.os }}-nuget-
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -383,9 +383,9 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
         restore-keys: |
-          ${{ runner.os }}-nuget
+          ${{ runner.os }}-nuget-
     - name: Build
       run: |
         cd csharp/AppEncryption
@@ -425,9 +425,9 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
           restore-keys: |
-            ${{ runner.os }}-nuget
+            ${{ runner.os }}-nuget-
       - name: Download artifact
         uses: actions/download-artifact@158ca71f7c614ae705e79f25522ef4658df18253
         with:
@@ -461,9 +461,9 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
         restore-keys: |
-          ${{ runner.os }}-nuget
+          ${{ runner.os }}-nuget-
     - name: Build
       run: |
         cd samples/csharp/ReferenceApp
@@ -484,7 +484,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
       run: go get gotest.tools/gotestsum
@@ -521,7 +521,7 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
           restore-keys: ${{ runner.os }}-go-
       - name: Publish Go Secure Memory
         run: |
@@ -554,7 +554,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
       run: go get gotest.tools/gotestsum
@@ -591,7 +591,7 @@ jobs:
         uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
         with:
           path: /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
           restore-keys: ${{ runner.os }}-go-
       - name: Publish Go App Encryption
         run: |
@@ -617,7 +617,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
       run: go get gotest.tools/gotestsum
@@ -644,7 +644,7 @@ jobs:
       uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
       with:
         path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
       run: go get gotest.tools/gotestsum
@@ -702,7 +702,7 @@ jobs:
           ~/.cache
           ~/.m2
           ~/go/pkg/mod
-        key: ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+        key: ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
         restore-keys: |
           ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
           ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-
@@ -772,7 +772,7 @@ jobs:
           ~/.m2
           ~/.nuget
           ~/go/pkg/mod
-        key: ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+        key: ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
         restore-keys: |
           ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
           ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-
