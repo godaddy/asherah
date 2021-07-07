@@ -4,6 +4,8 @@
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
