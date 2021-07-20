@@ -127,6 +127,42 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadRevokedKey(b *testing.B) {
 	})
 }
 
+func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B) {
+	var (
+		c       = newKeyCache(NewCryptoPolicy())
+		created = time.Now().Add(-(time.Minute * 100)).Unix()
+	)
+
+	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("testing"))
+
+	assert.NoError(b, err)
+
+	cacheEntry := cacheEntry{
+		key:      key,
+		loadedAt: time.Unix(created, 0),
+	}
+
+	defer c.Close()
+	c.keys[cacheKey(testKey, created)] = cacheEntry
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := c.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
+				// Note: this furction should only happen on first load (although could execute more than once currently), if it doesn't, then something is broken
+
+				// Add a delay to simulate time spent in performing a metastore read
+				time.Sleep(5 * time.Millisecond)
+
+				return internal.NewCryptoKey(secretFactory, created, false, []byte("testing"))
+			}))
+
+			assert.NoError(b, err)
+			assert.Equal(b, created, c.keys[cacheKey(testKey, 0)].key.Created())
+
+		}
+	})
+}
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 	var (
 		c = newKeyCache(NewCryptoPolicy())
