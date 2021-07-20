@@ -100,11 +100,12 @@ func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey,
 	c.rw.RLock()
 	k, ok := c.get(id)
 	c.rw.RUnlock()
+
 	if ok {
 		return k, nil
 	}
 
-	// load
+	// load with heavy lock
 	c.rw.Lock()
 	defer c.rw.Unlock()
 	// exit early if the key doesn't need to be reloaded just in case it has been loaded by rw lock in front of us

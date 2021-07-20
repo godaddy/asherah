@@ -211,20 +211,20 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredB
 		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
 
 		reloadedKey, e := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
-		if assert.NoError(suite.T(), e) {
-			key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
-				return reloadedKey, nil
-			}))
+		assert.NoError(suite.T(), e)
 
-			assert.NoError(suite.T(), err)
-			assert.NotNil(suite.T(), key)
-			assert.Equal(suite.T(), created, key.Created())
-			assert.Greater(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].loadedAt.Unix(), created)
+		key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+			return reloadedKey, nil
+		}))
 
-			// Verify we closed the new one we loaded and kept the cached one open
-			assert.True(suite.T(), reloadedKey.IsClosed())
-			assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].key.IsClosed())
-		}
+		assert.NoError(suite.T(), err)
+		assert.NotNil(suite.T(), key)
+		assert.Equal(suite.T(), created, key.Created())
+		assert.Greater(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].loadedAt.Unix(), created)
+
+		// Verify we closed the new one we loaded and kept the cached one open
+		assert.True(suite.T(), reloadedKey.IsClosed())
+		assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].key.IsClosed())
 	}
 }
 

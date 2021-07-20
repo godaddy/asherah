@@ -163,7 +163,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 			if created != k.Created() {
 				b.Error("created mismatch")
 			}
-
 		}
 	})
 }
