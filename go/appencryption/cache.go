@@ -96,6 +96,18 @@ func isReloadRequired(entry cacheEntry, checkInterval time.Duration) bool {
 // is not present in the cache it will retrieve the key using the provided keyLoader
 // and store the key if an error is not returned.
 func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
+	// get with "light" lock
+	c.rw.RLock()
+	k, ok := c.get(id)
+	c.rw.RUnlock()
+	if ok {
+		return k, nil
+	}
+
+	// load
+	c.rw.Lock()
+	defer c.rw.Unlock()
+	// exit early if the key doesn't need to be reloaded just in case it has been loaded by rw lock in front of us
 	if k, ok := c.get(id); ok {
 		return k, nil
 	}
@@ -109,9 +121,6 @@ func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey,
 // The second return value indicates the successful retrieval of a
 // fresh key.
 func (c *keyCache) get(id KeyMeta) (*internal.CryptoKey, bool) {
-	c.rw.RLock()
-	defer c.rw.RUnlock()
-
 	key := cacheKey(id.ID, id.Created)
 
 	if e, ok := c.read(key); ok && !isReloadRequired(e, c.policy.RevokeCheckInterval) {
@@ -127,9 +136,6 @@ func (c *keyCache) get(id KeyMeta) (*internal.CryptoKey, bool) {
 // load maintains the latest entry for each distinct ID which can be accessed using
 // id.Created == 0.
 func (c *keyCache) load(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
-	c.rw.Lock()
-	defer c.rw.Unlock()
-
 	key := cacheKey(id.ID, id.Created)
 
 	k, err := loader.Load()
