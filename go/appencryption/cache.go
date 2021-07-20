@@ -111,6 +111,7 @@ func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey,
 func (c *keyCache) get(id KeyMeta) (*internal.CryptoKey, bool) {
 	c.rw.RLock()
 	defer c.rw.RUnlock()
+
 	key := cacheKey(id.ID, id.Created)
 
 	if e, ok := c.read(key); ok && !isReloadRequired(e, c.policy.RevokeCheckInterval) {

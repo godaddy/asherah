@@ -149,7 +149,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := c.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
-				// Note: this furction should only happen on first load (although could execute more than once currently), if it doesn't, then something is broken
+				// Note: this function should only happen on first load (although could execute more than once currently), if it doesn't, then something is broken
 
 				// Add a delay to simulate time spent in performing a metastore read
 				time.Sleep(5 * time.Millisecond)
@@ -163,6 +163,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 		}
 	})
 }
+
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 	var (
 		c = newKeyCache(NewCryptoPolicy())
