@@ -198,6 +198,37 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredA
 	}
 }
 
+func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredButNotRevoked() {
+	var created = time.Now().Add(-2 * suite.policy.RevokeCheckInterval).Unix()
+	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
+
+	if assert.NoError(suite.T(), err) {
+		entry := cacheEntry{
+			key:      key,
+			loadedAt: time.Unix(created, 0),
+		}
+
+		suite.keyCache.keys[cacheKey(testKey, created)] = entry
+		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+
+		reloadedKey, e := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
+		assert.NoError(suite.T(), e)
+
+		key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+			return reloadedKey, nil
+		}))
+
+		assert.NoError(suite.T(), err)
+		assert.NotNil(suite.T(), key)
+		assert.Equal(suite.T(), created, key.Created())
+		assert.Greater(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].loadedAt.Unix(), created)
+
+		// Verify we closed the new one we loaded and kept the cached one open
+		assert.True(suite.T(), reloadedKey.IsClosed())
+		assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].key.IsClosed())
+	}
+}
+
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyNoReloadRequired() {
 	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
 		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
