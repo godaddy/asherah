@@ -46,5 +46,6 @@ func setRdbmsReplicaReadConsistencyValue(value string) (err error) {
 			_, err = dbconnection.Exec(ReplicaReadConsistencyQuery, value)
 		}
 	}
+
 	return
 }

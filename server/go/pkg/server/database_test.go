@@ -15,7 +15,8 @@ var (
 	readConsistencyValue string
 )
 
-type FakeResult struct {}
+type FakeResult struct {
+}
 
 func (r *FakeResult) LastInsertId() (int64, error) {
 	return 0, nil
@@ -38,10 +39,10 @@ func (c *FakeConn) Close() error {
 
 func (c *FakeConn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	result := &FakeResult{}
-	switch query {
-	case ReplicaReadConsistencyQuery:
+	if query == ReplicaReadConsistencyQuery {
 		readConsistencyValue = fmt.Sprintf("%v", args[0].Value)
 	}
+
 	return result, nil
 }
 
