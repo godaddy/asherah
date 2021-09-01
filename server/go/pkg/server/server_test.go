@@ -345,6 +345,7 @@ func Test_NewAppEncryption(t *testing.T) {
 	// using a variety of configuration options.
 	optCombos := []*Options{
 		{KMS: "aws", Metastore: "rdbms"},
+		{KMS: "aws", Metastore: "rdbms", ReplicaReadConsistency: "session"},
 		{KMS: "aws", Metastore: "dynamodb"},
 		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1"},
 		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000"},
