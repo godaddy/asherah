@@ -39,6 +39,7 @@ func (c *FakeConn) Close() error {
 
 func (c *FakeConn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	result := &FakeResult{}
+
 	if query == ReplicaReadConsistencyQuery {
 		readConsistencyValue = fmt.Sprintf("%v", args[0].Value)
 	}
