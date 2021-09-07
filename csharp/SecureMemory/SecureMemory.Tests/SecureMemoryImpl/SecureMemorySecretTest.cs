@@ -5,25 +5,24 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemorySecretTest : IDisposable
+    public class SecureMemorySecretTest : IDisposable
     {
-        private readonly Mock<ISecureMemoryAllocator> protectedMemoryAllocatorMock =
+        private readonly Mock<ISecureMemoryAllocator> secureMemoryAllocatorMock =
             new Mock<ISecureMemoryAllocator>();
 
         private readonly IConfiguration configuration;
 
-        public ProtectedMemorySecretTest()
+        public SecureMemorySecretTest()
         {
             Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
@@ -38,12 +37,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 .AddInMemoryCollection(configDictionary)
                 .Build();
 
-            Debug.WriteLine("\nProtectedMemorySecretTest ctor");
+            Debug.WriteLine("\nSecureMemorySecretTest ctor");
         }
 
         public void Dispose()
         {
-            Debug.WriteLine("ProtectedMemorySecretTest End\n");
+            Debug.WriteLine("SecureMemorySecretTest End\n");
         }
 
         [Theory]
@@ -51,7 +50,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestNullConfiguration(ISecureMemoryAllocator protectedMemoryAllocator)
         {
             Debug.WriteLine("TestNullConfiguration");
-            using (var secret = new ProtectedMemorySecret(new byte[] { 0, 1 }, protectedMemoryAllocator, null))
+            using (var secret = new SecureMemorySecret(new byte[] { 0, 1 }, protectedMemoryAllocator, null))
             {
             }
         }
@@ -60,10 +59,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestConstructorWithAllocatorReturnsNullShouldFail()
         {
             Debug.WriteLine("TestConstructorWithAllocatorReturnsNullShouldFail");
-            protectedMemoryAllocatorMock.Setup(x => x.Alloc(It.IsAny<ulong>())).Returns(IntPtr.Zero);
+            secureMemoryAllocatorMock.Setup(x => x.Alloc(It.IsAny<ulong>())).Returns(IntPtr.Zero);
             Assert.Throws<SecureMemoryAllocationFailedException>(() =>
             {
-                using (var secret = new ProtectedMemorySecret(new byte[] { 0, 1 }, protectedMemoryAllocatorMock.Object, configuration))
+                using (var secret = new SecureMemorySecret(new byte[] { 0, 1 }, secureMemoryAllocatorMock.Object, configuration))
                 {
                 }
             });
@@ -75,8 +74,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretBytesAction");
             byte[] secretBytes = { 0, 1 };
-            using (ProtectedMemorySecret secret =
-                new ProtectedMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                new SecureMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretBytes(decryptedBytes =>
                 {
@@ -91,8 +90,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretBytesSuccess");
             byte[] secretBytes = { 0, 1 };
-            using (ProtectedMemorySecret secret =
-                new ProtectedMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                new SecureMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretBytes(decryptedBytes =>
                 {
@@ -108,8 +107,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretBytesWithClosedSecretShouldFail");
             byte[] secretBytes = { 0, 1 };
-            ProtectedMemorySecret secret =
-                new ProtectedMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration);
+            SecureMemorySecret secret =
+                new SecureMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration);
             secret.Close();
             Assert.Throws<InvalidOperationException>(() => { secret.WithSecretBytes(decryptedBytes => true); });
         }
@@ -120,8 +119,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretUtf8CharsAction");
             char[] secretChars = { 'a', 'b' };
-            using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {
@@ -136,8 +135,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretUtf8CharsSuccess");
             char[] secretChars = { 'a', 'b' };
-            using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretUtf8Chars(decryptedChars =>
                 {
@@ -153,8 +152,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretIntPtrSuccess");
             char[] secretChars = { 'a', 'b' };
-            using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretIntPtr((ptr, len) =>
                 {
@@ -171,8 +170,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretIntPtrDisposed");
             char[] secretChars = { 'a', 'b' };
-            ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration);
+            SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration);
 
             secret.Dispose();
             Assert.Throws<InvalidOperationException>(() =>
@@ -190,8 +189,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretIntPtrActionSuccess");
             char[] secretChars = { 'a', 'b' };
-            using (ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration))
             {
                 secret.WithSecretIntPtr((ptr, len) =>
                 {
@@ -207,8 +206,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestWithSecretUtf8CharsWithClosedSecretShouldFail");
             char[] secretChars = { 'a', 'b' };
-            ProtectedMemorySecret secret =
-                ProtectedMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration);
+            SecureMemorySecret secret =
+                SecureMemorySecret.FromCharArray(secretChars, protectedMemoryAllocator, configuration);
             secret.Close();
             Assert.Throws<InvalidOperationException>(() => { secret.WithSecretUtf8Chars(decryptedChars => true); });
         }
@@ -219,10 +218,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("TestCopySecret");
             byte[] secretBytes = { 0, 1 };
-            using (ProtectedMemorySecret secret =
-                new ProtectedMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
+            using (SecureMemorySecret secret =
+                new SecureMemorySecret((byte[])secretBytes.Clone(), protectedMemoryAllocator, configuration))
             {
-                using (ProtectedMemorySecret secretCopy = (ProtectedMemorySecret)secret.CopySecret())
+                using (SecureMemorySecret secretCopy = (SecureMemorySecret)secret.CopySecret())
                 {
                     secretCopy.WithSecretBytes(decryptedBytes =>
                     {
@@ -241,11 +240,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSSecureMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
 
-                ProtectedMemorySecret secret =
-                    new ProtectedMemorySecret(secretBytes, protectedMemoryAllocatorMacOSMock.Object, configuration);
+                SecureMemorySecret secret =
+                    new SecureMemorySecret(secretBytes, protectedMemoryAllocatorMacOSMock.Object, configuration);
                 secret.Close();
                 secret.Close();
                 protectedMemoryAllocatorMacOSMock.Verify(
@@ -253,11 +252,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
+                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxSecureMemoryAllocatorLP64> { CallBase = true };
 
-                ProtectedMemorySecret secret =
-                    new ProtectedMemorySecret(secretBytes, protectedMemoryAllocatorLinuxMock.Object, configuration);
+                SecureMemorySecret secret =
+                    new SecureMemorySecret(secretBytes, protectedMemoryAllocatorLinuxMock.Object, configuration);
                 secret.Close();
                 secret.Close();
                 protectedMemoryAllocatorLinuxMock.Verify(
@@ -275,8 +274,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSSecureMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
 
                 protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
@@ -285,8 +284,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
+                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxSecureMemoryAllocatorLP64> { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
@@ -300,8 +299,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
 
             Assert.Throws<Exception>(() =>
             {
-                using ProtectedMemorySecret secret =
-                    new ProtectedMemorySecret(secretBytes, allocator, configuration);
+                using SecureMemorySecret secret =
+                    new SecureMemorySecret(secretBytes, allocator, configuration);
             });
         }
 
@@ -315,33 +314,33 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSSecureMemoryAllocatorLP64> secureMemoryAllocatorMacOSMock =
+                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
 
-                protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
+                secureMemoryAllocatorMacOSMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
 
-                allocator = protectedMemoryAllocatorMacOSMock.Object;
+                allocator = secureMemoryAllocatorMacOSMock.Object;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>(configuration) { CallBase = true };
+                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxSecureMemoryAllocatorLP64>(configuration) { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
 
-                allocator = protectedMemoryAllocatorLinuxMock.Object;
+                allocator = secureMemoryAllocatorMock.Object;
             }
             else
             {
                 return;
             }
 
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<SecureMemoryAllocationFailedException>(() =>
             {
-                using ProtectedMemorySecret secret =
-                    new ProtectedMemorySecret(secretBytes, allocator, configuration);
+                using SecureMemorySecret secret =
+                    new SecureMemorySecret(secretBytes, allocator, configuration);
             });
         }
 
@@ -350,7 +349,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestWithSecretBytesMultiThreadedAccess()
         {
             Debug.WriteLine("TestWithSecretBytesMultiThreadedAccess start");
-            using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
+            using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
             {
                 byte[] secretBytes = { 0, 1, 2, 3 };
                 Debug.WriteLine("Creating secret");

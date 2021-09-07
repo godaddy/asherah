@@ -1,17 +1,16 @@
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.Tests
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemoryAllocationFailedTest
+    public class SecureMemoryAllocationFailedTest
     {
         private const string Message = "Failure message";
 
         [Fact]
         private void ProtectedMemoryAllocationFailedConstructorTest()
         {
-            ProtectedMemoryAllocationFailedException exception = new ProtectedMemoryAllocationFailedException(Message);
+            SecureMemoryAllocationFailedException exception = new SecureMemoryAllocationFailedException(Message);
             Assert.Equal(Message, exception.Message);
         }
     }
