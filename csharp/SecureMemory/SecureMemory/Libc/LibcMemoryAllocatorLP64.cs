@@ -2,19 +2,19 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
+namespace GoDaddy.Asherah.SecureMemory.Libc
 {
-    internal abstract class LibcSecureMemoryAllocatorLP64 : ISecureMemoryAllocator
+    internal abstract class LibcMemoryAllocatorLP64 : ISecureMemoryAllocator
     {
-        private static long memoryLocked;
-        private readonly LibcLP64 libc;
+        private LibcLP64 libc;
         private bool globallyDisabledCoreDumps = false;
 
-        protected LibcSecureMemoryAllocatorLP64(LibcLP64 libc)
+        protected LibcMemoryAllocatorLP64(LibcLP64 libc)
         {
             this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
         }
@@ -34,47 +34,13 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
             Check.Zero(libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
         }
 
+        public abstract IntPtr Alloc(ulong length);
+
+        public abstract void Free(IntPtr pointer, ulong length);
+
         public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
             Check.Zero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
-        }
-
-        // ************************************
-        // alloc / free
-        // ************************************
-        public virtual IntPtr Alloc(ulong length)
-        {
-            // Some platforms may require fd to be -1 even if using anonymous
-            IntPtr secureMemory = libc.mmap(
-                IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
-
-            Check.IntPtr(secureMemory, "mmap");
-            SetNoDump(secureMemory, length);
-
-            return secureMemory;
-        }
-
-        public virtual void Free(IntPtr pointer, ulong length)
-        {
-            try
-            {
-                // Wipe the protected memory (assumes memory was made writeable)
-                ZeroMemory(pointer, length);
-            }
-            finally
-            {
-                try
-                {
-                    Interlocked.Add(ref memoryLocked, 0 - (long)length);
-                }
-                finally
-                {
-                    // Regardless of whether or not we successfully unlock, unmap
-
-                    // Free (unmap) the protected memory
-                    Check.Zero(libc.munmap(pointer, length), "munmap");
-                }
-            }
         }
 
         public abstract void Dispose();

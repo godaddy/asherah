@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
@@ -13,7 +14,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
     {
         // Detect methods should throw if they know for sure what the OS/platform is, but it isn't supported
         // Detect methods should return null if they don't know for sure what the OS/platform is
-        private static IProtectedMemoryAllocator allocator;
+        private static ISecureMemoryAllocator allocator;
         private static int refCount = 0;
         private static object allocatorLock = new object();
         private readonly IConfiguration configuration;
@@ -83,7 +84,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -107,7 +108,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -180,7 +181,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return null;
         }
 
-        private static IProtectedMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
+        private static ISecureMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
         {
             if (configuration != null)
             {
@@ -210,7 +211,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return new LinuxProtectedMemoryAllocatorLP64();
         }
 
-        private static IProtectedMemoryAllocator ConfigureForMacOS64(IConfiguration configuration)
+        private static ISecureMemoryAllocator ConfigureForMacOS64(IConfiguration configuration)
         {
             if (configuration != null)
             {
@@ -236,7 +237,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectOsDescription(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectOsDescription(IConfiguration configuration)
         {
             var desc = RuntimeInformation.OSDescription;
             if (desc.IndexOf("Linux", StringComparison.OrdinalIgnoreCase) != -1)

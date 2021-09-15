@@ -58,31 +58,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             libcProtectedMemoryAllocator?.Dispose();
         }
 
-        [SkippableFact]
-        private void TestDisableCoreDumpGlobally()
-        {
-            Skip.If(libc == null);
-
-            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestDisableCoreDumpGlobally");
-
-            // Mac allocator has global core dumps disabled on init
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Assert.False(libcProtectedMemoryAllocator.AreCoreDumpsGloballyDisabled());
-                libc.getrlimit(libcProtectedMemoryAllocator.GetRlimitCoreResource(), out var rlim);
-
-                // Initial values here system dependent, assumes docker container spun up w/ unlimited
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_max);
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_cur);
-            }
-
-            libcProtectedMemoryAllocator.DisableCoreDumpGlobally();
-            Assert.True(libcProtectedMemoryAllocator.AreCoreDumpsGloballyDisabled());
-            rlimit zeroRlimit = rlimit.Zero();
-            libc.getrlimit(libcProtectedMemoryAllocator.GetRlimitCoreResource(), out var newRlimit);
-            Assert.Equal(zeroRlimit.rlim_cur, newRlimit.rlim_cur);
-            Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
-        }
 
         [SkippableFact]
         private void TestAllocWithResourceLimitZeroShouldFail()

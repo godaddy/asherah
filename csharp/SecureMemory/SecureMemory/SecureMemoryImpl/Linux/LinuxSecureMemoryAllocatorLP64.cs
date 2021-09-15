@@ -26,7 +26,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux
         public LinuxSecureMemoryAllocatorLP64()
             : base(new LinuxLibcLP64())
         {
-            Debug.WriteLine("LinuxProtectedMemoryAllocatorLP64 ctor");
+            Debug.WriteLine("LinuxSecureMemoryAllocatorLP64 ctor");
             libc = (LinuxLibcLP64)GetLibc();
         }
 
@@ -45,16 +45,16 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux
             return (int)RlimitResource.RLIMIT_CORE;
         }
 
-        internal override void SetNoDump(IntPtr protectedMemory, ulong length)
+        internal override void SetNoDump(IntPtr secureMemory, ulong length)
         {
-            Check.IntPtr(protectedMemory, "SetNoDump");
+            Check.IntPtr(secureMemory, "SetNoDump");
             if (length == 0)
             {
                 throw new Exception("SetNoDump: Invalid length");
             }
 
             // Calculate the 4KB page aligned pointer for madvise
-            long addr = protectedMemory.ToInt64();
+            long addr = secureMemory.ToInt64();
             if (addr % pageSize != 0)
             {
                 addr -= addr % pageSize;
@@ -63,7 +63,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux
             IntPtr pagePointer = new IntPtr(addr);
 
             // Enable selective core dump avoidance
-            Check.Zero(libc.madvise(pagePointer, length, (int)Madvice.MADV_DONTDUMP), $"madvise({protectedMemory}, {length}, MADV_DONTDUMP)");
+            Check.Zero(libc.madvise(pagePointer, length, (int)Madvice.MADV_DONTDUMP), $"madvise({secureMemory}, {length}, MADV_DONTDUMP)");
         }
 
         // These flags are platform specific in their integer values

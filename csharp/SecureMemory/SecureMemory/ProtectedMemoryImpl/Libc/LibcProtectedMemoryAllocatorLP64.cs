@@ -2,13 +2,14 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 {
-    internal abstract class LibcProtectedMemoryAllocatorLP64 : IProtectedMemoryAllocator
+    internal abstract class LibcProtectedMemoryAllocatorLP64 : ISecureMemoryAllocator
     {
         private static long resourceLimit;
         private static long memoryLocked;

@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
@@ -15,7 +14,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Libc
 {
     /// <summary>
     /// These tests are a bit impure and expect the platform to be based on libc implementations
-    /// Pure tests have been promoted to ProtectedMemoryAllocatorTest.cs
+    /// Pure tests have been promoted to SecureMemoryAllocatorTest.cs
     /// </summary>
     [Collection("Logger Fixture collection")]
     public class LibcSecureMemoryAllocatorTest : IDisposable
@@ -56,32 +55,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Libc
         {
             Debug.WriteLine("LibcSecureMemoryAllocatorTest.Dispose");
             libcSecureMemoryAllocator?.Dispose();
-        }
-
-        [SkippableFact]
-        private void TestDisableCoreDumpGlobally()
-        {
-            Skip.If(libc == null);
-
-            Debug.WriteLine("LibcSecureMemoryAllocatorTest.TestDisableCoreDumpGlobally");
-
-            // Mac allocator has global core dumps disabled on init
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Assert.False(libcSecureMemoryAllocator.AreCoreDumpsGloballyDisabled());
-                libc.getrlimit(libcSecureMemoryAllocator.GetRlimitCoreResource(), out var rlim);
-
-                // Initial values here system dependent, assumes docker container spun up w/ unlimited
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_max);
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_cur);
-            }
-
-            libcSecureMemoryAllocator.DisableCoreDumpGlobally();
-            Assert.True(libcSecureMemoryAllocator.AreCoreDumpsGloballyDisabled());
-            rlimit zeroRlimit = rlimit.Zero();
-            libc.getrlimit(libcSecureMemoryAllocator.GetRlimitCoreResource(), out var newRlimit);
-            Assert.Equal(zeroRlimit.rlim_cur, newRlimit.rlim_cur);
-            Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
         }
 
         [SkippableFact]

@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void ProtectedMemoryExceptionConstructorTest()
         {
-            ProtectedMemoryException exception = new ProtectedMemoryException(Message);
+            SecureMemoryException exception = new SecureMemoryException(Message);
             Assert.Equal(Message, exception.Message);
         }
     }

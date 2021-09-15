@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS
         }
 
         // Platform specific blocking memory from core dump
-        internal override void SetNoDump(IntPtr protectedMemory, ulong length)
+        internal override void SetNoDump(IntPtr secureMemory, ulong length)
         {
             // MacOS doesn't have madvise(MAP_DONTDUMP) so we have to disable core dumps globally
             if (!AreCoreDumpsGloballyDisabled())

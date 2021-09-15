@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -17,7 +16,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        private readonly IProtectedMemoryAllocator protectedMemoryAllocator;
+        private readonly ISecureMemoryAllocator protectedMemoryAllocator;
         private IConfiguration configuration;
 
         public ProtectedMemoryAllocatorTest()
@@ -42,7 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocator.Dispose();
         }
 
-        internal IProtectedMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
+        internal ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -100,7 +99,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             try
             {
                 protectedMemoryAllocator.SetReadWriteAccess(pointer, 1);
-                CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
+                CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
                 // Verifies we can write and read back
                 Marshal.WriteByte(pointer, 0, 42);
@@ -117,7 +116,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         {
             Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
-            CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
+            CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
             try
             {

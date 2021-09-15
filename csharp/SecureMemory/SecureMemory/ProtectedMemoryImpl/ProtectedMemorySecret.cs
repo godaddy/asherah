@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -15,7 +16,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         private readonly ReaderWriterLockSlim pointerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private readonly object accessLock = new object();
         private readonly ulong length;
-        private readonly IProtectedMemoryAllocator allocator;
+        private readonly ISecureMemoryAllocator allocator;
         private readonly IConfiguration configuration;
         private readonly bool requireSecretDisposal;
         private IntPtr pointer;
@@ -25,7 +26,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         // access. If that changes, update the counter accordingly!
         private long accessCounter = 0;
 
-        internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator, IConfiguration configuration)
+        internal ProtectedMemorySecret(byte[] sourceBytes, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecret ctor");
             this.allocator = allocator;
@@ -49,7 +50,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (pointer == IntPtr.Zero)
             {
-                throw new ProtectedMemoryAllocationFailedException("Protected memory allocation failed");
+                throw new SecureMemoryAllocationFailedException("Protected memory allocation failed");
             }
 
             try
@@ -190,7 +191,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             GC.SuppressFinalize(this);
         }
 
-        internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, IProtectedMemoryAllocator allocator, IConfiguration configuration)
+        internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
             byte[] sourceBytes = Encoding.UTF8.GetBytes(sourceChars);
             try

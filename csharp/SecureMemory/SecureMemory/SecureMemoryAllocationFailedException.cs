@@ -1,4 +1,4 @@
-namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
     public class SecureMemoryAllocationFailedException : SecureMemoryException
     {

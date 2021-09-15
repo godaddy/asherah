@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
     public class SecureMemoryException : SystemException
     {

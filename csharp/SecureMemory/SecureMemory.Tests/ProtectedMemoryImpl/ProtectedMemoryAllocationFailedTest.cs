@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         [Fact]
         private void ProtectedMemoryAllocationFailedConstructorTest()
         {
-            ProtectedMemoryAllocationFailedException exception = new ProtectedMemoryAllocationFailedException(Message);
+            SecureMemoryAllocationFailedException exception = new SecureMemoryAllocationFailedException(Message);
             Assert.Equal(Message, exception.Message);
         }
     }
