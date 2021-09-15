@@ -85,42 +85,66 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
         [SkippableFact]
-        private void TestAlocWithResourceLimitZero()
+        private void TestAllocWithResourceLimitZeroShouldFail()
         {
             Skip.If(libc == null);
 
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
-
-            var allocator = allocatorMock.Object;
-            Assert.Throws<MemoryLimitException>(() =>
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                allocator.Alloc(1);
-            });
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
+                Assert.Throws<MemoryLimitException>(() =>
+                {
+                    allocatorMock.Object.Alloc(1);
+                });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
+                Assert.Throws<MemoryLimitException>(() =>
+                {
+                    allocatorMock.Object.Alloc(1);
+                });
+            }
         }
 
         [SkippableFact]
-        private void TestAlocWithResourceLimitMaxValue()
+        private void TestAllocWithResourceLimitMaxValueShouldSucceed()
         {
             Skip.If(libc == null);
 
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
-
-            var allocator = allocatorMock.Object;
-            allocator.Alloc(1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
+                allocatorMock.Object.Alloc(1);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
+                allocatorMock.Object.Alloc(1);
+            }
         }
 
         [SkippableFact]
-        private void TestAlocWithResourceLimitLargeValue()
+        private void TestAllocWithResourceLimitLargeValueShouldSucceed()
         {
             Skip.If(libc == null);
 
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
-
-            var allocator = allocatorMock.Object;
-            allocator.Alloc(1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Object.Alloc(1);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Object.Alloc(1);
+            }
         }
 
         [SkippableFact]

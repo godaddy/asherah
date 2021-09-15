@@ -45,18 +45,38 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [SkippableFact]
-        private void TestOpenSSLConfiguration()
+        private void TestOpenSSLConfigurationLinux()
         {
-            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                {"secureHeapEngine", "openssl11"}
+            }).Build();
+
+            Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestOpenSSLConfigurationLinux");
+            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            {
+            }
+        }
+
+        [SkippableFact]
+        private void TestOpenSSLConfigurationMacOS()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
+
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
                 {"secureHeapEngine", "openssl11"}
             }).Build();
 
             Debug.WriteLine("ProtectedMemorySecretFactoryTest.TestOpenSSLConfiguration");
-            using (var factory = new ProtectedMemorySecretFactory(configuration))
+            Assert.Throws<PlatformNotSupportedException>(() =>
             {
-            }
+                using (var factory = new ProtectedMemorySecretFactory(configuration))
+                {
+                }
+            });
         }
 
         [Fact]

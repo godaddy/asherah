@@ -141,7 +141,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on macOS X64 or Arm64");
                         }
 
-                        return new MacOSProtectedMemoryAllocatorLP64();
+                        return ConfigureForMacOS64(configuration);
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture macOS X86");
                     case Architecture.Arm:
@@ -208,6 +208,31 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             }
 
             return new LinuxProtectedMemoryAllocatorLP64();
+        }
+
+        private static IProtectedMemoryAllocator ConfigureForMacOS64(IConfiguration configuration)
+        {
+            if (configuration != null)
+            {
+                var secureHeapEngine = configuration["secureHeapEngine"];
+                if (!string.IsNullOrWhiteSpace(secureHeapEngine))
+                {
+                    if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        throw new PlatformNotSupportedException(
+                            "OpenSSL 1.1 selected for secureHeapEngine but is not yet supported for MacOS");
+                    }
+
+                    if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        return new MacOSProtectedMemoryAllocatorLP64();
+                    }
+
+                    throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
+                }
+            }
+
+            return new MacOSProtectedMemoryAllocatorLP64();
         }
 
         [ExcludeFromCodeCoverage]
