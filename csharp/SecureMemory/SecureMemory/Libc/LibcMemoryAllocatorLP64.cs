@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 
@@ -11,12 +10,14 @@ namespace GoDaddy.Asherah.SecureMemory.Libc
 {
     internal abstract class LibcMemoryAllocatorLP64 : ISecureMemoryAllocator
     {
-        private LibcLP64 libc;
-        private bool globallyDisabledCoreDumps = false;
+        #pragma warning disable SA1401
+        internal LibcLP64 Libc;
+        #pragma warning restore SA1401
+        private bool globallyDisabledCoreDumps;
 
         protected LibcMemoryAllocatorLP64(LibcLP64 libc)
         {
-            this.libc = libc ?? throw new ArgumentNullException(nameof(libc));
+            Libc = libc ?? throw new ArgumentNullException(nameof(libc));
         }
 
         // Implementation order of preference:
@@ -26,12 +27,12 @@ namespace GoDaddy.Asherah.SecureMemory.Libc
         // bzero (Linux, same guarantees as explicit_bzero)
         public virtual void SetNoAccess(IntPtr pointer, ulong length)
         {
-            Check.Zero(libc.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
+            Check.Zero(Libc.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
         }
 
         public virtual void SetReadAccess(IntPtr pointer, ulong length)
         {
-            Check.Zero(libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
+            Check.Zero(Libc.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
         }
 
         public abstract IntPtr Alloc(ulong length);
@@ -40,7 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Libc
 
         public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
         {
-            Check.Zero(libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
+            Check.Zero(Libc.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
         }
 
         public abstract void Dispose();
@@ -59,7 +60,7 @@ namespace GoDaddy.Asherah.SecureMemory.Libc
 
         internal void DisableCoreDumpGlobally()
         {
-            Check.Zero(libc.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
+            Check.Zero(Libc.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
 
             globallyDisabledCoreDumps = true;
         }
@@ -79,7 +80,7 @@ namespace GoDaddy.Asherah.SecureMemory.Libc
 
         protected LibcLP64 GetLibc()
         {
-            return libc;
+            return Libc;
         }
     }
 }
