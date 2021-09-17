@@ -2,24 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
 {
     [Collection("Logger Fixture collection")]
-    public class ProtectedMemoryAllocatorTest : IDisposable
+    public class SecureMemoryAllocatorTest : IDisposable
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        private readonly ISecureMemoryAllocator protectedMemoryAllocator;
+        private readonly ISecureMemoryAllocator secureMemoryAllocator;
         private IConfiguration configuration;
 
-        public ProtectedMemoryAllocatorTest()
+        public SecureMemoryAllocatorTest()
         {
             Trace.Listeners.Clear();
             var consoleListener = new ConsoleTraceListener();
@@ -31,29 +30,25 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
                 {"minimumAllocationSize", "128"},
             }).Build();
 
-            Debug.WriteLine("ProtectedMemoryAllocatorTest ctor");
-            protectedMemoryAllocator = GetPlatformAllocator(configuration);
+            Debug.WriteLine("SecureMemoryAllocatorTest ctor");
+            secureMemoryAllocator = GetPlatformAllocator(configuration);
         }
 
         public void Dispose()
         {
-            Debug.WriteLine("ProtectedMemoryAllocatorTest.Dispose");
-            protectedMemoryAllocator.Dispose();
+            Debug.WriteLine("SecureMemoryAllocatorTest.Dispose");
+            secureMemoryAllocator.Dispose();
         }
 
         internal ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return new LinuxProtectedMemoryAllocatorLP64();
+                return new LinuxSecureMemoryAllocatorLP64();
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return new MacOSProtectedMemoryAllocatorLP64();
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return new WindowsProtectedMemoryAllocatorVirtualAlloc(configuration);
+                return new MacOSSecureMemoryAllocatorLP64();
             }
             else
             {
@@ -80,11 +75,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             allocator2.Dispose();
         }
 
+
         [Fact]
         private void TestAllocSuccess()
         {
-            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
-            IntPtr pointer = protectedMemoryAllocator.Alloc(1);
+            Debug.WriteLine("SecureMemoryAllocatorTest.TestAllocSuccess");
+            IntPtr pointer = secureMemoryAllocator.Alloc(1);
             CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
             try
@@ -95,7 +91,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             }
             finally
             {
-                protectedMemoryAllocator.Free(pointer, 1);
+                secureMemoryAllocator.Free(pointer, 1);
             }
         }
     }

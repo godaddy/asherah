@@ -22,7 +22,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.Libc
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            Debug.WriteLine("LibcSecureMemoryAllocatorTest ctor");
+            Debug.WriteLine("LibcMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 libc = new LinuxLibcLP64();
@@ -44,7 +44,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.Libc
         {
             Skip.If(libc == null);
 
-            Debug.WriteLine("LibcSecureMemoryAllocatorTest.TestDisableCoreDumpGlobally");
+            Debug.WriteLine("LibcMemoryAllocatorTest.TestDisableCoreDumpGlobally");
 
             // Mac allocator has global core dumps disabled on init
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -67,8 +67,38 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.Libc
 
         public void Dispose()
         {
-            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.Dispose");
+            Debug.WriteLine("LibcMemoryAllocatorTest.Dispose");
             libcMemoryAllocator?.Dispose();
+        }
+
+        [Fact]
+        private void TestSetNoAccess()
+        {
+        }
+
+        [Fact]
+        private void TestSetReadAccess()
+        {
+        }
+
+        [Fact]
+        private void TestSetReadWriteAccess()
+        {
+            Debug.WriteLine("SecureMemoryAllocatorTest.TestSetReadWriteAccess");
+            IntPtr pointer = libcMemoryAllocator.Alloc(1);
+
+            try
+            {
+                libcMemoryAllocator.SetReadWriteAccess(pointer, 1);
+
+                // Verifies we can write and read back
+                Marshal.WriteByte(pointer, 0, 42);
+                Assert.Equal(42, Marshal.ReadByte(pointer, 0));
+            }
+            finally
+            {
+                libcMemoryAllocator.Free(pointer, 1);
+            }
         }
     }
 }
