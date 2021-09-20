@@ -11,6 +11,7 @@ using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
+using GoDaddy.Asherah.SecureMemory;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -38,6 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
         private readonly ConcurrentDictionary<string, object> semaphoreLocks;
+        private readonly ISecretFactory secretFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionFactory"/> class.
@@ -54,13 +56,15 @@ namespace GoDaddy.Asherah.AppEncryption
         /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
         /// implementation that generates the top level master key and encrypts the system keys using the master key.
         /// </param>
+        /// <param name="secretFactory">The SecureMemory implementation to use.</param>
         public SessionFactory(
             string productId,
             string serviceId,
             IMetastore<JObject> metastore,
             SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
             CryptoPolicy cryptoPolicy,
-            KeyManagementService keyManagementService)
+            KeyManagementService keyManagementService,
+            ISecretFactory secretFactory)
         {
             this.productId = productId;
             this.serviceId = serviceId;
@@ -70,6 +74,7 @@ namespace GoDaddy.Asherah.AppEncryption
             this.keyManagementService = keyManagementService;
             semaphoreLocks = new ConcurrentDictionary<string, object>();
             SessionCache = new MemoryCache(new MemoryCacheOptions());
+            this.secretFactory = secretFactory;
         }
 
         public interface IMetastoreStep
@@ -128,7 +133,7 @@ namespace GoDaddy.Asherah.AppEncryption
             ///
             /// <returns>The current <see cref="IBuildStep"/> instance initialized with a
             /// <see cref="StaticKeyManagementServiceImpl"/> object.</returns>
-            IBuildStep WithStaticKeyManagementService(string staticMasterKey);
+            ISecretFactoryStep WithStaticKeyManagementService(string staticMasterKey);
 
             /// <summary>
             /// Initialize a session factory builder step with the provided key management service.
@@ -138,7 +143,25 @@ namespace GoDaddy.Asherah.AppEncryption
             ///
             /// <returns>The current <see cref="IBuildStep"/> instance initialized with some
             /// <see cref="keyManagementService"/> implementation.</returns>
-            IBuildStep WithKeyManagementService(KeyManagementService keyManagementService);
+            ISecretFactoryStep WithKeyManagementService(KeyManagementService keyManagementService);
+        }
+
+        public interface ISecretFactoryStep
+        {
+            /// <summary>
+            /// Initialize a session factory builder step with the provided metastore.
+            /// </summary>
+            /// <returns>The current <see cref="ICryptoPolicyStep"/> instance initialized with some
+            /// <see cref="IMetastore{T}"/> implementation.</returns>
+            IBuildStep WithDefaultSecretFactory();
+
+            /// <summary>
+            /// Initialize a session factory builder step with the provided metastore.
+            /// </summary>
+            /// <param name="secretFactory">The secret factory instance</param>
+            /// <returns>The current <see cref="ICryptoPolicyStep"/> instance initialized with some
+            /// <see cref="IMetastore{T}"/> implementation.</returns>
+            IBuildStep WithSecretFactory(ISecretFactory secretFactory);
         }
 
         public interface IBuildStep
@@ -445,7 +468,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
         }
 
-        private class Builder : IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
+        private class Builder : ISecretFactoryStep, IMetastoreStep, ICryptoPolicyStep, IKeyManagementServiceStep, IBuildStep
         {
             private readonly string productId;
             private readonly string serviceId;
@@ -454,6 +477,7 @@ namespace GoDaddy.Asherah.AppEncryption
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
             private IMetrics metrics;
+            private ISecretFactory secretFactory;
 
             internal Builder(string productId, string serviceId)
             {
@@ -485,13 +509,13 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public IBuildStep WithStaticKeyManagementService(string staticMasterKey)
+            public ISecretFactoryStep WithStaticKeyManagementService(string staticMasterKey)
             {
                 keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
                 return this;
             }
 
-            public IBuildStep WithKeyManagementService(KeyManagementService kms)
+            public ISecretFactoryStep WithKeyManagementService(KeyManagementService kms)
             {
                 keyManagementService = kms;
                 return this;
@@ -521,7 +545,20 @@ namespace GoDaddy.Asherah.AppEncryption
                     metastore,
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     cryptoPolicy,
-                    keyManagementService);
+                    keyManagementService,
+                    secretFactory);
+            }
+
+            public IBuildStep WithDefaultSecretFactory()
+            {
+                secretFactory = new TransientSecretFactory();
+                return this;
+            }
+
+            public IBuildStep WithSecretFactory(ISecretFactory secretFactory)
+            {
+                this.secretFactory = secretFactory;
+                return this;
             }
         }
     }

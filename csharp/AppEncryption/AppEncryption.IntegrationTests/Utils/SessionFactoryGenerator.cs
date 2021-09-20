@@ -23,6 +23,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
                 .WithMetastore(metastore)
                 .WithNeverExpiredCryptoPolicy()
                 .WithKeyManagementService(keyManagementService)
+                .WithDefaultSecretFactory()
                 .Build();
         }
     }

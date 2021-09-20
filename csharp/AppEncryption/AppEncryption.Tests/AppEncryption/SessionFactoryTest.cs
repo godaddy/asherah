@@ -10,6 +10,7 @@ using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Keys;
+using GoDaddy.Asherah.SecureMemory;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Newtonsoft.Json.Linq;
@@ -28,6 +29,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
         private readonly Mock<IMetastore<JObject>> metastoreMock;
         private readonly Mock<InMemoryMetastoreImpl<JObject>> metastoreSpy;
+        private readonly Mock<ISecretFactory> secretFactoryMock;
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;
         private readonly Mock<KeyManagementService> keyManagementServiceMock;
         private readonly Mock<SecureCryptoKeyDictionary<DateTimeOffset>> systemKeyCacheMock;
@@ -39,6 +41,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
             systemKeyCacheMock = new Mock<SecureCryptoKeyDictionary<DateTimeOffset>>(1);
+            secretFactoryMock = new Mock<ISecretFactory>();
             metastoreSpy = new Mock<InMemoryMetastoreImpl<JObject>> { CallBase = true };
 
             sessionFactory = new SessionFactory(
@@ -47,7 +50,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 metastoreMock.Object,
                 systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
-                keyManagementServiceMock.Object);
+                keyManagementServiceMock.Object,
+                secretFactoryMock.Object);
             sessionFactory.Dispose();
         }
 
@@ -60,7 +64,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 metastoreMock.Object,
                 systemKeyCacheMock.Object,
                 cryptoPolicyMock.Object,
-                keyManagementServiceMock.Object))
+                keyManagementServiceMock.Object,
+                secretFactoryMock.Object))
             {
                 Assert.NotNull(sessionFactory);
             }
@@ -83,7 +88,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 metastoreMock.Object,
                 systemKeyCacheMock.Object,
                 policy,
-                keyManagementServiceMock.Object))
+                keyManagementServiceMock.Object,
+                secretFactoryMock.Object))
             {
                 sessionCache = factory.SessionCache;
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes("1234"))
@@ -112,6 +118,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithDefaultSecretFactory()
                 .Build())
             {
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
@@ -152,7 +159,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
                 {
@@ -203,7 +210,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
                 byte[] drr = null;
@@ -253,7 +260,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
                 byte[] drr = null;
@@ -307,7 +314,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
                 byte[] drr = null;
@@ -365,7 +372,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 byte[] payload = { 0, 1, 2, 3, 4, 5, 6, 7 };
                 byte[] drr = null;
@@ -420,7 +427,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 using (Session<byte[], byte[]> sessionBytes = factory.GetSessionBytes(TestPartitionId))
                 {
@@ -467,7 +474,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 int numThreads = 100;
                 int numRequests = 100;
@@ -511,7 +518,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 int numThreads = 100;
                 int numRequests = 100;
@@ -557,6 +564,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithDefaultSecretFactory()
                 .Build())
             {
                 int numThreads = 100;
@@ -601,7 +609,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 int numThreads = 100;
                 int numRequests = 100;
@@ -644,7 +652,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 int numThreads = 100;
                 int numRequests = 100;
@@ -693,7 +701,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithMetastore(metastoreSpy.Object)
                 .WithCryptoPolicy(policy)
                 .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build())
+                .WithDefaultSecretFactory().Build())
             {
                 int numThreads = 100;
                 int numRequests = 100;
@@ -823,8 +831,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 cryptoPolicyStep.WithNeverExpiredCryptoPolicy();
             Assert.NotNull(keyManagementServiceStep);
 
-            SessionFactory.IBuildStep buildStep =
+            SessionFactory.ISecretFactoryStep secretFactoryStep =
                 keyManagementServiceStep.WithStaticKeyManagementService(TestStaticMasterKey);
+            Assert.NotNull(secretFactoryStep);
+
+            SessionFactory.IBuildStep buildStep =
+                secretFactoryStep.WithDefaultSecretFactory();
             Assert.NotNull(buildStep);
 
             SessionFactory sessionFactory = buildStep.Build();
@@ -849,8 +861,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             Assert.NotNull(keyManagementServiceStep);
 
             KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(TestStaticMasterKey);
-            SessionFactory.IBuildStep buildStep =
+            SessionFactory.ISecretFactoryStep secretFactoryStep =
                 keyManagementServiceStep.WithKeyManagementService(keyManagementService);
+            Assert.NotNull(secretFactoryStep);
+
+            ISecretFactory secretFactory = new TransientSecretFactory();
+            SessionFactory.IBuildStep buildStep =
+                secretFactoryStep.WithSecretFactory(secretFactory);
             Assert.NotNull(buildStep);
 
             SessionFactory sessionFactory = buildStep.Build();
@@ -864,6 +881,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithDefaultSecretFactory()
                 .Build();
 
             MetricsUtil.MetricsInstance.Measure.Meter.Mark(new MeterOptions { Name = "should.not.record" }, 1);
@@ -880,6 +898,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 .WithInMemoryMetastore()
                 .WithNeverExpiredCryptoPolicy()
                 .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithDefaultSecretFactory()
                 .WithMetrics(metrics)
                 .Build();
 
