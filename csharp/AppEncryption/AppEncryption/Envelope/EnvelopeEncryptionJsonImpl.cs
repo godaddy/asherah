@@ -11,6 +11,7 @@ using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.Logging;
+using GoDaddy.Asherah.SecureMemory;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -35,6 +36,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private readonly AeadEnvelopeCrypto crypto;
         private readonly CryptoPolicy cryptoPolicy;
         private readonly KeyManagementService keyManagementService;
+        private readonly ISecretFactory secretFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
@@ -64,7 +66,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
             CryptoPolicy cryptoPolicy,
-            KeyManagementService keyManagementService)
+            KeyManagementService keyManagementService,
+            ISecretFactory secretFactory)
         {
             this.partition = partition;
             this.metastore = metastore;
@@ -73,6 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             crypto = aeadEnvelopeCrypto;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
+            this.secretFactory = secretFactory;
         }
 
         internal EnvelopeEncryptionJsonImpl()
@@ -115,21 +119,26 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
             {
-                EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
-                        payload,
-                        intermediateCryptoKey,
-                        new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
+                using (CryptoKey dataEncryptionKey = crypto.GenerateKey(secretFactory))
+                {
+                    EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey =>
+                        crypto.EnvelopeEncrypt(
+                            dataEncryptionKey,
+                            payload,
+                            intermediateCryptoKey,
+                            new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
 
-                KeyMeta parentKeyMeta = (KeyMeta)result.UserState;
+                    KeyMeta parentKeyMeta = (KeyMeta)result.UserState;
 
-                EnvelopeKeyRecord keyRecord =
-                    new EnvelopeKeyRecord(DateTimeOffset.UtcNow, parentKeyMeta, result.EncryptedKey);
+                    EnvelopeKeyRecord keyRecord =
+                        new EnvelopeKeyRecord(DateTimeOffset.UtcNow, parentKeyMeta, result.EncryptedKey);
 
-                Json wrapperDocument = new Json();
-                wrapperDocument.Put("Key", keyRecord.ToJson());
-                wrapperDocument.Put("Data", result.CipherText);
+                    Json wrapperDocument = new Json();
+                    wrapperDocument.Put("Key", keyRecord.ToJson());
+                    wrapperDocument.Put("Data", result.CipherText);
 
-                return wrapperDocument.ToJObject();
+                    return wrapperDocument.ToJObject();
+                }
             }
         }
 
@@ -375,7 +384,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
 
             DateTimeOffset intermediateKeyCreated = cryptoPolicy.TruncateToIntermediateKeyPrecision(DateTimeOffset.UtcNow);
-            CryptoKey intermediateKey = crypto.GenerateKey(intermediateKeyCreated);
+            CryptoKey intermediateKey = crypto.GenerateKey(secretFactory, intermediateKeyCreated);
             try
             {
                 EnvelopeKeyRecord newIntermediateKeyRecord = WithSystemKeyForWrite(systemCryptoKey =>
@@ -464,7 +473,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
 
             DateTimeOffset systemKeyCreated = cryptoPolicy.TruncateToSystemKeyPrecision(DateTimeOffset.UtcNow);
-            CryptoKey systemKey = crypto.GenerateKey(systemKeyCreated);
+            CryptoKey systemKey = crypto.GenerateKey(secretFactory, systemKeyCreated);
             try
             {
                 EnvelopeKeyRecord newSystemKeyRecord = new EnvelopeKeyRecord(
@@ -556,8 +565,10 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="keyEncryptionKey">Encryption key to use for decryption.</param>
         internal virtual CryptoKey DecryptKey(EnvelopeKeyRecord keyRecord, CryptoKey keyEncryptionKey)
         {
-            return crypto.DecryptKey(
+            byte[] x = crypto.DecryptKey(
                 keyRecord.EncryptedKey, keyRecord.Created, keyEncryptionKey, keyRecord.Revoked.IfNone(false));
+
+            return crypto.GenerateKeyFromBytes(secretFactory, x, keyRecord.Created, keyRecord.Revoked.IfNone(false));
         }
 
         /// <summary>

@@ -29,9 +29,11 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         /// <param name="encryptedKeyCreated">The creation time of the encrypted key.</param>
         /// <param name="keyEncryptionKey">The key encryption key.</param>
         /// <returns>A decrypted <see cref="CryptoKey"/> object.</returns>
-        public virtual CryptoKey DecryptKey(byte[] encryptedKey, DateTimeOffset encryptedKeyCreated, CryptoKey keyEncryptionKey)
+        public virtual byte[] DecryptKey(byte[] encryptedKey, DateTimeOffset encryptedKeyCreated, CryptoKey keyEncryptionKey)
         {
-            return DecryptKey(encryptedKey, encryptedKeyCreated, keyEncryptionKey, false);
+            byte[] decryptedKeyBytes = DecryptKey(encryptedKey, encryptedKeyCreated, keyEncryptionKey, false);
+
+            return decryptedKeyBytes;
         }
 
         /// <summary>
@@ -43,13 +45,13 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         /// <param name="keyEncryptionKey">The key encryption key.</param>
         /// <param name="revoked">The revocation status of the key.</param>
         /// <returns>A decrypted <see cref="CryptoKey"/> object.</returns>
-        public virtual CryptoKey DecryptKey(
+        public virtual byte[] DecryptKey(
             byte[] encryptedKey, DateTimeOffset encryptedKeyCreated, CryptoKey keyEncryptionKey, bool revoked)
         {
             byte[] decryptedKey = Decrypt(encryptedKey, keyEncryptionKey);
             try
             {
-                return GenerateKeyFromBytes(decryptedKey, encryptedKeyCreated, revoked);
+                return decryptedKey;
             }
             finally
             {
@@ -63,24 +65,10 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         ///
         /// <param name="plainText">The payload to be encrypted.</param>
         /// <param name="keyEncryptionKey">The key encryption key.</param>
-        /// <returns>A <see cref="EnvelopeEncryptResult"/>object/data row record (DRR).</returns>
-        public virtual EnvelopeEncryptResult EnvelopeEncrypt(byte[] plainText, CryptoKey keyEncryptionKey)
-        {
-            return EnvelopeEncrypt(plainText, keyEncryptionKey, null);
-        }
-
-        /// <summary>
-        /// Encrypts the payload and the key to create the data row record.
-        /// </summary>
-        ///
-        /// <param name="plainText">The payload to be encrypted.</param>
-        /// <param name="keyEncryptionKey">The key encryption key.</param>
         /// <param name="userState">The KeyMeta for the <see cref="keyEncryptionKey"/>.</param>
         /// <returns>A <see cref="EnvelopeEncryptResult"/>object/data row record (DRR).</returns>
-        public virtual EnvelopeEncryptResult EnvelopeEncrypt(byte[] plainText, CryptoKey keyEncryptionKey, object userState)
+        public virtual EnvelopeEncryptResult EnvelopeEncrypt(CryptoKey dataEncryptionKey, byte[] plainText, CryptoKey keyEncryptionKey, object userState)
         {
-            using (CryptoKey dataEncryptionKey = GenerateKey())
-            {
                 EnvelopeEncryptResult result = new EnvelopeEncryptResult
                 {
                     CipherText = Encrypt(plainText, dataEncryptionKey),
@@ -89,7 +77,6 @@ namespace GoDaddy.Asherah.Crypto.Envelope
                 };
 
                 return result;
-            }
         }
 
         /// <summary>
@@ -103,11 +90,14 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         /// <returns>The decrypted payload.</returns>
         public virtual byte[] EnvelopeDecrypt(byte[] cipherText, byte[] encryptedKey, DateTimeOffset keyCreated, CryptoKey keyEncryptionKey)
         {
-            using (CryptoKey plaintextKey = DecryptKey(encryptedKey, keyCreated, keyEncryptionKey))
-            {
-                // ReSharper disable once AccessToDisposedClosure
-                return Decrypt(cipherText, plaintextKey);
-            }
+            byte[] x = DecryptKey(encryptedKey, keyCreated, keyEncryptionKey);
+            return x;
+
+            // using (CryptoKey key = GenerateKeyFromBytes(x, keyCreated, false))
+            // {
+            //     // ReSharper disable once AccessToDisposedClosure
+            //     return Decrypt(cipherText, key);
+            // }
         }
     }
 }

@@ -17,11 +17,9 @@ namespace GoDaddy.Asherah.Crypto
         private static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
         private readonly NonceGenerator nonceGenerator;
-        private readonly ISecretFactory secretFactory;
 
         protected AeadCrypto()
         {
-            secretFactory = new TransientSecretFactory();
             nonceGenerator = new NonceGenerator();
         }
 
@@ -48,20 +46,20 @@ namespace GoDaddy.Asherah.Crypto
         /// </summary>
         ///
         /// <returns>A newly generated <see cref="CryptoKey"/>.</returns>
-        public virtual CryptoKey GenerateKey()
+        public virtual CryptoKey GenerateKey(ISecretFactory secretFactory)
         {
-            return GenerateRandomCryptoKey();
+            return GenerateRandomCryptoKey(secretFactory);
         }
 
         /// <summary>
         /// Generates a new <see cref="CryptoKey"/>.
         /// </summary>
-        ///
+        /// <param name="factory"></param>
         /// <param name="created">The timestamp to be used for key creation.</param>
         /// <returns>A newly generated <see cref="CryptoKey"/>.</returns>
-        public virtual CryptoKey GenerateKey(DateTimeOffset created)
+        public virtual CryptoKey GenerateKey(ISecretFactory secretFactory, DateTimeOffset created)
         {
-            return GenerateRandomCryptoKey(created);
+            return GenerateRandomCryptoKey(secretFactory, created);
         }
 
         /// <summary>
@@ -71,9 +69,9 @@ namespace GoDaddy.Asherah.Crypto
         ///
         /// <param name="sourceBytes">Bytes used to generate the key.</param>
         /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
-        public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes)
+        public virtual CryptoKey GenerateKeyFromBytes(ISecretFactory secretFactory, byte[] sourceBytes)
         {
-            return GenerateKeyFromBytes(sourceBytes, DateTimeOffset.UtcNow);
+            return GenerateKeyFromBytes(secretFactory, sourceBytes, DateTimeOffset.UtcNow);
         }
 
         /// <summary>
@@ -84,9 +82,9 @@ namespace GoDaddy.Asherah.Crypto
         /// <param name="sourceBytes">Bytes used to generate the key.</param>
         /// <param name="created">Time of creation of key.</param>
         /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
-        public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes, DateTimeOffset created)
+        public virtual CryptoKey GenerateKeyFromBytes(ISecretFactory secretFactory, byte[] sourceBytes, DateTimeOffset created)
         {
-            return GenerateKeyFromBytes(sourceBytes, created, false);
+            return GenerateKeyFromBytes(secretFactory, sourceBytes, created, false);
         }
 
         /// <summary>
@@ -98,10 +96,10 @@ namespace GoDaddy.Asherah.Crypto
         /// <param name="created">Time of creation of key.</param>
         /// <param name="revoked">Specifies if the key is revoked or not.</param>
         /// <returns>A <see cref="CryptoKey"/> generated using the sourceBytes.</returns>
-        public virtual CryptoKey GenerateKeyFromBytes(byte[] sourceBytes, DateTimeOffset created, bool revoked)
+        public virtual CryptoKey GenerateKeyFromBytes(ISecretFactory secretFactory, byte[] sourceBytes, DateTimeOffset created, bool revoked)
         {
             byte[] clonedBytes = sourceBytes.Clone() as byte[];
-            Secret newKeySecret = GetSecretFactory().CreateSecret(clonedBytes);
+            Secret newKeySecret = secretFactory.CreateSecret(clonedBytes);
 
             return new SecretCryptoKey(newKeySecret, created, revoked);
         }
@@ -111,9 +109,9 @@ namespace GoDaddy.Asherah.Crypto
         /// </summary>
         ///
         /// <returns>A generated random <see cref="CryptoKey"/>.</returns>
-        protected internal virtual CryptoKey GenerateRandomCryptoKey()
+        protected internal virtual CryptoKey GenerateRandomCryptoKey(ISecretFactory secretFactory)
         {
-            return GenerateRandomCryptoKey(DateTimeOffset.UtcNow);
+            return GenerateRandomCryptoKey(secretFactory, DateTimeOffset.UtcNow);
         }
 
         /// <summary>
@@ -123,7 +121,7 @@ namespace GoDaddy.Asherah.Crypto
         /// <param name="created"> The time to associate the generated <see cref="CryptoKey"/> with.</param>
         /// <returns>A generated random <see cref="CryptoKey"/>.</returns>
         /// <exception cref="ArgumentException">Throws an exception if key length is invalid.</exception>
-        protected internal virtual CryptoKey GenerateRandomCryptoKey(DateTimeOffset created)
+        protected internal virtual CryptoKey GenerateRandomCryptoKey(ISecretFactory secretFactory, DateTimeOffset created)
         {
             int keyLengthBits = GetKeySizeBits();
             if (keyLengthBits % BitsPerByte != 0)
@@ -135,7 +133,7 @@ namespace GoDaddy.Asherah.Crypto
             CryptoRandom.GetBytes(keyBytes);
             try
             {
-                return GenerateKeyFromBytes(keyBytes, created);
+                return GenerateKeyFromBytes(secretFactory, keyBytes, created);
             }
             finally
             {
@@ -144,11 +142,6 @@ namespace GoDaddy.Asherah.Crypto
         }
 
         protected internal abstract int GetKeySizeBits();
-
-        protected internal virtual ISecretFactory GetSecretFactory()
-        {
-            return secretFactory;
-        }
 
         protected abstract int GetNonceSizeBits();
 

@@ -15,6 +15,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     {
         private readonly CryptoKey encryptionKey;
         private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
+        private readonly ISecretFactory secretFactory = new TransientSecretFactory();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StaticKeyManagementServiceImpl"/> class. It uses a hard coded
@@ -25,7 +26,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         public StaticKeyManagementServiceImpl(string key)
         {
             byte[] keyBytes = Encoding.UTF8.GetBytes(key);
-            Secret secretKey = new TransientSecretFactory().CreateSecret(keyBytes);
+            Secret secretKey = secretFactory.CreateSecret(keyBytes);
 
             encryptionKey = new SecretCryptoKey(secretKey, DateTimeOffset.UtcNow, false);
         }
@@ -39,7 +40,9 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         /// <inheritdoc/>
         public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
         {
-            return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
+            byte[] x = crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
+
+            return crypto.GenerateKeyFromBytes(secretFactory, x, keyCreated, revoked);
         }
     }
 }

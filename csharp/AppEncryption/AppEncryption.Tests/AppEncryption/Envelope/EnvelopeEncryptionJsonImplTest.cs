@@ -10,6 +10,7 @@ using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.ExtensionMethods;
 using GoDaddy.Asherah.Crypto.Keys;
+using GoDaddy.Asherah.SecureMemory;
 using LanguageExt;
 using Moq;
 using Newtonsoft.Json.Linq;
@@ -39,6 +40,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         private readonly Mock<CryptoKey> intermediateCryptoKeyMock;
         private readonly Mock<CryptoKey> systemCryptoKeyMock;
         private readonly Mock<KeyMeta> keyMetaMock;
+        private readonly Mock<ISecretFactory> secretFactoryMock;
 
         private readonly Mock<EnvelopeEncryptionJsonImpl> envelopeEncryptionJsonImplSpy;
 
@@ -54,6 +56,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             aeadEnvelopeCryptoMock = new Mock<AeadEnvelopeCrypto>();
             cryptoPolicyMock = new Mock<CryptoPolicy>();
             keyManagementServiceMock = new Mock<KeyManagementService>();
+            secretFactoryMock = new Mock<ISecretFactory>();
 
             intermediateCryptoKeyMock = new Mock<CryptoKey>();
             systemCryptoKeyMock = new Mock<CryptoKey>();
@@ -665,7 +668,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.None);
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
@@ -691,7 +694,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.None);
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
@@ -725,7 +728,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(true);
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
                 .Returns<Func<CryptoKey, EnvelopeKeyRecord>>(functionWithDecryptedSystemKey =>
@@ -778,7 +781,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
                 .Returns<Func<CryptoKey, EnvelopeKeyRecord>>(functionWithDecryptedSystemKey =>
@@ -812,7 +815,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Throws(new MetadataMissingException("fake error"));
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
                 .Returns<Func<CryptoKey, EnvelopeKeyRecord>>(functionWithDecryptedSystemKey =>
@@ -873,7 +876,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             cryptoPolicyMock.Setup(x => x.IsQueuedKeyRotation()).Returns(true);
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
                 .Returns<Func<CryptoKey, EnvelopeKeyRecord>>(functionWithDecryptedSystemKey =>
@@ -913,7 +916,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Throws(new MetadataMissingException("fake error"));
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(intermediateCryptoKeyMock.Object);
             envelopeEncryptionJsonImplSpy
                 .Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
                 .Returns<Func<CryptoKey, EnvelopeKeyRecord>>(functionWithDecryptedSystemKey =>
@@ -949,7 +952,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(unusedCryptoKeyMock.Object);
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
             envelopeEncryptionJsonImplSpy.Setup(x =>
                     x.WithExistingSystemKey((KeyMeta)keyRecord.ParentKeyMeta, true, It.IsAny<Func<CryptoKey, CryptoKey>>()))
@@ -985,7 +988,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.None)
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(unusedCryptoKeyMock.Object);
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             envelopeEncryptionJsonImplSpy.Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
@@ -1009,7 +1012,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.None);
             cryptoPolicyMock.Setup(x => x.TruncateToIntermediateKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(ikDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(ikDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, ikDateTime)).Returns(unusedCryptoKeyMock.Object);
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             envelopeEncryptionJsonImplSpy.Setup(x => x.WithSystemKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeKeyRecord>>()))
@@ -1031,7 +1034,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionJsonImplSpy.Setup(x => x.LoadLatestKeyRecord(It.IsAny<string>()))
                 .Returns(Option<EnvelopeKeyRecord>.None);
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(systemCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(systemCryptoKeyMock.Object);
             keyManagementServiceMock.Setup(x => x.EncryptKey(systemCryptoKeyMock.Object))
                 .Returns(new byte[] { 0, 1, 2, 3 });
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
@@ -1053,7 +1056,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.None);
 
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(systemCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(systemCryptoKeyMock.Object);
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             keyManagementServiceMock.Setup(x => x.EncryptKey(systemCryptoKeyMock.Object))
                 .Returns(new byte[] { 0, 1, 2, 3 });
@@ -1080,7 +1083,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(true);
 
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(systemCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(systemCryptoKeyMock.Object);
             systemCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             keyManagementServiceMock.Setup(x => x.EncryptKey(systemCryptoKeyMock.Object))
                 .Returns(new byte[] { 0, 1, 2, 3 });
@@ -1199,7 +1202,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
 
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(unusedCryptoKeyMock.Object);
             keyManagementServiceMock.Setup(x => x.EncryptKey(unusedCryptoKeyMock.Object)).Returns(new byte[] { 0, 1, 2, 3 });
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             metastoreMock.Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
@@ -1228,7 +1231,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.Some(keyRecord));
 
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(unusedCryptoKeyMock.Object);
             keyManagementServiceMock.Setup(x => x.EncryptKey(unusedCryptoKeyMock.Object)).Returns(new byte[] { 0, 1, 2, 3 });
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             metastoreMock.Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))
@@ -1251,7 +1254,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 .Returns(Option<EnvelopeKeyRecord>.None);
 
             cryptoPolicyMock.Setup(x => x.TruncateToSystemKeyPrecision(It.IsAny<DateTimeOffset>())).Returns(skDateTime);
-            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(skDateTime)).Returns(unusedCryptoKeyMock.Object);
+            aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey(secretFactoryMock.Object, skDateTime)).Returns(unusedCryptoKeyMock.Object);
             keyManagementServiceMock.Setup(x => x.EncryptKey(unusedCryptoKeyMock.Object)).Returns(new byte[] { 0, 1, 2, 3 });
             unusedCryptoKeyMock.Setup(x => x.GetCreated()).Returns(skDateTime);
             metastoreMock.Setup(x => x.Store(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<JObject>()))

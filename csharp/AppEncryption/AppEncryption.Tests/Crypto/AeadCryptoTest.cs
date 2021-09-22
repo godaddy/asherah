@@ -28,9 +28,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         private void TestGenerateKeyFromBytesByteArray()
         {
             byte[] sourceBytes = { 0, 1 };
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(sourceBytes, It.IsAny<DateTimeOffset>())).Returns(cryptoKeyMock.Object);
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(It.IsAny<byte[]>())).CallBase();
-            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(sourceBytes);
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, sourceBytes, It.IsAny<DateTimeOffset>())).Returns(cryptoKeyMock.Object);
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, It.IsAny<byte[]>())).CallBase();
+            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(secretFactoryMock.Object, sourceBytes);
             Assert.Equal(cryptoKeyMock.Object, actualCryptoKey);
         }
 
@@ -39,9 +39,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         {
             byte[] sourceBytes = { 0, 1 };
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(sourceBytes, now, false)).Returns(cryptoKeyMock.Object);
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(It.IsAny<byte[]>(), It.IsAny<DateTimeOffset>())).CallBase();
-            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(sourceBytes, now);
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, sourceBytes, now, false)).Returns(cryptoKeyMock.Object);
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, It.IsAny<byte[]>(), It.IsAny<DateTimeOffset>())).CallBase();
+            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(secretFactoryMock.Object, sourceBytes, now);
             Assert.Equal(cryptoKeyMock.Object, actualCryptoKey);
         }
 
@@ -49,16 +49,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         private void TestGenerateRandomCryptoKeyCreatedWithInvalidKeySize()
         {
             aeadCryptoMock.Setup(x => x.GetKeySizeBits()).Returns(BitsPerByte + 1);
-            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(It.IsAny<DateTimeOffset>())).CallBase();
-            Assert.Throws<ArgumentException>(() => aeadCryptoMock.Object.GenerateRandomCryptoKey(DateTimeOffset.UtcNow));
+            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(secretFactoryMock.Object, It.IsAny<DateTimeOffset>())).CallBase();
+            Assert.Throws<ArgumentException>(() => aeadCryptoMock.Object.GenerateRandomCryptoKey(secretFactoryMock.Object, DateTimeOffset.UtcNow));
         }
 
         [Fact]
         private void TestGenerateRandomCryptoKey()
         {
-            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(It.IsAny<DateTimeOffset>())).Returns(cryptoKeyMock.Object);
-            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey()).CallBase();
-            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateRandomCryptoKey();
+            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(secretFactoryMock.Object, It.IsAny<DateTimeOffset>())).Returns(cryptoKeyMock.Object);
+            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(secretFactoryMock.Object)).CallBase();
+            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateRandomCryptoKey(secretFactoryMock.Object);
             Assert.Equal(cryptoKeyMock.Object, actualCryptoKey);
         }
 
@@ -67,10 +67,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             aeadCryptoMock.Setup(x => x.GetKeySizeBits()).Returns(BitsPerByte * 2);
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(It.IsAny<byte[]>(), now)).Returns(cryptoKeyMock.Object);
-            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(It.IsAny<DateTimeOffset>())).CallBase();
-            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey()).CallBase();
-            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateRandomCryptoKey(now);
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, It.IsAny<byte[]>(), now)).Returns(cryptoKeyMock.Object);
+            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(secretFactoryMock.Object, It.IsAny<DateTimeOffset>())).CallBase();
+            aeadCryptoMock.Setup(x => x.GenerateRandomCryptoKey(secretFactoryMock.Object)).CallBase();
+            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateRandomCryptoKey(secretFactoryMock.Object, now);
             Assert.Equal(cryptoKeyMock.Object, actualCryptoKey);
         }
 
@@ -81,11 +81,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
             byte[] clearedBytes = { 0, 0 };
             DateTimeOffset now = DateTimeOffset.UtcNow;
             bool revoked = true;
-            aeadCryptoMock.Setup(x => x.GetSecretFactory()).Returns(secretFactoryMock.Object);
             secretFactoryMock.Setup(x => x.CreateSecret(sourceBytes)).Returns(secretMock.Object);
-            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(It.IsAny<byte[]>(), It.IsAny<DateTimeOffset>(), It.IsAny<bool>())).CallBase();
+            aeadCryptoMock.Setup(x => x.GenerateKeyFromBytes(secretFactoryMock.Object, It.IsAny<byte[]>(), It.IsAny<DateTimeOffset>(), It.IsAny<bool>())).CallBase();
 
-            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(sourceBytes, now, revoked);
+            CryptoKey actualCryptoKey = aeadCryptoMock.Object.GenerateKeyFromBytes(secretFactoryMock.Object, sourceBytes, now, revoked);
             Assert.Equal(typeof(SecretCryptoKey), actualCryptoKey.GetType());
             Assert.Equal(now, actualCryptoKey.GetCreated());
             Assert.Equal(revoked, actualCryptoKey.IsRevoked());
