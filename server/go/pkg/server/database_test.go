@@ -76,28 +76,39 @@ func TestNewMysql(t *testing.T) {
 	assert.NotNil(t, dbconnection)
 }
 
-func TestSetRdbmsReplicaReadConsistencyValue(t *testing.T) {
+func resetTestDb() {
 	dbconnection = nil
+	_, _ = newMysql("root:secret@(localhost:%s)/mysql")
+}
 
-	var err error
-	db, err := newMysql("root:secret@(localhost:%s)/mysql")
-	assert.Nil(t, err)
-	assert.NotNil(t, db)
+func TestSetRdbmsReplicaReadConsistencyValueEmpty(t *testing.T) {
+	resetTestDb()
 
-	// empty
-	err = setRdbmsReplicaReadConsistencyValue("")
+	err := setRdbmsReplicaReadConsistencyValue("")
 	assert.Nil(t, err)
 	assert.Equal(t, "", readConsistencyValue)
-	// eventual
-	err = setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueEventual)
+}
+
+func TestSetRdbmsReplicaReadConsistencyValueEventual(t *testing.T) {
+	resetTestDb()
+
+	err := setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueEventual)
 	assert.Nil(t, err)
 	assert.Equal(t, ReplicaReadConsistencyValueEventual, readConsistencyValue)
-	// global
-	err = setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueGlobal)
+}
+
+func TestSetRdbmsReplicaReadConsistencyValueGlobal(t *testing.T) {
+	resetTestDb()
+
+	err := setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueGlobal)
 	assert.Nil(t, err)
 	assert.Equal(t, ReplicaReadConsistencyValueGlobal, readConsistencyValue)
-	// session
-	err = setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueSession)
+}
+
+func TestSetRdbmsReplicaReadConsistencyValueSession(t *testing.T) {
+	resetTestDb()
+
+	err := setRdbmsReplicaReadConsistencyValue(ReplicaReadConsistencyValueSession)
 	assert.Nil(t, err)
 	assert.Equal(t, ReplicaReadConsistencyValueSession, readConsistencyValue)
 }
