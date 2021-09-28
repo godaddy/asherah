@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
+using GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.Tests
 {
     [Collection("Logger Fixture collection")]
     public class SecureMemorySecretTest : IDisposable
