@@ -24,7 +24,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
         public override IntPtr Alloc(ulong length)
         {
             // Some platforms may require fd to be -1 even if using anonymous
-            IntPtr secureMemory = Libc.mmap(
+            IntPtr secureMemory = GetLibc().mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
             Check.IntPtr(secureMemory, "mmap");
@@ -51,7 +51,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
                     // Regardless of whether or not we successfully unlock, unmap
 
                     // Free (unmap) the protected memory
-                    Check.Zero(Libc.munmap(pointer, length), "munmap");
+                    Check.Zero(GetLibc().munmap(pointer, length), "munmap");
                 }
             }
         }

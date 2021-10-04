@@ -52,7 +52,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void TestMmapConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"secureHeapEngine", "mmap"}
             }).Build();
@@ -66,7 +66,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void TestInvalidConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"secureHeapEngine", "magic-heap-engine2"}
             }).Build();
@@ -109,14 +109,15 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             factory.Dispose();
             Assert.Throws<Exception>(() => {
                 factory.Dispose();
-             });
+            });
         }
 
         [SkippableFact]
         private void TestMlockConfigurationSettingForMac()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+
+            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "disabled"}
             }).Build();
@@ -131,7 +132,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestMlockConfigurationSettingForLinux()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+
+            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "disabled"}
             }).Build();
@@ -141,18 +143,18 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.IsType<LinuxSecureMemoryAllocatorLP64>(allocator);
             Assert.IsNotType<LinuxProtectedMemoryAllocatorLP64>(allocator);
         }
-         [SkippableFact]
+
+        [SkippableFact]
         private void TestMlockConfigurationSettingForMacWithInvalidValueThrowsException()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "false"}
             }).Build();
 
             Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForMacOS64(configuration));
-
         }
 
         [SkippableFact]
@@ -160,13 +162,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "no"}
             }).Build();
 
             Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForLinux64(configuration));
-
         }
 
         [SkippableFact]
