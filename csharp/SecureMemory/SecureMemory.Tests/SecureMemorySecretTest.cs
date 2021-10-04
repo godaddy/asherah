@@ -5,9 +5,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -241,8 +241,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSSecureMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 SecureMemorySecret secret =
                     new SecureMemorySecret(secretBytes, protectedMemoryAllocatorMacOSMock.Object, configuration);
@@ -253,8 +253,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxSecureMemoryAllocatorLP64> { CallBase = true };
+                Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 SecureMemorySecret secret =
                     new SecureMemorySecret(secretBytes, protectedMemoryAllocatorLinuxMock.Object, configuration);
@@ -275,8 +275,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSSecureMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
-                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSProtectedMemoryAllocatorLP64> protectedMemoryAllocatorMacOSMock =
+                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 protectedMemoryAllocatorMacOSMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
@@ -285,8 +285,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxSecureMemoryAllocatorLP64> { CallBase = true };
+                Mock<LinuxProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoAccess(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
@@ -315,8 +315,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Mock<MacOSSecureMemoryAllocatorLP64> secureMemoryAllocatorMacOSMock =
-                    new Mock<MacOSSecureMemoryAllocatorLP64> { CallBase = true };
+                Mock<MacOSProtectedMemoryAllocatorLP64> secureMemoryAllocatorMacOSMock =
+                    new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 secureMemoryAllocatorMacOSMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
@@ -325,8 +325,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Mock<LinuxSecureMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
-                    new Mock<LinuxSecureMemoryAllocatorLP64>(configuration) { CallBase = true };
+                Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64> protectedMemoryAllocatorLinuxMock =
+                    new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>(configuration) { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new Exception());
