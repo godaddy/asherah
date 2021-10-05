@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.Logging;
 using GoDaddy.Asherah.SecureMemory;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -25,7 +24,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.SecureMemory.Multithrea
         [Fact]
         private void MultiThreadedWithSecretBytesAccess()
         {
-            ISecretFactory secretFactory = new ProtectedMemorySecretFactory(null);
+            ISecretFactory secretFactory = new TransientSecretFactory(null);
             Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]);
 
             // Get the current settings and try to force minWorkers
