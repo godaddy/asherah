@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
     public class MemoryLimitException : SystemException
     {

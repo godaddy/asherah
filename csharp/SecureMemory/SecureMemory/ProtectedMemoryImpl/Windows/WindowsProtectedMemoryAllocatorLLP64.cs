@@ -2,10 +2,11 @@ using System;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
-    internal abstract class WindowsProtectedMemoryAllocatorLLP64 : IProtectedMemoryAllocator
+    internal abstract class WindowsProtectedMemoryAllocatorLLP64 : ISecureMemoryAllocator
     {
         protected static readonly IntPtr InvalidPointer = new IntPtr(-1);
 

@@ -105,6 +105,13 @@ Windows:
 * Values stored will not be swapped
 * Values stored will be explicitly zeroed out when no longer in use
 
+## Secure Memory Implementation
+This implementation of secure memory
+
+* Uses mprotect to mark the pages no-access until needed
+* If the operating system supports it, uses madvise to disallow core dumps of protected regions
+* If the operating system does not support madvise, uses setrlimit to disable core dumps entirely
+
 ## Protected Memory Implementation
 The protected memory implementation of secure memory
 

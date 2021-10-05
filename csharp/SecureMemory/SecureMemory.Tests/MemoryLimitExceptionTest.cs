@@ -1,7 +1,6 @@
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Xunit;
 
-namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.Tests
 {
     [Collection("Logger Fixture collection")]
     public class MemoryLimitExceptionTest

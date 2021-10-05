@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +37,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Debug.WriteLine("\nTestCreateSecretByteArray: Start");
             using Secret secret = transientSecretFactory.CreateSecret(new byte[] { 0, 1 });
-            Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
             Debug.WriteLine("TestCreateSecretByteArray: Finish\n");
         }
 
@@ -45,7 +46,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Debug.WriteLine("\nTestCreateSecretCharArray: Start");
             using Secret secret = transientSecretFactory.CreateSecret(new[] { 'a', 'b' });
-            Assert.Equal(typeof(ProtectedMemorySecret), secret.GetType());
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
             Debug.WriteLine("TestCreateSecretCharArray: Finish\n");
         }
     }
