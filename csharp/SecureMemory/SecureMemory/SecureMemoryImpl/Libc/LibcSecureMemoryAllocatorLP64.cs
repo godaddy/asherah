@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.SecureMemory.Libc;
 
@@ -11,8 +10,6 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
 {
     internal abstract class LibcSecureMemoryAllocatorLP64 : LibcMemoryAllocatorLP64
     {
-        private static long memoryLocked;
-
         protected LibcSecureMemoryAllocatorLP64(LibcLP64 libc)
             : base(libc)
         {
@@ -42,17 +39,8 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
             }
             finally
             {
-                try
-                {
-                    Interlocked.Add(ref memoryLocked, 0 - (long)length);
-                }
-                finally
-                {
-                    // Regardless of whether or not we successfully unlock, unmap
-
-                    // Free (unmap) the protected memory
-                    Check.Zero(GetLibc().munmap(pointer, length), "munmap");
-                }
+                // Free (unmap) the protected memory
+                Check.Zero(GetLibc().munmap(pointer, length), "munmap");
             }
         }
     }
