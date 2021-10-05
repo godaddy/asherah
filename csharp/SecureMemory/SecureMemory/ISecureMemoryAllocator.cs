@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl
 {
-    internal interface IProtectedMemoryAllocator : IDisposable
+    internal interface ISecureMemoryAllocator : IDisposable
     {
         IntPtr Alloc(ulong length);
 

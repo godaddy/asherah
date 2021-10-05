@@ -24,7 +24,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             try
             {
                 Debug.WriteLine("SampleTest.EndToEndTest");
-                using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
+                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
                 {
                     var secretBytes = new byte[] { 0, 1, 2, 3 };
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
@@ -61,7 +61,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             try
             {
                 Debug.WriteLine("SampleTest.EndToEndOpenSSLTest");
-                using (ISecretFactory secretFactory = new ProtectedMemorySecretFactory(configuration))
+                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
                 {
                     var secretBytes = new byte[] { 0, 1, 2, 3 };
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))

@@ -86,6 +86,14 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 			panic(err)
 		}
 
+		// set optional replica read consistency
+		if len(opts.ReplicaReadConsistency) > 0 {
+			err := setRdbmsReplicaReadConsistencyValue(opts.ReplicaReadConsistency)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		return persistence.NewSQLMetastore(db)
 	case "dynamodb":
 		awsOpts := awssession.Options{

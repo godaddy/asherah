@@ -1,24 +1,28 @@
 using System;
+using System.Configuration;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
 using Microsoft.Extensions.Configuration;
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
-    public class ProtectedMemorySecretFactory : ISecretFactory
+    public class SecureMemorySecretFactory : ISecretFactory
     {
         // Detect methods should throw if they know for sure what the OS/platform is, but it isn't supported
         // Detect methods should return null if they don't know for sure what the OS/platform is
-        private static IProtectedMemoryAllocator allocator;
+        private static ISecureMemoryAllocator allocator;
         private static int refCount = 0;
         private static object allocatorLock = new object();
         private readonly IConfiguration configuration;
 
-        public ProtectedMemorySecretFactory(IConfiguration configuration)
+        public SecureMemorySecretFactory(IConfiguration configuration)
         {
             Debug.WriteLine("ProtectedMemorySecretFactory ctor");
             lock (allocatorLock)
@@ -48,12 +52,12 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public Secret CreateSecret(byte[] secretData)
         {
-            return new ProtectedMemorySecret(secretData, allocator, configuration);
+            return new SecureMemorySecret(secretData, allocator, configuration);
         }
 
         public Secret CreateSecret(char[] secretData)
         {
-            return ProtectedMemorySecret.FromCharArray(secretData, allocator, configuration);
+            return SecureMemorySecret.FromCharArray(secretData, allocator, configuration);
         }
 
         public void Dispose()
@@ -82,8 +86,105 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             }
         }
 
+        internal static ISecureMemoryAllocator ConfigureForMacOS64(IConfiguration configuration)
+        {
+            if (configuration != null)
+            {
+                string secureHeapEngine = configuration["secureHeapEngine"];
+                string mLock = configuration["mlock"];
+                if (!string.IsNullOrWhiteSpace(secureHeapEngine))
+                {
+                    if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        throw new PlatformNotSupportedException(
+                            "OpenSSL 1.1 selected for secureHeapEngine but is not yet supported for MacOS");
+                    }
+
+                    if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        if (!string.IsNullOrWhiteSpace(mLock))
+                        {
+                            if (string.Compare(mLock, "disabled", StringComparison.InvariantCultureIgnoreCase) == 0)
+                            {
+                                return new MacOSSecureMemoryAllocatorLP64();
+                            }
+
+                            throw new ConfigurationErrorsException("Unknown mlock configuration: " + mLock);
+                        }
+
+                        return new MacOSProtectedMemoryAllocatorLP64();
+                    }
+
+                    throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
+                }
+
+                if (!string.IsNullOrWhiteSpace(mLock))
+                {
+                    if (string.Compare(mLock, "disabled", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        return new MacOSSecureMemoryAllocatorLP64();
+                    }
+
+                    throw new ConfigurationErrorsException("Unknown mlock configuration: " + mLock);
+                }
+            }
+
+            return new MacOSProtectedMemoryAllocatorLP64();
+        }
+
+        internal static ISecureMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
+        {
+            if (configuration != null)
+            {
+                string secureHeapEngine = configuration["secureHeapEngine"];
+                string mLock = configuration["mlock"];
+                if (!string.IsNullOrWhiteSpace(secureHeapEngine))
+                {
+                    if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
+                        {
+                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
+                        }
+
+                        throw new PlatformNotSupportedException(
+                            "OpenSSL 1.1 selected for secureHeapEngine but library not found");
+                    }
+
+                    if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        if (!string.IsNullOrWhiteSpace(mLock))
+                        {
+                            if (string.Compare(mLock, "disabled", StringComparison.InvariantCultureIgnoreCase) == 0)
+                            {
+                                return new LinuxSecureMemoryAllocatorLP64();
+                            }
+
+                            throw new ConfigurationErrorsException("Unknown mlock configuration: " + mLock);
+                        }
+
+                        return new LinuxProtectedMemoryAllocatorLP64();
+                    }
+
+                    throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
+                }
+
+                if (!string.IsNullOrWhiteSpace(mLock))
+                {
+                    if (string.Compare(mLock, "disabled", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        return new LinuxSecureMemoryAllocatorLP64();
+                    }
+
+                    throw new ConfigurationErrorsException("Unknown mlock configuration: " + mLock);
+                }
+            }
+
+            return new LinuxProtectedMemoryAllocatorLP64();
+        }
+
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectViaOsVersionPlatform(IConfiguration configuration)
         {
             switch (Environment.OSVersion.Platform)
             {
@@ -107,7 +208,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         }
 
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectViaRuntimeInformation(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -141,7 +242,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
                             throw new PlatformNotSupportedException("Non-64bit process not supported on macOS X64 or Arm64");
                         }
 
-                        return new MacOSProtectedMemoryAllocatorLP64();
+                        return ConfigureForMacOS64(configuration);
                     case Architecture.X86:
                         throw new PlatformNotSupportedException("Unsupported architecture macOS X86");
                     case Architecture.Arm:
@@ -180,38 +281,8 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             return null;
         }
 
-        private static IProtectedMemoryAllocator ConfigureForLinux64(IConfiguration configuration)
-        {
-            if (configuration != null)
-            {
-                var secureHeapEngine = configuration["secureHeapEngine"];
-                if (!string.IsNullOrWhiteSpace(secureHeapEngine))
-                {
-                    if (string.Compare(secureHeapEngine, "openssl11", StringComparison.InvariantCultureIgnoreCase) == 0)
-                    {
-                        if (LinuxOpenSSL11ProtectedMemoryAllocatorLP64.IsAvailable())
-                        {
-                            return new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);
-                        }
-
-                        throw new PlatformNotSupportedException(
-                            "OpenSSL 1.1 selected for secureHeapEngine but library not found");
-                    }
-
-                    if (string.Compare(secureHeapEngine, "mmap", StringComparison.InvariantCultureIgnoreCase) == 0)
-                    {
-                        return new LinuxProtectedMemoryAllocatorLP64();
-                    }
-
-                    throw new PlatformNotSupportedException("Unknown secureHeapEngine: " + secureHeapEngine);
-                }
-            }
-
-            return new LinuxProtectedMemoryAllocatorLP64();
-        }
-
         [ExcludeFromCodeCoverage]
-        private static IProtectedMemoryAllocator DetectOsDescription(IConfiguration configuration)
+        private static ISecureMemoryAllocator DetectOsDescription(IConfiguration configuration)
         {
             var desc = RuntimeInformation.OSDescription;
             if (desc.IndexOf("Linux", StringComparison.OrdinalIgnoreCase) != -1)
