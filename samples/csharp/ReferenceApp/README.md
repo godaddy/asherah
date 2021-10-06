@@ -13,6 +13,7 @@ Table of Contents
 
   * [How to Run Reference App](#how-to-run-reference-app)
     * [Using a Docker read-only container](#using-a-docker-read-only-container)
+    * [Using Asherah without mlock](#using-asherah-without-mlock)
   * [General Notes](#general-notes)
   * [External Resource Setup](#external-resource-setup)
     * [Using an ADO Metastore](#using-an-ado-metastore)
@@ -62,6 +63,24 @@ The ReferenceApp can be tested/used in a docker container having only the dotnet
 # Run the image in a read-only container
 [user@machine ReferenceApp]$ docker run -it --read-only <runtime-generated-image-id>
 ```
+
+### Using Asherah without mlock
+* Add an `appsettings.json` file to your project with the following content
+```json
+{
+    "mlock": "disabled"
+}
+```
+* Package it with your project by adding the following lines to your `csproj` file
+```
+<ItemGroup>
+  <None Update="appsettings.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+```
+**NOTE:** This will disable the [mlock](https://linux.die.net/man/2/mlock) protection that Asherah provides.
+While this can be used in environments where the lockable memory is limited, this is not recommended for general use.
 
 ## General Notes
 
@@ -144,7 +163,7 @@ follows:
 
   -p, --preferred-region         Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.
 
-  -t, --region-arn-tuples        Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
+  --region-arn-tuples        Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 
   -i, --iterations               (Default: 1) Number of encrypt/decrypt iterations to run
 
@@ -157,4 +176,3 @@ follows:
   --version                      Display version information.
 ```
 
-TODO: Add link to Sceptre template example
