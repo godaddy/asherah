@@ -80,7 +80,7 @@ The ReferenceApp can be tested/used in a docker container having only the dotnet
 </ItemGroup>
 ```
 **NOTE:** This will disable the [mlock](https://linux.die.net/man/2/mlock) protection that Asherah provides.
-While this can be used in environments where the lockable memory is limited, this is not recommended for general use.
+While this can be used in environments where the lockable memory is limited, such as in AWS Lambda, this is not recommended for general use.
 
 ## General Notes
 
