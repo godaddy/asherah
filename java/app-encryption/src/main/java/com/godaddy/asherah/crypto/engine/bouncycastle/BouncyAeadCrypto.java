@@ -7,6 +7,7 @@ import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.securememory.Debug;
 
 import org.bouncycastle.crypto.modes.AEADBlockCipher;
+import org.bouncycastle.crypto.modes.AEADCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   private static final Logger LOG = LoggerFactory.getLogger(BouncyAeadCrypto.class);
 
-  protected abstract AEADBlockCipher getNewAeadBlockCipherInstance();
+  protected abstract AEADCipher getNewAeadBlockCipherInstance();
 
   protected abstract AEADParameters getParameters(CryptoKey key, byte[] nonce);
 
@@ -23,7 +24,7 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   @Override
   public byte[] encrypt(final byte[] input, final CryptoKey key) {
     byte[] nonce = generateNonce();
-    AEADBlockCipher cipher = getNewAeadBlockCipherInstance();
+    AEADCipher cipher = getNewAeadBlockCipherInstance();
 
     AEADParameters cipherParameters = getParameters(key, nonce);
     try {
@@ -50,7 +51,7 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   @Override
   public byte[] decrypt(final byte[] input, final CryptoKey key) {
     byte[] nonce = getAppendedNonce(input);
-    AEADBlockCipher cipher = getNewAeadBlockCipherInstance();
+    AEADCipher cipher = getNewAeadBlockCipherInstance();
 
     AEADParameters cipherParameters = getParameters(key, nonce);
     try {

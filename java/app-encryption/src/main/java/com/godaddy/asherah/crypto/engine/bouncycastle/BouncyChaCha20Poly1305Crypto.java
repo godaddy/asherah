@@ -1,16 +1,15 @@
 package com.godaddy.asherah.crypto.engine.bouncycastle;
 
 import org.bouncycastle.crypto.StreamCipher;
-import org.bouncycastle.crypto.engines.AESEngine;
-import org.bouncycastle.crypto.engines.RC4Engine;
-import org.bouncycastle.crypto.modes.AEADBlockCipher;
-import org.bouncycastle.crypto.modes.GCMBlockCipher;
+import org.bouncycastle.crypto.macs.SipHash;
+import org.bouncycastle.crypto.modes.AEADCipher;
+import org.bouncycastle.crypto.modes.ChaCha20Poly1305;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 
-public class BouncyRC4Crypto extends BouncyStreamCrypto {
+public class BouncyChaCha20Poly1305Crypto extends BouncyAeadCrypto {
 
   //Do NOT modify the size of the nonce unless you've read NIST 800-38D
   private static final int NonceSizeBits = 96;
@@ -20,13 +19,13 @@ public class BouncyRC4Crypto extends BouncyStreamCrypto {
   /**
    * Creates a new {@link BouncyAeadCrypto} instance.
    */
-  public BouncyRC4Crypto() {
+  public BouncyChaCha20Poly1305Crypto() {
     super();
   }
 
   @Override
-  protected StreamCipher getNewAeadBlockCipherInstance() {
-    return new RC4Engine();
+  protected AEADCipher getNewAeadBlockCipherInstance() {
+    return new ChaCha20Poly1305();
   }
 
   @Override

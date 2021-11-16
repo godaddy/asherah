@@ -19,7 +19,7 @@ import com.godaddy.asherah.appencryption.testhelpers.dummy.DummyKeyManagementSer
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
-import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyRC4Crypto;
+import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyChaCha20Poly1305Crypto;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
