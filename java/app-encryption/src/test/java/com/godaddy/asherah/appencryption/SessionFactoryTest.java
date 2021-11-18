@@ -413,6 +413,7 @@ class SessionFactoryTest {
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
+      .withStreamCipher()
         .build()) {
       try (Session<byte[], byte[]> session = factory.getSessionBytes(testPartitionId)) {
         byte[] payload = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};

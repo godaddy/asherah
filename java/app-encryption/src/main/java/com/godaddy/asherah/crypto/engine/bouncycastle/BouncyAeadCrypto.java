@@ -9,15 +9,19 @@ import com.godaddy.asherah.securememory.Debug;
 import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.AEADCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   private static final Logger LOG = LoggerFactory.getLogger(BouncyAeadCrypto.class);
 
-  protected abstract AEADCipher getNewAeadBlockCipherInstance();
+  //Do NOT modify the size of the nonce unless you've read NIST 800-38D
+  private static final int NonceSizeBits = 96;
+  private static final int MacSizeBits = 128;
+  private static final int KeySizeBits = 256;
 
-  protected abstract AEADParameters getParameters(CryptoKey key, byte[] nonce);
+  protected abstract AEADCipher getNewAeadBlockCipherInstance();
 
   protected BouncyAeadCrypto() { }
 
@@ -80,5 +84,23 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
     finally {
       ManagedBufferUtils.wipeByteArray(cipherParameters.getKey().getKey());
     }
+  }
+
+  AEADParameters getParameters(final CryptoKey key, final byte[] nonce) {
+    return key.withKey(keyBytes -> {
+      return new AEADParameters(new KeyParameter(keyBytes), MacSizeBits, nonce);
+    });
+  }
+
+  protected int getNonceSizeBits() {
+    return NonceSizeBits;
+  }
+
+  protected int getKeySizeBits() {
+    return KeySizeBits;
+  }
+
+  protected int getMacSizeBits() {
+    return MacSizeBits;
   }
 }
