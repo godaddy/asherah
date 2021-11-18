@@ -1,7 +1,5 @@
 package com.godaddy.asherah.crypto.engine.bouncycastle;
 
-import org.bouncycastle.crypto.StreamCipher;
-import org.bouncycastle.crypto.macs.SipHash;
 import org.bouncycastle.crypto.modes.AEADCipher;
 import org.bouncycastle.crypto.modes.ChaCha20Poly1305;
 import org.bouncycastle.crypto.params.AEADParameters;

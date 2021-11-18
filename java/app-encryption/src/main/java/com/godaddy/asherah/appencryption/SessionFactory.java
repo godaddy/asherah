@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
+import org.bouncycastle.crypto.modes.AEADCipher;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONObject;
@@ -27,6 +28,8 @@ import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
 import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
+import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyChaCha20Poly1305Crypto;
+import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -43,6 +46,7 @@ public class SessionFactory implements SafeAutoCloseable {
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
   private final Cache<String, CachedSession> sessionCache;
+  private final AeadEnvelopeCrypto cipher;
 
   /**
    * Creates a new {@code SessionFactory} instance using the provided parameters. A session factory is required to
@@ -63,13 +67,15 @@ public class SessionFactory implements SafeAutoCloseable {
       final Metastore<JSONObject> metastore,
       final SecureCryptoKeyMap<Instant> systemKeyCache,
       final CryptoPolicy cryptoPolicy,
-      final KeyManagementService keyManagementService) {
+      final KeyManagementService keyManagementService,
+      final AeadEnvelopeCrypto cipher) {
     this.productId = productId;
     this.serviceId = serviceId;
     this.metastore = metastore;
     this.systemKeyCache = systemKeyCache;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
+    this.cipher = cipher;
 
     this.sessionCache = Caffeine.newBuilder()
         .weigher((String intermediateKeyId, CachedSession session) -> {
@@ -244,7 +250,7 @@ public class SessionFactory implements SafeAutoCloseable {
           metastore,
           systemKeyCache,
           new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()),
-          new BouncyAes256GcmCrypto(),
+          cipher,
           cryptoPolicy,
           keyManagementService);
     };
@@ -286,11 +292,11 @@ public class SessionFactory implements SafeAutoCloseable {
    * @param serviceId A unique identifier for a service, used to create a {@code SessionFactory} object.
    * @return The current {@code MetastoreStep} instance with initialized {@code productId} and {@code serviceId}.
    */
-  public static MetastoreStep newBuilder(final String productId, final String serviceId) {
+  public static CipherStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);
   }
 
-  public static final class Builder implements MetastoreStep, CryptoPolicyStep, KeyManagementServiceStep, BuildStep {
+  public static final class Builder implements MetastoreStep, CryptoPolicyStep, KeyManagementServiceStep, CipherStep, BuildStep {
     private final String productId;
     private final String serviceId;
 
@@ -298,10 +304,23 @@ public class SessionFactory implements SafeAutoCloseable {
     private CryptoPolicy cryptoPolicy;
     private KeyManagementService keyManagementService;
     private boolean metricsEnabled = false;
+    private AeadEnvelopeCrypto cipher;
 
     private Builder(final String productId, final String serviceId) {
       this.productId = productId;
       this.serviceId = serviceId;
+    }
+
+    @Override
+    public MetastoreStep withBlockCipher() {
+      this.cipher = new BouncyAes256GcmCrypto();
+      return this;
+    }
+
+    @Override
+    public MetastoreStep withStreamCipher() {
+      this.cipher = new BouncyChaCha20Poly1305Crypto();
+      return this;
     }
 
     @Override
@@ -355,10 +374,21 @@ public class SessionFactory implements SafeAutoCloseable {
       }
 
       return new SessionFactory(productId, serviceId, metastore,
-          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService);
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService, cipher);
     }
   }
 
+
+  public interface CipherStep {
+    /**
+     *
+     * @return
+     */
+    MetastoreStep withBlockCipher();
+
+    MetastoreStep withStreamCipher();
+
+  }
   public interface MetastoreStep {
     /**
      * Initialize a session factory builder step with an {@link InMemoryMetastoreImpl} object.
