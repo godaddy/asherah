@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
-import org.bouncycastle.crypto.modes.AEADCipher;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONObject;
@@ -292,11 +291,11 @@ public class SessionFactory implements SafeAutoCloseable {
    * @param serviceId A unique identifier for a service, used to create a {@code SessionFactory} object.
    * @return The current {@code MetastoreStep} instance with initialized {@code productId} and {@code serviceId}.
    */
-  public static CipherStep newBuilder(final String productId, final String serviceId) {
+  public static MetastoreStep newBuilder(final String productId, final String serviceId) {
     return new Builder(productId, serviceId);
   }
 
-  public static final class Builder implements MetastoreStep, CryptoPolicyStep, KeyManagementServiceStep, CipherStep, BuildStep {
+  public static final class Builder implements MetastoreStep, CryptoPolicyStep, KeyManagementServiceStep, BuildStep {
     private final String productId;
     private final String serviceId;
 
@@ -304,23 +303,11 @@ public class SessionFactory implements SafeAutoCloseable {
     private CryptoPolicy cryptoPolicy;
     private KeyManagementService keyManagementService;
     private boolean metricsEnabled = false;
-    private AeadEnvelopeCrypto cipher;
+    private AeadEnvelopeCrypto cipher = new BouncyAes256GcmCrypto();
 
     private Builder(final String productId, final String serviceId) {
       this.productId = productId;
       this.serviceId = serviceId;
-    }
-
-    @Override
-    public MetastoreStep withBlockCipher() {
-      this.cipher = new BouncyAes256GcmCrypto();
-      return this;
-    }
-
-    @Override
-    public MetastoreStep withStreamCipher() {
-      this.cipher = new BouncyChaCha20Poly1305Crypto();
-      return this;
     }
 
     @Override
@@ -367,6 +354,13 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     @Override
+    public BuildStep withStreamCipher() {
+      this.cipher = new BouncyChaCha20Poly1305Crypto();
+      return this;
+    }
+
+
+    @Override
     public SessionFactory build() {
       if (!metricsEnabled) {
         // Deny takes precedence in the filtering logic, so we deny if they didn't explicitly enable metrics
@@ -378,17 +372,6 @@ public class SessionFactory implements SafeAutoCloseable {
     }
   }
 
-
-  public interface CipherStep {
-    /**
-     *
-     * @return
-     */
-    MetastoreStep withBlockCipher();
-
-    MetastoreStep withStreamCipher();
-
-  }
   public interface MetastoreStep {
     /**
      * Initialize a session factory builder step with an {@link InMemoryMetastoreImpl} object.
@@ -446,6 +429,12 @@ public class SessionFactory implements SafeAutoCloseable {
   }
 
   public interface BuildStep {
+
+    /**
+     *
+     */
+    BuildStep withStreamCipher();
+
     /**
      * Enable metrics for the {@code SessionFactory}.
      *

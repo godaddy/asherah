@@ -22,7 +22,6 @@ public final class SessionFactoryGenerator {
   public static SessionFactory createDefaultSessionFactory(final String productId, final String serviceId,
       KeyManagementService keyManagementService, Metastore<JSONObject> metastore) {
     return SessionFactory.newBuilder(productId, serviceId)
-      .withBlockCipher()
       .withMetastore(metastore)
       .withNeverExpiredCryptoPolicy()
       .withKeyManagementService(keyManagementService)

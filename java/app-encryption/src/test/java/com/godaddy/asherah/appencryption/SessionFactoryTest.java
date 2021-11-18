@@ -130,7 +130,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -167,7 +166,6 @@ class SessionFactoryTest {
     when(policy.getSessionCacheExpireMillis()).thenReturn(sessionCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -211,7 +209,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -257,7 +254,6 @@ class SessionFactoryTest {
     when(policy.getSessionCacheExpireMillis()).thenReturn(sessionCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -309,7 +305,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -361,7 +356,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -416,7 +410,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withMetastore(metastoreSpy)
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -460,7 +453,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -511,7 +503,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -557,7 +548,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -605,7 +595,6 @@ class SessionFactoryTest {
         .build();
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -655,7 +644,6 @@ class SessionFactoryTest {
     when(policy.getSessionCacheExpireMillis()).thenReturn(sessionCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -707,7 +695,6 @@ class SessionFactoryTest {
     when(policy.getSessionCacheExpireMillis()).thenReturn(sessionCacheExpireMillis);
 
     try (SessionFactory factory = SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withCryptoPolicy(policy)
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -829,12 +816,8 @@ class SessionFactoryTest {
 
   @Test
   void testBuilderPathWithPrebuiltInterfaces() {
-    SessionFactory.CipherStep cipherStep =
-      SessionFactory.newBuilder(testProductId, testServiceId);
-    assertNotNull(cipherStep);
-
     SessionFactory.MetastoreStep metastoreStep =
-        cipherStep.withBlockCipher();
+        SessionFactory.newBuilder(testProductId, testServiceId);
     assertNotNull(metastoreStep);
 
     SessionFactory.CryptoPolicyStep cryptoPolicyStep = metastoreStep.withInMemoryMetastore();
@@ -854,12 +837,8 @@ class SessionFactoryTest {
 
   @Test
   void testBuilderPathWithSpecifiedInterfaces() {
-    SessionFactory.CipherStep cipherStep =
-      SessionFactory.newBuilder(testProductId, testServiceId);
-    assertNotNull(cipherStep);
-
     SessionFactory.MetastoreStep metastoreStep =
-      cipherStep.withBlockCipher();
+        SessionFactory.newBuilder(testProductId, testServiceId);
     assertNotNull(metastoreStep);
 
     Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
@@ -882,9 +861,36 @@ class SessionFactoryTest {
   }
 
   @Test
+  void testBuilderPathWithStreamCipher() {
+    SessionFactory.MetastoreStep metastoreStep =
+      SessionFactory.newBuilder(testProductId, testServiceId);
+    assertNotNull(metastoreStep);
+
+    Metastore<JSONObject> metastore = new InMemoryMetastoreImpl<>();
+    SessionFactory.CryptoPolicyStep cryptoPolicyStep =
+      metastoreStep.withMetastore(metastore);
+    assertNotNull(cryptoPolicyStep);
+
+    CryptoPolicy cryptoPolicy = new NeverExpiredCryptoPolicy();
+    SessionFactory.KeyManagementServiceStep keyManagementServiceStep =
+      cryptoPolicyStep.withCryptoPolicy(cryptoPolicy);
+    assertNotNull(keyManagementServiceStep);
+
+    KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl(testStaticMasterKey);
+    SessionFactory.BuildStep buildStep =
+      keyManagementServiceStep.withKeyManagementService(keyManagementService);
+    assertNotNull(buildStep);
+
+    buildStep = buildStep.withStreamCipher();
+    assertNotNull(buildStep);
+
+    SessionFactory sessionFactory = buildStep.build();
+    assertNotNull(sessionFactory);
+  }
+
+  @Test
   void testBuilderPathWithMetricsDisabled() {
     SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testStaticMasterKey)
@@ -895,7 +901,6 @@ class SessionFactoryTest {
   @Test
   void testBuilderPathWithMetricsEnabled() {
     SessionFactory.newBuilder(testProductId, testServiceId)
-        .withBlockCipher()
         .withInMemoryMetastore()
         .withNeverExpiredCryptoPolicy()
         .withStaticKeyManagementService(testStaticMasterKey)
