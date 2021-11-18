@@ -59,6 +59,7 @@ public class SessionFactory implements SafeAutoCloseable {
    * @param cryptoPolicy A {@link CryptoPolicy} implementation that dictates the various behaviors of Asherah.
    * @param keyManagementService A {@link KeyManagementService} implementation that generates the top level master key
    *                             and encrypts the system keys using the master key.
+   * @param cipher An implementation of {@link AeadEnvelopeCrypto} which can be a block cipher or a stream Cipher
    */
   public SessionFactory(
       final String productId,
@@ -367,8 +368,13 @@ public class SessionFactory implements SafeAutoCloseable {
         Metrics.globalRegistry.config().meterFilter(MeterFilter.denyNameStartsWith(MetricsUtil.AEL_METRICS_PREFIX));
       }
 
-      return new SessionFactory(productId, serviceId, metastore,
-          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService, cipher);
+      return new SessionFactory(productId,
+        serviceId,
+        metastore,
+        new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()),
+        cryptoPolicy,
+        keyManagementService,
+        cipher);
     }
   }
 
@@ -431,7 +437,9 @@ public class SessionFactory implements SafeAutoCloseable {
   public interface BuildStep {
 
     /**
+     * Use stream cipher for encryption/decryption operations
      *
+     * @return The current {@code BuildStep} instance with metrics enabled.
      */
     BuildStep withStreamCipher();
 

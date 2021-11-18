@@ -6,7 +6,6 @@ import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.godaddy.asherah.securememory.Debug;
 
-import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.AEADCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
