@@ -437,7 +437,7 @@ public class SessionFactory implements SafeAutoCloseable {
   public interface BuildStep {
 
     /**
-     * Use stream cipher for encryption/decryption operations
+     * Use stream cipher for encryption/decryption operations.
      *
      * @return The current {@code BuildStep} instance with metrics enabled.
      */
