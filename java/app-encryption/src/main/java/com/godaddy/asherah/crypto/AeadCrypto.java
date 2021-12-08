@@ -9,6 +9,9 @@ import com.godaddy.asherah.securememory.Secret;
 import com.godaddy.asherah.securememory.SecretFactory;
 import com.godaddy.asherah.securememory.TransientSecretFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.time.Instant;
 
@@ -40,6 +43,11 @@ public abstract class AeadCrypto {
    * @return A decrypted payload.
    */
   public abstract byte[] decrypt(byte[] input, CryptoKey key);
+
+  public abstract void encryptStream(InputStream inputStream, OutputStream streamOut, CryptoKey key)
+    throws IOException;
+  public abstract void decryptStream(InputStream encStream, OutputStream outStream, CryptoKey key)
+    throws IOException;
 
   protected AeadCrypto() {
     secretFactory = new TransientSecretFactory();

@@ -13,7 +13,7 @@ public class BouncyChaCha20Poly1305Crypto extends BouncyAeadCrypto {
   }
 
   @Override
-  protected AEADCipher getNewAeadBlockCipherInstance() {
+  protected AEADCipher getNewAeadCipherInstance() {
     return new ChaCha20Poly1305();
   }
 }
