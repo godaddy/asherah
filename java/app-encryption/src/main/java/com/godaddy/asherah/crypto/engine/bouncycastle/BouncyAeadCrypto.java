@@ -24,7 +24,7 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   private static final int NonceSizeBits = 96;
   private static final int MacSizeBits = 128;
   private static final int KeySizeBits = 256;
-  private static final int BufferSize = 4096;
+  private static final int BufferSize = 4096; // TODO Use default buffer size
 
   protected abstract AEADCipher getNewAeadCipherInstance();
 

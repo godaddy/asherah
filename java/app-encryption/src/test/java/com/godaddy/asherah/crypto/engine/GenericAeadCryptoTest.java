@@ -10,13 +10,19 @@ import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyChaCha20Poly1305Cryp
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,16 +96,33 @@ public abstract class GenericAeadCryptoTest {
     "TestString",
     "ᐊᓕᒍᖅ ᓂᕆᔭᕌᖓᒃᑯ ᓱᕋᙱᑦᑐᓐᓇᖅᑐᖓ ",
     "𠜎 𠜱 𠝹 𠱓 𠱸 𠲖 𠳏 𠳕 𠴕 𠵼 𠵿 𠸎 𠸏 𠹷 𠺝 𠺢 𠻗 𠻹 𠻺 𠼭 𠼮 𠽌 𠾴 𠾼 𠿪 𡁜 𡁯 𡁵 𡁶 𡁻 𡃁 𡃉 𡇙 𢃇 𢞵 𢫕 𢭃 𢯊 𢱑 𢱕 𢳂 𢴈 𢵌 𢵧 𢺳 𣲷 𤓓 𤶸 𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘" })
-  void testEncryptStream(String testData) throws IOException {
-    this.crypto = new BouncyChaCha20Poly1305Crypto();
+  void roundTripStream(String testData) throws IOException {
+    // TODO Don't use static values. Create temp file, populate, enc, dec. Add a sanity check that tempfile> buffer size
+    this.crypto = new BouncyAes256GcmCrypto();
     CryptoKey rightKey = crypto.generateKey();
     InputStream inputStream = new ByteArrayInputStream(testData.getBytes());
-    OutputStream s = new FileOutputStream(testData+"_encrypt.txt");
-    crypto.encryptStream(inputStream, s, rightKey);
+    OutputStream outputStream = new FileOutputStream(testData+"_encrypt.txt");
+    // Encrypt stream
+    crypto.encryptStream(inputStream, outputStream, rightKey);
 
-    InputStream x = new FileInputStream(testData+"_encrypt.txt");
-    OutputStream o = new FileOutputStream(testData+"_decrypt.txt");
+    inputStream = new FileInputStream(testData+"_encrypt.txt");
+    outputStream = new FileOutputStream(testData+"_decrypt.txt");
+    // Decrypt stream
+    crypto.decryptStream(inputStream,outputStream, rightKey);
 
-    crypto.decryptStream(x,o, rightKey);
+    // Read value from the file written by the OutputStream & compare
+    StringBuilder textBuilder = new StringBuilder();
+    inputStream = new FileInputStream(testData+"_decrypt.txt");
+
+    try (Reader reader = new BufferedReader(new InputStreamReader
+      (inputStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
+      int data;
+      while ((data = reader.read()) != -1) {
+        textBuilder.append((char) data);
+      }
+    }
+    assertEquals(testData, textBuilder.toString());
+    Files.deleteIfExists(Paths.get(testData+"_decrypt.txt"));
+    Files.deleteIfExists(Paths.get(testData+"_encrypt.txt"));
   }
 }
