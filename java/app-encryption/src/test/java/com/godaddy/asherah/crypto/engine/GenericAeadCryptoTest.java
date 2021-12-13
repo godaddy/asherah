@@ -5,9 +5,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.testhelpers.ByteArray;
+import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
+import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyChaCha20Poly1305Crypto;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -74,5 +82,24 @@ public abstract class GenericAeadCryptoTest {
     byte[] cipherText = crypto.encrypt(testData.getBytes(StandardCharsets.UTF_8), rightKey);
     CryptoKey wrongKey = crypto.generateKey();
     assertThrows(AppEncryptionException.class, () -> crypto.decrypt(cipherText, wrongKey));
+  }
+
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "TestString",
+    "ᐊᓕᒍᖅ ᓂᕆᔭᕌᖓᒃᑯ ᓱᕋᙱᑦᑐᓐᓇᖅᑐᖓ ",
+    "𠜎 𠜱 𠝹 𠱓 𠱸 𠲖 𠳏 𠳕 𠴕 𠵼 𠵿 𠸎 𠸏 𠹷 𠺝 𠺢 𠻗 𠻹 𠻺 𠼭 𠼮 𠽌 𠾴 𠾼 𠿪 𡁜 𡁯 𡁵 𡁶 𡁻 𡃁 𡃉 𡇙 𢃇 𢞵 𢫕 𢭃 𢯊 𢱑 𢱕 𢳂 𢴈 𢵌 𢵧 𢺳 𣲷 𤓓 𤶸 𤷪 𥄫 𦉘 𦟌 𦧲 𦧺 𧨾 𨅝 𨈇 𨋢 𨳊 𨳍 𨳒 𩶘" })
+  void testEncryptStream(String testData) throws IOException {
+    this.crypto = new BouncyChaCha20Poly1305Crypto();
+    CryptoKey rightKey = crypto.generateKey();
+    InputStream inputStream = new ByteArrayInputStream(testData.getBytes());
+    OutputStream s = new FileOutputStream(testData+"_encrypt.txt");
+    crypto.encryptStream(inputStream, s, rightKey);
+
+    InputStream x = new FileInputStream(testData+"_encrypt.txt");
+    OutputStream o = new FileOutputStream(testData+"_decrypt.txt");
+
+    crypto.decryptStream(x,o, rightKey);
   }
 }

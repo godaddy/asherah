@@ -3,6 +3,7 @@ package com.godaddy.asherah.crypto.engine.bouncycastle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.crypto.bufferutils.ManagedBufferUtils;
@@ -151,10 +152,11 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
       } catch (Exception e) {
         throw new AppEncryptionException("unexpected error during encrypt cipher finalization", e);
       }
-      outputStream.write(output);
+      outputStream.write(trim(output));
       count += n;
       cipher.reset();
     }
+
   }
 
 
@@ -168,5 +170,16 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
 
   protected int getMacSizeBits() {
     return MacSizeBits;
+  }
+
+  private byte[] trim(byte[] bytes)
+  {
+    int i = bytes.length - 1;
+    while (i >= 0 && bytes[i] == 0)
+    {
+      --i;
+    }
+
+    return Arrays.copyOf(bytes, i + 1);
   }
 }
