@@ -5,17 +5,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.godaddy.asherah.crypto.bufferutils.ManagedBufferUtils;
-import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
-import com.godaddy.asherah.crypto.keys.CryptoKey;
-import com.godaddy.asherah.securememory.Debug;
-
 import org.bouncycastle.crypto.modes.AEADCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
+import com.godaddy.asherah.crypto.bufferutils.ManagedBufferUtils;
+import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
+import com.godaddy.asherah.crypto.keys.CryptoKey;
+import com.godaddy.asherah.securememory.Debug;
 
 public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   private static final Logger LOG = LoggerFactory.getLogger(BouncyAeadCrypto.class);
@@ -25,11 +25,11 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
   private static final int MacSizeBits = 128;
   private static final int KeySizeBits = 256;
   private static final int BufferSize = 4096;
-  private static final long ReadLimit = 9223372036854775807L;
 
   protected abstract AEADCipher getNewAeadCipherInstance();
 
-  protected BouncyAeadCrypto() { }
+  protected BouncyAeadCrypto() {
+  }
 
   @Override
   public byte[] encrypt(final byte[] input, final CryptoKey key) {
@@ -100,20 +100,10 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
 
   @Override
   public void encryptStream(final InputStream inputStream, final OutputStream outputStream,
-                            final CryptoKey key) {
-    long count = 0L;
-    while (count < ReadLimit) {
-      int n = 0;
-      byte[] buf = new byte[BufferSize];
-      try {
-        n = inputStream.read(buf);
-        if (n <= -1) {
-          break;
-        }
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
+                            final CryptoKey key) throws IOException {
+    byte[] buf = new byte[BufferSize];
+    int data = inputStream.read(buf);
+    while (data != -1) {
       byte[] nonce = generateNonce();
       AEADCipher cipher = getNewAeadCipherInstance();
       AEADParameters cipherParameters = getParameters(key, nonce);
@@ -128,34 +118,19 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
         throw new AppEncryptionException("unexpected error during encrypt cipher finalization", e);
       }
       appendNonce(output, nonce);
-      try {
-        outputStream.write(output);
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      count += n;
+      outputStream.write(output);
       cipher.reset();
+      data = inputStream.read(buf);
     }
   }
 
   @Override
   public void decryptStream(final InputStream inputStream, final OutputStream outputStream,
-                            final CryptoKey key) {
+                            final CryptoKey key) throws IOException {
     int nonceLength = getNonceSizeBits() / Byte.SIZE;
-    long count = 0L;
-    while (count < ReadLimit) {
-      int n = 0;
-      byte[] buf = new byte[BufferSize + getMacSizeBits() / Byte.SIZE + nonceLength];
-      try {
-        n = inputStream.read(buf);
-        if (n <= -1) {
-          break;
-        }
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
+    byte[] buf = new byte[BufferSize + getMacSizeBits() / Byte.SIZE + nonceLength];
+    int data = inputStream.read(buf);
+    while (data != -1) {
       byte[] nonce = getAppendedNonce(buf);
       AEADCipher cipher = getNewAeadCipherInstance();
       AEADParameters cipherParameters = getParameters(key, nonce);
@@ -170,16 +145,10 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
       catch (Exception e) {
         throw new AppEncryptionException("unexpected error during encrypt cipher finalization", e);
       }
-      try {
-        outputStream.write(trim(output));
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      count += n;
+      outputStream.write(trim(output));
       cipher.reset();
+      data = inputStream.read(buf);
     }
-
   }
 
 
@@ -200,7 +169,6 @@ public abstract class BouncyAeadCrypto extends AeadEnvelopeCrypto {
     while (i >= 0 && bytes[i] == 0) {
       --i;
     }
-
     return Arrays.copyOf(bytes, i + 1);
   }
 }
