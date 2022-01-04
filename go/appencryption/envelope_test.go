@@ -487,6 +487,7 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_CreateIntermediateKey_Metasto
 
 	suite.secretFactory.(*MockSecretFactory).On("CreateRandom", mock.Anything).Return(suite.randomSecret, nil)
 	sk, skBytes := getKeyAndKeyBytes(suite.T())
+	suite.skCache.(*MockCache).On("GetOrLoad", KeyMeta{}, mock.Anything).Return(sk, nil)
 	suite.skCache.(*MockCache).On("GetOrLoadLatest", suite.partition.SystemKeyID(), mock.Anything).Return(sk, nil)
 	suite.crypto.(*MockCrypto).On("Encrypt", mock.AnythingOfType("[]uint8"), skBytes).Return(encryptedBytes, nil)
 	suite.metastore.(*MockMetastore).On("Store", context.Background(), suite.partition.IntermediateKeyID(), mock.Anything, mock.Anything).
