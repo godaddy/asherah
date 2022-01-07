@@ -465,6 +465,29 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_LoadLatestOrCreateSystemKey_M
 	mock.AssertExpectationsForObjects(suite.T(), suite.crypto, suite.kms, suite.metastore, suite.secretFactory)
 }
 
+func (suite *EnvelopeSuite) TestEnvelopeEncryption_CreateIntermediateKey_IntermediateKeyFromEKRWithSKLookupSuccess() {
+    ikEkr := new(EnvelopeKeyRecord)
+    ikEkr.ParentKeyMeta = &KeyMeta{ Created: someTimestamp+1}
+
+    suite.secretFactory.(*MockSecretFactory).On("CreateRandom", mock.Anything).Return(suite.randomSecret, nil)
+    sk, skBytes := getKeyAndKeyBytes(suite.T())
+    suite.skCache.(*MockCache).On("GetOrLoad", mock.Anything, mock.Anything).Return(sk, nil)
+    suite.skCache.(*MockCache).On("GetOrLoadLatest", suite.partition.SystemKeyID(), mock.Anything).Return(sk, nil)
+    suite.crypto.(*MockCrypto).On("Encrypt", mock.AnythingOfType("[]uint8"), skBytes).Return(encryptedBytes, nil)
+    suite.metastore.(*MockMetastore).On("Store", context.Background(), suite.partition.IntermediateKeyID(), mock.Anything, mock.Anything).
+        Return(false, errors.New(genericErrorMessage))
+    suite.metastore.(*MockMetastore).On("LoadLatest", context.Background(), suite.partition.IntermediateKeyID()).Return(ikEkr, nil)
+    suite.crypto.(*MockCrypto).On("Decrypt", ikEkr.EncryptedKey, skBytes).Return(decryptedBytes, nil)
+    suite.secretFactory.(*MockSecretFactory).On("New", mock.Anything).Return(suite.newSecret, nil)
+
+    ik, err := suite.e.createIntermediateKey(context.Background())
+
+    assert.Nil(suite.T(), err)
+    assert.NotNil(suite.T(), ik)
+    assert.True(suite.T(), suite.randomSecret.IsClosed())
+    mock.AssertExpectationsForObjects(suite.T(), suite.crypto, suite.metastore, suite.skCache, suite.secretFactory)
+}
+
 func (suite *EnvelopeSuite) TestEnvelopeEncryption_CreateIntermediateKey_IntermediateKeyFromEKRWithSKLookupFailsShouldReturnError() {
     ikEkr := new(EnvelopeKeyRecord)
     ikEkr.ParentKeyMeta = &KeyMeta{ Created: someTimestamp+1}
