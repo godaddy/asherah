@@ -93,16 +93,18 @@ func (e *envelopeEncryption) systemKeyFromEKR(ctx context.Context, ekr *Envelope
 
 // intermediateKeyFromEKR decrypts ekr using sk and returns a new CryptoKey containing the decrypted key data.
 func (e *envelopeEncryption) intermediateKeyFromEKR(sk *internal.CryptoKey, ekr *EnvelopeKeyRecord) (*internal.CryptoKey, error) {
-    if ekr != nil && ekr.ParentKeyMeta != nil && sk.Created() != ekr.ParentKeyMeta.Created {
-        //In this case, the system key just rotated and this EKR was encrypted with the prior SK.
-        //A duplicate IK would have been attempted to create with the correct SK but would create a duplicate so is discarded.
-        //Lookup the correct system key so the ik decryption can succeed.
-        skLoaded, err := e.getOrLoadSystemKey(context.Background(), *ekr.ParentKeyMeta)
-        if err != nil {
-            return nil, err
-        }
-        sk = skLoaded
-    }
+	if ekr != nil && ekr.ParentKeyMeta != nil && sk.Created() != ekr.ParentKeyMeta.Created {
+		//In this case, the system key just rotated and this EKR was encrypted with the prior SK.
+		//A duplicate IK would have been attempted to create with the correct SK but would create a duplicate so is discarded.
+		//Lookup the correct system key so the ik decryption can succeed.
+		skLoaded, err := e.getOrLoadSystemKey(context.Background(), *ekr.ParentKeyMeta)
+		if err != nil {
+			return nil, err
+		}
+
+		sk = skLoaded
+	}
+
 	ikBuffer, err := internal.WithKeyFunc(sk, func(skBytes []byte) ([]byte, error) {
 		return e.Crypto.Decrypt(ekr.EncryptedKey, skBytes)
 	})
