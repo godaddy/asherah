@@ -30,7 +30,7 @@ namespace GoDaddy.Asherah.ReferenceApp
         [Option('p', "preferred-region", Required = false, HelpText = "Preferred region to use for KMS if using AWS KMS. Required for AWS KMS.")]
         public string PreferredRegion { get; set; }
 
-        [Option('t', "region-arn-tuples", Required = false, Separator = ',', HelpText = "Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.")]
+        [Option("region-arn-tuples", Required = false, Separator = ',', HelpText = "Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.")]
         public IEnumerable<string> RegionToArnTuples { get; set; }
 
         [Option('i', "iterations", Required = false, HelpText = "Number of encrypt/decrypt iterations to run", Default = 1)]
