@@ -65,3 +65,6 @@ while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do sleep 1; done
 behave features/decrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf ${ASHERAH_SOCKET_FILE}
+
+# Run the Node decrypt test
+cd ../node/ && ./run-decrypt.sh

@@ -802,6 +802,10 @@ jobs:
         echo "PATH: ${PATH}"
         echo "GOBIN: ${GOBIN}"
         ./scripts/build.sh
+    - name: Install npm packages for Asherah-Node
+      run: |
+        cd tests/cross-language/node
+        npm install
     - name: Test
       env:
         TEST_DB_NAME: ${{ env.MYSQL_DATABASE }}

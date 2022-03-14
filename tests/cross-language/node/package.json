@@ -1,0 +1,17 @@
+{
+  "name": "cross-language",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cucumber.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@cucumber/cucumber": "^7.3.2",
+    "asherah": "*",
+    "assert": "^2.0.0",
+    "fs": "^0.0.1-security"
+  }
+}

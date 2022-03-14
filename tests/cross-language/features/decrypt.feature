@@ -13,3 +13,4 @@ Feature: Decrypt Data using RDBMS metastore and static KMS
       | mySuperSecretPayload | go_encrypted           |
       | mySuperSecretPayload | sidecar_go_encrypted   |
       | mySuperSecretPayload | sidecar_java_encrypted |
+      | mySuperSecretPayload | node_encrypted         |

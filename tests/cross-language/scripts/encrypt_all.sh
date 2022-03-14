@@ -67,3 +67,6 @@ while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do sleep 1; done
 behave -D FILE=/tmp/sidecar_java_encrypted features/encrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf ${ASHERAH_SOCKET_FILE}
+
+# Run the Node encrypt test
+cd ../node/ && ./run-encrypt.sh
