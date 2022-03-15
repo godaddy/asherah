@@ -802,6 +802,13 @@ jobs:
         echo "PATH: ${PATH}"
         echo "GOBIN: ${GOBIN}"
         ./scripts/build.sh
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.1
+        bundler: default
+        bundler-cache: true
+        working-directory: tests/cross-language/ruby
     - name: Test
       env:
         TEST_DB_NAME: ${{ env.MYSQL_DATABASE }}

@@ -65,3 +65,10 @@ while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do sleep 1; done
 behave features/decrypt.feature
 kill $ASHERAH_JAVA_SIDECAR_PID
 rm -rf ${ASHERAH_SOCKET_FILE}
+cd ..
+
+
+echo "---------------------Decrypting data using Ruby-------------------------"
+cd ruby
+bundle exec cucumber ../features/decrypt.feature
+cd ..
