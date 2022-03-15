@@ -10,4 +10,5 @@ require (
 	github.com/godaddy/asherah/go/securememory v0.1.2
 	github.com/prometheus/procfs v0.7.3
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 )
