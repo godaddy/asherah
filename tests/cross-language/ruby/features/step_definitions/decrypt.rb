@@ -3,7 +3,7 @@ Given 'I have encrypted_data from {string}' do |file_name|
 end
 
 When 'I decrypt the encrypted_data' do
-  @decrypted_data = Asherah.decrypt_from_json('partition', @encrypted_data)
+  @decrypted_data = Asherah.decrypt_from_json('partition', Base64.strict_decode64(@encrypted_data))
 end
 
 Then 'I should get decrypted_data' do

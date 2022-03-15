@@ -1,4 +1,5 @@
 require 'asherah'
+require 'base64'
 
 SERVICE_NAME      = ENV.fetch('ASHERAH_SERVICE_NAME')
 PRODUCT_ID        = ENV.fetch('ASHERAH_PRODUCT_NAME')

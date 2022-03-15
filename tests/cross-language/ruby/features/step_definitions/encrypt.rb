@@ -3,7 +3,7 @@ Given 'I have {string}' do |data|
 end
 
 When 'I encrypt the data' do
-  @encrypted_data = Asherah.encrypt_to_json('partition', @data)
+  @encrypted_data = Base64.strict_encode64(Asherah.encrypt_to_json('partition', @data))
   Asherah.shutdown
 end
 
