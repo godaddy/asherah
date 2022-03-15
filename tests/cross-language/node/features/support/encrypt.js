@@ -58,6 +58,6 @@ Then('I should get encrypted_data', async function () {
 });
 
 Then('encrypted_data should not be equal to data', async function () {
-    assert(payloadString, encryptedPayloadString);
+    assert(payloadString != encryptedPayloadString);
     return 'passed';
 });
