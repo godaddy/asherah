@@ -4,7 +4,6 @@ end
 
 When 'I encrypt the data' do
   @encrypted_data = Base64.strict_encode64(Asherah.encrypt_to_json('partition', @data))
-  Asherah.shutdown
 end
 
 Then 'I should get encrypted_data' do
