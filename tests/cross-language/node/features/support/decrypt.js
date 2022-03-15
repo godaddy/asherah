@@ -4,7 +4,6 @@ const asherah = require("asherah");
 const fs = require("fs");
 
 const fileDirectory = "/tmp/";
-const fileName = "node_encrypted";
 
 var encryptedPayload;
 var decryptedPayload;
@@ -16,7 +15,7 @@ var adoPort = process.env.TEST_DB_PORT;
 var adoConnectionString = adoUsername+":"+adoPassword+"@tcp(localhost:"+adoPort+")/"+adoDatabaseName+"?tls=false"
 
 Given('I have encrypted_data from {string}', async function (string) {
-    var payload = fs.readFileSync(fileDirectory + fileName, 'utf8');
+    var payload = fs.readFileSync(fileDirectory + string, 'utf8');
     encryptedPayload = Buffer.from(payload, 'base64').toString('utf8')
     return 'passed';
 });
