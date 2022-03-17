@@ -7,4 +7,5 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/godaddy/asherah/go/appencryption v0.2.3
 	github.com/pkg/errors v0.9.1
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 )
