@@ -807,7 +807,7 @@ jobs:
         TEST_DB_NAME: ${{ env.MYSQL_DATABASE }}
         TEST_DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
         TEST_DB_USER: ${{ env.MYSQL_USERNAME }}
-        TEST_DB_HOSTNAME: ${{ env.MYSQL_HOSTNAME }}
+        TEST_DB_HOSTNAME: localhost
         TEST_DB_PORT: ${{ job.services.mysql.ports[3306] }}
         ASHERAH_SERVICE_NAME: service
         ASHERAH_PRODUCT_NAME: product
