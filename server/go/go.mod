@@ -10,5 +10,6 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 	google.golang.org/grpc v1.44.0
 )
