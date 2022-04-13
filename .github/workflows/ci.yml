@@ -475,7 +475,7 @@ jobs:
     name: Build Go Secure Memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.15
+      image: golang:1.17
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -538,7 +538,7 @@ jobs:
     needs: go-secure-memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.15
+      image: golang:1.17
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -608,7 +608,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.15
+      image: golang:1.17
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -635,7 +635,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.15
+      image: golang:1.17
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -679,10 +679,10 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: '11'
-    - name: Set up Go 1.15
+    - name: Set up Go 1.17
       uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
       with:
-        go-version: '1.15'
+        go-version: '1.17'
     - name: Set up Python 3.7
       uses: actions/setup-python@3105fb18c05ddd93efea5f9e0bef7a03a6e9e7df
       with:
@@ -752,10 +752,10 @@ jobs:
       uses: actions/setup-dotnet@51f68377c181a79065c61bd492bd49be4575c439
       with:
         dotnet-version: '3.1.x'
-    - name: Set up Go 1.15
+    - name: Set up Go 1.17
       uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
       with:
-        go-version: '1.15'
+        go-version: '1.17'
     - name: Set up Python 3.8
       uses: actions/setup-python@3105fb18c05ddd93efea5f9e0bef7a03a6e9e7df
       with:
