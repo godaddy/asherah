@@ -2,7 +2,8 @@
 
 set -e
 
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export PATH=${GOROOT}/bin:${PATH}
+go version
 
 export ASHERAH_SERVICE_NAME=service
 export ASHERAH_PRODUCT_NAME=product
