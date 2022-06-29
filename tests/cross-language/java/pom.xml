@@ -32,7 +32,7 @@
     <cucumber.version>5.4.0</cucumber.version>
     <junit.jupiter.version>5.1.0</junit.jupiter.version>
     <hikaricp.version>2.6.1</hikaricp.version>
-    <mysql.connector.version>8.0.16</mysql.connector.version>
+    <mysql.connector.version>8.0.28</mysql.connector.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
 
