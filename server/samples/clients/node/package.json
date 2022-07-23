@@ -4,7 +4,7 @@
   "description": "A simple Node application that demonstrates integrating with Asherah Server",
   "main": "appencryption_client.js",
   "dependencies": {
-    "@grpc/grpc-js": "^1.1.8",
+    "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.13",
     "sleep": "^6.3.0",
     "winston": "^3.3.3",
