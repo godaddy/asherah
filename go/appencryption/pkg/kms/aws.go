@@ -281,11 +281,13 @@ func (m *AWSKMS) DecryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 			decryptKeyTimer.UpdateSince(start)
 
 			if err != nil {
+				log.Printf("error kms decrypt: %s", err)
 				continue
 			}
 
 			decryptedKeyBytes, err := m.Crypto.Decrypt(en.EncryptedKey, output.Plaintext)
 			if err != nil {
+				log.Printf("error crypto decrypt: %s", err)
 				continue
 			}
 
