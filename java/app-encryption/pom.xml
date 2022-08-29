@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.3</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -38,18 +38,18 @@
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <slf4j.version>1.7.30</slf4j.version>
+    <slf4j.version>1.7.36</slf4j.version>
     <guava.version>30.1-jre</guava.version>
-    <aws.sdk.version>1.11.966</aws.sdk.version>
-    <micrometer.version>1.6.4</micrometer.version>
-    <caffeine.version>3.0.0</caffeine.version>
+    <aws.sdk.version>1.12.288</aws.sdk.version>
+    <micrometer.version>1.9.1</micrometer.version>
+    <caffeine.version>3.1.1</caffeine.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <mockito.core.version>3.8.0</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
     <jacoco.version>0.8.6</jacoco.version>
     <amazonaws.version>1.15.0</amazonaws.version>
-    <jackson.version>2.12.1</jackson.version>
+    <jackson.version>2.13.3</jackson.version>
     <apache.commons.version>1.9</apache.commons.version>
     <zaxxer.version>4.0.3</zaxxer.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
@@ -413,6 +413,13 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
             <version>1.6</version>
+            <configuration>
+              <!-- Prevent gpg from using pinentry programs -->
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
             <executions>
               <execution>
                 <id>sign-artifacts</id>

@@ -4,18 +4,19 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 
-namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
-    internal class ProtectedMemorySecret : Secret
+    internal class SecureMemorySecret : Secret
     {
         private readonly ReaderWriterLockSlim pointerLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private readonly object accessLock = new object();
         private readonly ulong length;
-        private readonly IProtectedMemoryAllocator allocator;
+        private readonly ISecureMemoryAllocator allocator;
         private readonly IConfiguration configuration;
         private readonly bool requireSecretDisposal;
         private IntPtr pointer;
@@ -25,9 +26,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
         // access. If that changes, update the counter accordingly!
         private long accessCounter = 0;
 
-        internal ProtectedMemorySecret(byte[] sourceBytes, IProtectedMemoryAllocator allocator, IConfiguration configuration)
+        internal SecureMemorySecret(byte[] sourceBytes, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
-            Debug.WriteLine("ProtectedMemorySecret ctor");
+            Debug.WriteLine("SecureMemorySecret ctor");
             this.allocator = allocator;
             this.configuration = configuration;
 
@@ -49,7 +50,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
             if (pointer == IntPtr.Zero)
             {
-                throw new ProtectedMemoryAllocationFailedException("Protected memory allocation failed");
+                throw new SecureMemoryAllocationFailedException("Protected memory allocation failed");
             }
 
             try
@@ -76,9 +77,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
             SecureZeroMemory(sourceBytes);
         }
 
-        ~ProtectedMemorySecret()
+        ~SecureMemorySecret()
         {
-            Debug.WriteLine($"ProtectedMemorySecret: Finalizer");
+            Debug.WriteLine($"SecureMemorySecret: Finalizer");
             Dispose(disposing: false);
         }
 
@@ -172,30 +173,30 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
         public override Secret CopySecret()
         {
-            Debug.WriteLine("ProtectedMemorySecret.CopySecret");
-            return WithSecretBytes(bytes => new ProtectedMemorySecret(bytes, allocator, configuration));
+            Debug.WriteLine("SecureMemorySecret.CopySecret");
+            return WithSecretBytes(bytes => new SecureMemorySecret(bytes, allocator, configuration));
         }
 
         public override void Close()
         {
-            Debug.WriteLine("ProtectedMemorySecret.Close");
+            Debug.WriteLine("SecureMemorySecret.Close");
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         public override void Dispose()
         {
-            Debug.WriteLine("ProtectedMemorySecret.Dispose");
+            Debug.WriteLine("SecureMemorySecret.Dispose");
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        internal static ProtectedMemorySecret FromCharArray(char[] sourceChars, IProtectedMemoryAllocator allocator, IConfiguration configuration)
+        internal static SecureMemorySecret FromCharArray(char[] sourceChars, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
             byte[] sourceBytes = Encoding.UTF8.GetBytes(sourceChars);
             try
             {
-                return new ProtectedMemorySecret(sourceBytes, allocator, configuration);
+                return new SecureMemorySecret(sourceBytes, allocator, configuration);
             }
             finally
             {
@@ -214,11 +215,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl
 
                 if (requireSecretDisposal)
                 {
-                    const string exceptionMessage = "FATAL: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
+                    const string exceptionMessage = "FATAL: Reached finalizer for SecureMemorySecret (missing Dispose())";
                     throw new Exception(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
                 }
 
-                const string warningMessage = "WARN: Reached finalizer for ProtectedMemorySecret (missing Dispose())";
+                const string warningMessage = "WARN: Reached finalizer for SecureMemorySecret (missing Dispose())";
                 Debug.WriteLine(warningMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
             }
             else

@@ -96,9 +96,19 @@ func isReloadRequired(entry cacheEntry, checkInterval time.Duration) bool {
 // is not present in the cache it will retrieve the key using the provided keyLoader
 // and store the key if an error is not returned.
 func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
+	// get with "light" lock
+	c.rw.RLock()
+	k, ok := c.get(id)
+	c.rw.RUnlock()
+
+	if ok {
+		return k, nil
+	}
+
+	// load with heavy lock
 	c.rw.Lock()
 	defer c.rw.Unlock()
-
+	// exit early if the key doesn't need to be reloaded just in case it has been loaded by rw lock in front of us
 	if k, ok := c.get(id); ok {
 		return k, nil
 	}
@@ -140,6 +150,7 @@ func (c *keyCache) load(id KeyMeta, loader keyLoader) (*internal.CryptoKey, erro
 		// we just loaded since we don't need it
 		e.key.SetRevoked(k.Revoked())
 		e.loadedAt = time.Now()
+		c.write(key, e)
 
 		k.Close()
 	} else {

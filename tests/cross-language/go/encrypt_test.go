@@ -115,9 +115,11 @@ func FeatureContext(s *godog.Suite) {
 // connectionString returns the RDBMS connection string
 func connectionString() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(localhost:3306)/%s",
+		"%s:%s@tcp(%s:%s)/%s",
 		os.Getenv("TEST_DB_USER"),
 		os.Getenv("TEST_DB_PASSWORD"),
+		os.Getenv("TEST_DB_HOSTNAME"),
+		os.Getenv("TEST_DB_PORT"),
 		os.Getenv("TEST_DB_NAME"))
 }
 

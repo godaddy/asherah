@@ -8,13 +8,12 @@ TAG=`echo java/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
-    echo ${PRIVATE_GPG_KEY} | base64 --decode | gpg --batch --no-tty --import --yes
     echo "Releasing ${ARTIFACT_NAME} artifact"
-    mvn -DskipTests -s ../../.circleci/settings.xml deploy -Prelease
+    mvn -DskipTests deploy -Prelease
 
     # Create tag
-    git tag -f ${TAG} ${CIRCLE_SHA1}
-    ssh-agent sh -c 'ssh-add ~/.ssh/id_rsa_git; git push origin --tags'
+    git tag -f ${TAG} ${GITHUB_SHA}
+    git push origin --tags
     echo "Created tag ${TAG}"
 else
     echo "${TAG} exists for ${ARTIFACT_NAME} v${BASE_VERSION}"

@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
+using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -17,7 +16,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
     {
         private static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        private readonly IProtectedMemoryAllocator protectedMemoryAllocator;
+        private readonly ISecureMemoryAllocator protectedMemoryAllocator;
         private IConfiguration configuration;
 
         public ProtectedMemoryAllocatorTest()
@@ -42,7 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocator.Dispose();
         }
 
-        internal IProtectedMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
+        internal ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -82,42 +81,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         }
 
         [Fact]
-        private void TestSetNoAccess()
-        {
-        }
-
-        [Fact]
-        private void TestSetReadAccess()
-        {
-        }
-
-        [Fact]
-        private void TestSetReadWriteAccess()
-        {
-            Debug.WriteLine("ProtectedMemoryAllocatorTest.TestSetReadWriteAccess");
-            IntPtr pointer = protectedMemoryAllocator.Alloc(1);
-
-            try
-            {
-                protectedMemoryAllocator.SetReadWriteAccess(pointer, 1);
-                CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
-
-                // Verifies we can write and read back
-                Marshal.WriteByte(pointer, 0, 42);
-                Assert.Equal(42, Marshal.ReadByte(pointer, 0));
-            }
-            finally
-            {
-                protectedMemoryAllocator.Free(pointer, 1);
-            }
-        }
-
-        [Fact]
         private void TestAllocSuccess()
         {
             Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
             IntPtr pointer = protectedMemoryAllocator.Alloc(1);
-            CheckIntPtr(pointer, "IProtectedMemoryAllocator.Alloc");
+            CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
             try
             {
@@ -129,11 +97,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             {
                 protectedMemoryAllocator.Free(pointer, 1);
             }
-        }
-
-        [Fact]
-        private void TestFree()
-        {
         }
     }
 }

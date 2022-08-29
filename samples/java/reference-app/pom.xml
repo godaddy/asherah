@@ -115,7 +115,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.21</version>
+      <version>8.0.28</version>
     </dependency>
 
     <dependency>
@@ -139,13 +139,13 @@
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>4.1.12.1</version>
+      <version>4.2.10</version>
     </dependency>
 
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-cloudwatch</artifactId>
-      <version>1.5.5</version>
+      <version>1.9.1</version>
     </dependency>
 
     <!-- Test Dependencies -->

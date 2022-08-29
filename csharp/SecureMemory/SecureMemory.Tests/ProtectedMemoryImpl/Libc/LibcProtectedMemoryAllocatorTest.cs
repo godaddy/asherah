@@ -58,69 +58,68 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             libcProtectedMemoryAllocator?.Dispose();
         }
 
+
         [SkippableFact]
-        private void TestDisableCoreDumpGlobally()
+        private void TestAllocWithResourceLimitZeroShouldFail()
         {
             Skip.If(libc == null);
 
-            Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestDisableCoreDumpGlobally");
-
-            // Mac allocator has global core dumps disabled on init
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Assert.False(libcProtectedMemoryAllocator.AreCoreDumpsGloballyDisabled());
-                libc.getrlimit(libcProtectedMemoryAllocator.GetRlimitCoreResource(), out var rlim);
-
-                // Initial values here system dependent, assumes docker container spun up w/ unlimited
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_max);
-                Assert.Equal(rlimit.UNLIMITED, rlim.rlim_cur);
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
+                Assert.Throws<MemoryLimitException>(() =>
+                {
+                    allocatorMock.Object.Alloc(1);
+                });
             }
-
-            libcProtectedMemoryAllocator.DisableCoreDumpGlobally();
-            Assert.True(libcProtectedMemoryAllocator.AreCoreDumpsGloballyDisabled());
-            rlimit zeroRlimit = rlimit.Zero();
-            libc.getrlimit(libcProtectedMemoryAllocator.GetRlimitCoreResource(), out var newRlimit);
-            Assert.Equal(zeroRlimit.rlim_cur, newRlimit.rlim_cur);
-            Assert.Equal(zeroRlimit.rlim_max, newRlimit.rlim_max);
-        }
-
-        [SkippableFact]
-        private void TestAlocWithResourceLimitZero()
-        {
-            Skip.If(libc == null);
-
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
-
-            var allocator = allocatorMock.Object;
-            Assert.Throws<MemoryLimitException>(() =>
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                allocator.Alloc(1);
-            });
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(0);
+                Assert.Throws<MemoryLimitException>(() =>
+                {
+                    allocatorMock.Object.Alloc(1);
+                });
+            }
         }
 
         [SkippableFact]
-        private void TestAlocWithResourceLimitMaxValue()
+        private void TestAllocWithResourceLimitMaxValueShouldSucceed()
         {
             Skip.If(libc == null);
 
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
-
-            var allocator = allocatorMock.Object;
-            allocator.Alloc(1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
+                allocatorMock.Object.Alloc(1);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue);
+                allocatorMock.Object.Alloc(1);
+            }
         }
 
         [SkippableFact]
-        private void TestAlocWithResourceLimitLargeValue()
+        private void TestAllocWithResourceLimitLargeValueShouldSucceed()
         {
             Skip.If(libc == null);
 
-            var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-            allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
-
-            var allocator = allocatorMock.Object;
-            allocator.Alloc(1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Object.Alloc(1);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Object.Alloc(1);
+            }
         }
 
         [SkippableFact]
