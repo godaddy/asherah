@@ -263,7 +263,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.68</version>
+      <version>1.70</version>
     </dependency>
 
     <!-- not used directly but need to override the version used by aws-java-sdk-core to remediate security concerns -->
