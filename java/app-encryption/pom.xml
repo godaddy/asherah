@@ -39,7 +39,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <slf4j.version>1.7.36</slf4j.version>
-    <guava.version>30.1-jre</guava.version>
+    <guava.version>30.1.1-jre</guava.version>
     <aws.sdk.version>1.12.288</aws.sdk.version>
     <micrometer.version>1.9.1</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
