@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 	"sync"
 	"time"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
 // KMS Metrics Counters & Timers
@@ -250,7 +250,7 @@ func generateDataKey(ctx context.Context, clients []AWSKMSClient) (*kms.Generate
 		generateDataKeyTimer.UpdateSince(start)
 
 		if err != nil {
-			log.Printf("error generating data key in region (%s) trying next region: %s", c.Region, err)
+			log.Debugf("error generating data key in region (%s) trying next region: %s\n", c.Region, err)
 			continue
 		}
 
@@ -281,13 +281,13 @@ func (m *AWSKMS) DecryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 			decryptKeyTimer.UpdateSince(start)
 
 			if err != nil {
-				log.Printf("error kms decrypt: %s", err)
+				log.Debugf("error kms decrypt: %s\n", err)
 				continue
 			}
 
 			decryptedKeyBytes, err := m.Crypto.Decrypt(en.EncryptedKey, output.Plaintext)
 			if err != nil {
-				log.Printf("error crypto decrypt: %s", err)
+				log.Debugf("error crypto decrypt: %s\n", err)
 				continue
 			}
 
