@@ -797,7 +797,7 @@ jobs:
         cd tests/cross-language/go
         ./scripts/lint.sh
         go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
-        go get github.com/cucumber/godog/cmd/godog@v0.8.1
+        go install github.com/cucumber/godog/cmd/godog@latest
         echo "GOPATH: ${GOPATH}"
         echo "PATH: ${PATH}"
         echo "GOBIN: ${GOBIN}"
