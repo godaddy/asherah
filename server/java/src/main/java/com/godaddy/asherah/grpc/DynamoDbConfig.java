@@ -3,14 +3,14 @@ package com.godaddy.asherah.grpc;
 public class DynamoDbConfig {
   private final String endpointConfig;
   private final String region;
-  private final String keySuffix;
+  private final boolean enableKeySuffix;
   private final String tableName;
 
-  protected DynamoDbConfig(final String endpointConfig, final String region, final String keySuffix,
+  protected DynamoDbConfig(final String endpointConfig, final String region, final boolean enableKeySuffix,
       final String tableName) {
     this.endpointConfig = endpointConfig;
     this.region = region;
-    this.keySuffix = keySuffix;
+    this.enableKeySuffix = enableKeySuffix;
     this.tableName = tableName;
   }
 
@@ -22,8 +22,8 @@ public class DynamoDbConfig {
     return region;
   }
 
-  public String getKeySuffix() {
-    return keySuffix;
+  public boolean getKeySuffixEnabled() {
+    return enableKeySuffix;
   }
 
   public String getTableName() {
