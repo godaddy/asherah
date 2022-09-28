@@ -680,7 +680,7 @@ jobs:
         distribution: 'adopt'
         java-version: '11'
     - name: Set up Go 1.17
-      uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+      uses: actions/setup-go@30b9ddff1180797dbf0efc06837929f98bdf7af7
       with:
         go-version: '1.17'
     - name: Set up Python 3.7
@@ -753,7 +753,7 @@ jobs:
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.17
-      uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+      uses: actions/setup-go@30b9ddff1180797dbf0efc06837929f98bdf7af7
       with:
         go-version: '1.17'
     - name: Set up Python 3.8
