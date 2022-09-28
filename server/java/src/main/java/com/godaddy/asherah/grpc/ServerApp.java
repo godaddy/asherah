@@ -34,9 +34,9 @@ class ServerApp implements Callable<Void> {
   @CommandLine.Option(names = "--jdbc-url", defaultValue = "${env:ASHERAH_CONNECTION_STRING}",
       description = "JDBC URL to use for JDBC metastore. Required for JDBC metastore.")
   private String jdbcUrl;
-  @CommandLine.Option(names = "--key-suffix", defaultValue = "${env:ASHERAH_ENABLE_KEY_SUFFIX}",
+  @CommandLine.Option(names = "--enable-key-suffix", defaultValue = "${env:ASHERAH_ENABLE_KEY_SUFFIX}",
       description = "Configure the metastore to use key suffixes (only supported by DYNAMODB)")
-  private String keySuffix;
+  private boolean enableKeySuffix;
   @CommandLine.Option(names = "--dynamodb-table-name", defaultValue = "${env:ASHERAH_DYNAMODB_TABLE_NAME}",
       description = "The table name for DynamoDb (only supported by DYNAMODB)")
   private String dynamoDbTableName;
@@ -95,7 +95,8 @@ class ServerApp implements Callable<Void> {
     KeyManagementService keyManagementService =
         appEncryptionConfig.setupKeyManagementService(kmsType, preferredRegion, regionMap);
 
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig(dynamoDbEndpoint, dynamoDbRegion, keySuffix, dynamoDbTableName);
+    DynamoDbConfig dynamoDbConfig =
+        new DynamoDbConfig(dynamoDbEndpoint, dynamoDbRegion, enableKeySuffix, dynamoDbTableName);
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore(metastoreType, jdbcUrl, dynamoDbConfig);
 
     if (keyManagementService == null || metastore == null) {

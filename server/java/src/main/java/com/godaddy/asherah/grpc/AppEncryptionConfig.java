@@ -64,11 +64,25 @@ class AppEncryptionConfig {
 
       case Constants.METASTORE_DYNAMODB:
         logger.info("using DynamoDB-based metastore...");
-        DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder();
+
         String region = dynamoDbConfig.getRegion();
-        String keySuffix = dynamoDbConfig.getKeySuffix();
+        boolean keySuffixEnabled = dynamoDbConfig.getKeySuffixEnabled();
         String tableName = dynamoDbConfig.getTableName();
         String endPoint = dynamoDbConfig.getEndpointConfig();
+
+        // Check for key suffix
+        if (region != null) {
+          if (region.trim().isEmpty()) {
+            logger.error("Region cannot be empty.");
+            return null;
+          }
+        }
+        else {
+          region = "us-west-2";
+          logger.info("configuring metastore with default region: {}.", region);
+        }
+
+        DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(region);
 
         // Check for region and endpoint configuration.
         // The client can use either withRegion or withEndPointConfiguration but not both
@@ -79,13 +93,6 @@ class AppEncryptionConfig {
           }
           builder.withEndPointConfiguration(endPoint, region);
         }
-        else if (region != null) {
-          if (region.trim().isEmpty()) {
-            logger.error("Region cannot be empty.");
-            return null;
-          }
-          builder.withRegion(region);
-        }
         //Check for table name
         if (tableName != null) {
           if (tableName.trim().isEmpty()) {
@@ -94,13 +101,9 @@ class AppEncryptionConfig {
           }
           builder.withTableName(tableName);
         }
-        // Check for key suffix
-        if (keySuffix != null) {
-          if (keySuffix.trim().isEmpty()) {
-            logger.error("KeySuffix cannot be empty.");
-            return null;
-          }
-          builder.withKeySuffix(keySuffix);
+
+        if (keySuffixEnabled) {
+          builder.withKeySuffix();
         }
 
         return builder.build();
