@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>GoDaddy.Asherah.SecureMemory.Tests</RootNamespace>
-    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

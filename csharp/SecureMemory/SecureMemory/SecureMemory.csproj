@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <PackageId>GoDaddy.Asherah.SecureMemory</PackageId>
@@ -6,7 +6,7 @@
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <Description>Provides a secure area of memory to store sensitive data</Description>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>GoDaddy.Asherah.SecureMemory</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>

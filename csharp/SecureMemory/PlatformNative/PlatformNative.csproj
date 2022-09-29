@@ -4,7 +4,7 @@
     <PackageId>GoDaddy.Asherah.PlatformNative</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>GoDaddy.Asherah.PlatformNative</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
