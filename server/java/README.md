@@ -69,22 +69,10 @@ java -jar <jar-path> --uds='/tmp/appencryption.sock'
 > alternative [Go server](../go).
 
 ```console
-[user@machine java]$ mvn clean install
-[user@machine java]$ docker build --build-arg JAR_FILE=<path-to-jar-file-with-dependencies> .
-Sending build context to Docker daemon  47.37MB
-Step 1/11 : FROM openjdk:8-jre-alpine
- ---> f7a292bbb70c
+[user@machine java]$ cd ..
+[user@machine server]$ docker build -t asherah-server-java -f java/Dockerfile .
 ... snipped
-Step 10/11 : USER aeljava
- ---> Running in 83998149b2f7
-Removing intermediate container 83998149b2f7
- ---> 01d9203abe43
-Step 11/11 : ENTRYPOINT ["java", "-Djna.nounpack=true", "-jar", "app.jar"]
- ---> Running in 9651fa614533
-Removing intermediate container 9651fa614533
- ---> e9cb70abb481
-Successfully built e9cb70abb481
-[user@machine java]$ docker run -it e9cb70abb481
+[user@machine java]$ docker run -it asherah-server-java
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using static KMS...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - using in-memory metastore...
 [main] INFO com.godaddy.asherah.grpc.AppEncryptionConfig - key expiration days set to = 90 days
@@ -103,8 +91,7 @@ follows:
                           The AWS region for DynamoDB requests (only supported by --metastore-type=DYNAMODB)
 --dynamodb-table-name=<dynamoDbTableName>
                           The table name for DynamoDb (only supported by --metastore-type=DYNAMODB)
---key-suffix=<keySuffix>
-                          Configure the metastore to use key suffixes (only supported by --metastore-type=DYNAMODB)
+--enable-key-suffix       Configure the metastore to use key suffixes (only supported by --metastore-type=DYNAMODB)
 --jdbc-url=<jdbcUrl>      JDBC URL to use for JDBC metastore. Required for JDBC metastore.
 --key-expiration-days=<keyExpirationDays>
                           The number of days after which a key will expire

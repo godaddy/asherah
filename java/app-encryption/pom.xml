@@ -39,9 +39,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <slf4j.version>1.7.36</slf4j.version>
-    <guava.version>30.1-jre</guava.version>
-    <aws.sdk.version>1.12.248</aws.sdk.version>
-    <micrometer.version>1.9.1</micrometer.version>
+    <guava.version>30.1.1-jre</guava.version>
+    <aws.sdk.version>1.12.312</aws.sdk.version>
+    <micrometer.version>1.9.4</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
@@ -159,7 +159,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M4</version>
+        <version>3.0.0-M7</version>
         <executions>
           <execution>
             <goals>
@@ -263,7 +263,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.68</version>
+      <version>1.70</version>
     </dependency>
 
     <!-- not used directly but need to override the version used by aws-java-sdk-core to remediate security concerns -->

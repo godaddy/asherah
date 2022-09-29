@@ -115,7 +115,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.28</version>
+      <version>8.0.30</version>
     </dependency>
 
     <dependency>
@@ -127,7 +127,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
+      <version>1.2.11</version>
     </dependency>
 
     <dependency>
@@ -139,13 +139,13 @@
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>4.1.12.1</version>
+      <version>4.2.12</version>
     </dependency>
 
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-cloudwatch</artifactId>
-      <version>1.5.5</version>
+      <version>1.9.4</version>
     </dependency>
 
     <!-- Test Dependencies -->
