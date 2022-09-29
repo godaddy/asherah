@@ -38,7 +38,7 @@
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <mockito.core.version>3.5.13</mockito.core.version>
-    <jacoco.version>0.8.6</jacoco.version>
+    <jacoco.version>0.8.8</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
 

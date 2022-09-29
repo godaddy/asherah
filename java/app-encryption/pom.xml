@@ -47,7 +47,7 @@
     <junit.platform.version>1.7.0</junit.platform.version>
     <mockito.core.version>3.8.0</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
-    <jacoco.version>0.8.6</jacoco.version>
+    <jacoco.version>0.8.8</jacoco.version>
     <amazonaws.version>1.15.0</amazonaws.version>
     <jackson.version>2.13.3</jackson.version>
     <apache.commons.version>1.9</apache.commons.version>

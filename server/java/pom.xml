@@ -23,7 +23,7 @@
     <io.netty.version>4.1.82.Final</io.netty.version>
     <commons.lang3.version>3.10</commons.lang3.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <jacoco.version>0.8.2</jacoco.version>
+    <jacoco.version>0.8.8</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <suppressions.config>${project.basedir}/suppressions.xml</suppressions.config>
   </properties>
