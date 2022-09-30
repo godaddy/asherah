@@ -306,6 +306,7 @@ jobs:
     - name: Build
       run: |
         cd csharp/SecureMemory
+        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
     - name: Test
