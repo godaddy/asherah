@@ -23,8 +23,8 @@
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.28" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.3.3" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.5.8" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.4.32" />
     <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

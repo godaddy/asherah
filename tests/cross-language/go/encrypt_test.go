@@ -95,10 +95,13 @@ func encryptedDataShouldNotBeEqualToData() error {
 	return nil
 }
 
-func FeatureContext(s *godog.Suite) {
+func InitializeTestSuite(s *godog.TestSuiteContext) {
 	s.BeforeSuite(func() {
 		connectSQL()
 	})
+}
+
+func InitializeScenario(s *godog.ScenarioContext) {
 	// Encrypt feature steps
 	s.Step(`^I have "([^"]*)"$`, iHave)
 	s.Step(`^I encrypt the data$`, iEncryptTheData)
