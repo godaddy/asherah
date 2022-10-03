@@ -1,7 +1,6 @@
 using System;
 using System.Data.Common;
 using System.Runtime.CompilerServices;
-using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Logging;
 using LanguageExt;
@@ -36,10 +35,6 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
         private static readonly ILogger Logger = LogManager.CreateLogger<AdoMetastoreImpl>();
 
-        private static readonly TimerOptions LoadTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.load" };
-        private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.loadlatest" };
-        private static readonly TimerOptions StoreTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.store" };
-
         private readonly string connectionString;
         private readonly DbProviderFactory dbProviderFactory;
 
@@ -73,29 +68,26 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <paramref name="created"/> tuple.</returns>
         public virtual Option<JObject> Load(string keyId, DateTimeOffset created)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadTimerOptions))
+            try
             {
-                try
+                using (DbConnection connection = GetConnection())
                 {
-                    using (DbConnection connection = GetConnection())
+                    using (DbCommand command = CreateCommand(connection))
                     {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = LoadQuery;
-                            AddParameter(command, Id, keyId);
-                            AddParameter(command, Created, created.UtcDateTime);
+                        command.CommandText = LoadQuery;
+                        AddParameter(command, Id, keyId);
+                        AddParameter(command, Created, created.UtcDateTime);
 
-                            return ExecuteQueryAndLoadJsonObjectFromKey(command);
-                        }
+                        return ExecuteQueryAndLoadJsonObjectFromKey(command);
                     }
                 }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error");
-                }
-
-                return Option<JObject>.None;
             }
+            catch (DbException dbe)
+            {
+                Logger.LogError(dbe, "Metastore error");
+            }
+
+            return Option<JObject>.None;
         }
 
         /// <summary>
@@ -106,28 +98,25 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <returns>The latest value associated with the keyId, if any.</returns>
         public Option<JObject> LoadLatest(string keyId)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(LoadLatestTimerOptions))
+            try
             {
-                try
+                using (DbConnection connection = GetConnection())
                 {
-                    using (DbConnection connection = GetConnection())
+                    using (DbCommand command = CreateCommand(connection))
                     {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = LoadLatestQuery;
-                            AddParameter(command, Id, keyId);
+                        command.CommandText = LoadLatestQuery;
+                        AddParameter(command, Id, keyId);
 
-                            return ExecuteQueryAndLoadJsonObjectFromKey(command);
-                        }
+                        return ExecuteQueryAndLoadJsonObjectFromKey(command);
                     }
                 }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error");
-                }
-
-                return Option<JObject>.None;
             }
+            catch (DbException dbe)
+            {
+                Logger.LogError(dbe, "Metastore error");
+            }
+
+            return Option<JObject>.None;
         }
 
         /// <summary>
@@ -141,33 +130,30 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// e.g., trying to save a duplicate value should return false, not throw an exception. </returns>
         public bool Store(string keyId, DateTimeOffset created, JObject value)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(StoreTimerOptions))
+            try
             {
-                try
+                using (DbConnection connection = GetConnection())
                 {
-                    using (DbConnection connection = GetConnection())
+                    using (DbCommand command = CreateCommand(connection))
                     {
-                        using (DbCommand command = CreateCommand(connection))
-                        {
-                            command.CommandText = StoreQuery;
-                            AddParameter(command, Id, keyId);
-                            AddParameter(command, Created, created.UtcDateTime);
-                            AddParameter(command, KeyRecord, value.ToString(Formatting.None));
+                        command.CommandText = StoreQuery;
+                        AddParameter(command, Id, keyId);
+                        AddParameter(command, Created, created.UtcDateTime);
+                        AddParameter(command, KeyRecord, value.ToString(Formatting.None));
 
-                            int result = command.ExecuteNonQuery();
+                        int result = command.ExecuteNonQuery();
 
-                            return result == 1;
-                        }
+                        return result == 1;
                     }
                 }
-                catch (DbException dbe)
-                {
-                    Logger.LogError(dbe, "Metastore error during store");
+            }
+            catch (DbException dbe)
+            {
+                Logger.LogError(dbe, "Metastore error during store");
 
-                    // ADO based persistence does not provide any kind of specific integrity violation error
-                    // code/exception. Hence we always return false even for systemic issues to keep things simple.
-                    return false;
-                }
+                // ADO based persistence does not provide any kind of specific integrity violation error
+                // code/exception. Hence we always return false even for systemic issues to keep things simple.
+                return false;
             }
         }
 

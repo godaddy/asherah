@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -24,9 +23,6 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     public class EnvelopeEncryptionJsonImpl : IEnvelopeEncryption<JObject>
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionJsonImpl>();
-
-        private static readonly TimerOptions EncryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
-        private static readonly TimerOptions DecryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
 
         private readonly Partition partition;
         private readonly IMetastore<JObject> metastore;
@@ -83,54 +79,48 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <inheritdoc/>
         public virtual byte[] DecryptDataRowRecord(JObject dataRowRecord)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(DecryptTimerOptions))
+            Json dataRowRecordJson = new Json(dataRowRecord);
+
+            Json keyDocument = dataRowRecordJson.GetJson("Key");
+            byte[] payloadEncrypted = dataRowRecordJson.GetBytes("Data");
+
+            EnvelopeKeyRecord dataRowKeyRecord = new EnvelopeKeyRecord(keyDocument);
+
+            KeyMeta keyMeta = dataRowKeyRecord.ParentKeyMeta.IfNone(() =>
+                throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey"));
+
+            if (!partition.IsValidIntermediateKeyId(keyMeta.KeyId))
             {
-                Json dataRowRecordJson = new Json(dataRowRecord);
-
-                Json keyDocument = dataRowRecordJson.GetJson("Key");
-                byte[] payloadEncrypted = dataRowRecordJson.GetBytes("Data");
-
-                EnvelopeKeyRecord dataRowKeyRecord = new EnvelopeKeyRecord(keyDocument);
-
-                KeyMeta keyMeta = dataRowKeyRecord.ParentKeyMeta.IfNone(() =>
-                    throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey"));
-
-                if (!partition.IsValidIntermediateKeyId(keyMeta.KeyId))
-                {
-                    throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey");
-                }
-
-                byte[] decryptedPayload = WithIntermediateKeyForRead(
-                    keyMeta,
-                    intermediateCryptoKey =>
-                        crypto.EnvelopeDecrypt(
-                            payloadEncrypted, dataRowKeyRecord.EncryptedKey, dataRowKeyRecord.Created, intermediateCryptoKey));
-
-                return decryptedPayload;
+                throw new MetadataMissingException("Could not find parentKeyMeta {IK} for dataRowKey");
             }
+
+            byte[] decryptedPayload = WithIntermediateKeyForRead(
+                keyMeta,
+                intermediateCryptoKey =>
+                    crypto.EnvelopeDecrypt(
+                        payloadEncrypted, dataRowKeyRecord.EncryptedKey, dataRowKeyRecord.Created, intermediateCryptoKey));
+
+            return decryptedPayload;
         }
 
         /// <inheritdoc/>
         public virtual JObject EncryptPayload(byte[] payload)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
-            {
-                EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
-                        payload,
-                        intermediateCryptoKey,
-                        new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
+            EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
+                    payload,
+                    intermediateCryptoKey,
+                    new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
 
-                KeyMeta parentKeyMeta = (KeyMeta)result.UserState;
+            KeyMeta parentKeyMeta = (KeyMeta)result.UserState;
 
-                EnvelopeKeyRecord keyRecord =
-                    new EnvelopeKeyRecord(DateTimeOffset.UtcNow, parentKeyMeta, result.EncryptedKey);
+            EnvelopeKeyRecord keyRecord =
+                new EnvelopeKeyRecord(DateTimeOffset.UtcNow, parentKeyMeta, result.EncryptedKey);
 
-                Json wrapperDocument = new Json();
-                wrapperDocument.Put("Key", keyRecord.ToJson());
-                wrapperDocument.Put("Data", result.CipherText);
+            Json wrapperDocument = new Json();
+            wrapperDocument.Put("Key", keyRecord.ToJson());
+            wrapperDocument.Put("Data", result.CipherText);
 
-                return wrapperDocument.ToJObject();
-            }
+            return wrapperDocument.ToJObject();
         }
 
         /// <inheritdoc/>

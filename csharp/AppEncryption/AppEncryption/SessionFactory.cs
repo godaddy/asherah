@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using App.Metrics;
-using App.Metrics.Concurrency;
+using System.Threading;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
@@ -143,15 +142,6 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public interface IBuildStep
         {
-            /// <summary>
-            /// Enable metrics for the <see cref="SessionFactory"/>.
-            /// </summary>
-            ///
-            /// <param name="metrics">Implementation of <seealso cref="App.Metrics" /> to use.</param>
-            ///
-            /// <returns>The current <see cref="IBuildStep"/> instance with metrics enabled.</returns>
-            IBuildStep WithMetrics(IMetrics metrics);
-
             /// <summary>
             /// Builds the finalized session factory with the parameters specified in the <see cref="Builder"/>.
             /// </summary>
@@ -393,10 +383,9 @@ namespace GoDaddy.Asherah.AppEncryption
         {
             private readonly EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl;
 
-            // The usageCounter is used to determine if any callers are still using this instance.
-            private readonly StripedLongAdder usageCounter = new StripedLongAdder();
             private readonly string key;
             private readonly SessionFactory sessionFactory;
+            private long counter;
 
             public CachedSession(
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJsonImpl,
@@ -426,7 +415,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
             internal void IncrementUsageTracker()
             {
-                usageCounter.Increment();
+                Interlocked.Increment(ref counter);
             }
 
             internal EnvelopeEncryptionJsonImpl GetEnvelopeEncryptionJsonImpl()
@@ -436,12 +425,12 @@ namespace GoDaddy.Asherah.AppEncryption
 
             internal void DecrementUsageTracker()
             {
-                usageCounter.Decrement();
+                Interlocked.Decrement(ref counter);
             }
 
             internal bool IsUsed()
             {
-                return usageCounter.GetValue() > 0;
+                return Volatile.Read(ref counter) > 0;
             }
         }
 
@@ -453,7 +442,6 @@ namespace GoDaddy.Asherah.AppEncryption
             private IMetastore<JObject> metastore;
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
-            private IMetrics metrics;
 
             internal Builder(string productId, string serviceId)
             {
@@ -497,24 +485,8 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
-            public IBuildStep WithMetrics(IMetrics metrics)
-            {
-                this.metrics = metrics;
-                return this;
-            }
-
             public SessionFactory Build()
             {
-                // If no metrics provided, we just create a disabled/no-op one
-                if (metrics == null)
-                {
-                    metrics = new MetricsBuilder()
-                        .Configuration.Configure(options => options.Enabled = false)
-                        .Build();
-                }
-
-                MetricsUtil.SetMetricsInstance(metrics);
-
                 return new SessionFactory(
                     productId,
                     serviceId,

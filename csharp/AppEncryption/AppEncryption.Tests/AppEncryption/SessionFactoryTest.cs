@@ -2,12 +2,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using App.Metrics;
-using App.Metrics.Meter;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Keys;
 using Microsoft.Extensions.Caching.Memory;
@@ -855,38 +852,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             SessionFactory sessionFactory = buildStep.Build();
             Assert.NotNull(sessionFactory);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithMetricsDisabled()
-        {
-            SessionFactory.NewBuilder(TestProductId, TestServiceId)
-                .WithInMemoryMetastore()
-                .WithNeverExpiredCryptoPolicy()
-                .WithStaticKeyManagementService(TestStaticMasterKey)
-                .Build();
-
-            MetricsUtil.MetricsInstance.Measure.Meter.Mark(new MeterOptions { Name = "should.not.record" }, 1);
-
-            // Verify no metrics were recorded
-            Assert.Empty(MetricsUtil.MetricsInstance.Snapshot.Get().Contexts);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithMetricsEnabled()
-        {
-            IMetrics metrics = new MetricsBuilder().Build();
-            SessionFactory.NewBuilder(TestProductId, TestServiceId)
-                .WithInMemoryMetastore()
-                .WithNeverExpiredCryptoPolicy()
-                .WithStaticKeyManagementService(TestStaticMasterKey)
-                .WithMetrics(metrics)
-                .Build();
-
-            MetricsUtil.MetricsInstance.Measure.Meter.Mark(new MeterOptions { Name = "should.record" }, 1);
-
-            // Verify metrics were recorded
-            Assert.NotEmpty(MetricsUtil.MetricsInstance.Snapshot.Get().Contexts);
         }
     }
 }

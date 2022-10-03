@@ -10,7 +10,6 @@ using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
 using Amazon.Runtime.SharedInterfaces;
-using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto.BufferUtils;
@@ -53,9 +52,6 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         internal const string EncryptedKek = "encryptedKek";
 
         private static readonly ILogger Logger = LogManager.CreateLogger<AwsKeyManagementServiceImpl>();
-
-        private static readonly TimerOptions EncryptkeyTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.encryptkey" };
-        private static readonly TimerOptions DecryptkeyTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.decryptkey" };
 
         private readonly string preferredRegion;
         private readonly AeadEnvelopeCrypto crypto;
@@ -120,103 +116,92 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         /// <inheritdoc />
         public override byte[] EncryptKey(CryptoKey key)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptkeyTimerOptions))
+            Json kmsKeyEnvelope = new Json();
+
+            // We generate a KMS datakey (plaintext and encrypted) and encrypt its plaintext key against remaining regions.
+            // This allows us to be able to decrypt from any of the regions locally later.
+            GenerateDataKeyResult dataKey = GenerateDataKey(RegionToArnAndClientDictionary, out string dateKeyKeyId);
+            byte[] dataKeyPlainText = dataKey.KeyPlaintext;
+            try
             {
-                Json kmsKeyEnvelope = new Json();
+                byte[] encryptedKey = crypto.EncryptKey(key, crypto.GenerateKeyFromBytes(dataKeyPlainText));
+                kmsKeyEnvelope.Put(EncryptedKey, encryptedKey);
 
-                // We generate a KMS datakey (plaintext and encrypted) and encrypt its plaintext key against remaining regions.
-                // This allows us to be able to decrypt from any of the regions locally later.
-                GenerateDataKeyResult dataKey = GenerateDataKey(RegionToArnAndClientDictionary, out string dateKeyKeyId);
-                byte[] dataKeyPlainText = dataKey.KeyPlaintext;
-                try
+                ConcurrentBag<JObject> kmsRegionKeyJsonBag = new ConcurrentBag<JObject>();
+                Parallel.ForEach(RegionToArnAndClientDictionary.Cast<object>(), regionToArnClientObject =>
                 {
-                    byte[] encryptedKey = crypto.EncryptKey(key, crypto.GenerateKeyFromBytes(dataKeyPlainText));
-                    kmsKeyEnvelope.Put(EncryptedKey, encryptedKey);
-
-                    ConcurrentBag<JObject> kmsRegionKeyJsonBag = new ConcurrentBag<JObject>();
-                    Parallel.ForEach(RegionToArnAndClientDictionary.Cast<object>(), regionToArnClientObject =>
+                    DictionaryEntry regionToArnAndClient = (DictionaryEntry)regionToArnClientObject;
+                    AwsKmsArnClient arnClient = (AwsKmsArnClient)regionToArnAndClient.Value;
+                    string region = (string)regionToArnAndClient.Key;
+                    if (!arnClient.Arn.Equals(dateKeyKeyId))
                     {
-                        DictionaryEntry regionToArnAndClient = (DictionaryEntry)regionToArnClientObject;
-                        AwsKmsArnClient arnClient = (AwsKmsArnClient)regionToArnAndClient.Value;
-                        string region = (string)regionToArnAndClient.Key;
-                        if (!arnClient.Arn.Equals(dateKeyKeyId))
-                        {
-                            // If the ARN is different than the datakey's, call encrypt since it's another region
-                            EncryptKeyAndBuildResult(
-                                arnClient.AwsKmsClient,
-                                region,
-                                arnClient.Arn,
-                                dataKeyPlainText).IfSome(encryptedKeyResult => kmsRegionKeyJsonBag.Add(encryptedKeyResult));
-                        }
-                        else
-                        {
-                            // This is the datakey, so build kmsKey json for it
-                            kmsRegionKeyJsonBag.Add((JObject)Option<JObject>.Some(BuildKmsRegionKeyJson(
-                                region,
-                                dateKeyKeyId,
-                                dataKey.KeyCiphertext)));
-                        }
-                    });
+                        // If the ARN is different than the datakey's, call encrypt since it's another region
+                        EncryptKeyAndBuildResult(
+                            arnClient.AwsKmsClient,
+                            region,
+                            arnClient.Arn,
+                            dataKeyPlainText).IfSome(encryptedKeyResult => kmsRegionKeyJsonBag.Add(encryptedKeyResult));
+                    }
+                    else
+                    {
+                        // This is the datakey, so build kmsKey json for it
+                        kmsRegionKeyJsonBag.Add((JObject)Option<JObject>.Some(BuildKmsRegionKeyJson(
+                            region,
+                            dateKeyKeyId,
+                            dataKey.KeyCiphertext)));
+                    }
+                });
 
-                    // TODO Consider adding minimum or quorum check on number of entries
-                    kmsKeyEnvelope.Put(KmsKeksKey, kmsRegionKeyJsonBag.ToList());
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e, "Unexpected execution exception while encrypting KMS data key");
-                    throw new AppEncryptionException("unexpected execution error during encrypt", e);
-                }
-                finally
-                {
-                    ManagedBufferUtils.WipeByteArray(dataKeyPlainText);
-                }
-
-                return kmsKeyEnvelope.ToUtf8();
+                // TODO Consider adding minimum or quorum check on number of entries
+                kmsKeyEnvelope.Put(KmsKeksKey, kmsRegionKeyJsonBag.ToList());
             }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Unexpected execution exception while encrypting KMS data key");
+                throw new AppEncryptionException("unexpected execution error during encrypt", e);
+            }
+            finally
+            {
+                ManagedBufferUtils.WipeByteArray(dataKeyPlainText);
+            }
+
+            return kmsKeyEnvelope.ToUtf8();
         }
 
         /// <inheritdoc />
         public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
         {
-            using (MetricsUtil.MetricsInstance.Measure.Timer.Time(DecryptkeyTimerOptions))
+            Json kmsKeyEnvelope = new Json(keyCipherText);
+            byte[] encryptedKey = kmsKeyEnvelope.GetBytes(EncryptedKey);
+
+            foreach (Json kmsRegionKeyJson in GetPrioritizedKmsRegionKeyJsonList(kmsKeyEnvelope.GetJsonArray(KmsKeksKey)))
             {
-                Json kmsKeyEnvelope = new Json(keyCipherText);
-                byte[] encryptedKey = kmsKeyEnvelope.GetBytes(EncryptedKey);
-
-                foreach (Json kmsRegionKeyJson in GetPrioritizedKmsRegionKeyJsonList(kmsKeyEnvelope.GetJsonArray(KmsKeksKey)))
+                string region = kmsRegionKeyJson.GetString(RegionKey);
+                if (!RegionToArnAndClientDictionary.Contains(region))
                 {
-                    string region = kmsRegionKeyJson.GetString(RegionKey);
-                    if (!RegionToArnAndClientDictionary.Contains(region))
-                    {
-                        Logger.LogWarning("Failed to decrypt due to no client for region {region}, trying next region", region);
-                        continue;
-                    }
-
-                    byte[] kmsKeyEncryptionKey = kmsRegionKeyJson.GetBytes(EncryptedKek);
-                    try
-                    {
-                        TimerOptions decryptTimerOptions =
-                            new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.decrypt." + region };
-                        using (MetricsUtil.MetricsInstance.Measure.Timer.Time(decryptTimerOptions))
-                        {
-                            return DecryptKmsEncryptedKey(
-                                ((AwsKmsArnClient)RegionToArnAndClientDictionary[region]).AwsKmsClient,
-                                encryptedKey,
-                                keyCreated,
-                                kmsKeyEncryptionKey,
-                                revoked);
-                        }
-                    }
-                    catch (AmazonServiceException e)
-                    {
-                        Logger.LogWarning(e, "Failed to decrypt via region {region} KMS, trying next region", region);
-
-                        // TODO Consider adding notification/CW alert
-                    }
+                    Logger.LogWarning("Failed to decrypt due to no client for region {region}, trying next region", region);
+                    continue;
                 }
 
-                throw new KmsException("could not successfully decrypt key using any regions");
+                byte[] kmsKeyEncryptionKey = kmsRegionKeyJson.GetBytes(EncryptedKek);
+                try
+                {
+                    return DecryptKmsEncryptedKey(
+                        ((AwsKmsArnClient)RegionToArnAndClientDictionary[region]).AwsKmsClient,
+                        encryptedKey,
+                        keyCreated,
+                        kmsKeyEncryptionKey,
+                        revoked);
+                }
+                catch (AmazonServiceException e)
+                {
+                    Logger.LogWarning(e, "Failed to decrypt via region {region} KMS, trying next region", region);
+
+                    // TODO Consider adding notification/CW alert
+                }
             }
+
+            throw new KmsException("could not successfully decrypt key using any regions");
         }
 
         internal virtual Option<JObject> EncryptKeyAndBuildResult(
@@ -227,22 +212,17 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         {
             try
             {
-                TimerOptions encryptTimerOptions =
-                    new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.encrypt." + region };
-                using (MetricsUtil.MetricsInstance.Measure.Timer.Time(encryptTimerOptions))
+                // Note we can't wipe plaintext key till end of calling method since underlying buffer shared by all requests
+                EncryptRequest encryptRequest = new EncryptRequest
                 {
-                    // Note we can't wipe plaintext key till end of calling method since underlying buffer shared by all requests
-                    EncryptRequest encryptRequest = new EncryptRequest
-                    {
-                        KeyId = arn,
-                        Plaintext = new MemoryStream(dataKeyPlainText),
-                    };
-                    Task<EncryptResponse> encryptAsync = kmsClient.EncryptAsync(encryptRequest);
+                    KeyId = arn,
+                    Plaintext = new MemoryStream(dataKeyPlainText),
+                };
+                Task<EncryptResponse> encryptAsync = kmsClient.EncryptAsync(encryptRequest);
 
-                    byte[] encryptedKeyEncryptionKey = encryptAsync.Result.CiphertextBlob.ToArray();
+                byte[] encryptedKeyEncryptionKey = encryptAsync.Result.CiphertextBlob.ToArray();
 
-                    return Option<JObject>.Some(BuildKmsRegionKeyJson(region, arn, encryptedKeyEncryptionKey));
-                }
+                return Option<JObject>.Some(BuildKmsRegionKeyJson(region, arn, encryptedKeyEncryptionKey));
             }
             catch (AggregateException e)
             {
@@ -271,21 +251,14 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             {
                 try
                 {
-                    TimerOptions generateDataKeyTimerOptions = new TimerOptions
-                    {
-                        Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.generatedatakey." + regionToArnAndClient.Key,
-                    };
-                    using (MetricsUtil.MetricsInstance.Measure.Timer.Time(generateDataKeyTimerOptions))
-                    {
-                        IAmazonKeyManagementService client = ((AwsKmsArnClient)regionToArnAndClient.Value).AwsKmsClient;
-                        string keyIdForDataKeyGeneration = ((AwsKmsArnClient)regionToArnAndClient.Value).Arn;
-                        GenerateDataKeyResult generateDataKeyResult = client.GenerateDataKey(
-                            keyIdForDataKeyGeneration,
-                            null,
-                            DataKeySpec.AES_256);
-                        dateKeyKeyId = keyIdForDataKeyGeneration;
-                        return generateDataKeyResult;
-                    }
+                    IAmazonKeyManagementService client = ((AwsKmsArnClient)regionToArnAndClient.Value).AwsKmsClient;
+                    string keyIdForDataKeyGeneration = ((AwsKmsArnClient)regionToArnAndClient.Value).Arn;
+                    GenerateDataKeyResult generateDataKeyResult = client.GenerateDataKey(
+                        keyIdForDataKeyGeneration,
+                        null,
+                        DataKeySpec.AES_256);
+                    dateKeyKeyId = keyIdForDataKeyGeneration;
+                    return generateDataKeyResult;
                 }
                 catch (AmazonServiceException e)
                 {

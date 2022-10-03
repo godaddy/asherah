@@ -15,7 +15,7 @@ using static GoDaddy.Asherah.AppEncryption.Persistence.DynamoDbMetastoreImpl;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     [Collection("Logger Fixture collection")]
-    public class DynamoDbMetastoreImplTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+    public class DynamoDbMetastoreImplTest : IClassFixture<DynamoDBContainerFixture>, IDisposable
     {
         private const string TestKey = "some_key";
         private const string DynamoDbPort = "8000";

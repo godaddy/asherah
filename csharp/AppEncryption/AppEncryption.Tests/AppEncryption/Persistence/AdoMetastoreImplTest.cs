@@ -14,7 +14,7 @@ using static GoDaddy.Asherah.AppEncryption.Persistence.AdoMetastoreImpl;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     [Collection("Logger Fixture collection")]
-    public class AdoMetastoreImplTest : IClassFixture<MySqlContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+    public class AdoMetastoreImplTest : IClassFixture<MySqlContainerFixture>, IDisposable
     {
         private const string KeyStringWithParentKeyMetaKey = "key_with_parentkeymeta";
 

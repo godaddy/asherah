@@ -11,7 +11,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     [Collection("Configuration collection")]
-    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDBContainerFixture>, IDisposable
     {
         private const string PartitionKey = "Id";
         private const string SortKey = "Created";

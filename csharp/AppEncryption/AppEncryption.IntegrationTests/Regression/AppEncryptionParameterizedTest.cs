@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using App.Metrics;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
@@ -174,13 +173,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             public AppEncryptionParameterizedTestData()
             {
                 configFixture = new ConfigFixture();
-
-                // We do not log metrics for the Parameterized tests but we still need to set a disabled/no-op metrics
-                // instance for the tests to run successfully. This is done below.
-                IMetricsRoot metrics = new MetricsBuilder()
-                    .Configuration.Configure(options => options.Enabled = false)
-                    .Build();
-                MetricsUtil.SetMetricsInstance(metrics);
             }
 
             public IEnumerator<object[]> GetEnumerator()
