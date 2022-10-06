@@ -37,7 +37,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Java packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -75,7 +75,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -105,7 +105,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Java packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -147,7 +147,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -177,7 +177,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Java packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -199,7 +199,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Java packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -219,13 +219,13 @@ jobs:
     name: Build C# Logging
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:3.1
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache dotnet packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -234,6 +234,7 @@ jobs:
     - name: Build
       run: |
         cd csharp/Logging
+        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
     - name: Test
@@ -261,7 +262,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -291,13 +292,13 @@ jobs:
     needs: csharp-logging
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:3.1
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache dotnet packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -306,6 +307,7 @@ jobs:
     - name: Build
       run: |
         cd csharp/SecureMemory
+        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
     - name: Test
@@ -335,7 +337,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -367,7 +369,7 @@ jobs:
     needs: csharp-secure-memory
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:3.1
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -380,7 +382,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache dotnet packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -389,6 +391,7 @@ jobs:
     - name: Build
       run: |
         cd csharp/AppEncryption
+        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
     - name: Unit tests
@@ -422,7 +425,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -452,13 +455,13 @@ jobs:
     needs: csharp-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:3.1
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache dotnet packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -467,6 +470,7 @@ jobs:
     - name: Build
       run: |
         cd samples/csharp/ReferenceApp
+        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
 
@@ -481,7 +485,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Go packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -518,7 +522,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -551,7 +555,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Go packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -588,7 +592,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -614,7 +618,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Go packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -641,7 +645,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@e6d535c99c374d0c3f6d8cd8086a57b43c6c700a
     - name: Cache Go packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -696,7 +700,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: |
           ~/.cache
@@ -765,7 +769,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@12681847c623a9274356751fdf0a63576ff3f846
+      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
       with:
         path: |
           ~/.cache
