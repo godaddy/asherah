@@ -692,7 +692,7 @@ jobs:
       with:
         python-version: 3.7
     - name: Set up NodeJS 13
-      uses: actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b
+      uses: actions/setup-node@c81d8ad96dab0a834a87f7a0300b154386f2e26a
       with:
         node-version: 13.x
     - name: Extract branch name
