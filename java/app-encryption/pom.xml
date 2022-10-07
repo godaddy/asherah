@@ -40,6 +40,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <slf4j.version>1.7.36</slf4j.version>
     <guava.version>30.1.1-jre</guava.version>
+    <checkerframework.version>3.8.0</checkerframework.version>
     <aws.sdk.version>1.12.317</aws.sdk.version>
     <micrometer.version>1.9.4</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
@@ -50,7 +51,7 @@
     <jacoco.version>0.8.8</jacoco.version>
     <amazonaws.version>1.15.0</amazonaws.version>
     <jackson.version>2.13.4</jackson.version>
-    <apache.commons.version>1.9</apache.commons.version>
+    <apache.commons.version>3.8.1</apache.commons.version>
     <zaxxer.version>4.0.3</zaxxer.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
@@ -223,6 +224,11 @@
         <artifactId>commons-codec</artifactId>
         <version>1.15</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-cbor</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -247,6 +253,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
+      <version>${checkerframework.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
       <version>${caffeine.version}</version>
@@ -266,13 +278,10 @@
       <version>1.70</version>
     </dependency>
 
-    <!-- not used directly but need to override the version used by aws-java-sdk-core to remediate security concerns -->
     <dependency>
-        <groupId>com.fasterxml.jackson.dataformat</groupId>
-        <artifactId>jackson-dataformat-cbor</artifactId>
-        <version>${jackson.version}</version>
-        <type>jar</type>
-        <scope>compile</scope>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-core</artifactId>
+      <version>${aws.sdk.version}</version>
     </dependency>
 
     <dependency>
@@ -305,16 +314,8 @@
     <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
+      <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner -->
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-runner</artifactId>
-      <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -322,6 +323,13 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.core.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -347,6 +355,13 @@
     </dependency>
 
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
       <version>${jackson.version}</version>
@@ -356,6 +371,13 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
+      <version>1.10.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
       <version>${apache.commons.version}</version>
       <scope>test</scope>
     </dependency>
