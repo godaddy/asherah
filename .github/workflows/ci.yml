@@ -35,9 +35,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Java packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -59,13 +59,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Maven Central Repository
-        uses: actions/setup-java@e150063ee446b60ce2e35b040e81846da9001576
+        uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc
         with:
           java-version: '11'
           distribution: 'adopt'
@@ -75,7 +75,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -103,9 +103,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Java packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -131,13 +131,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Maven Central Repository
-        uses: actions/setup-java@e150063ee446b60ce2e35b040e81846da9001576
+        uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc
         with:
           java-version: '11'
           distribution: 'adopt'
@@ -147,7 +147,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -175,9 +175,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Java packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -197,9 +197,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Java packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -223,9 +223,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache dotnet packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -256,13 +256,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -296,9 +296,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache dotnet packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -331,13 +331,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -380,9 +380,9 @@ jobs:
           MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache dotnet packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -419,13 +419,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -459,9 +459,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache dotnet packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -483,9 +483,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Go packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -516,13 +516,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -553,9 +553,9 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Go packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -586,13 +586,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+        uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -616,9 +616,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Go packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -643,9 +643,9 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Cache Go packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -672,27 +672,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Install build tools
       run: |
         sudo apt-get update
         sudo apt-get -y upgrade --fix-missing
         sudo apt-get install -y build-essential
     - name: Set up JDK 11
-      uses: actions/setup-java@e150063ee446b60ce2e35b040e81846da9001576
+      uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc
       with:
         distribution: 'adopt'
         java-version: '11'
     - name: Set up Go 1.17
-      uses: actions/setup-go@30b9ddff1180797dbf0efc06837929f98bdf7af7
+      uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
       with:
         go-version: '1.17'
     - name: Set up Python 3.7
-      uses: actions/setup-python@13a464fa1180c0025831475fa35bb1878b1a4728
+      uses: actions/setup-python@8bcd2560e267a43fbd8ff66c50da8a61825a0782
       with:
         python-version: 3.7
     - name: Set up NodeJS 13
-      uses: actions/setup-node@c81d8ad96dab0a834a87f7a0300b154386f2e26a
+      uses: actions/setup-node@788c6ccbd0d6bddb637da16397c675d9e1c6f93c
       with:
         node-version: 13.x
     - name: Extract branch name
@@ -700,7 +700,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: |
           ~/.cache
@@ -737,7 +737,7 @@ jobs:
         options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
     - name: Initialize RDBMS based metastore
       run: |
         mysql -h 127.0.0.1 -P${{ job.services.mysql.ports[3306] }} -u ${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }} -e "CREATE TABLE ${{ env.MYSQL_DATABASE }}.encryption_key (
@@ -748,20 +748,20 @@ jobs:
           INDEX (created)
         );"
     - name: Set up JDK 11
-      uses: actions/setup-java@e150063ee446b60ce2e35b040e81846da9001576
+      uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc
       with:
         distribution: 'adopt'
         java-version: '11.0.4'
     - name: Set up C#
-      uses: actions/setup-dotnet@45c9f236cf9a0c09d11298348f6ed06bd81914c0
+      uses: actions/setup-dotnet@4d4a70f4a5b2a5a5329f13be4ac933f2c9206ac0
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.17
-      uses: actions/setup-go@30b9ddff1180797dbf0efc06837929f98bdf7af7
+      uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f
       with:
         go-version: '1.17'
     - name: Set up Python 3.8
-      uses: actions/setup-python@13a464fa1180c0025831475fa35bb1878b1a4728
+      uses: actions/setup-python@8bcd2560e267a43fbd8ff66c50da8a61825a0782
       with:
         python-version: 3.8
     - name: Extract branch name
@@ -769,7 +769,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@0f20846208ed4e2be4e84eecef2d1eb1bb617786
+      uses: actions/cache@4fe9c4bd54cc7f1a32249072c2256c718ea68a5b
       with:
         path: |
           ~/.cache
