@@ -479,7 +479,7 @@ jobs:
     name: Build Go Secure Memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -542,7 +542,7 @@ jobs:
     needs: go-secure-memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -612,7 +612,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -639,7 +639,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
