@@ -182,7 +182,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version>
+        <version>2.22.2</version>
         <!-- Work-around for SUREFIRE-1588 debian openjdk classloading bug -->
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
