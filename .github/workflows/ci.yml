@@ -688,7 +688,7 @@ jobs:
       with:
         go-version: '1.17'
     - name: Set up Python 3.7
-      uses: actions/setup-python@13a464fa1180c0025831475fa35bb1878b1a4728
+      uses: actions/setup-python@8bcd2560e267a43fbd8ff66c50da8a61825a0782
       with:
         python-version: 3.7
     - name: Set up NodeJS 13
@@ -761,7 +761,7 @@ jobs:
       with:
         go-version: '1.17'
     - name: Set up Python 3.8
-      uses: actions/setup-python@13a464fa1180c0025831475fa35bb1878b1a4728
+      uses: actions/setup-python@8bcd2560e267a43fbd8ff66c50da8a61825a0782
       with:
         python-version: 3.8
     - name: Extract branch name
