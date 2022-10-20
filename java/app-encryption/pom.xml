@@ -46,7 +46,7 @@
     <caffeine.version>3.1.1</caffeine.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <mockito.core.version>3.8.0</mockito.core.version>
+    <mockito.core.version>3.12.4</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
     <jacoco.version>0.8.8</jacoco.version>
     <amazonaws.version>1.20.0</amazonaws.version>
