@@ -15,13 +15,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <junit.platform.version>1.3.2</junit.platform.version>
-    <io.grpc.version>1.28.0</io.grpc.version>
+    <io.grpc.version>1.50.1</io.grpc.version>
     <appencryption.version>0.2.3</appencryption.version>
     <info.picocli.version>4.6.3</info.picocli.version>
-    <gson.version>2.8.9</gson.version>
+    <gson.version>2.9.1</gson.version>
     <hikaricp.version>2.7.9</hikaricp.version>
-    <io.netty.version>4.1.82.Final</io.netty.version>
-    <commons.lang3.version>3.10</commons.lang3.version>
+    <io.netty.version>4.1.84.Final</io.netty.version>
+    <commons.lang3.version>3.12.0</commons.lang3.version>
     <slf4j.version>1.7.36</slf4j.version>
     <jacoco.version>0.8.8</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
@@ -48,7 +48,7 @@
     <dependency>
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
-        <version>8.0.30</version>
+        <version>8.0.31</version>
     </dependency>
 
     <dependency>
@@ -125,7 +125,7 @@
       <extension>
         <groupId>kr.motd.maven</groupId>
         <artifactId>os-maven-plugin</artifactId>
-        <version>1.6.2</version>
+        <version>1.7.0</version>
       </extension>
     </extensions>
     <plugins>
@@ -152,7 +152,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.10.1</version>
         <configuration>
           <source>8</source>
           <target>8</target>
@@ -161,7 +161,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <executions>
           <execution>
             <id>validate</id>
@@ -182,7 +182,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version>
+        <version>2.22.2</version>
         <!-- Work-around for SUREFIRE-1588 debian openjdk classloading bug -->
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>

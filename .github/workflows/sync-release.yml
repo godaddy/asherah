@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Merge master -> {RELEASE_TARGET}
-        uses: devmasx/merge-branch@v1.3.0
+        uses: devmasx/merge-branch@v1.4.0
         with:
           type: now
           head_to_merge: master
