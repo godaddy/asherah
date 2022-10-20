@@ -3,7 +3,7 @@ module github.com/godaddy/asherah/samples/aws/lambda
 go 1.17
 
 require (
-	github.com/aws/aws-lambda-go v1.28.0
+	github.com/aws/aws-lambda-go v1.34.1
 	github.com/aws/aws-sdk-go v1.43.39
 	github.com/aws/aws-xray-sdk-go v1.7.1
 	github.com/godaddy/asherah/go/appencryption v0.2.4
