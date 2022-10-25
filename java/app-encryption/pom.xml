@@ -41,7 +41,7 @@
     <slf4j.version>1.7.36</slf4j.version>
     <guava.version>30.1.1-jre</guava.version>
     <checkerframework.version>3.26.0</checkerframework.version>
-    <aws.sdk.version>1.12.324</aws.sdk.version>
+    <aws.sdk.version>1.12.328</aws.sdk.version>
     <micrometer.version>1.9.5</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
