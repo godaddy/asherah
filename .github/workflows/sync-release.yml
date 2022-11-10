@@ -12,7 +12,7 @@ jobs:
   sync-branch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Merge master -> {RELEASE_TARGET}
         uses: devmasx/merge-branch@v1.4.0
