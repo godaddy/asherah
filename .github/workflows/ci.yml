@@ -242,7 +242,7 @@ jobs:
         cd csharp/Logging
         ./scripts/test.sh
     - name: Upload artifact
-      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
       with:
         name: csharp-logging
         path: |
@@ -315,7 +315,7 @@ jobs:
         cd csharp/SecureMemory
         ./scripts/test.sh
     - name: Upload artifact
-      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
       with:
         name: csharp-secure-memory
         path: |
@@ -403,7 +403,7 @@ jobs:
         cd csharp/AppEncryption
         ./scripts/integration_test.sh
     - name: Upload artifact
-      uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
       with:
         name: csharp-app-encryption
         path: |
