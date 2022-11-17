@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
-	github.com/aws/aws-sdk-go v1.44.139
+	github.com/aws/aws-sdk-go v1.44.140
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/godaddy/asherah/go/appencryption v0.2.4
 	github.com/godaddy/asherah/go/securememory v0.1.3
