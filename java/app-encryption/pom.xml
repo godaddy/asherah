@@ -40,7 +40,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <slf4j.version>1.7.36</slf4j.version>
     <guava.version>31.1-jre</guava.version>
-    <checkerframework.version>3.26.0</checkerframework.version>
+    <checkerframework.version>3.27.0</checkerframework.version>
     <aws.sdk.version>1.12.344</aws.sdk.version>
     <micrometer.version>1.10.1</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
