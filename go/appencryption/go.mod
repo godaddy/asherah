@@ -3,7 +3,7 @@ module github.com/godaddy/asherah/go/appencryption
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.134
+	github.com/aws/aws-sdk-go v1.44.139
 	github.com/docker/go-connections v0.4.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goburrow/cache v0.1.4
