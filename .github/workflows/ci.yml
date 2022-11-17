@@ -35,7 +35,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Java packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -103,7 +103,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Java packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -175,7 +175,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Java packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -197,7 +197,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Java packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -223,7 +223,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache dotnet packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -256,7 +256,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -296,7 +296,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache dotnet packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -331,7 +331,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -380,7 +380,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache dotnet packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -419,7 +419,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -459,7 +459,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache dotnet packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -483,7 +483,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Go packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -516,7 +516,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -553,7 +553,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Go packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -586,7 +586,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+        uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         with:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
@@ -616,7 +616,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Go packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -643,7 +643,7 @@ jobs:
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Cache Go packages
       uses: actions/cache@5c79b3fd6c0e87c9444fe7b18edafe7d9ba61531
       with:
@@ -672,7 +672,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Install build tools
       run: |
         sudo apt-get update
@@ -737,7 +737,7 @@ jobs:
         options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
+      uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
     - name: Initialize RDBMS based metastore
       run: |
         mysql -h 127.0.0.1 -P${{ job.services.mysql.ports[3306] }} -u ${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }} -e "CREATE TABLE ${{ env.MYSQL_DATABASE }}.encryption_key (
