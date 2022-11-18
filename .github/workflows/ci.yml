@@ -375,7 +375,7 @@ jobs:
       dynamodb:
         image: amazon/dynamodb-local
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
     steps:
@@ -548,7 +548,7 @@ jobs:
       dynamodb:
         image: amazon/dynamodb-local
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: Password123
     steps:
@@ -728,7 +728,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
           MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
