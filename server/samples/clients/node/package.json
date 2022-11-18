@@ -13,7 +13,7 @@
   "devDependencies": {
     "babel-eslint": "10.1.0",
     "eslint": "8.27.0",
-    "eslint-config-godaddy": "5.0.1"
+    "eslint-config-godaddy": "6.1.0"
   },
   "author": "Asherah Developers",
   "license": "MIT",
