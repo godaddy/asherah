@@ -72,7 +72,7 @@ public final class AppEncryptionProtos {
    *
    * Protobuf type {@code asherah.apps.server.SessionRequest}
    */
-  public  static final class SessionRequest extends
+  public static final class SessionRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.SessionRequest)
       SessionRequestOrBuilder {
@@ -95,85 +95,6 @@ public final class AppEncryptionProtos {
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
-    }
-    private SessionRequest(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.Builder subBuilder = null;
-              if (requestCase_ == 1) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt) request_).toBuilder();
-              }
-              request_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt) request_);
-                request_ = subBuilder.buildPartial();
-              }
-              requestCase_ = 1;
-              break;
-            }
-            case 18: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.Builder subBuilder = null;
-              if (requestCase_ == 2) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt) request_).toBuilder();
-              }
-              request_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt) request_);
-                request_ = subBuilder.buildPartial();
-              }
-              requestCase_ = 2;
-              break;
-            }
-            case 26: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.Builder subBuilder = null;
-              if (requestCase_ == 3) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_).toBuilder();
-              }
-              request_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_);
-                request_ = subBuilder.buildPartial();
-              }
-              requestCase_ = 3;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
@@ -236,6 +157,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
      * @return Whether the encrypt field is set.
      */
+    @java.lang.Override
     public boolean hasEncrypt() {
       return requestCase_ == 1;
     }
@@ -243,6 +165,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
      * @return The encrypt.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt getEncrypt() {
       if (requestCase_ == 1) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt) request_;
@@ -252,6 +175,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder getEncryptOrBuilder() {
       if (requestCase_ == 1) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt) request_;
@@ -264,6 +188,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
      * @return Whether the decrypt field is set.
      */
+    @java.lang.Override
     public boolean hasDecrypt() {
       return requestCase_ == 2;
     }
@@ -271,6 +196,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
      * @return The decrypt.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt getDecrypt() {
       if (requestCase_ == 2) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt) request_;
@@ -280,6 +206,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder getDecryptOrBuilder() {
       if (requestCase_ == 2) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt) request_;
@@ -292,6 +219,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.GetSession get_session = 3;</code>
      * @return Whether the getSession field is set.
      */
+    @java.lang.Override
     public boolean hasGetSession() {
       return requestCase_ == 3;
     }
@@ -299,6 +227,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.GetSession get_session = 3;</code>
      * @return The getSession.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession getGetSession() {
       if (requestCase_ == 3) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_;
@@ -308,6 +237,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.GetSession get_session = 3;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder getGetSessionOrBuilder() {
       if (requestCase_ == 3) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_;
@@ -338,7 +268,7 @@ public final class AppEncryptionProtos {
       if (requestCase_ == 3) {
         output.writeMessage(3, (com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -359,7 +289,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, (com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) request_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -391,7 +321,7 @@ public final class AppEncryptionProtos {
         case 0:
         default:
       }
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -418,7 +348,7 @@ public final class AppEncryptionProtos {
         case 0:
         default:
       }
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -539,22 +469,26 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        if (encryptBuilder_ != null) {
+          encryptBuilder_.clear();
+        }
+        if (decryptBuilder_ != null) {
+          decryptBuilder_.clear();
+        }
+        if (getSessionBuilder_ != null) {
+          getSessionBuilder_.clear();
+        }
         requestCase_ = 0;
         request_ = null;
         return this;
@@ -670,7 +604,7 @@ public final class AppEncryptionProtos {
             break;
           }
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -685,17 +619,51 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                input.readMessage(
+                    getEncryptFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                requestCase_ = 1;
+                break;
+              } // case 10
+              case 18: {
+                input.readMessage(
+                    getDecryptFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                requestCase_ = 2;
+                break;
+              } // case 18
+              case 26: {
+                input.readMessage(
+                    getGetSessionFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                requestCase_ = 3;
+                break;
+              } // case 26
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
       private int requestCase_ = 0;
@@ -720,6 +688,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
        * @return Whether the encrypt field is set.
        */
+      @java.lang.Override
       public boolean hasEncrypt() {
         return requestCase_ == 1;
       }
@@ -727,6 +696,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
        * @return The encrypt.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt getEncrypt() {
         if (encryptBuilder_ == null) {
           if (requestCase_ == 1) {
@@ -786,8 +756,9 @@ public final class AppEncryptionProtos {
         } else {
           if (requestCase_ == 1) {
             encryptBuilder_.mergeFrom(value);
+          } else {
+            encryptBuilder_.setMessage(value);
           }
-          encryptBuilder_.setMessage(value);
         }
         requestCase_ = 1;
         return this;
@@ -820,6 +791,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder getEncryptOrBuilder() {
         if ((requestCase_ == 1) && (encryptBuilder_ != null)) {
           return encryptBuilder_.getMessageOrBuilder();
@@ -834,7 +806,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Encrypt encrypt = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptOrBuilder> 
           getEncryptFieldBuilder() {
         if (encryptBuilder_ == null) {
           if (!(requestCase_ == 1)) {
@@ -858,6 +830,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
        * @return Whether the decrypt field is set.
        */
+      @java.lang.Override
       public boolean hasDecrypt() {
         return requestCase_ == 2;
       }
@@ -865,6 +838,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
        * @return The decrypt.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt getDecrypt() {
         if (decryptBuilder_ == null) {
           if (requestCase_ == 2) {
@@ -924,8 +898,9 @@ public final class AppEncryptionProtos {
         } else {
           if (requestCase_ == 2) {
             decryptBuilder_.mergeFrom(value);
+          } else {
+            decryptBuilder_.setMessage(value);
           }
-          decryptBuilder_.setMessage(value);
         }
         requestCase_ = 2;
         return this;
@@ -958,6 +933,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder getDecryptOrBuilder() {
         if ((requestCase_ == 2) && (decryptBuilder_ != null)) {
           return decryptBuilder_.getMessageOrBuilder();
@@ -972,7 +948,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.Decrypt decrypt = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt, com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptOrBuilder> 
           getDecryptFieldBuilder() {
         if (decryptBuilder_ == null) {
           if (!(requestCase_ == 2)) {
@@ -996,6 +972,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.GetSession get_session = 3;</code>
        * @return Whether the getSession field is set.
        */
+      @java.lang.Override
       public boolean hasGetSession() {
         return requestCase_ == 3;
       }
@@ -1003,6 +980,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.GetSession get_session = 3;</code>
        * @return The getSession.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession getGetSession() {
         if (getSessionBuilder_ == null) {
           if (requestCase_ == 3) {
@@ -1062,8 +1040,9 @@ public final class AppEncryptionProtos {
         } else {
           if (requestCase_ == 3) {
             getSessionBuilder_.mergeFrom(value);
+          } else {
+            getSessionBuilder_.setMessage(value);
           }
-          getSessionBuilder_.setMessage(value);
         }
         requestCase_ = 3;
         return this;
@@ -1096,6 +1075,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.GetSession get_session = 3;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder getGetSessionOrBuilder() {
         if ((requestCase_ == 3) && (getSessionBuilder_ != null)) {
           return getSessionBuilder_.getMessageOrBuilder();
@@ -1110,7 +1090,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.GetSession get_session = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.GetSessionOrBuilder> 
           getGetSessionFieldBuilder() {
         if (getSessionBuilder_ == null) {
           if (!(requestCase_ == 3)) {
@@ -1160,7 +1140,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SessionRequest(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -1193,7 +1184,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.Encrypt}
    */
-  public  static final class Encrypt extends
+  public static final class Encrypt extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.Encrypt)
       EncryptOrBuilder {
@@ -1218,48 +1209,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Encrypt(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-
-              data_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_Encrypt_descriptor;
@@ -1279,6 +1228,7 @@ public final class AppEncryptionProtos {
      * <code>bytes data = 1;</code>
      * @return The data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getData() {
       return data_;
     }
@@ -1300,7 +1250,7 @@ public final class AppEncryptionProtos {
       if (!data_.isEmpty()) {
         output.writeBytes(1, data_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -1313,7 +1263,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, data_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -1330,7 +1280,7 @@ public final class AppEncryptionProtos {
 
       if (!getData()
           .equals(other.getData())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -1343,7 +1293,7 @@ public final class AppEncryptionProtos {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + getData().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -1460,18 +1410,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -1556,7 +1501,7 @@ public final class AppEncryptionProtos {
         if (other.getData() != com.google.protobuf.ByteString.EMPTY) {
           setData(other.getData());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -1571,17 +1516,35 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                data_ = input.readBytes();
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.Encrypt) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -1590,6 +1553,7 @@ public final class AppEncryptionProtos {
        * <code>bytes data = 1;</code>
        * @return The data.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
@@ -1602,7 +1566,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         data_ = value;
         onChanged();
         return this;
@@ -1612,7 +1576,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-
+        
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -1650,7 +1614,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Encrypt(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -1692,7 +1667,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.Decrypt}
    */
-  public  static final class Decrypt extends
+  public static final class Decrypt extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.Decrypt)
       DecryptOrBuilder {
@@ -1716,56 +1691,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Decrypt(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder subBuilder = null;
-              if (dataRowRecord_ != null) {
-                subBuilder = dataRowRecord_.toBuilder();
-              }
-              dataRowRecord_ = input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(dataRowRecord_);
-                dataRowRecord_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_Decrypt_descriptor;
@@ -1785,6 +1710,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      * @return Whether the dataRowRecord field is set.
      */
+    @java.lang.Override
     public boolean hasDataRowRecord() {
       return dataRowRecord_ != null;
     }
@@ -1792,12 +1718,14 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      * @return The dataRowRecord.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord getDataRowRecord() {
       return dataRowRecord_ == null ? com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.getDefaultInstance() : dataRowRecord_;
     }
     /**
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder getDataRowRecordOrBuilder() {
       return getDataRowRecord();
     }
@@ -1819,7 +1747,7 @@ public final class AppEncryptionProtos {
       if (dataRowRecord_ != null) {
         output.writeMessage(1, getDataRowRecord());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -1832,7 +1760,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getDataRowRecord());
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -1852,7 +1780,7 @@ public final class AppEncryptionProtos {
         if (!getDataRowRecord()
             .equals(other.getDataRowRecord())) return false;
       }
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -1867,7 +1795,7 @@ public final class AppEncryptionProtos {
         hash = (37 * hash) + DATA_ROW_RECORD_FIELD_NUMBER;
         hash = (53 * hash) + getDataRowRecord().hashCode();
       }
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -1984,18 +1912,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -2088,7 +2011,7 @@ public final class AppEncryptionProtos {
         if (other.hasDataRowRecord()) {
           mergeDataRowRecord(other.getDataRowRecord());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -2103,17 +2026,37 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                input.readMessage(
+                    getDataRowRecordFieldBuilder().getBuilder(),
+                    extensionRegistry);
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.Decrypt) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -2204,7 +2147,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder getDataRowRecordBuilder() {
-
+        
         onChanged();
         return getDataRowRecordFieldBuilder().getBuilder();
       }
@@ -2223,7 +2166,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder> 
           getDataRowRecordFieldBuilder() {
         if (dataRowRecordBuilder_ == null) {
           dataRowRecordBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2268,7 +2211,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Decrypt(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -2321,7 +2275,7 @@ public final class AppEncryptionProtos {
    *
    * Protobuf type {@code asherah.apps.server.DataRowRecord}
    */
-  public  static final class DataRowRecord extends
+  public static final class DataRowRecord extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.DataRowRecord)
       DataRowRecordOrBuilder {
@@ -2346,61 +2300,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private DataRowRecord(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder subBuilder = null;
-              if (key_ != null) {
-                subBuilder = key_.toBuilder();
-              }
-              key_ = input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(key_);
-                key_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            case 18: {
-
-              data_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_DataRowRecord_descriptor;
@@ -2420,6 +2319,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
      * @return Whether the key field is set.
      */
+    @java.lang.Override
     public boolean hasKey() {
       return key_ != null;
     }
@@ -2427,12 +2327,14 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
      * @return The key.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord getKey() {
       return key_ == null ? com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.getDefaultInstance() : key_;
     }
     /**
      * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecordOrBuilder getKeyOrBuilder() {
       return getKey();
     }
@@ -2443,6 +2345,7 @@ public final class AppEncryptionProtos {
      * <code>bytes data = 2;</code>
      * @return The data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getData() {
       return data_;
     }
@@ -2467,7 +2370,7 @@ public final class AppEncryptionProtos {
       if (!data_.isEmpty()) {
         output.writeBytes(2, data_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -2484,7 +2387,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, data_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -2506,7 +2409,7 @@ public final class AppEncryptionProtos {
       }
       if (!getData()
           .equals(other.getData())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -2523,7 +2426,7 @@ public final class AppEncryptionProtos {
       }
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + getData().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -2645,18 +2548,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -2755,7 +2653,7 @@ public final class AppEncryptionProtos {
         if (other.getData() != com.google.protobuf.ByteString.EMPTY) {
           setData(other.getData());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -2770,17 +2668,42 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                input.readMessage(
+                    getKeyFieldBuilder().getBuilder(),
+                    extensionRegistry);
+
+                break;
+              } // case 10
+              case 18: {
+                data_ = input.readBytes();
+
+                break;
+              } // case 18
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -2871,7 +2794,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder getKeyBuilder() {
-
+        
         onChanged();
         return getKeyFieldBuilder().getBuilder();
       }
@@ -2890,7 +2813,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EnvelopeKeyRecord key = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecordOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecordOrBuilder> 
           getKeyFieldBuilder() {
         if (keyBuilder_ == null) {
           keyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -2908,6 +2831,7 @@ public final class AppEncryptionProtos {
        * <code>bytes data = 2;</code>
        * @return The data.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
@@ -2920,7 +2844,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         data_ = value;
         onChanged();
         return this;
@@ -2930,7 +2854,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-
+        
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -2968,7 +2892,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataRowRecord(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -3022,7 +2957,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.EnvelopeKeyRecord}
    */
-  public  static final class EnvelopeKeyRecord extends
+  public static final class EnvelopeKeyRecord extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.EnvelopeKeyRecord)
       EnvelopeKeyRecordOrBuilder {
@@ -3047,66 +2982,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private EnvelopeKeyRecord(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-
-              created_ = input.readInt64();
-              break;
-            }
-            case 18: {
-
-              key_ = input.readBytes();
-              break;
-            }
-            case 26: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder subBuilder = null;
-              if (parentKeyMeta_ != null) {
-                subBuilder = parentKeyMeta_.toBuilder();
-              }
-              parentKeyMeta_ = input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(parentKeyMeta_);
-                parentKeyMeta_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_EnvelopeKeyRecord_descriptor;
@@ -3126,6 +3001,7 @@ public final class AppEncryptionProtos {
      * <code>int64 created = 1;</code>
      * @return The created.
      */
+    @java.lang.Override
     public long getCreated() {
       return created_;
     }
@@ -3136,6 +3012,7 @@ public final class AppEncryptionProtos {
      * <code>bytes key = 2;</code>
      * @return The key.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getKey() {
       return key_;
     }
@@ -3146,6 +3023,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
      * @return Whether the parentKeyMeta field is set.
      */
+    @java.lang.Override
     public boolean hasParentKeyMeta() {
       return parentKeyMeta_ != null;
     }
@@ -3153,12 +3031,14 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
      * @return The parentKeyMeta.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta getParentKeyMeta() {
       return parentKeyMeta_ == null ? com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.getDefaultInstance() : parentKeyMeta_;
     }
     /**
      * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMetaOrBuilder getParentKeyMetaOrBuilder() {
       return getParentKeyMeta();
     }
@@ -3186,7 +3066,7 @@ public final class AppEncryptionProtos {
       if (parentKeyMeta_ != null) {
         output.writeMessage(3, getParentKeyMeta());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -3207,7 +3087,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getParentKeyMeta());
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -3231,7 +3111,7 @@ public final class AppEncryptionProtos {
         if (!getParentKeyMeta()
             .equals(other.getParentKeyMeta())) return false;
       }
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -3251,7 +3131,7 @@ public final class AppEncryptionProtos {
         hash = (37 * hash) + PARENT_KEY_META_FIELD_NUMBER;
         hash = (53 * hash) + getParentKeyMeta().hashCode();
       }
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -3368,18 +3248,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -3484,7 +3359,7 @@ public final class AppEncryptionProtos {
         if (other.hasParentKeyMeta()) {
           mergeParentKeyMeta(other.getParentKeyMeta());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -3499,17 +3374,47 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+                created_ = input.readInt64();
+
+                break;
+              } // case 8
+              case 18: {
+                key_ = input.readBytes();
+
+                break;
+              } // case 18
+              case 26: {
+                input.readMessage(
+                    getParentKeyMetaFieldBuilder().getBuilder(),
+                    extensionRegistry);
+
+                break;
+              } // case 26
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.EnvelopeKeyRecord) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -3518,6 +3423,7 @@ public final class AppEncryptionProtos {
        * <code>int64 created = 1;</code>
        * @return The created.
        */
+      @java.lang.Override
       public long getCreated() {
         return created_;
       }
@@ -3527,7 +3433,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder setCreated(long value) {
-
+        
         created_ = value;
         onChanged();
         return this;
@@ -3537,7 +3443,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearCreated() {
-
+        
         created_ = 0L;
         onChanged();
         return this;
@@ -3548,6 +3454,7 @@ public final class AppEncryptionProtos {
        * <code>bytes key = 2;</code>
        * @return The key.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getKey() {
         return key_;
       }
@@ -3560,7 +3467,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         key_ = value;
         onChanged();
         return this;
@@ -3570,7 +3477,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearKey() {
-
+        
         key_ = getDefaultInstance().getKey();
         onChanged();
         return this;
@@ -3663,7 +3570,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder getParentKeyMetaBuilder() {
-
+        
         onChanged();
         return getParentKeyMetaFieldBuilder().getBuilder();
       }
@@ -3682,7 +3589,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.KeyMeta parent_key_meta = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMetaOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMetaOrBuilder> 
           getParentKeyMetaFieldBuilder() {
         if (parentKeyMetaBuilder_ == null) {
           parentKeyMetaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -3727,7 +3634,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EnvelopeKeyRecord(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -3772,7 +3690,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.KeyMeta}
    */
-  public  static final class KeyMeta extends
+  public static final class KeyMeta extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.KeyMeta)
       KeyMetaOrBuilder {
@@ -3797,54 +3715,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private KeyMeta(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-
-              created_ = input.readInt64();
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              keyId_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_KeyMeta_descriptor;
@@ -3864,6 +3734,7 @@ public final class AppEncryptionProtos {
      * <code>int64 created = 1;</code>
      * @return The created.
      */
+    @java.lang.Override
     public long getCreated() {
       return created_;
     }
@@ -3874,12 +3745,13 @@ public final class AppEncryptionProtos {
      * <code>string key_id = 2;</code>
      * @return The keyId.
      */
+    @java.lang.Override
     public java.lang.String getKeyId() {
       java.lang.Object ref = keyId_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         keyId_ = s;
@@ -3890,11 +3762,12 @@ public final class AppEncryptionProtos {
      * <code>string key_id = 2;</code>
      * @return The bytes for keyId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getKeyIdBytes() {
       java.lang.Object ref = keyId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         keyId_ = b;
@@ -3921,10 +3794,10 @@ public final class AppEncryptionProtos {
       if (created_ != 0L) {
         output.writeInt64(1, created_);
       }
-      if (!getKeyIdBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(keyId_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, keyId_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -3937,10 +3810,10 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(1, created_);
       }
-      if (!getKeyIdBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(keyId_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, keyId_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -3959,7 +3832,7 @@ public final class AppEncryptionProtos {
           != other.getCreated()) return false;
       if (!getKeyId()
           .equals(other.getKeyId())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -3975,7 +3848,7 @@ public final class AppEncryptionProtos {
           getCreated());
       hash = (37 * hash) + KEY_ID_FIELD_NUMBER;
       hash = (53 * hash) + getKeyId().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -4092,18 +3965,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -4195,7 +4063,7 @@ public final class AppEncryptionProtos {
           keyId_ = other.keyId_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -4210,17 +4078,40 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+                created_ = input.readInt64();
+
+                break;
+              } // case 8
+              case 18: {
+                keyId_ = input.readStringRequireUtf8();
+
+                break;
+              } // case 18
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.KeyMeta) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -4229,6 +4120,7 @@ public final class AppEncryptionProtos {
        * <code>int64 created = 1;</code>
        * @return The created.
        */
+      @java.lang.Override
       public long getCreated() {
         return created_;
       }
@@ -4238,7 +4130,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder setCreated(long value) {
-
+        
         created_ = value;
         onChanged();
         return this;
@@ -4248,7 +4140,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearCreated() {
-
+        
         created_ = 0L;
         onChanged();
         return this;
@@ -4279,7 +4171,7 @@ public final class AppEncryptionProtos {
           getKeyIdBytes() {
         java.lang.Object ref = keyId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           keyId_ = b;
@@ -4298,7 +4190,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         keyId_ = value;
         onChanged();
         return this;
@@ -4308,7 +4200,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearKeyId() {
-
+        
         keyId_ = getDefaultInstance().getKeyId();
         onChanged();
         return this;
@@ -4324,7 +4216,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         keyId_ = value;
         onChanged();
         return this;
@@ -4362,7 +4254,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new KeyMeta(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -4401,7 +4304,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.GetSession}
    */
-  public  static final class GetSession extends
+  public static final class GetSession extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.GetSession)
       GetSessionOrBuilder {
@@ -4426,49 +4329,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private GetSession(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              partitionId_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_GetSession_descriptor;
@@ -4488,12 +4348,13 @@ public final class AppEncryptionProtos {
      * <code>string partition_id = 1;</code>
      * @return The partitionId.
      */
+    @java.lang.Override
     public java.lang.String getPartitionId() {
       java.lang.Object ref = partitionId_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         partitionId_ = s;
@@ -4504,11 +4365,12 @@ public final class AppEncryptionProtos {
      * <code>string partition_id = 1;</code>
      * @return The bytes for partitionId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getPartitionIdBytes() {
       java.lang.Object ref = partitionId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         partitionId_ = b;
@@ -4532,10 +4394,10 @@ public final class AppEncryptionProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getPartitionIdBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(partitionId_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, partitionId_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -4544,10 +4406,10 @@ public final class AppEncryptionProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (!getPartitionIdBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(partitionId_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, partitionId_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -4564,7 +4426,7 @@ public final class AppEncryptionProtos {
 
       if (!getPartitionId()
           .equals(other.getPartitionId())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -4577,7 +4439,7 @@ public final class AppEncryptionProtos {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + PARTITION_ID_FIELD_NUMBER;
       hash = (53 * hash) + getPartitionId().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -4694,18 +4556,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -4791,7 +4648,7 @@ public final class AppEncryptionProtos {
           partitionId_ = other.partitionId_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -4806,17 +4663,35 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                partitionId_ = input.readStringRequireUtf8();
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.GetSession) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -4845,7 +4720,7 @@ public final class AppEncryptionProtos {
           getPartitionIdBytes() {
         java.lang.Object ref = partitionId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           partitionId_ = b;
@@ -4864,7 +4739,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         partitionId_ = value;
         onChanged();
         return this;
@@ -4874,7 +4749,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearPartitionId() {
-
+        
         partitionId_ = getDefaultInstance().getPartitionId();
         onChanged();
         return this;
@@ -4890,7 +4765,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         partitionId_ = value;
         onChanged();
         return this;
@@ -4928,7 +4803,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetSession(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -4967,7 +4853,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.ErrorResponse}
    */
-  public  static final class ErrorResponse extends
+  public static final class ErrorResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.ErrorResponse)
       ErrorResponseOrBuilder {
@@ -4992,49 +4878,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private ErrorResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              message_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_ErrorResponse_descriptor;
@@ -5054,12 +4897,13 @@ public final class AppEncryptionProtos {
      * <code>string message = 1;</code>
      * @return The message.
      */
+    @java.lang.Override
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs =
+        com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         message_ = s;
@@ -5070,11 +4914,12 @@ public final class AppEncryptionProtos {
      * <code>string message = 1;</code>
      * @return The bytes for message.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString
         getMessageBytes() {
       java.lang.Object ref = message_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
+        com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         message_ = b;
@@ -5098,10 +4943,10 @@ public final class AppEncryptionProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getMessageBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(message_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, message_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -5110,10 +4955,10 @@ public final class AppEncryptionProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (!getMessageBytes().isEmpty()) {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(message_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, message_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -5130,7 +4975,7 @@ public final class AppEncryptionProtos {
 
       if (!getMessage()
           .equals(other.getMessage())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -5143,7 +4988,7 @@ public final class AppEncryptionProtos {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
       hash = (53 * hash) + getMessage().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -5260,18 +5105,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -5357,7 +5197,7 @@ public final class AppEncryptionProtos {
           message_ = other.message_;
           onChanged();
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -5372,17 +5212,35 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                message_ = input.readStringRequireUtf8();
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -5411,7 +5269,7 @@ public final class AppEncryptionProtos {
           getMessageBytes() {
         java.lang.Object ref = message_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
+          com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           message_ = b;
@@ -5430,7 +5288,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         message_ = value;
         onChanged();
         return this;
@@ -5440,7 +5298,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearMessage() {
-
+        
         message_ = getDefaultInstance().getMessage();
         onChanged();
         return this;
@@ -5456,7 +5314,7 @@ public final class AppEncryptionProtos {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-
+        
         message_ = value;
         onChanged();
         return this;
@@ -5494,7 +5352,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ErrorResponse(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -5536,7 +5405,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.EncryptResponse}
    */
-  public  static final class EncryptResponse extends
+  public static final class EncryptResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.EncryptResponse)
       EncryptResponseOrBuilder {
@@ -5560,56 +5429,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private EncryptResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder subBuilder = null;
-              if (dataRowRecord_ != null) {
-                subBuilder = dataRowRecord_.toBuilder();
-              }
-              dataRowRecord_ = input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(dataRowRecord_);
-                dataRowRecord_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_EncryptResponse_descriptor;
@@ -5629,6 +5448,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      * @return Whether the dataRowRecord field is set.
      */
+    @java.lang.Override
     public boolean hasDataRowRecord() {
       return dataRowRecord_ != null;
     }
@@ -5636,12 +5456,14 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      * @return The dataRowRecord.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord getDataRowRecord() {
       return dataRowRecord_ == null ? com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.getDefaultInstance() : dataRowRecord_;
     }
     /**
      * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder getDataRowRecordOrBuilder() {
       return getDataRowRecord();
     }
@@ -5663,7 +5485,7 @@ public final class AppEncryptionProtos {
       if (dataRowRecord_ != null) {
         output.writeMessage(1, getDataRowRecord());
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -5676,7 +5498,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getDataRowRecord());
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -5696,7 +5518,7 @@ public final class AppEncryptionProtos {
         if (!getDataRowRecord()
             .equals(other.getDataRowRecord())) return false;
       }
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -5711,7 +5533,7 @@ public final class AppEncryptionProtos {
         hash = (37 * hash) + DATA_ROW_RECORD_FIELD_NUMBER;
         hash = (53 * hash) + getDataRowRecord().hashCode();
       }
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -5828,18 +5650,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -5932,7 +5749,7 @@ public final class AppEncryptionProtos {
         if (other.hasDataRowRecord()) {
           mergeDataRowRecord(other.getDataRowRecord());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -5947,17 +5764,37 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                input.readMessage(
+                    getDataRowRecordFieldBuilder().getBuilder(),
+                    extensionRegistry);
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -6048,7 +5885,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder getDataRowRecordBuilder() {
-
+        
         onChanged();
         return getDataRowRecordFieldBuilder().getBuilder();
       }
@@ -6067,7 +5904,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DataRowRecord data_row_record = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecord.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DataRowRecordOrBuilder> 
           getDataRowRecordFieldBuilder() {
         if (dataRowRecordBuilder_ == null) {
           dataRowRecordBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -6112,7 +5949,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EncryptResponse(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -6145,7 +5993,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.DecryptResponse}
    */
-  public  static final class DecryptResponse extends
+  public static final class DecryptResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.DecryptResponse)
       DecryptResponseOrBuilder {
@@ -6170,48 +6018,6 @@ public final class AppEncryptionProtos {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private DecryptResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-
-              data_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.godaddy.asherah.grpc.AppEncryptionProtos.internal_static_asherah_apps_server_DecryptResponse_descriptor;
@@ -6231,6 +6037,7 @@ public final class AppEncryptionProtos {
      * <code>bytes data = 1;</code>
      * @return The data.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getData() {
       return data_;
     }
@@ -6252,7 +6059,7 @@ public final class AppEncryptionProtos {
       if (!data_.isEmpty()) {
         output.writeBytes(1, data_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -6265,7 +6072,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, data_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -6282,7 +6089,7 @@ public final class AppEncryptionProtos {
 
       if (!getData()
           .equals(other.getData())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -6295,7 +6102,7 @@ public final class AppEncryptionProtos {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + getData().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -6412,18 +6219,13 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
@@ -6508,7 +6310,7 @@ public final class AppEncryptionProtos {
         if (other.getData() != com.google.protobuf.ByteString.EMPTY) {
           setData(other.getData());
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -6523,17 +6325,35 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                data_ = input.readBytes();
+
+                break;
+              } // case 10
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
 
@@ -6542,6 +6362,7 @@ public final class AppEncryptionProtos {
        * <code>bytes data = 1;</code>
        * @return The data.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getData() {
         return data_;
       }
@@ -6554,7 +6375,7 @@ public final class AppEncryptionProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-
+  
         data_ = value;
         onChanged();
         return this;
@@ -6564,7 +6385,7 @@ public final class AppEncryptionProtos {
        * @return This builder for chaining.
        */
       public Builder clearData() {
-
+        
         data_ = getDefaultInstance().getData();
         onChanged();
         return this;
@@ -6602,7 +6423,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptResponse(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -6676,7 +6508,7 @@ public final class AppEncryptionProtos {
   /**
    * Protobuf type {@code asherah.apps.server.SessionResponse}
    */
-  public  static final class SessionResponse extends
+  public static final class SessionResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:asherah.apps.server.SessionResponse)
       SessionResponseOrBuilder {
@@ -6699,85 +6531,6 @@ public final class AppEncryptionProtos {
     public final com.google.protobuf.UnknownFieldSet
     getUnknownFields() {
       return this.unknownFields;
-    }
-    private SessionResponse(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.Builder subBuilder = null;
-              if (responseCase_ == 1) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse) response_).toBuilder();
-              }
-              response_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse) response_);
-                response_ = subBuilder.buildPartial();
-              }
-              responseCase_ = 1;
-              break;
-            }
-            case 18: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.Builder subBuilder = null;
-              if (responseCase_ == 2) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse) response_).toBuilder();
-              }
-              response_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse) response_);
-                response_ = subBuilder.buildPartial();
-              }
-              responseCase_ = 2;
-              break;
-            }
-            case 26: {
-              com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.Builder subBuilder = null;
-              if (responseCase_ == 3) {
-                subBuilder = ((com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_).toBuilder();
-              }
-              response_ =
-                  input.readMessage(com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_);
-                response_ = subBuilder.buildPartial();
-              }
-              responseCase_ = 3;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
@@ -6840,6 +6593,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
      * @return Whether the encryptResponse field is set.
      */
+    @java.lang.Override
     public boolean hasEncryptResponse() {
       return responseCase_ == 1;
     }
@@ -6847,6 +6601,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
      * @return The encryptResponse.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse getEncryptResponse() {
       if (responseCase_ == 1) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse) response_;
@@ -6856,6 +6611,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder getEncryptResponseOrBuilder() {
       if (responseCase_ == 1) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse) response_;
@@ -6868,6 +6624,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
      * @return Whether the decryptResponse field is set.
      */
+    @java.lang.Override
     public boolean hasDecryptResponse() {
       return responseCase_ == 2;
     }
@@ -6875,6 +6632,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
      * @return The decryptResponse.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse getDecryptResponse() {
       if (responseCase_ == 2) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse) response_;
@@ -6884,6 +6642,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder getDecryptResponseOrBuilder() {
       if (responseCase_ == 2) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse) response_;
@@ -6896,6 +6655,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
      * @return Whether the errorResponse field is set.
      */
+    @java.lang.Override
     public boolean hasErrorResponse() {
       return responseCase_ == 3;
     }
@@ -6903,6 +6663,7 @@ public final class AppEncryptionProtos {
      * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
      * @return The errorResponse.
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse getErrorResponse() {
       if (responseCase_ == 3) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_;
@@ -6912,6 +6673,7 @@ public final class AppEncryptionProtos {
     /**
      * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
      */
+    @java.lang.Override
     public com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
       if (responseCase_ == 3) {
          return (com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_;
@@ -6942,7 +6704,7 @@ public final class AppEncryptionProtos {
       if (responseCase_ == 3) {
         output.writeMessage(3, (com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
     @java.lang.Override
@@ -6963,7 +6725,7 @@ public final class AppEncryptionProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, (com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse) response_);
       }
-      size += unknownFields.getSerializedSize();
+      size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
     }
@@ -6995,7 +6757,7 @@ public final class AppEncryptionProtos {
         case 0:
         default:
       }
-      if (!unknownFields.equals(other.unknownFields)) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
 
@@ -7022,7 +6784,7 @@ public final class AppEncryptionProtos {
         case 0:
         default:
       }
-      hash = (29 * hash) + unknownFields.hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
     }
@@ -7139,22 +6901,26 @@ public final class AppEncryptionProtos {
 
       // Construct using com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse.newBuilder()
       private Builder() {
-        maybeForceBuilderInitialization();
+
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        if (encryptResponseBuilder_ != null) {
+          encryptResponseBuilder_.clear();
+        }
+        if (decryptResponseBuilder_ != null) {
+          decryptResponseBuilder_.clear();
+        }
+        if (errorResponseBuilder_ != null) {
+          errorResponseBuilder_.clear();
+        }
         responseCase_ = 0;
         response_ = null;
         return this;
@@ -7270,7 +7036,7 @@ public final class AppEncryptionProtos {
             break;
           }
         }
-        this.mergeUnknownFields(other.unknownFields);
+        this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
       }
@@ -7285,17 +7051,51 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse parsedMessage = null;
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
         try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                input.readMessage(
+                    getEncryptResponseFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                responseCase_ = 1;
+                break;
+              } // case 10
+              case 18: {
+                input.readMessage(
+                    getDecryptResponseFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                responseCase_ = 2;
+                break;
+              } // case 18
+              case 26: {
+                input.readMessage(
+                    getErrorResponseFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                responseCase_ = 3;
+                break;
+              } // case 26
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
+          onChanged();
+        } // finally
         return this;
       }
       private int responseCase_ = 0;
@@ -7320,6 +7120,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
        * @return Whether the encryptResponse field is set.
        */
+      @java.lang.Override
       public boolean hasEncryptResponse() {
         return responseCase_ == 1;
       }
@@ -7327,6 +7128,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
        * @return The encryptResponse.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse getEncryptResponse() {
         if (encryptResponseBuilder_ == null) {
           if (responseCase_ == 1) {
@@ -7386,8 +7188,9 @@ public final class AppEncryptionProtos {
         } else {
           if (responseCase_ == 1) {
             encryptResponseBuilder_.mergeFrom(value);
+          } else {
+            encryptResponseBuilder_.setMessage(value);
           }
-          encryptResponseBuilder_.setMessage(value);
         }
         responseCase_ = 1;
         return this;
@@ -7420,6 +7223,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder getEncryptResponseOrBuilder() {
         if ((responseCase_ == 1) && (encryptResponseBuilder_ != null)) {
           return encryptResponseBuilder_.getMessageOrBuilder();
@@ -7434,7 +7238,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.EncryptResponse encrypt_response = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.EncryptResponseOrBuilder> 
           getEncryptResponseFieldBuilder() {
         if (encryptResponseBuilder_ == null) {
           if (!(responseCase_ == 1)) {
@@ -7458,6 +7262,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
        * @return Whether the decryptResponse field is set.
        */
+      @java.lang.Override
       public boolean hasDecryptResponse() {
         return responseCase_ == 2;
       }
@@ -7465,6 +7270,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
        * @return The decryptResponse.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse getDecryptResponse() {
         if (decryptResponseBuilder_ == null) {
           if (responseCase_ == 2) {
@@ -7524,8 +7330,9 @@ public final class AppEncryptionProtos {
         } else {
           if (responseCase_ == 2) {
             decryptResponseBuilder_.mergeFrom(value);
+          } else {
+            decryptResponseBuilder_.setMessage(value);
           }
-          decryptResponseBuilder_.setMessage(value);
         }
         responseCase_ = 2;
         return this;
@@ -7558,6 +7365,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder getDecryptResponseOrBuilder() {
         if ((responseCase_ == 2) && (decryptResponseBuilder_ != null)) {
           return decryptResponseBuilder_.getMessageOrBuilder();
@@ -7572,7 +7380,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.DecryptResponse decrypt_response = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.DecryptResponseOrBuilder> 
           getDecryptResponseFieldBuilder() {
         if (decryptResponseBuilder_ == null) {
           if (!(responseCase_ == 2)) {
@@ -7596,6 +7404,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
        * @return Whether the errorResponse field is set.
        */
+      @java.lang.Override
       public boolean hasErrorResponse() {
         return responseCase_ == 3;
       }
@@ -7603,6 +7412,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
        * @return The errorResponse.
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse getErrorResponse() {
         if (errorResponseBuilder_ == null) {
           if (responseCase_ == 3) {
@@ -7662,8 +7472,9 @@ public final class AppEncryptionProtos {
         } else {
           if (responseCase_ == 3) {
             errorResponseBuilder_.mergeFrom(value);
+          } else {
+            errorResponseBuilder_.setMessage(value);
           }
-          errorResponseBuilder_.setMessage(value);
         }
         responseCase_ = 3;
         return this;
@@ -7696,6 +7507,7 @@ public final class AppEncryptionProtos {
       /**
        * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
        */
+      @java.lang.Override
       public com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
         if ((responseCase_ == 3) && (errorResponseBuilder_ != null)) {
           return errorResponseBuilder_.getMessageOrBuilder();
@@ -7710,7 +7522,7 @@ public final class AppEncryptionProtos {
        * <code>.asherah.apps.server.ErrorResponse error_response = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder>
+          com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponse.Builder, com.godaddy.asherah.grpc.AppEncryptionProtos.ErrorResponseOrBuilder> 
           getErrorResponseFieldBuilder() {
         if (errorResponseBuilder_ == null) {
           if (!(responseCase_ == 3)) {
@@ -7760,7 +7572,18 @@ public final class AppEncryptionProtos {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SessionResponse(input, extensionRegistry);
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
       }
     };
 
@@ -7782,57 +7605,57 @@ public final class AppEncryptionProtos {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_SessionRequest_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_SessionRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_Encrypt_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_Encrypt_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_Decrypt_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_Decrypt_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_DataRowRecord_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_DataRowRecord_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_EnvelopeKeyRecord_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_EnvelopeKeyRecord_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_KeyMeta_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_KeyMeta_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_GetSession_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_GetSession_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_ErrorResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_ErrorResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_EncryptResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_EncryptResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_DecryptResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_DecryptResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_asherah_apps_server_SessionResponse_descriptor;
-  private static final
+  private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_asherah_apps_server_SessionResponse_fieldAccessorTable;
 
