@@ -8,7 +8,7 @@
     "@grpc/proto-loader": "^0.7.0",
     "sleep": "^6.3.0",
     "winston": "^3.3.3",
-    "yargs": "^15.4.1"
+    "yargs": "^17.0.0"
   },
   "devDependencies": {
     "babel-eslint": "10.1.0",
