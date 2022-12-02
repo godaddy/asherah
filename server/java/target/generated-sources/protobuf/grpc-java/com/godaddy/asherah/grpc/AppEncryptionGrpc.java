@@ -1,25 +1,13 @@
 package com.godaddy.asherah.grpc;
 
 import static io.grpc.MethodDescriptor.generateFullMethodName;
-import static io.grpc.stub.ClientCalls.asyncBidiStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncClientStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncServerStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncUnaryCall;
-import static io.grpc.stub.ClientCalls.blockingServerStreamingCall;
-import static io.grpc.stub.ClientCalls.blockingUnaryCall;
-import static io.grpc.stub.ClientCalls.futureUnaryCall;
-import static io.grpc.stub.ServerCalls.asyncBidiStreamingCall;
-import static io.grpc.stub.ServerCalls.asyncClientStreamingCall;
-import static io.grpc.stub.ServerCalls.asyncServerStreamingCall;
-import static io.grpc.stub.ServerCalls.asyncUnaryCall;
-import static io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall;
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
 @javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.28.0)",
+    value = "by gRPC proto compiler (version 1.51.0)",
     comments = "Source: appencryption.proto")
+@io.grpc.stub.annotations.GrpcGenerated
 public final class AppEncryptionGrpc {
 
   private AppEncryptionGrpc() {}
@@ -115,14 +103,14 @@ public final class AppEncryptionGrpc {
      */
     public io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest> session(
         io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse> responseObserver) {
-      return asyncUnimplementedStreamingCall(getSessionMethod(), responseObserver);
+      return io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall(getSessionMethod(), responseObserver);
     }
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
             getSessionMethod(),
-            asyncBidiStreamingCall(
+            io.grpc.stub.ServerCalls.asyncBidiStreamingCall(
               new MethodHandlers<
                 com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest,
                 com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse>(
@@ -154,7 +142,7 @@ public final class AppEncryptionGrpc {
      */
     public io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest> session(
         io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse> responseObserver) {
-      return asyncBidiStreamingCall(
+      return io.grpc.stub.ClientCalls.asyncBidiStreamingCall(
           getChannel().newCall(getSessionMethod(), getCallOptions()), responseObserver);
     }
   }

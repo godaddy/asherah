@@ -35,9 +35,9 @@
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <slf4j.version>1.7.36</slf4j.version>
-    <junit.jupiter.version>5.7.0</junit.jupiter.version>
-    <junit.platform.version>1.7.0</junit.platform.version>
-    <mockito.core.version>3.12.4</mockito.core.version>
+    <junit.jupiter.version>5.9.1</junit.jupiter.version>
+    <junit.platform.version>1.9.1</junit.platform.version>
+    <mockito.core.version>4.9.0</mockito.core.version>
     <jacoco.version>0.8.8</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
@@ -236,7 +236,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
+            <version>3.0.1</version>
             <configuration>
               <!-- Prevent gpg from using pinentry programs -->
               <gpgArguments>
