@@ -44,7 +44,7 @@
     <aws.sdk.version>1.12.345</aws.sdk.version>
     <micrometer.version>1.10.1</micrometer.version>
     <caffeine.version>3.1.1</caffeine.version>
-    <junit.jupiter.version>5.7.0</junit.jupiter.version>
+    <junit.jupiter.version>5.9.1</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <mockito.core.version>3.12.4</mockito.core.version>
     <testcontainers.version>1.11.2</testcontainers.version>
