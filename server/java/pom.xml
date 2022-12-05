@@ -17,7 +17,6 @@
     <junit.jupiter.api.version>5.9.1</junit.jupiter.api.version>
     <io.grpc.version>1.51.0</io.grpc.version>
     <protobuf.version>3.21.9</protobuf.version>
-    <protoc.version>3.21.7</protoc.version>
     <appencryption.version>0.2.3</appencryption.version>
     <info.picocli.version>4.7.0</info.picocli.version>
     <gson.version>2.10</gson.version>
@@ -199,7 +198,7 @@
         <version>0.6.1</version>
         <configuration>
           <protoSourceRoot>${project.basedir}/../protos/</protoSourceRoot>
-          <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+          <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
           <pluginId>grpc-java</pluginId>
           <pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
           <checkStaleness>true</checkStaleness>
