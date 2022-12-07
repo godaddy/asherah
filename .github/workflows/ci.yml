@@ -479,7 +479,7 @@ jobs:
     name: Build Go Secure Memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -491,7 +491,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
-      run: go get gotest.tools/gotestsum
+      run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
       run: |
         cd go/securememory
@@ -542,7 +542,7 @@ jobs:
     needs: go-secure-memory
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -561,7 +561,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
-      run: go get gotest.tools/gotestsum
+      run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
       run: |
         cd go/appencryption
@@ -612,7 +612,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -624,7 +624,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
-      run: go get gotest.tools/gotestsum
+      run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
       run: |
         cd samples/go/referenceapp
@@ -639,7 +639,7 @@ jobs:
     needs: go-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17
+      image: golang:1.19
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -651,7 +651,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
         restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
-      run: go get gotest.tools/gotestsum
+      run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
       run: |
         cd server/go
@@ -683,10 +683,10 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: '11'
-    - name: Set up Go 1.17
+    - name: Set up Go 1.19
       uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613
       with:
-        go-version: '1.17'
+        go-version: '1.19'
     - name: Set up Python 3.7
       uses: actions/setup-python@1aafadcfb96443dc8b2c66d464369fad6ead5571
       with:
@@ -756,10 +756,10 @@ jobs:
       uses: actions/setup-dotnet@09d024bd0207f89ac22acd11bbc262fc9e869ae7
       with:
         dotnet-version: '3.1.x'
-    - name: Set up Go 1.17
+    - name: Set up Go 1.19
       uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613
       with:
-        go-version: '1.17'
+        go-version: '1.19'
     - name: Set up Python 3.8
       uses: actions/setup-python@1aafadcfb96443dc8b2c66d464369fad6ead5571
       with:
