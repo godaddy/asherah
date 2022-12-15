@@ -346,6 +346,10 @@ Some unit tests will use the AWS SDK, If you don’t already have a local
 [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html),
 create a *dummy* file called **`~/.aws/credentials`** with the below contents:
 
+## Cross Account Usage
+
+If you want to encrypt data in one AWS account but decrypt in an another AWS account then make sure the session that you use to access the table(Dynamodb) is configured has the right permissions. But for the KMS keys you would need to configure the KMS Key to have the ConsumerLists correctly configured. 
+
 ```
 [default]
 aws_access_key_id = foobar
