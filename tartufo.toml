@@ -1,8 +1,8 @@
 [tool.tartufo]
-exclude-paths = ".tartufo-excludes"
 json = false
 regex = true
 entropy = true
+
 exclude-signatures = [
     # High entropy findings for images and keys used in documentation
     "13c9d46245326e1995825a10ef733a7971bff3d293d58afa9ab16fb3770be8fb",
@@ -66,16 +66,16 @@ exclude-signatures = [
     # High entropy findings in C# tutorial for Amazon ECS
     "8cde955170a11afe8859722e054a593c096c41c3d4941336f6ae116f6d71fcc9",
     "81cf261e99da4bff783e7fcddb2ed25d90fab710f8e52b2f35c289a5ecbcd2bd",
-
-    # Commit SHAs pinned for GitHub Actions
-    "09890ca4a01205541d5d7736c9c0eb6d57f8d4bd5348f6e8b244a3221ba4fcbf",
-    "6d7eba1a5cf1844ccac6afc0a88c9121901566df40d05a4e176a52b7391fbbb5",
-    "70ab47252d065b887fbe8305ab1a20bc6c45aec91d0fc9a203ca8de52e795402",
-    "718d4b895807784fd2ecb539cffac13730a7fdc19cc90948c2f8e2205c3275a1",
-    "71d6f090aa2783a1ddb78a5d60503859aeb74a60903435581ac6f38087a096b1",
-    "8680b4614afea1f9304b803bd6247572e992ef8a832a94b80528c5870cd221aa",
-    "b43c8dab1f47704031581b6033a8289f79cebeba17442d9e4c84ce69e134691c",
-    "f83a6f17c3c86fe3535731a045ba44355b78203e93435c1715598227097e68db",
-    "35eeb17d0a4c30decc48e76a940e048ee65e4d52101b4ee43542ee59e40b960c",
-    "a6f8ac7c749e633826a416739e91d0582aeb115967c3f0f89770e642cccfc9eb",
     ]
+
+exclude-path-patterns = [
+    {path-pattern = '.*/go.mod', reason = 'Exclude diagrams'},
+    {path-pattern = '.*/go.sum', reason = 'Exclude poetry lock file'},
+    {path-pattern = '.*/package.json', reason = 'Exclude toml file'},
+    {path-pattern = '.*/package.lock.json', reason = 'Littered with alarming example data'},
+    {path-pattern = 'tartufo.toml', reason = 'Ignore long parameter names in cached context info'},
+]
+
+exclude-entropy-patterns = [
+    {path-pattern = '\.github/(workflows|actions)/.*\.yml$', pattern = 'uses: .*@[a-zA-Z0-9]{40}', reason = 'GitHub Actions'},
+]
