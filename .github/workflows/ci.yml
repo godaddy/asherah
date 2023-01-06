@@ -753,7 +753,7 @@ jobs:
         distribution: 'adopt'
         java-version: '11.0.4'
     - name: Set up C#
-      uses: actions/setup-dotnet@09d024bd0207f89ac22acd11bbc262fc9e869ae7
+      uses: actions/setup-dotnet@ae8edb8fff22869e2cc7e757e899e0e7516b429c
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.19
