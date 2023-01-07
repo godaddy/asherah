@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.9.1</junit.jupiter.version>
     <junit.jupiter.api.version>5.9.1</junit.jupiter.api.version>
-    <io.grpc.version>1.51.0</io.grpc.version>
+    <io.grpc.version>1.51.1</io.grpc.version>
     <protobuf.version>3.21.11</protobuf.version>
     <appencryption.version>0.2.3</appencryption.version>
     <info.picocli.version>4.7.0</info.picocli.version>
