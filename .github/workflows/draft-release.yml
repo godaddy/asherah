@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Format release title
         id: format-release-title
@@ -58,12 +58,12 @@ jobs:
           fi
         shell: bash
       - name: Create release
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ steps.format-release-title.outputs.release-title }}
+          tag: ${{ github.ref }}
+          name: ${{ steps.format-release-title.outputs.release-title }}
           body: |
             Changes in this Release
             - First Change
