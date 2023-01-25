@@ -20,7 +20,7 @@
     <ItemGroup>
         <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.2.9" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="MySql.Data" Version="8.0.31" />
+        <PackageReference Include="MySql.Data" Version="8.0.32" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
         <PackageReference Include="App.Metrics.Reporting.Console" Version="4.3.0" />
         <!-- Uncomment to use Asherah without mlock
