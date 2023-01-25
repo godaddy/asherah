@@ -269,7 +269,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - name: Download artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
+        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
           name: csharp-logging
           path: ${{ github.workspace }}/csharp/Logging/Logging
@@ -344,7 +344,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - name: Download artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
+        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
           name: csharp-secure-memory
           path: |
@@ -432,7 +432,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - name: Download artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
+        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
         with:
           name: csharp-app-encryption
           path: ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
