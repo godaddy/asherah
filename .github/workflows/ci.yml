@@ -224,6 +224,8 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Git config - set workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
@@ -297,6 +299,8 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Git config - set workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
@@ -381,6 +385,8 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Git config - set workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
@@ -460,6 +466,8 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Git config - set workspace as safe
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
