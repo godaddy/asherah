@@ -303,7 +303,7 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     try {
       EnvelopeKeyRecord newIntermediateKeyRecord = withSystemKeyForWrite(
           (systemCryptoKey) -> new EnvelopeKeyRecord(intermediateKey.getCreated(),
-          new KeyMeta(partition.getSystemKeyId(), systemCryptoKey.getCreated()),
+              new KeyMeta(partition.getSystemKeyId(), systemCryptoKey.getCreated()),
           crypto.encryptKey(intermediateKey, systemCryptoKey), false));
 
       logger.debug("attempting to store new IK {} for created {}",

@@ -15,7 +15,7 @@ jobs:
   run-wss-scans:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
     - uses: ./.github/actions/setup-wss-env
 

@@ -2,7 +2,7 @@
 
 set -ex
 
-export PATH=${GOROOT}/bin:${PATH}
+which go
 go version
 
 TEST_DB_PORT="${TEST_DB_PORT:-3306}"

@@ -10,7 +10,7 @@ COPY ./java/src /usr/src/server/java/src
 RUN mvn clean install -DskipTests
 
 
-FROM --platform=${PLATFORM} eclipse-temurin:17-jre-alpine
+FROM --platform=${PLATFORM} eclipse-temurin:17.0.6_10-jre-alpine
 
 # jna native lib install to support RO filesystems
 RUN apk add --no-cache java-jna-native
