@@ -42,7 +42,7 @@
     <guava.version>31.1-jre</guava.version>
     <checkerframework.version>3.28.0</checkerframework.version>
     <aws.sdk.version>1.12.393</aws.sdk.version>
-    <micrometer.version>1.10.2</micrometer.version>
+    <micrometer.version>1.10.3</micrometer.version>
     <caffeine.version>3.1.2</caffeine.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
