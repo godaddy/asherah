@@ -37,7 +37,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -75,7 +75,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -105,7 +105,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -147,7 +147,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
       - name: Cache Java packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -177,7 +177,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -199,7 +199,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
@@ -227,7 +227,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -264,7 +264,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -302,7 +302,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -341,7 +341,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -388,7 +388,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -431,7 +431,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -469,7 +469,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
@@ -493,7 +493,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -530,7 +530,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -563,7 +563,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -600,7 +600,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Cache Go packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+        uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
         with:
           path: /go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -626,7 +626,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -653,7 +653,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
     - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: /go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
@@ -708,7 +708,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: |
           ~/.cache
@@ -777,7 +777,7 @@ jobs:
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
     - name: Cache client packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+      uses: actions/cache@22d3da765b787a233e4179e931c5d710b219e7f0
       with:
         path: |
           ~/.cache
