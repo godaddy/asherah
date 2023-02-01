@@ -30,802 +30,814 @@ jobs:
   java-secure-memory:
     name: Build Java Secure Memory
     runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
-    - name: Build
-      run: |
-        cd java/secure-memory
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Test
-      run: |
-        cd java/secure-memory
-        ./scripts/test.sh
-
-  release-java-secure-memory:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release Java Secure Memory
-    needs: java-secure-memory
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
-      - name: Cache Java packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-          restore-keys: ${{ runner.os }}-m2-
-      - name: Publish Java SecureMemory
-        run: |
-          cd java/secure-memory
-          BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-
-  java-app-encryption:
-    name: Build Java Application Encryption
-    needs: java-secure-memory
-    runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
-    - name: Build
-      run: |
-        cd java/app-encryption
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd java/app-encryption
-        ./scripts/test.sh
-    - name: Integration tests
-      run: |
-        cd java/app-encryption
-        ./scripts/integration_test.sh
-
-  release-java-app-Encryption:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release Java App Encryption
-    needs: java-app-encryption
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
-      - name: Cache Java packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-          restore-keys: ${{ runner.os }}-m2-
-      - name: Publish Java AppEncryption
-        run: |
-          cd java/app-encryption
-          BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-
-  java-reference-app:
-    name: Java Reference Application
-    needs: java-app-encryption
-    runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
-    - name: Build
-      run: |
-        cd samples/java/reference-app
-        ./scripts/clean.sh
-        ./scripts/build.sh
-
-  java-server:
-    name: Java Server Implementation
-    needs: java-app-encryption
-    runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Java packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
-    - name: Build
-      run: |
-        cd server/java
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd server/java
-        ./scripts/test.sh
-
-  #### C#
-  csharp-logging:
-    name: Build C# Logging
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:7.0
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Git config - set workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Build
-      run: |
-        cd csharp/Logging
-        ./scripts/install-dotnet-3.1.sh
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Test
-      run: |
-        cd csharp/Logging
-        ./scripts/test.sh
-    - name: Upload artifact
-      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
-      with:
-        name: csharp-logging
-        path: |
-          csharp/Logging/Logging/bin/**
-          csharp/Logging/Logging/obj/**
-
-  release-csharp-logging:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release C# Logging
-    needs: csharp-logging
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-      - name: Download artifact
-        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
-        with:
-          name: csharp-logging
-          path: ${{ github.workspace }}/csharp/Logging/Logging
-      - name: Publish C# Logging
-        run: |
-          sudo apt-get install -y libxml2-utils
-          cd csharp/Logging
-          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-
-  csharp-secure-memory:
-    name: Build C# Secure Memory
-    needs: csharp-logging
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:7.0
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Git config - set workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Build
-      run: |
-        cd csharp/SecureMemory
-        ./scripts/install-dotnet-3.1.sh
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Test
-      run: |
-        cd csharp/SecureMemory
-        ./scripts/test.sh
-    - name: Upload artifact
-      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
-      with:
-        name: csharp-secure-memory
-        path: |
-          csharp/SecureMemory/SecureMemory/bin/**
-          csharp/SecureMemory/SecureMemory/obj/**
-          csharp/SecureMemory/PlatformNative/bin/**
-          csharp/SecureMemory/PlatformNative/obj/**
-
-  release-csharp-secure-memory:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release C# Secure Memory
-    needs: csharp-secure-memory
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-      - name: Download artifact
-        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
-        with:
-          name: csharp-secure-memory
-          path: |
-            ${{ github.workspace }}/csharp/SecureMemory/SecureMemory
-            ${{ github.workspace }}/csharp/SecureMemory/PlatformNative
-      - name: Publish C# Secure Memory
-        run: |
-          sudo apt-get install -y libxml2-utils
-          cd csharp/SecureMemory
-          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-
-  csharp-app-encryption:
-    name: Build C# Application Encryption
-    needs: csharp-secure-memory
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:7.0
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Git config - set workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Build
-      run: |
-        cd csharp/AppEncryption
-        ./scripts/install-dotnet-3.1.sh
-        ./scripts/clean.sh
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd csharp/AppEncryption
-        ./scripts/test.sh
-    - name: Integration tests
-      run: |
-        cd csharp/AppEncryption
-        ./scripts/integration_test.sh
-    - name: Upload artifact
-      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
-      with:
-        name: csharp-app-encryption
-        path: |
-          csharp/AppEncryption/AppEncryption/bin/**
-          csharp/AppEncryption/AppEncryption/obj/**
-          csharp/AppEncryption/Crypto/bin/**
-          csharp/AppEncryption/Crypto/obj/**
-
-  release-csharp-app-encryption:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release C# App Encryption
-    needs: csharp-app-encryption
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Cache dotnet packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-      - name: Download artifact
-        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
-        with:
-          name: csharp-app-encryption
-          path: ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
-      - name: Publish App Encryption
-        run: |
-          sudo apt-get install -y libxml2-utils
-          cd csharp/AppEncryption
-          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
-
-  csharp-reference-app:
-    name: C# Reference Application
-    needs: csharp-app-encryption
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:7.0
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Git config - set workspace as safe
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Cache dotnet packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Build
-      run: |
-        cd samples/csharp/ReferenceApp
-        ./scripts/install-dotnet-3.1.sh
-        ./scripts/clean.sh
-        ./scripts/build.sh
-
-  #### Go
-  go-secure-memory:
-    name: Build Go Secure Memory
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
-    - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
-    - name: Build
-      run: |
-        cd go/securememory
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd go/securememory
-        ./scripts/test.sh
-    - name: Benchmark tests
-      run: |
-        cd go/securememory
-        ./scripts/benchmark_test.sh
-    - name: Static analysis
-      run: |
-        cd go/securememory
-        ./scripts/lint.sh
-
-  release-go-secure-memory:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release Go Secure Memory
-    needs: go-secure-memory
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Cache Go packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-          restore-keys: ${{ runner.os }}-go-
-      - name: Publish Go Secure Memory
-        run: |
-          cd go/securememory
-          BASE_VERSION=$(cat .versionfile)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-
-  go-app-encryption:
-    name: Build Go Application Encryption
-    needs: go-secure-memory
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: Password123
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
-    - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
-    - name: Build
-      run: |
-        cd go/appencryption
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd go/appencryption
-        ./scripts/test.sh
-    - name: Benchmark tests
-      run: |
-        cd go/appencryption
-        ./scripts/benchmark_test.sh
-    - name: Static analysis
-      run: |
-        cd go/appencryption
-        ./scripts/lint.sh
-
-  release-go-app-encryption:
-    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
-    name: Release Go App Encryption
-    needs: go-app-encryption
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-        with:
-          token: ${{ secrets.MERGE_TOKEN }}
-      - name: Fetch all tags
-        run: git fetch --prune --unshallow --tags
-      - name: Cache Go packages
-        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-        with:
-          path: /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-          restore-keys: ${{ runner.os }}-go-
-      - name: Publish Go App Encryption
-        run: |
-          cd go/appencryption
-          BASE_VERSION=$(cat .versionfile)
-          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
-          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
-          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
-            ./scripts/release_prod.sh
-          fi
-
-  go-reference-app:
-    name: Go Reference Application
-    needs: go-app-encryption
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
-    - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
-    - name: Build
-      run: |
-        cd samples/go/referenceapp
-        ./scripts/build.sh
-    - name: Static analysis
-      run: |
-        cd samples/go/referenceapp
-        ./scripts/lint.sh
-
-  go-server:
-    name: Go Server Implementation
-    needs: go-app-encryption
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Cache Go packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
-    - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
-    - name: Build
-      run: |
-        cd server/go
-        ./scripts/build.sh
-    - name: Unit tests
-      run: |
-        cd server/go
-        ./scripts/test.sh
-    - name: Static analysis
-      run: |
-        cd server/go
-        ./scripts/lint.sh
-
-  #### Cross-Language
-  server-samples:
-    name: Server Samples
-    needs: [ java-server, go-server ]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Install build tools
-      run: |
-        sudo apt-get update
-        sudo apt-get -y upgrade --fix-missing
-        sudo apt-get install -y build-essential
-    - name: Set up JDK 11
-      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
-      with:
-        distribution: 'adopt'
-        java-version: '11'
-    - name: Set up Go 1.19
-      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
-      with:
-        go-version: '1.19'
-    - name: Set up Python 3.7
-      uses: actions/setup-python@a6eba85bba13ec8929458742a9c19803934c4340
-      with:
-        python-version: 3.7
-    - name: Set up NodeJS 13
-      uses: actions/setup-node@3dbcda8bc2eb5ec6aa3fbde01feaae3236952db8
-      with:
-        node-version: 13.x
-    - name: Extract branch name
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Disable core dump
       shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-    - name: Cache client packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: |
-          ~/.cache
-          ~/.m2
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
-        restore-keys: |
-          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
-          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-
-          ${{ runner.os }}-v5-clients-
-    - name: Build the Java project
       run: |
-        # Delete previous builds and rebuild from the current branch
-        rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
-        mvn clean install -f java/app-encryption/pom.xml -DskipTests
-        mvn clean install -f server/java/pom.xml -DskipTests
-    - name: Test clients
-      run: |
-        cd server/samples/clients
-        ./test_clients.sh
-
-  tests-cross-language:
-    name: Cross-Language Tests
-    needs: [ java-app-encryption, csharp-app-encryption, go-app-encryption, java-server, go-server ]
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
-          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-        ports:
-          - 3306
-        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-    - name: Initialize RDBMS based metastore
-      run: |
-        mysql -h 127.0.0.1 -P${{ job.services.mysql.ports[3306] }} -u ${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }} -e "CREATE TABLE ${{ env.MYSQL_DATABASE }}.encryption_key (
-          id             VARCHAR(255) NOT NULL,
-          created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          key_record     TEXT         NOT NULL,
-          PRIMARY KEY (id, created),
-          INDEX (created)
-        );"
-    - name: Set up JDK 11
-      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
-      with:
-        distribution: 'adopt'
-        java-version: '11.0.4'
-    - name: Set up C#
-      uses: actions/setup-dotnet@c41fd15071f7822714b95f804b84355ca64b7840
-      with:
-        dotnet-version: '3.1.x'
-    - name: Set up Go 1.19
-      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
-      with:
-        go-version: '1.19'
-    - name: Set up Python 3.8
-      uses: actions/setup-python@a6eba85bba13ec8929458742a9c19803934c4340
-      with:
-        python-version: 3.8
-    - name: Extract branch name
+        ulimit -c unlimited
+        ulimit -a
+    - name: Max lockable memory unlimited
       shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-    - name: Cache client packages
-      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
-      with:
-        path: |
-          ~/.cache
-          ~/.m2
-          ~/.nuget
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
-        restore-keys: |
-          ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
-          ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-
-          ${{ runner.os }}-v5-cltf-
-    - name: Build the Java project
       run: |
-        # Delete previous builds and rebuild from the current branch
-        rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
-        mvn clean install -f java/app-encryption/pom.xml -DskipTests
-        mvn clean install -f server/java/pom.xml -DskipTests
-        cd tests/cross-language/java
-        ./scripts/build.sh
-    - name: Build the C# project
-      run: |
-        cd tests/cross-language/csharp
-        ./scripts/clean.sh
-        # Workaround for https://github.com/SpecFlowOSS/SpecFlow/issues/1912#issue-583000545
-        export MSBUILDSINGLELOADCONTEXT=1
-        ./scripts/build.sh
-    - name: Lint & Build the Go project
-      run: |
-        cd tests/cross-language/go
-        ./scripts/lint.sh
-        go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
-        go install github.com/cucumber/godog/cmd/godog@latest
-        echo "GOPATH: ${GOPATH}"
-        echo "PATH: ${PATH}"
-        echo "GOBIN: ${GOBIN}"
-        ./scripts/build.sh
-    - name: Test
-      env:
-        TEST_DB_NAME: ${{ env.MYSQL_DATABASE }}
-        TEST_DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
-        TEST_DB_USER: ${{ env.MYSQL_USERNAME }}
-        TEST_DB_HOSTNAME: localhost
-        TEST_DB_PORT: ${{ job.services.mysql.ports[3306] }}
-        ASHERAH_SERVICE_NAME: service
-        ASHERAH_PRODUCT_NAME: product
-        ASHERAH_KMS_MODE: static
-      run: |
-        export JAVA_AE_VERSION=$(mvn -f java/app-encryption/pom.xml -q -DforceStdout help:evaluate -Dexpression=project.version)
-        cd tests/cross-language/
-        ./scripts/encrypt_all.sh
-        ./scripts/decrypt_all.sh
+        sudo prlimit --memlock=-1:-1
+        ulimit -a
+#    - name: Set up Java
+#      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+#      with:
+#        java-version: '17'
+#        distribution: 'adopt'
+#    - name: Cache Java packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.m2
+#        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#        restore-keys: ${{ runner.os }}-m2-
+#    - name: Build
+#      run: |
+#        cd java/secure-memory
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Test
+#      run: |
+#        cd java/secure-memory
+#        ./scripts/test.sh
+
+#  release-java-secure-memory:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release Java Secure Memory
+#    needs: java-secure-memory
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Set up Maven Central Repository
+#        uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+#        with:
+#          java-version: '11'
+#          distribution: 'adopt'
+#          server-id: ossrh
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+#          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+#      - name: Cache Java packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: ~/.m2
+#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#          restore-keys: ${{ runner.os }}-m2-
+#      - name: Publish Java SecureMemory
+#        run: |
+#          cd java/secure-memory
+#          BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#        env:
+#          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+#          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+#
+#  java-app-encryption:
+#    name: Build Java Application Encryption
+#    needs: java-secure-memory
+#    runs-on: ubuntu-latest
+#    container:
+#      image: adoptopenjdk/maven-openjdk11
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Java packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.m2
+#        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#        restore-keys: ${{ runner.os }}-m2-
+#    - name: Build
+#      run: |
+#        cd java/app-encryption
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd java/app-encryption
+#        ./scripts/test.sh
+#    - name: Integration tests
+#      run: |
+#        cd java/app-encryption
+#        ./scripts/integration_test.sh
+#
+#  release-java-app-Encryption:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release Java App Encryption
+#    needs: java-app-encryption
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Set up Maven Central Repository
+#        uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+#        with:
+#          java-version: '11'
+#          distribution: 'adopt'
+#          server-id: ossrh
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+#          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+#      - name: Cache Java packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: ~/.m2
+#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#          restore-keys: ${{ runner.os }}-m2-
+#      - name: Publish Java AppEncryption
+#        run: |
+#          cd java/app-encryption
+#          BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#        env:
+#          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+#          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+#
+#  java-reference-app:
+#    name: Java Reference Application
+#    needs: java-app-encryption
+#    runs-on: ubuntu-latest
+#    container:
+#      image: adoptopenjdk/maven-openjdk11
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Java packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.m2
+#        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#        restore-keys: ${{ runner.os }}-m2-
+#    - name: Build
+#      run: |
+#        cd samples/java/reference-app
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#
+#  java-server:
+#    name: Java Server Implementation
+#    needs: java-app-encryption
+#    runs-on: ubuntu-latest
+#    container:
+#      image: adoptopenjdk/maven-openjdk11
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Java packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.m2
+#        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+#        restore-keys: ${{ runner.os }}-m2-
+#    - name: Build
+#      run: |
+#        cd server/java
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd server/java
+#        ./scripts/test.sh
+#
+#  #### C#
+#  csharp-logging:
+#    name: Build C# Logging
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mcr.microsoft.com/dotnet/sdk:7.0
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Git config - set workspace as safe
+#      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+#    - name: Cache dotnet packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.nuget/packages
+#        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-nuget-
+#    - name: Build
+#      run: |
+#        cd csharp/Logging
+#        ./scripts/install-dotnet-3.1.sh
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Test
+#      run: |
+#        cd csharp/Logging
+#        ./scripts/test.sh
+#    - name: Upload artifact
+#      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
+#      with:
+#        name: csharp-logging
+#        path: |
+#          csharp/Logging/Logging/bin/**
+#          csharp/Logging/Logging/obj/**
+#
+#  release-csharp-logging:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release C# Logging
+#    needs: csharp-logging
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Cache dotnet packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: ~/.nuget/packages
+#          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#          restore-keys: |
+#            ${{ runner.os }}-nuget-
+#      - name: Download artifact
+#        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+#        with:
+#          name: csharp-logging
+#          path: ${{ github.workspace }}/csharp/Logging/Logging
+#      - name: Publish C# Logging
+#        run: |
+#          sudo apt-get install -y libxml2-utils
+#          cd csharp/Logging
+#          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#        env:
+#          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+#          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
+#
+#  csharp-secure-memory:
+#    name: Build C# Secure Memory
+#    needs: csharp-logging
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mcr.microsoft.com/dotnet/sdk:7.0
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Git config - set workspace as safe
+#      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+#    - name: Cache dotnet packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.nuget/packages
+#        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-nuget-
+#    - name: Build
+#      run: |
+#        cd csharp/SecureMemory
+#        ./scripts/install-dotnet-3.1.sh
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Test
+#      run: |
+#        cd csharp/SecureMemory
+#        ./scripts/test.sh
+#    - name: Upload artifact
+#      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
+#      with:
+#        name: csharp-secure-memory
+#        path: |
+#          csharp/SecureMemory/SecureMemory/bin/**
+#          csharp/SecureMemory/SecureMemory/obj/**
+#          csharp/SecureMemory/PlatformNative/bin/**
+#          csharp/SecureMemory/PlatformNative/obj/**
+#
+#  release-csharp-secure-memory:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release C# Secure Memory
+#    needs: csharp-secure-memory
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Cache dotnet packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: ~/.nuget/packages
+#          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#          restore-keys: |
+#            ${{ runner.os }}-nuget-
+#      - name: Download artifact
+#        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+#        with:
+#          name: csharp-secure-memory
+#          path: |
+#            ${{ github.workspace }}/csharp/SecureMemory/SecureMemory
+#            ${{ github.workspace }}/csharp/SecureMemory/PlatformNative
+#      - name: Publish C# Secure Memory
+#        run: |
+#          sudo apt-get install -y libxml2-utils
+#          cd csharp/SecureMemory
+#          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#        env:
+#          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+#          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
+#
+#  csharp-app-encryption:
+#    name: Build C# Application Encryption
+#    needs: csharp-secure-memory
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mcr.microsoft.com/dotnet/sdk:7.0
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    services:
+#      dynamodb:
+#        image: amazon/dynamodb-local
+#      mysql:
+#        image: mysql:5.7
+#        env:
+#          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Git config - set workspace as safe
+#      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+#    - name: Cache dotnet packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.nuget/packages
+#        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-nuget-
+#    - name: Build
+#      run: |
+#        cd csharp/AppEncryption
+#        ./scripts/install-dotnet-3.1.sh
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd csharp/AppEncryption
+#        ./scripts/test.sh
+#    - name: Integration tests
+#      run: |
+#        cd csharp/AppEncryption
+#        ./scripts/integration_test.sh
+#    - name: Upload artifact
+#      uses: actions/upload-artifact@65d862660abb392b8c4a3d1195a2108db131dd05
+#      with:
+#        name: csharp-app-encryption
+#        path: |
+#          csharp/AppEncryption/AppEncryption/bin/**
+#          csharp/AppEncryption/AppEncryption/obj/**
+#          csharp/AppEncryption/Crypto/bin/**
+#          csharp/AppEncryption/Crypto/obj/**
+#
+#  release-csharp-app-encryption:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release C# App Encryption
+#    needs: csharp-app-encryption
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Cache dotnet packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: ~/.nuget/packages
+#          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#          restore-keys: |
+#            ${{ runner.os }}-nuget-
+#      - name: Download artifact
+#        uses: actions/download-artifact@e9ef242655d12993efdcda9058dee2db83a2cb9b
+#        with:
+#          name: csharp-app-encryption
+#          path: ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
+#      - name: Publish App Encryption
+#        run: |
+#          sudo apt-get install -y libxml2-utils
+#          cd csharp/AppEncryption
+#          BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#        env:
+#          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+#          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
+#
+#  csharp-reference-app:
+#    name: C# Reference Application
+#    needs: csharp-app-encryption
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mcr.microsoft.com/dotnet/sdk:7.0
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Git config - set workspace as safe
+#      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+#    - name: Cache dotnet packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: ~/.nuget/packages
+#        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-nuget-
+#    - name: Build
+#      run: |
+#        cd samples/csharp/ReferenceApp
+#        ./scripts/install-dotnet-3.1.sh
+#        ./scripts/clean.sh
+#        ./scripts/build.sh
+#
+#  #### Go
+#  go-secure-memory:
+#    name: Build Go Secure Memory
+#    runs-on: ubuntu-latest
+#    container:
+#      image: golang:1.19
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Go packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: /go/pkg/mod
+#        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#        restore-keys: ${{ runner.os }}-go-
+#    - name: Install gotestsum
+#      run: go install gotest.tools/gotestsum@v1.8.2
+#    - name: Build
+#      run: |
+#        cd go/securememory
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd go/securememory
+#        ./scripts/test.sh
+#    - name: Benchmark tests
+#      run: |
+#        cd go/securememory
+#        ./scripts/benchmark_test.sh
+#    - name: Static analysis
+#      run: |
+#        cd go/securememory
+#        ./scripts/lint.sh
+#
+#  release-go-secure-memory:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release Go Secure Memory
+#    needs: go-secure-memory
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Cache Go packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: /go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#          restore-keys: ${{ runner.os }}-go-
+#      - name: Publish Go Secure Memory
+#        run: |
+#          cd go/securememory
+#          BASE_VERSION=$(cat .versionfile)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#
+#  go-app-encryption:
+#    name: Build Go Application Encryption
+#    needs: go-secure-memory
+#    runs-on: ubuntu-latest
+#    container:
+#      image: golang:1.19
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    services:
+#      dynamodb:
+#        image: amazon/dynamodb-local
+#      mysql:
+#        image: mysql:5.7
+#        env:
+#          MYSQL_ROOT_PASSWORD: Password123
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Go packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: /go/pkg/mod
+#        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#        restore-keys: ${{ runner.os }}-go-
+#    - name: Install gotestsum
+#      run: go install gotest.tools/gotestsum@v1.8.2
+#    - name: Build
+#      run: |
+#        cd go/appencryption
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd go/appencryption
+#        ./scripts/test.sh
+#    - name: Benchmark tests
+#      run: |
+#        cd go/appencryption
+#        ./scripts/benchmark_test.sh
+#    - name: Static analysis
+#      run: |
+#        cd go/appencryption
+#        ./scripts/lint.sh
+#
+#  release-go-app-encryption:
+#    if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
+#    name: Release Go App Encryption
+#    needs: go-app-encryption
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#        with:
+#          token: ${{ secrets.MERGE_TOKEN }}
+#      - name: Fetch all tags
+#        run: git fetch --prune --unshallow --tags
+#      - name: Cache Go packages
+#        uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#        with:
+#          path: /go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#          restore-keys: ${{ runner.os }}-go-
+#      - name: Publish Go App Encryption
+#        run: |
+#          cd go/appencryption
+#          BASE_VERSION=$(cat .versionfile)
+#          VERSION_SUFFIX=`echo ${BASE_VERSION} | cut -f2 -d'-'`
+#          BRANCH=`echo ${GITHUB_REF#refs/heads/}`
+#          if [[ "${BRANCH}" =~ release-.* && "${VERSION_SUFFIX}" != "alpha" ]]; then
+#            ./scripts/release_prod.sh
+#          fi
+#
+#  go-reference-app:
+#    name: Go Reference Application
+#    needs: go-app-encryption
+#    runs-on: ubuntu-latest
+#    container:
+#      image: golang:1.19
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Go packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: /go/pkg/mod
+#        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#        restore-keys: ${{ runner.os }}-go-
+#    - name: Install gotestsum
+#      run: go install gotest.tools/gotestsum@v1.8.2
+#    - name: Build
+#      run: |
+#        cd samples/go/referenceapp
+#        ./scripts/build.sh
+#    - name: Static analysis
+#      run: |
+#        cd samples/go/referenceapp
+#        ./scripts/lint.sh
+#
+#  go-server:
+#    name: Go Server Implementation
+#    needs: go-app-encryption
+#    runs-on: ubuntu-latest
+#    container:
+#      image: golang:1.19
+#      options: --ulimit core=-1 --ulimit memlock=-1:-1
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Cache Go packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: /go/pkg/mod
+#        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+#        restore-keys: ${{ runner.os }}-go-
+#    - name: Install gotestsum
+#      run: go install gotest.tools/gotestsum@v1.8.2
+#    - name: Build
+#      run: |
+#        cd server/go
+#        ./scripts/build.sh
+#    - name: Unit tests
+#      run: |
+#        cd server/go
+#        ./scripts/test.sh
+#    - name: Static analysis
+#      run: |
+#        cd server/go
+#        ./scripts/lint.sh
+#
+#  #### Cross-Language
+#  server-samples:
+#    name: Server Samples
+#    needs: [ java-server, go-server ]
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Install build tools
+#      run: |
+#        sudo apt-get update
+#        sudo apt-get -y upgrade --fix-missing
+#        sudo apt-get install -y build-essential
+#    - name: Set up JDK 11
+#      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+#      with:
+#        distribution: 'adopt'
+#        java-version: '11'
+#    - name: Set up Go 1.19
+#      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
+#      with:
+#        go-version: '1.19'
+#    - name: Set up Python 3.7
+#      uses: actions/setup-python@a6eba85bba13ec8929458742a9c19803934c4340
+#      with:
+#        python-version: 3.7
+#    - name: Set up NodeJS 13
+#      uses: actions/setup-node@3dbcda8bc2eb5ec6aa3fbde01feaae3236952db8
+#      with:
+#        node-version: 13.x
+#    - name: Extract branch name
+#      shell: bash
+#      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+#      id: extract_branch
+#    - name: Cache client packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: |
+#          ~/.cache
+#          ~/.m2
+#          ~/go/pkg/mod
+#        key: ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+#          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-
+#          ${{ runner.os }}-v5-clients-
+#    - name: Build the Java project
+#      run: |
+#        # Delete previous builds and rebuild from the current branch
+#        rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+#        mvn clean install -f java/app-encryption/pom.xml -DskipTests
+#        mvn clean install -f server/java/pom.xml -DskipTests
+#    - name: Test clients
+#      run: |
+#        cd server/samples/clients
+#        ./test_clients.sh
+#
+#  tests-cross-language:
+#    name: Cross-Language Tests
+#    needs: [ java-app-encryption, csharp-app-encryption, go-app-encryption, java-server, go-server ]
+#    runs-on: ubuntu-latest
+#    services:
+#      mysql:
+#        image: mysql:5.7
+#        env:
+#          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+#          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+#        ports:
+#          - 3306
+#        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
+#    steps:
+#    - name: Checkout the repository
+#      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+#    - name: Initialize RDBMS based metastore
+#      run: |
+#        mysql -h 127.0.0.1 -P${{ job.services.mysql.ports[3306] }} -u ${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }} -e "CREATE TABLE ${{ env.MYSQL_DATABASE }}.encryption_key (
+#          id             VARCHAR(255) NOT NULL,
+#          created        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+#          key_record     TEXT         NOT NULL,
+#          PRIMARY KEY (id, created),
+#          INDEX (created)
+#        );"
+#    - name: Set up JDK 11
+#      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+#      with:
+#        distribution: 'adopt'
+#        java-version: '11.0.4'
+#    - name: Set up C#
+#      uses: actions/setup-dotnet@c41fd15071f7822714b95f804b84355ca64b7840
+#      with:
+#        dotnet-version: '3.1.x'
+#    - name: Set up Go 1.19
+#      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
+#      with:
+#        go-version: '1.19'
+#    - name: Set up Python 3.8
+#      uses: actions/setup-python@a6eba85bba13ec8929458742a9c19803934c4340
+#      with:
+#        python-version: 3.8
+#    - name: Extract branch name
+#      shell: bash
+#      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+#      id: extract_branch
+#    - name: Cache client packages
+#      uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
+#      with:
+#        path: |
+#          ~/.cache
+#          ~/.m2
+#          ~/.nuget
+#          ~/go/pkg/mod
+#        key: ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
+#        restore-keys: |
+#          ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+#          ${{ runner.os }}-v5-cltf-${{ steps.extract_branch.outputs.branch }}-
+#          ${{ runner.os }}-v5-cltf-
+#    - name: Build the Java project
+#      run: |
+#        # Delete previous builds and rebuild from the current branch
+#        rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
+#        mvn clean install -f java/app-encryption/pom.xml -DskipTests
+#        mvn clean install -f server/java/pom.xml -DskipTests
+#        cd tests/cross-language/java
+#        ./scripts/build.sh
+#    - name: Build the C# project
+#      run: |
+#        cd tests/cross-language/csharp
+#        ./scripts/clean.sh
+#        # Workaround for https://github.com/SpecFlowOSS/SpecFlow/issues/1912#issue-583000545
+#        export MSBUILDSINGLELOADCONTEXT=1
+#        ./scripts/build.sh
+#    - name: Lint & Build the Go project
+#      run: |
+#        cd tests/cross-language/go
+#        ./scripts/lint.sh
+#        go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
+#        go install github.com/cucumber/godog/cmd/godog@latest
+#        echo "GOPATH: ${GOPATH}"
+#        echo "PATH: ${PATH}"
+#        echo "GOBIN: ${GOBIN}"
+#        ./scripts/build.sh
+#    - name: Test
+#      env:
+#        TEST_DB_NAME: ${{ env.MYSQL_DATABASE }}
+#        TEST_DB_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+#        TEST_DB_USER: ${{ env.MYSQL_USERNAME }}
+#        TEST_DB_HOSTNAME: localhost
+#        TEST_DB_PORT: ${{ job.services.mysql.ports[3306] }}
+#        ASHERAH_SERVICE_NAME: service
+#        ASHERAH_PRODUCT_NAME: product
+#        ASHERAH_KMS_MODE: static
+#      run: |
+#        export JAVA_AE_VERSION=$(mvn -f java/app-encryption/pom.xml -q -DforceStdout help:evaluate -Dexpression=project.version)
+#        cd tests/cross-language/
+#        ./scripts/encrypt_all.sh
+#        ./scripts/decrypt_all.sh
