@@ -71,7 +71,7 @@ jobs:
       - name: Set up Maven Central Repository
         uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'adopt'
           server-id: ossrh
           server-username: MAVEN_USERNAME
