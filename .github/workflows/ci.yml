@@ -30,12 +30,14 @@ jobs:
   java-secure-memory:
     name: Build Java Secure Memory
     runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - name: Set up Java
+      uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
+      with:
+        java-version: '17'
+        distribution: 'adopt'
     - name: Cache Java packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
@@ -50,6 +52,8 @@ jobs:
     - name: Test
       run: |
         cd java/secure-memory
+        sudo prlimit --pid $$ --core=-1
+        sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/test.sh
 
   release-java-secure-memory:
@@ -67,7 +71,7 @@ jobs:
       - name: Set up Maven Central Repository
         uses: actions/setup-java@8f12c5c4d1ebd18bf4b7a51a1b0b912633f0bc61
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'adopt'
           server-id: ossrh
           server-username: MAVEN_USERNAME

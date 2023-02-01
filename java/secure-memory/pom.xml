@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>securememory</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <name>SecureMemory</name>
   <description>Secure off-heap memory storage for application secrets (like cryptographic keys)</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -32,14 +32,25 @@
   </scm>
 
   <properties>
-    <java.version>1.8</java.version>
+    <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <slf4j.version>2.0.6</slf4j.version>
+    <!--    Project Dependencies   -->
+    <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
+    <jacoco.version>0.8.8</jacoco.version>
+    <jna.version>5.13.0</jna.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
-    <mockito.core.version>4.11.0</mockito.core.version>
-    <jacoco.version>0.8.8</jacoco.version>
-    <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
+    <logback.version>1.4.5</logback.version>
+    <maven.checkstyle.version>3.2.1</maven.checkstyle.version>
+    <maven.compiler.version>3.10.1</maven.compiler.version>
+    <maven.gpg.plugin>3.0.1</maven.gpg.plugin>
+    <maven.javadoc.version>3.4.1</maven.javadoc.version>
+    <maven.scm.version>2.0.0-M3</maven.scm.version>
+    <maven.source.version>3.2.1</maven.source.version>
+    <maven.surefire.version>3.0.0-M8</maven.surefire.version>
+    <mockito.core.version>5.1.1</mockito.core.version>
+    <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>
+    <slf4j.version>2.0.6</slf4j.version>
   </properties>
 
   <build>
@@ -47,13 +58,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>${maven.checkstyle.version}</version>
         <executions>
           <execution>
             <id>validate</id>
             <phase>validate</phase>
             <configuration>
-              <encoding>UTF-8</encoding>
+              <inputEncoding>UTF-8</inputEncoding>
               <consoleOutput>true</consoleOutput>
               <configLocation>${checkstyle.config}</configLocation>
               <includeResources>false</includeResources>
@@ -68,15 +79,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>${maven.compiler.version}</version>
         <configuration>
-          <release>8</release>
+          <release>${java.version}</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>${maven.source.version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -89,14 +100,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M8</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.jupiter.version}</version>
-          </dependency>
-        </dependencies>
+        <version>${maven.surefire.version}</version>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -120,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-scm-plugin</artifactId>
-        <version>1.13.0</version>
+        <version>${maven.scm.version}</version>
         <configuration>
           <connectionType>developerConnection</connectionType>
         </configuration>
@@ -133,13 +137,13 @@
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
-      <version>5.13.0</version>
+      <version>${jna.version}</version>
     </dependency>
 
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna-platform</artifactId>
-      <version>5.13.0</version>
+      <version>${jna.version}</version>
     </dependency>
 
     <dependency>
@@ -153,23 +157,15 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.4.5</version>
+      <version>${logback.version}</version>
       <scope>test</scope>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
+      <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner -->
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-runner</artifactId>
-      <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -212,7 +208,7 @@
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.13</version>
+            <version>${nexus.staging.maven.version}</version>
             <extensions>true</extensions>
             <configuration>
                 <serverId>ossrh</serverId>
@@ -223,7 +219,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.4.1</version>
+            <version>${maven.javadoc.version}</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -236,7 +232,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>${maven.gpg.plugin}</version>
             <configuration>
               <!-- Prevent gpg from using pinentry programs -->
               <gpgArguments>
