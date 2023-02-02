@@ -4,10 +4,10 @@ go 1.19
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
-	github.com/aws/aws-sdk-go v1.44.187
+	github.com/aws/aws-sdk-go v1.44.190
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/godaddy/asherah/go/appencryption v0.2.4
-	github.com/godaddy/asherah/go/securememory v0.1.3
+	github.com/godaddy/asherah/go/securememory v0.1.4
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
@@ -23,8 +23,8 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b // indirect
-	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
