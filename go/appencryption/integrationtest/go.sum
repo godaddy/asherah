@@ -314,8 +314,8 @@ github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/goburrow/cache v0.1.4 h1:As4KzO3hgmzPlnaMniZU9+VmoNYseUhuELbxy9mRBfw=
 github.com/goburrow/cache v0.1.4/go.mod h1:cDFesZDnIlrHoNlMYqqMpCRawuXulgx+y7mXU8HZ+/c=
-github.com/godaddy/asherah/go/appencryption v0.2.5 h1:l/eGEqxw+fbbZEPHRxs/XUCzw1QCKwsodO46gO4VGKE=
-github.com/godaddy/asherah/go/appencryption v0.2.5/go.mod h1:XbtYpHOsVCz35gp2XGZLv4esGRCxeB/bsllt/aYntn4=
+github.com/godaddy/asherah/go/appencryption v0.2.6 h1:4Julkowk/oL2xspt6XvcT0i93RASSU5k2kmauBSTV2U=
+github.com/godaddy/asherah/go/appencryption v0.2.6/go.mod h1:T4QuD/LuWnFxaro5K7n6VzXAtII5fjVed5el4j6hMns=
 github.com/godaddy/asherah/go/securememory v0.1.4 h1:1UlEPE5Q2wK1fbGwjIBtlGO02teLFBFk7dNIvdWOzNQ=
 github.com/godaddy/asherah/go/securememory v0.1.4/go.mod h1:grCFdMhT5CY8h+E+Qb1Abhd6uBDIxrwVh6Tulsc9gj4=
 github.com/godbus/dbus v0.0.0-20151105175453-c7fdd8b5cd55/go.mod h1:/YcGZj5zSblfDWMMoOzV4fas9FZnQYTkDnsGvmh2Grw=
