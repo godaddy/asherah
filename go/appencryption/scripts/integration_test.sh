@@ -1,0 +1,1 @@
+../../../build/go/integration_test.sh
