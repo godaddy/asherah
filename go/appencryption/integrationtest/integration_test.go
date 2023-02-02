@@ -1,4 +1,4 @@
-package appencryption_test
+package integration_test
 
 import (
 	"context"
@@ -14,7 +14,8 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence/persistencetest"
+
+	"github.com/godaddy/asherah/go/appencryption/integrationtest/persistence/persistencetest"
 )
 
 const original = "somesupersecretstring!hjdkashfjkdashfd"

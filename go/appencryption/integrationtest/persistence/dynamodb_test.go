@@ -11,7 +11,8 @@ import (
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence/persistencetest"
+
+	"github.com/godaddy/asherah/go/appencryption/integrationtest/persistence/persistencetest"
 )
 
 type DynamoDBSuite struct {
