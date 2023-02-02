@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.2.4</version>
+  <version>0.2.5</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -35,26 +35,46 @@
   </scm>
 
   <properties>
-    <java.version>1.8</java.version>
+    <java.version>17</java.version>
+
+    <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <slf4j.version>2.0.6</slf4j.version>
-    <guava.version>31.1-jre</guava.version>
-    <checkerframework.version>3.29.0</checkerframework.version>
-    <aws.sdk.version>1.12.393</aws.sdk.version>
-    <micrometer.version>1.10.3</micrometer.version>
+    <skip.surefire.tests>${skipTests}</skip.surefire.tests>
+    <!--      Project Dependencies-->
+    <apache.commons.version>3.12.0</apache.commons.version>
+    <amazonaws.version>1.21.0</amazonaws.version>
+    <aws.sdk.version>1.12.398</aws.sdk.version>
+    <bouncycastle.version>1.70</bouncycastle.version>
+    <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.2</caffeine.version>
+    <checkerframework.version>3.30.0</checkerframework.version>
+    <commons.codec.version>1.15</commons.codec.version>
+    <commons.logging.version>1.2</commons.logging.version>
+    <commons.text.version>1.10.0</commons.text.version>
+    <guava.version>31.1-jre</guava.version>
+    <jackson.version>2.14.2</jackson.version>
+    <jacoco.version>0.8.8</jacoco.version>
+    <json.version>20220924</json.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <mockito.core.version>4.11.0</mockito.core.version>
+    <logback.version>1.4.5</logback.version>
+    <maven.checkstyle.version>3.2.1</maven.checkstyle.version>
+    <maven.compiler.version>3.10.1</maven.compiler.version>
+    <maven.dependency.version>3.5.0</maven.dependency.version>
+    <maven.gpg.version>3.0.1</maven.gpg.version>
+    <maven.javadoc.version>3.4.1</maven.javadoc.version>
+    <maven.scm.version>2.0.0-M3</maven.scm.version>
+    <maven.source.version>3.2.1</maven.source.version>
+    <maven.surefire.version>3.0.0-M8</maven.surefire.version>
+    <micrometer.version>1.10.3</micrometer.version>
+    <mockito.core.version>5.1.1</mockito.core.version>
+    <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>
+    <securememory.version>0.1.2</securememory.version>
+    <slf4j.version>2.0.6</slf4j.version>
+    <sqlite4java.version>1.0.392</sqlite4java.version>
     <testcontainers.version>1.11.2</testcontainers.version>
-    <jacoco.version>0.8.8</jacoco.version>
-    <amazonaws.version>1.20.0</amazonaws.version>
-    <jackson.version>2.14.1</jackson.version>
-    <apache.commons.version>3.12.0</apache.commons.version>
     <zaxxer.version>5.0.1</zaxxer.version>
-    <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
-    <skip.surefire.tests>${skipTests}</skip.surefire.tests>
   </properties>
 
   <build>
@@ -62,13 +82,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>${maven.checkstyle.version}</version>
         <executions>
           <execution>
             <id>validate</id>
             <phase>validate</phase>
             <configuration>
-              <encoding>UTF-8</encoding>
+              <inputEncoding>UTF-8</inputEncoding>
               <consoleOutput>true</consoleOutput>
               <configLocation>${checkstyle.config}</configLocation>
               <includeResources>false</includeResources>
@@ -83,15 +103,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>${maven.compiler.version}</version>
         <configuration>
-          <release>8</release>
+          <release>17</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>${maven.source.version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -104,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.1</version>
+        <version>${maven.javadoc.version}</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -142,7 +162,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-scm-plugin</artifactId>
-        <version>1.13.0</version>
+        <version>${maven.scm.version}</version>
         <configuration>
           <connectionType>developerConnection</connectionType>
         </configuration>
@@ -150,7 +170,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M8</version>
+        <version>${maven.surefire.version}</version>
         <configuration>
           <!-- skips surefire tests without skipping failsafe tests.
           Property value seems to magically default to false -->
@@ -160,7 +180,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M8</version>
+        <version>${maven.surefire.version}</version>
         <executions>
           <execution>
             <goals>
@@ -173,7 +193,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>${build.helper.version}</version>
         <executions>
           <execution>
             <id>add-test-source</id>
@@ -192,7 +212,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>${maven.dependency.version}</version>
         <executions>
           <execution>
             <id>copy</id>
@@ -217,12 +237,12 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.2</version>
+        <version>${commons.logging.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.15</version>
+        <version>${commons.codec.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -237,7 +257,7 @@
     <dependency>
       <groupId>com.godaddy.asherah</groupId>
       <artifactId>securememory</artifactId>
-      <version>0.1.1</version>
+      <version>${securememory.version}</version>
     </dependency>
 
     <dependency>
@@ -268,14 +288,14 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20220924</version>
+      <version>${json.version}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.70</version>
+      <version>${bouncycastle.version}</version>
     </dependency>
 
     <dependency>
@@ -307,7 +327,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.4.5</version>
+      <version>${logback.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -343,7 +363,7 @@
     <dependency>
       <groupId>com.almworks.sqlite4java</groupId>
       <artifactId>sqlite4java</artifactId>
-      <version>1.0.392</version>
+      <version>${sqlite4java.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -357,7 +377,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.14.2</version>
+      <version>${jackson.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -371,7 +391,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
-      <version>1.10.0</version>
+      <version>${commons.text.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -423,7 +443,7 @@
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.13</version>
+            <version>$nexus.staging.maven.version}</version>
             <extensions>true</extensions>
             <configuration>
               <serverId>ossrh</serverId>
@@ -434,14 +454,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.0.1</version>
-            <configuration>
-              <!-- Prevent gpg from using pinentry programs -->
-              <gpgArguments>
-                <arg>--pinentry-mode</arg>
-                <arg>loopback</arg>
-              </gpgArguments>
-            </configuration>
+            <version>${maven.gpg.version}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -456,5 +469,4 @@
       </build>
     </profile>
   </profiles>
-
 </project>
