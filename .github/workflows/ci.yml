@@ -588,6 +588,10 @@ jobs:
       run: |
         cd go/appencryption
         ./scripts/test.sh
+    - name: Integration tests
+      run: |
+        cd go/appencryption
+        ./scripts/integration_test.sh
     - name: Benchmark tests
       run: |
         cd go/appencryption
