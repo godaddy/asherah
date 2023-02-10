@@ -44,7 +44,7 @@
     <!--      Project Dependencies-->
     <apache.commons.version>3.12.0</apache.commons.version>
     <amazonaws.version>1.21.0</amazonaws.version>
-    <aws.sdk.version>1.12.398</aws.sdk.version>
+    <aws.sdk.version>1.12.400</aws.sdk.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.2</caffeine.version>
@@ -455,6 +455,13 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
             <version>${maven.gpg.version}</version>
+            <configuration>
+              <!-- Prevent gpg from using pinentry programs -->
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
