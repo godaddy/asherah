@@ -41,7 +41,7 @@ jobs:
     - name: Cache Java packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
-        path: ~/.m2/reposiroty
+        path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
         restore-keys: ${{ runner.os }}-m2-
     - name: Build
@@ -81,7 +81,7 @@ jobs:
       - name: Cache Java packages
         uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
         with:
-          path: ~/.m2/reposiroty
+          path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
           restore-keys: ${{ runner.os }}-m2-
       - name: Publish Java SecureMemory
@@ -113,7 +113,7 @@ jobs:
     - name: Cache Java packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
-        path: ~/.m2/reposiroty
+        path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
         restore-keys: ${{ runner.os }}-m2-
     - name: Build
@@ -159,7 +159,7 @@ jobs:
       - name: Cache Java packages
         uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
         with:
-          path: ~/.m2/reposiroty
+          path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
           restore-keys: ${{ runner.os }}-m2-
       - name: Publish Java AppEncryption
@@ -189,7 +189,7 @@ jobs:
     - name: Cache Java packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
-        path: ~/.m2/reposiroty
+        path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
         restore-keys: ${{ runner.os }}-m2-
     - name: Build
@@ -211,7 +211,7 @@ jobs:
     - name: Cache Java packages
       uses: actions/cache@2b5a782c6414f96354f95902141714b127692d1e
       with:
-        path: ~/.m2/reposiroty
+        path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
         restore-keys: ${{ runner.os }}-m2-
     - name: Build
