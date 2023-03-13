@@ -141,21 +141,22 @@ languages and platforms.
 
 ## Supported Languages
 
-* [Java](java/app-encryption)
+* [Java](https://github.com/godaddy/asherah-java)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
 * [Service Layer (gRPC)](/server)
+* [Node.JS](https://github.com/godaddy/asherah-node)
+* [Ruby](https://github.com/godaddy/asherah-ruby)
+* [Python](https://github.com/godaddy/asherah-python)
 
 ### Feature Support
 
-| Feature                    | Java | .NET | Go  |
-| -------------------------- | ---- | ---- | --- |
-| AWS KMS Support            | Yes  | Yes  | Yes |
-| RDBMS Metastore            | Yes  | Yes  | Yes |
-| DynamoDB Metastore         | Yes  | Yes  | Yes |
-| Session caching            | Yes  | Yes  | Yes |
-| Encrypt/Decrypt pattern    | Yes  | Yes  | Yes |
-| Store/Load pattern.        | Yes  | Yes  | Yes |
+* AWS KMS Support
+* RDBMS Metastore
+* DynamoDB Metastore
+* Session caching
+* Encrypt/Decrypt pattern
+* Store/Load pattern
 
 ## Contributing
 
