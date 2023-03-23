@@ -141,7 +141,7 @@ languages and platforms.
 
 ## Supported Languages
 
-* [Java](https://github.com/godaddy/asherah-java)
+* [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
 * [Service Layer (gRPC)](/server)
