@@ -24,7 +24,7 @@ services:
     volumes:
       - tmp:/tmp
   db:
-    image: "mysql:5.7"
+    image: "mysql:8.0"
     ports:
       - "33060:3306"
     environment:
