@@ -145,6 +145,11 @@ languages and platforms.
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
 * [Service Layer (gRPC)](/server)
+
+### Derived Projects
+
+[Asherah-Cobhan](https://github.com/godaddy/asherah-cobhan) implementations built atop the [Asherah SDK for Go](go/appencryption).
+
 * [Node.JS](https://github.com/godaddy/asherah-node)
 * [Ruby](https://github.com/godaddy/asherah-ruby)
 * [Python](https://github.com/godaddy/asherah-python)
