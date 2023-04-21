@@ -44,7 +44,7 @@
     <!--      Project Dependencies-->
     <apache.commons.version>3.12.0</apache.commons.version>
     <amazonaws.version>1.21.0</amazonaws.version>
-    <aws.sdk.version>1.12.400</aws.sdk.version>
+    <aws.sdk.version>1.12.452</aws.sdk.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.2</caffeine.version>
