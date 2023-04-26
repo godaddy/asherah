@@ -58,7 +58,7 @@ jobs:
           fi
         shell: bash
       - name: Create release
-        uses: ncipollo/release-action@a5996b3a733af99dce9d614dc1d70412e81735c7
+        uses: ncipollo/release-action@eb05307dcee34deaad054e98128088a30d7980dc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
