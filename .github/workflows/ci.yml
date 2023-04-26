@@ -710,7 +710,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
     - name: Set up Go 1.19
-      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
+      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
         go-version: '1.19'
     - name: Set up Python 3.7
@@ -783,7 +783,7 @@ jobs:
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.19
-      uses: actions/setup-go@21459d0b7b1d63741429b748885bf5a4974593b4
+      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
         go-version: '1.19'
     - name: Set up Python 3.8
