@@ -55,7 +55,7 @@
     <guava.version>31.1-jre</guava.version>
     <jackson.version>2.14.2</jackson.version>
     <jacoco.version>0.8.8</jacoco.version>
-    <json.version>20220924</json.version>
+    <json.version>20230227</json.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <logback.version>1.4.5</logback.version>
