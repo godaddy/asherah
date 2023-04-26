@@ -81,8 +81,6 @@ github.com/awnumar/memcall v0.1.2/go.mod h1:S911igBPR9CThzd/hYQQmTc9SWNu3ZHIlCGa
 github.com/awnumar/memguard v0.22.3 h1:b4sgUXtbUjhrGELPbuC62wU+BsPQy+8lkWed9Z+pj0Y=
 github.com/awnumar/memguard v0.22.3/go.mod h1:mmGunnffnLHlxE5rRgQc3j+uwPZ27eYb61ccr8Clz2Y=
 github.com/aws/aws-sdk-go v1.15.11/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
-github.com/aws/aws-sdk-go v1.44.190 h1:QC+Pf/Ooj7Waf2obOPZbIQOqr00hy4h54j3ZK9mvHcc=
-github.com/aws/aws-sdk-go v1.44.190/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go v1.44.250 h1:IuGUO2Hafv/b0yYKI5UPLQShYDx50BCIQhab/H1sX2M=
 github.com/aws/aws-sdk-go v1.44.250/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -547,8 +545,8 @@ github.com/opencontainers/runc v1.0.0-rc8.0.20190926000215-3e425f80a8c9/go.mod h
 github.com/opencontainers/runc v1.0.0-rc9/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
 github.com/opencontainers/runc v1.0.0-rc93/go.mod h1:3NOsor4w32B2tC0Zbl8Knk4Wg84SM2ImC1fxBuqJ/H0=
 github.com/opencontainers/runc v1.0.2/go.mod h1:aTaHFFwQXuA71CiyxOdFFIorAoemI04suvGRQFzWTD0=
-github.com/opencontainers/runc v1.1.4 h1:nRCz/8sKg6K6jgYAFLDlXzPeITBZJyX28DBVhWD+5dg=
-github.com/opencontainers/runc v1.1.4/go.mod h1:1J5XiS+vdZ3wCyZybsuxXZWGrgSr8fFJHLXuG2PsnNg=
+github.com/opencontainers/runc v1.1.5 h1:L44KXEpKmfWDcS02aeGm8QNTFXTo2D+8MYGDIJ/GDEs=
+github.com/opencontainers/runc v1.1.5/go.mod h1:1J5XiS+vdZ3wCyZybsuxXZWGrgSr8fFJHLXuG2PsnNg=
 github.com/opencontainers/runtime-spec v0.1.2-0.20190507144316-5b71a03e2700/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
 github.com/opencontainers/runtime-spec v1.0.1/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
 github.com/opencontainers/runtime-spec v1.0.2-0.20190207185410-29686dbc5559/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
