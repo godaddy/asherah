@@ -779,7 +779,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
     - name: Set up C#
-      uses: actions/setup-dotnet@c41fd15071f7822714b95f804b84355ca64b7840
+      uses: actions/setup-dotnet@fc8786b149b2cff0bab21db5f07780e94e258ceb
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.19
