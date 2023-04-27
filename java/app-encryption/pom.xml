@@ -47,7 +47,7 @@
     <aws.sdk.version>1.12.455</aws.sdk.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
-    <caffeine.version>3.1.2</caffeine.version>
+    <caffeine.version>3.1.5</caffeine.version>
     <checkerframework.version>3.30.0</checkerframework.version>
     <commons.codec.version>1.15</commons.codec.version>
     <commons.logging.version>1.2</commons.logging.version>
