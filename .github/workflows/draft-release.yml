@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
 
       - name: Format release title
         id: format-release-title
