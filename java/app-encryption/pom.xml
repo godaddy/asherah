@@ -54,7 +54,7 @@
     <commons.text.version>1.10.0</commons.text.version>
     <guava.version>31.1-jre</guava.version>
     <jackson.version>2.14.2</jackson.version>
-    <jacoco.version>0.8.8</jacoco.version>
+    <jacoco.version>0.8.10</jacoco.version>
     <json.version>20230227</json.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
