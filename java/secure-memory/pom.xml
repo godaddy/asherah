@@ -37,7 +37,7 @@
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!--    Project Dependencies   -->
-    <jacoco.version>0.8.8</jacoco.version>
+    <jacoco.version>0.8.10</jacoco.version>
     <jna.version>5.13.0</jna.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
