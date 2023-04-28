@@ -64,7 +64,7 @@
     <maven.dependency.version>3.5.0</maven.dependency.version>
     <maven.gpg.version>3.0.1</maven.gpg.version>
     <maven.javadoc.version>3.4.1</maven.javadoc.version>
-    <maven.scm.version>2.0.0-M3</maven.scm.version>
+    <maven.scm.version>2.0.0</maven.scm.version>
     <maven.source.version>3.2.1</maven.source.version>
     <maven.surefire.version>3.0.0-M8</maven.surefire.version>
     <micrometer.version>1.10.3</micrometer.version>
