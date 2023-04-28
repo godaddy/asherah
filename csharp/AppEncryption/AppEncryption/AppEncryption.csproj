@@ -31,7 +31,7 @@
     <PackageReference Include="App.Metrics" Version="4.3.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
     <PackageReference Include="System.Text.Encodings.Web" Version="7.0.0" />
-    <PackageReference Include="System.Text.Json" Version="7.0.1" />
+    <PackageReference Include="System.Text.Json" Version="7.0.2" />
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../Crypto/Crypto.csproj" />
