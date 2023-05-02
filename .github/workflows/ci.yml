@@ -713,6 +713,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'maven'
     - name: Set up Go 1.19
       uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
