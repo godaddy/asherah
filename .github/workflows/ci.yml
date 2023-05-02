@@ -743,6 +743,7 @@ jobs:
           ${{ runner.os }}-v6-clients-
     - name: Build the Java project
       run: |
+        mvn -v
         # Delete previous builds and rebuild from the current branch
         rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
         mvn clean install -f java/app-encryption/pom.xml -DskipTests
