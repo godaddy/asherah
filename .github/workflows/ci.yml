@@ -736,11 +736,11 @@ jobs:
           ~/.cache
           ~/.m2
           ~/go/pkg/mod
-        key: ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
+        key: ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
         restore-keys: |
-          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
-          ${{ runner.os }}-v5-clients-${{ steps.extract_branch.outputs.branch }}-
-          ${{ runner.os }}-v5-clients-
+          ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+          ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-
+          ${{ runner.os }}-v6-clients-
     - name: Build the Java project
       run: |
         # Delete previous builds and rebuild from the current branch
