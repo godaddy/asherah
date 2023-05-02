@@ -15,14 +15,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.9.3</junit.jupiter.version>
     <junit.jupiter.api.version>5.9.3</junit.jupiter.api.version>
-    <io.grpc.version>1.52.1</io.grpc.version>
-    <protobuf.version>3.21.12</protobuf.version>
-    <appencryption.version>0.2.3</appencryption.version>
+    <io.grpc.version>1.54.1</io.grpc.version>
+    <protobuf.version>3.22.3</protobuf.version>
+    <appencryption.version>0.2.5</appencryption.version>
     <info.picocli.version>4.7.1</info.picocli.version>
     <gson.version>2.10.1</gson.version>
     <json.version>20230227</json.version>
     <hikaricp.version>5.0.1</hikaricp.version>
-    <io.netty.version>4.1.87.Final</io.netty.version>
+    <io.netty.version>4.1.92.Final</io.netty.version>
     <commons.lang3.version>3.12.0</commons.lang3.version>
     <slf4j.version>2.0.6</slf4j.version>
     <jacoco.version>0.8.10</jacoco.version>
