@@ -467,7 +467,7 @@ jobs:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
+      run: go install gotest.tools/gotestsum@latest
     - name: Build
       run: |
         cd go/securememory
@@ -539,7 +539,7 @@ jobs:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
+      run: go install gotest.tools/gotestsum@latest
     - name: Build
       run: |
         cd go/appencryption
@@ -606,7 +606,7 @@ jobs:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
-      run: go install gotest.tools/gotestsum@v1.8.2
+      run: go install gotest.tools/gotestsum@latest
     - name: Build
       run: |
         cd samples/go/referenceapp
