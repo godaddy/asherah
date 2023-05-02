@@ -202,12 +202,14 @@ jobs:
     name: Java Server Implementation
     needs: java-app-encryption
     runs-on: ubuntu-latest
-    container:
-      image: adoptopenjdk/maven-openjdk11
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+    - name: Set up JDK 17
+      uses: actions/setup-java@ddb82ce8a6ecf5ac3e80c3184839e6661546e4aa
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - name: Cache Java packages
       uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
       with:
@@ -222,6 +224,8 @@ jobs:
     - name: Unit tests
       run: |
         cd server/java
+        sudo prlimit --pid $$ --core=-1
+        sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/test.sh
 
   #### C#
