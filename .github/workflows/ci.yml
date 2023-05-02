@@ -38,12 +38,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Cache Java packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
+        cache: 'maven'
+    #   cache-key: setup-java-${{ platform }}-${{ packageManager }}-${{ fileHash }}
+    # - name: Cache Java packages
+    #   uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    #   with:
+    #     path: ~/.m2/repository
+    #     key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+    #     restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd java/secure-memory
@@ -110,12 +112,13 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Cache Java packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
+        cache: 'maven'
+    # - name: Cache Java packages
+    #   uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    #   with:
+    #     path: ~/.m2/repository
+    #     key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+    #     restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd java/app-encryption
@@ -210,12 +213,13 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-    - name: Cache Java packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
-        restore-keys: ${{ runner.os }}-m2-
+        cache: 'maven'
+    # - name: Cache Java packages
+    #   uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    #   with:
+    #     path: ~/.m2/repository
+    #     key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}-v1
+    #     restore-keys: ${{ runner.os }}-m2-
     - name: Build
       run: |
         cd server/java
@@ -500,18 +504,21 @@ jobs:
   go-secure-memory:
     name: Build Go Secure Memory
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-    - name: Cache Go packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    - name: Set up Go 1.19
+      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
+        go-version: '1.19'
+        cache-dependency-path: '**/go.sum'
+    # setup-go-${platform}-go-${versionSpec}-${fileHash}
+    # - name: Cache Go packages
+    #   uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    #   with:
+    #     path: /go/pkg/mod
+    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
+    #     restore-keys: ${{ runner.os }}-go-
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
@@ -521,10 +528,14 @@ jobs:
     - name: Unit tests
       run: |
         cd go/securememory
+        sudo prlimit --pid $$ --core=-1
+        sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/test.sh
     - name: Benchmark tests
       run: |
         cd go/securememory
+        sudo prlimit --pid $$ --core=-1
+        sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/benchmark_test.sh
     - name: Static analysis
       run: |
@@ -543,12 +554,11 @@ jobs:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
-      - name: Cache Go packages
-        uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+      - name: Set up Go 1.19
+        uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
         with:
-          path: /go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-          restore-keys: ${{ runner.os }}-go-
+          go-version: '1.19'
+          cache-dependency-path: '**/go.sum'
       - name: Publish Go Secure Memory
         run: |
           cd go/securememory
@@ -576,12 +586,11 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-    - name: Cache Go packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    - name: Set up Go 1.19
+      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
+        go-version: '1.19'
+        cache-dependency-path: '**/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
@@ -666,20 +675,16 @@ jobs:
     name: Go Server Implementation
     needs: go-app-encryption
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.19
-      options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Cache Go packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    - name: Set up Go 1.19
+      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
-        path: /go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-v1
-        restore-keys: ${{ runner.os }}-go-
+        go-version: '1.19'
+        cache-dependency-path: '**/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@v1.8.2
     - name: Build
@@ -689,6 +694,8 @@ jobs:
     - name: Unit tests
       run: |
         cd server/go
+        sudo prlimit --pid $$ --core=-1
+        sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/test.sh
     - name: Static analysis
       run: |
@@ -718,6 +725,7 @@ jobs:
       uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
       with:
         go-version: '1.19'
+        cache-dependency-path: '**/go.sum'
     - name: Set up Python 3.7
       uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
       with:
@@ -730,18 +738,15 @@ jobs:
       shell: bash
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
-    - name: Cache client packages
-      uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
-      with:
-        path: |
-          ~/.cache
-          ~/.m2
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}-v1
-        restore-keys: |
-          ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
-          ${{ runner.os }}-v6-clients-${{ steps.extract_branch.outputs.branch }}-
-          ${{ runner.os }}-v6-clients-
+    # - name: Cache client packages
+    #   uses: actions/cache@04f198bf0b2a39f7230a4304bf07747a0bddf146
+    #   with:
+    #     path: |
+    #       ~/.cache
+    #     key: ${{ runner.os }}-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-clients-${{ steps.extract_branch.outputs.branch }}-${{ github.run_number }}
+    #       ${{ runner.os }}-clients-${{ steps.extract_branch.outputs.branch }}-
     - name: Build the Java project
       run: |
         mvn -v
