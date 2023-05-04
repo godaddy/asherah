@@ -2,7 +2,7 @@
 
 set -e
 
-export PATH=${GOROOT}/bin:${PATH}
+# export PATH=${GOROOT}/bin:${PATH}
 go version
 
 export ASHERAH_SERVICE_NAME=service
@@ -15,6 +15,7 @@ echo "------------Testing clients using go server------------"
 cd ../../go
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m
+go mod download
 go run main.go -s /tmp/appencryption.sock &
 ASHERAH_GO_SIDECAR_PID=$!
 cd -

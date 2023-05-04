@@ -32,20 +32,20 @@ const (
 
 func (suite *DynamoDBSuite) SetupSuite() {
 	suite.instant = time.Now().Add(-24 * time.Hour).Unix()
-	suite.testContext = persistencetest.NewDynamoDBTestContext(suite.instant)
+	suite.testContext = persistencetest.NewDynamoDBTestContext(suite.T(), suite.instant)
 }
 
 func (suite *DynamoDBSuite) TearDownSuite() {
-	suite.testContext.TearDown()
+	suite.testContext.TearDown(suite.T())
 }
 
 func (suite *DynamoDBSuite) SetupTest() {
-	suite.testContext.SeedDB()
-	suite.dynamodbMetastore = suite.testContext.GetMetastore()
+	suite.testContext.SeedDB(suite.T())
+	suite.dynamodbMetastore = suite.testContext.NewMetastore()
 }
 
 func (suite *DynamoDBSuite) TearDownTest() {
-	suite.testContext.CleanDB()
+	suite.testContext.CleanDB(suite.T())
 }
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_Success() {
@@ -68,7 +68,8 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_WithNoResultShouldReturnE
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_WithFailureShouldReturnEmpty() {
 	// Explicitly delete the table to force an error
-	suite.TearDownTest()
+	suite.testContext.CleanDB(suite.T())
+
 	envelope, _ := suite.dynamodbMetastore.Load(context.Background(), testKey, suite.instant)
 
 	assert.Nil(suite.T(), envelope)
@@ -94,10 +95,10 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithMultipleRecords
 	timePlusOneDay := currentEpochTime.Add(24 * time.Hour).Unix()
 
 	// intentionally mixing up insertion order
-	suite.testContext.InsertTestItem(timePlusOneHour)
-	suite.testContext.InsertTestItem(timePlusOneDay)
-	suite.testContext.InsertTestItem(timeMinusOneHour)
-	suite.testContext.InsertTestItem(timeMinusOneDay)
+	suite.testContext.InsertTestItem(suite.T(), timePlusOneHour)
+	suite.testContext.InsertTestItem(suite.T(), timePlusOneDay)
+	suite.testContext.InsertTestItem(suite.T(), timeMinusOneHour)
+	suite.testContext.InsertTestItem(suite.T(), timeMinusOneDay)
 
 	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), persistencetest.TestKey)
 
@@ -113,7 +114,8 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithNoResultShouldR
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithFailureShouldReturnEmpty() {
 	// Explicitly delete the table to force an error
-	suite.TearDownTest()
+	suite.testContext.CleanDB(suite.T())
+
 	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), testKey)
 
 	assert.Nil(suite.T(), envelope)
@@ -161,14 +163,15 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 		ParentKeyMeta: &km,
 	}
 	// Explicitly delete the table to force an error
-	suite.TearDownTest()
+	suite.testContext.CleanDB(suite.T())
+
 	res, err := suite.dynamodbMetastore.Store(context.Background(), testKey, time.Now().Unix(), en)
 
 	assert.False(suite.T(), res)
 	assert.NotNil(suite.T(), err)
 }
 
-func TestDynamoSuite(t *testing.T) {
+func TestDynamoDBSuite(t *testing.T) {
 	if testing.Short() {
 		t.Skip("too slow for testing.Short")
 	}
