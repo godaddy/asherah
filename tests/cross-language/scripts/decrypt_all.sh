@@ -14,7 +14,7 @@ ASHERAH_SOCKET_FILE="${ASHERAH_SOCKET_FILE:-/tmp/appencryption.sock}"
 # Run decrypt tests for all languages
 cd java
 echo "----------------------Decrypting data using Java------------------------"
-mvn -Drevision=${JAVA_AE_VERSION} -Dtest=RunDecryptTest test
+mvn --no-transfer-progress -Drevision=${JAVA_AE_VERSION} -Dtest=RunDecryptTest test
 cd ..
 
 cd csharp

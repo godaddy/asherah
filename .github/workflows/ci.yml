@@ -688,8 +688,8 @@ jobs:
         mvn -v
         # Delete previous builds and rebuild from the current branch
         rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
-        mvn clean install -f java/app-encryption/pom.xml -DskipTests
-        mvn clean install -f server/java/pom.xml -DskipTests
+        mvn --no-transfer-progress clean install -f java/app-encryption/pom.xml -DskipTests
+        mvn --no-transfer-progress clean install -f server/java/pom.xml -DskipTests
     - name: Test clients
       run: |
         cd server/samples/clients
@@ -752,8 +752,8 @@ jobs:
       run: |
         # Delete previous builds and rebuild from the current branch
         rm -rf ~/.m2/repository/com/godaddy/asherah/grpc-server ~/.m2/repository/com/godaddy/asherah/appencryption
-        mvn clean install -f java/app-encryption/pom.xml -DskipTests
-        mvn clean install -f server/java/pom.xml -DskipTests
+        mvn --no-transfer-progress clean install -f java/app-encryption/pom.xml -DskipTests
+        mvn --no-transfer-progress clean install -f server/java/pom.xml -DskipTests
         cd tests/cross-language/java
         ./scripts/build.sh
     - name: Build the C# project
