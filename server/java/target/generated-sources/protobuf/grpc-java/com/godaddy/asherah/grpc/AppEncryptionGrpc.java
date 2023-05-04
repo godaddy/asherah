@@ -5,7 +5,7 @@ import static io.grpc.MethodDescriptor.generateFullMethodName;
 /**
  */
 @javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.51.0)",
+    value = "by gRPC proto compiler (version 1.54.1)",
     comments = "Source: appencryption.proto")
 @io.grpc.stub.annotations.GrpcGenerated
 public final class AppEncryptionGrpc {
@@ -92,7 +92,7 @@ public final class AppEncryptionGrpc {
 
   /**
    */
-  public static abstract class AppEncryptionImplBase implements io.grpc.BindableService {
+  public interface AsyncService {
 
     /**
      * <pre>
@@ -101,27 +101,28 @@ public final class AppEncryptionGrpc {
      * Encrypt and Decrypt operations scoped its partition.
      * </pre>
      */
-    public io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest> session(
+    default io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest> session(
         io.grpc.stub.StreamObserver<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse> responseObserver) {
       return io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall(getSessionMethod(), responseObserver);
-    }
-
-    @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
-      return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
-          .addMethod(
-            getSessionMethod(),
-            io.grpc.stub.ServerCalls.asyncBidiStreamingCall(
-              new MethodHandlers<
-                com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest,
-                com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse>(
-                  this, METHODID_SESSION)))
-          .build();
     }
   }
 
   /**
+   * Base class for the server implementation of the service AppEncryption.
    */
-  public static final class AppEncryptionStub extends io.grpc.stub.AbstractAsyncStub<AppEncryptionStub> {
+  public static abstract class AppEncryptionImplBase
+      implements io.grpc.BindableService, AsyncService {
+
+    @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
+      return AppEncryptionGrpc.bindService(this);
+    }
+  }
+
+  /**
+   * A stub to allow clients to do asynchronous rpc calls to service AppEncryption.
+   */
+  public static final class AppEncryptionStub
+      extends io.grpc.stub.AbstractAsyncStub<AppEncryptionStub> {
     private AppEncryptionStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -148,8 +149,10 @@ public final class AppEncryptionGrpc {
   }
 
   /**
+   * A stub to allow clients to do synchronous rpc calls to service AppEncryption.
    */
-  public static final class AppEncryptionBlockingStub extends io.grpc.stub.AbstractBlockingStub<AppEncryptionBlockingStub> {
+  public static final class AppEncryptionBlockingStub
+      extends io.grpc.stub.AbstractBlockingStub<AppEncryptionBlockingStub> {
     private AppEncryptionBlockingStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -163,8 +166,10 @@ public final class AppEncryptionGrpc {
   }
 
   /**
+   * A stub to allow clients to do ListenableFuture-style rpc calls to service AppEncryption.
    */
-  public static final class AppEncryptionFutureStub extends io.grpc.stub.AbstractFutureStub<AppEncryptionFutureStub> {
+  public static final class AppEncryptionFutureStub
+      extends io.grpc.stub.AbstractFutureStub<AppEncryptionFutureStub> {
     private AppEncryptionFutureStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -184,10 +189,10 @@ public final class AppEncryptionGrpc {
       io.grpc.stub.ServerCalls.ServerStreamingMethod<Req, Resp>,
       io.grpc.stub.ServerCalls.ClientStreamingMethod<Req, Resp>,
       io.grpc.stub.ServerCalls.BidiStreamingMethod<Req, Resp> {
-    private final AppEncryptionImplBase serviceImpl;
+    private final AsyncService serviceImpl;
     private final int methodId;
 
-    MethodHandlers(AppEncryptionImplBase serviceImpl, int methodId) {
+    MethodHandlers(AsyncService serviceImpl, int methodId) {
       this.serviceImpl = serviceImpl;
       this.methodId = methodId;
     }
@@ -213,6 +218,18 @@ public final class AppEncryptionGrpc {
           throw new AssertionError();
       }
     }
+  }
+
+  public static final io.grpc.ServerServiceDefinition bindService(AsyncService service) {
+    return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+        .addMethod(
+          getSessionMethod(),
+          io.grpc.stub.ServerCalls.asyncBidiStreamingCall(
+            new MethodHandlers<
+              com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest,
+              com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse>(
+                service, METHODID_SESSION)))
+        .build();
   }
 
   private static abstract class AppEncryptionBaseDescriptorSupplier
