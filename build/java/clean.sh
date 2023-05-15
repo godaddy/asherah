@@ -2,4 +2,4 @@
 
 set -e
 
-mvn clean
+mvn --no-transfer-progress clean

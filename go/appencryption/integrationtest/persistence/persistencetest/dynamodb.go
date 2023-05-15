@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,15 +43,6 @@ type DynamoDBTestContext struct {
 	sess                  *session.Session
 	container             testcontainers.Container
 	dbSvc                 *dynamodb.DynamoDB
-	dynamodbMetastore     *persistence.DynamoDBMetastore
-}
-
-func (d *DynamoDBTestContext) GetMetastore() *persistence.DynamoDBMetastore {
-	if d.dynamodbMetastore == nil {
-		d.dynamodbMetastore = d.NewMetastore()
-	}
-
-	return d.dynamodbMetastore
 }
 
 func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastoreOption) *persistence.DynamoDBMetastore {
@@ -65,7 +57,10 @@ func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastore
 	return persistence.NewDynamoDBMetastore(d.sess, combinedOpts...)
 }
 
-func (d *DynamoDBTestContext) SeedDB() {
+func (d *DynamoDBTestContext) SeedDB(t *testing.T) {
+	t.Helper()
+	t.Log("seeding dynamodb")
+
 	// Create table schema
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
@@ -94,9 +89,20 @@ func (d *DynamoDBTestContext) SeedDB() {
 		},
 		TableName: aws.String(tableName),
 	}
-	if _, err := d.dbSvc.CreateTable(input); err != nil {
+
+	o, err := d.dbSvc.CreateTable(input)
+	if err != nil {
 		panic(err)
 	}
+
+	t.Log("table created:", o.TableDescription.TableArn, "@", o.TableDescription.CreationDateTime)
+
+	describeTableInput := &dynamodb.DescribeTableInput{TableName: aws.String(tableName)}
+	if err := d.dbSvc.WaitUntilTableExists(describeTableInput); err != nil {
+		panic(err)
+	}
+
+	t.Log("finished waiting for table")
 
 	// Add item to table
 	km := appencryption.KeyMeta{
@@ -109,10 +115,13 @@ func (d *DynamoDBTestContext) SeedDB() {
 		EncryptedKey:  EncryptedKeyString,
 		ParentKeyMeta: &km,
 	}
-	d.putItemInDynamoDB(d.getDynamoDBItem(en, d.instant))
+	d.putItemInDynamoDB(t, d.newDynamoDBPutItemInput(en, d.instant))
 }
 
-func (d *DynamoDBTestContext) CleanDB() {
+func (d *DynamoDBTestContext) CleanDB(t *testing.T) {
+	t.Helper()
+	t.Log("cleaning db")
+
 	// Blow out the whole table so we have clean slate each time
 	deleteTableInput := &dynamodb.DeleteTableInput{
 		TableName: aws.String(tableName),
@@ -121,24 +130,41 @@ func (d *DynamoDBTestContext) CleanDB() {
 	if _, err := d.dbSvc.DeleteTable(deleteTableInput); err != nil {
 		// We may have already deleted the table in some test cases
 		if e, ok := err.(awserr.Error); ok && e.Code() == dynamodb.ErrCodeResourceNotFoundException {
+			t.Logf("ignoring error on delete table: %v", e)
+
 			return
 		}
 
 		panic(err)
 	}
+
+	t.Log("waiting for table delete")
+
+	describeTableInput := &dynamodb.DescribeTableInput{TableName: aws.String(tableName)}
+	if err := d.dbSvc.WaitUntilTableNotExists(describeTableInput); err != nil {
+		panic(err)
+	}
+
+	t.Log("finished waiting for table delete")
 }
 
-func (d *DynamoDBTestContext) InsertTestItem(instant int64) {
-	d.putItemInDynamoDB(d.getDynamoDBItem(persistence.DynamoDBEnvelope{Created: instant}, instant))
+func (d *DynamoDBTestContext) InsertTestItem(t *testing.T, instant int64) {
+	t.Helper()
+
+	d.putItemInDynamoDB(t, d.newDynamoDBPutItemInput(persistence.DynamoDBEnvelope{Created: instant}, instant))
 }
 
-func (d *DynamoDBTestContext) putItemInDynamoDB(item *dynamodb.PutItemInput) {
-	if _, err := d.dbSvc.PutItem(item); err != nil {
+func (d *DynamoDBTestContext) putItemInDynamoDB(t *testing.T, item *dynamodb.PutItemInput) {
+	t.Helper()
+	t.Log("putting item")
+
+	_, err := d.dbSvc.PutItem(item)
+	if err != nil {
 		panic(err)
 	}
 }
 
-func (d *DynamoDBTestContext) getDynamoDBItem(envelope persistence.DynamoDBEnvelope, instant int64) *dynamodb.PutItemInput {
+func (d *DynamoDBTestContext) newDynamoDBPutItemInput(envelope persistence.DynamoDBEnvelope, instant int64) *dynamodb.PutItemInput {
 	// Get item to add in table
 	av, err := dynamodbattribute.MarshalMap(&envelope)
 	if err != nil {
@@ -157,14 +183,17 @@ func (d *DynamoDBTestContext) getDynamoDBItem(envelope persistence.DynamoDBEnvel
 	return input
 }
 
-func (d *DynamoDBTestContext) waitForDynamoDBPing() {
+func (d *DynamoDBTestContext) waitForDynamoDBPing(t *testing.T) {
+	t.Helper()
+
 	// Check if dynamodb is up and running
 	listTableInput := new(dynamodb.ListTablesInput)
 	_, err := d.dbSvc.ListTables(listTableInput)
 
 	for tries := 1; err != nil; tries++ {
+		t.Logf("failed to list dynamodb tables (tried %d of max %d)", tries, maxTriesDynamoDB)
+
 		if tries == maxTriesDynamoDB {
-			// suite.T().Logf("unable to connect to the DynamoDB container: %s", err)
 			panic(err)
 		}
 
@@ -172,18 +201,27 @@ func (d *DynamoDBTestContext) waitForDynamoDBPing() {
 
 		_, err = d.dbSvc.ListTables(listTableInput)
 	}
+
+	t.Log("finished waiting for dynamodb")
 }
 
-func (d *DynamoDBTestContext) TearDown() {
+func (d *DynamoDBTestContext) TearDown(t *testing.T) {
+	t.Helper()
+	t.Log("tearing down")
+
 	// Don't call terminate if we are not using test containers
 	if !d.disableTestContainers {
+		t.Log("terminating test container")
+
 		if err := d.container.Terminate(context.Background()); err != nil {
 			panic(err)
 		}
 	}
 }
 
-func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
+func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
+	t.Helper()
+
 	ctx := context.Background()
 	d := &DynamoDBTestContext{
 		instant: instant,
@@ -196,9 +234,11 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 		dynamodbNatPort nat.Port
 	)
 
-	d.disableTestContainers, err = strconv.ParseBool(os.Getenv("DISABLE_TESTCONTAINERS"))
-	if err != nil {
-		d.disableTestContainers = false
+	if val, ok := os.LookupEnv("DISABLE_TESTCONTAINERS"); ok {
+		d.disableTestContainers, err = strconv.ParseBool(val)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if d.disableTestContainers {
@@ -230,17 +270,18 @@ func NewDynamoDBTestContext(instant int64) *DynamoDBTestContext {
 		}
 	}
 
-	d.sess, err = session.NewSession(&aws.Config{
+	endpoint := "http://" + host + ":" + dynamodbNatPort.Port()
+
+	t.Logf("using dynamodb endpoint: %s", endpoint)
+
+	d.sess = session.Must(session.NewSession(&aws.Config{
 		Region:   aws.String("us-west-2"),
-		Endpoint: aws.String("http://" + host + ":" + dynamodbNatPort.Port()),
-	})
-	if err != nil {
-		panic(err)
-	}
+		Endpoint: aws.String(endpoint),
+	}))
 
 	d.dbSvc = dynamodb.New(d.sess)
 
-	d.waitForDynamoDBPing()
+	d.waitForDynamoDBPing(t)
 
 	return d
 }

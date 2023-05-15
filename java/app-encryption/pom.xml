@@ -44,10 +44,10 @@
     <!--      Project Dependencies-->
     <apache.commons.version>3.12.0</apache.commons.version>
     <amazonaws.version>1.21.1</amazonaws.version>
-    <aws.sdk.version>1.12.455</aws.sdk.version>
+    <aws.sdk.version>1.12.468</aws.sdk.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
-    <caffeine.version>3.1.5</caffeine.version>
+    <caffeine.version>3.1.6</caffeine.version>
     <checkerframework.version>3.33.0</checkerframework.version>
     <commons.codec.version>1.15</commons.codec.version>
     <commons.logging.version>1.2</commons.logging.version>
@@ -66,7 +66,7 @@
     <maven.javadoc.version>3.4.1</maven.javadoc.version>
     <maven.scm.version>2.0.0</maven.scm.version>
     <maven.source.version>3.2.1</maven.source.version>
-    <maven.surefire.version>3.0.0-M8</maven.surefire.version>
+    <maven.surefire.version>3.1.0</maven.surefire.version>
     <micrometer.version>1.10.5</micrometer.version>
     <mockito.core.version>5.1.1</mockito.core.version>
     <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>

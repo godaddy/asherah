@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-mvn verify -Dskip.surefire.tests
+mvn --no-transfer-progress verify -Dskip.surefire.tests

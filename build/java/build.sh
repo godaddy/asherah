@@ -2,4 +2,4 @@
 
 set -e
 
-mvn -U compile
+mvn --no-transfer-progress -U compile
