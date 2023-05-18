@@ -462,7 +462,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
@@ -502,7 +502,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Go 1.19
-        uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version: '1.19'
           cache-dependency-path: 'go/*/go.sum'
@@ -534,7 +534,7 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
@@ -574,7 +574,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Go 1.19
-        uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version: '1.19'
           cache-dependency-path: 'go/*/go.sum'
@@ -601,7 +601,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
@@ -626,7 +626,7 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
@@ -667,7 +667,7 @@ jobs:
         java-version: '17'
         cache: 'maven'
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
@@ -731,7 +731,7 @@ jobs:
       with:
         dotnet-version: '3.1.x'
     - name: Set up Go 1.19
-      uses: actions/setup-go@dd84a9531a6f8e72c321f2aa3b9048ed359670e4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
         go-version: '1.19'
         cache-dependency-path: 'go/*/go.sum'
