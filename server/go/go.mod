@@ -9,7 +9,7 @@ require (
 	github.com/godaddy/asherah/go/securememory v0.1.4
 	github.com/golang/protobuf v1.5.2
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.3
 	google.golang.org/grpc v1.52.3
 )
 
