@@ -7,7 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/godaddy/asherah/go/appencryption v0.2.6
 	github.com/godaddy/asherah/go/securememory v0.1.4
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.52.3
