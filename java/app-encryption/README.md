@@ -4,6 +4,7 @@ Application level envelope encryption SDK for Java with support for cloud-agnost
 [![Version](https://img.shields.io/maven-central/v/com.godaddy.asherah/appencryption)](https://mvnrepository.com/artifact/com.godaddy.asherah/appencryption)
 
   * [Installation](#installation)
+  * [Upgrade](#upgrade)
   * [Quick Start](#quick-start)
   * [How to Use Asherah](#how-to-use-asherah)
     * [Define the Metastore](#define-the-metastore)
@@ -30,10 +31,30 @@ You can specify the current release of Asherah as a project dependency using the
   <dependency>
     <groupId>com.godaddy.asherah</groupId>
     <artifactId>appencryption</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
   </dependency>
 </dependencies>
 ```
+
+## Upgrade
+
+### 0.3.x
+
+Starting with version 0.3.0 Asherah uses AWS SDK v2. AWS SDK both major versions can be used in the same project,
+and v2 dependencies will be provided as transitive. There is single breaking change around DynamoDB metastore configuration:
+Previous DynamoDB client was initialized withing metastore builder, now it should be provided as a parameter.
+
+Assuming you had previously used `DynamoDbMetastoreImpl`, you can replace it with new equivalent:
+```java
+// before 0.3.0
+final var metastore = DynamoDbMetastoreImpl.newBuilder("us-west-2").build();
+
+// after
+final var dynamoDbClient = DynamoDBClient.builder().region(Region.US_WEST_2).build();
+final var metastore = DynamoDbMetastoreImpl.newBuilder("us-west-2", dynamoDbClient).build();
+```
+
+Region specified two times intentionally, to support Global Tables and prevent key collisions.
 
 ## Quick Start
 
@@ -87,7 +108,11 @@ For simplicity, the DynamoDB implementation uses the builder pattern to enable c
 
 To obtain an instance of the builder, use the static factory method `newBuilder`.
 ```java
-DynamoDbMetastoreImpl.newBuilder();
+// Create dynamo db client
+DynamoDbClient dynamoDbClient = ...;
+
+// Build the DynamoDB Metastore
+DynamoDbMetastoreImpl.newBuilder("us-west-2", dynamoDbClient).build();
 ```
 Once you have a builder, you can either use the `withXXX` setter methods to configure the metastore properties or simply
 build the metastore by calling the `build` method.
@@ -95,15 +120,13 @@ build the metastore by calling the `build` method.
  - **withKeySuffix**: Specifies whether key suffix should be enabled for DynamoDB. **This is required to enable Global
  Tables.**
  - **withTableName**: Specifies the name of the DynamoDb table.
- - **withRegion**: Specifies the region for the AWS DynamoDb client.
- - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
 
 Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
 ```java
 Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
-      .withKeySuffix("us-west-2")
       .withTableName("TestTable")
+      .withKeySuffix()
       .build();
 ```
 
@@ -127,6 +150,17 @@ Map<String, String> regionMap = ImmutableMap.of("us-east-1", "arn_of_us-east-1",
 
 // Build the Key Management Service using the region map and your preferred (usually current) region
 KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1").build();
+```
+
+Starting with version 0.3.0 it is possible to specify AWS KMS client factory to be used:
+```java
+// Define AWS KMS client factory
+AwsKmsClientFactory awsKmsClientFactory = ...;
+
+// Build the Key Management Service using the region map and your preferred (usually current) region and custom AWS KMS client factory
+KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1")
+    .withAwsKmsClientFactory(awsKmsClientFactory)
+    .build();
 ```
 
 #### Static KMS (FOR TESTING ONLY)

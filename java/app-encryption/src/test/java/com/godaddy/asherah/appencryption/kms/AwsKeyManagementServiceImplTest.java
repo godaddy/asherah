@@ -1,8 +1,9 @@
 package com.godaddy.asherah.appencryption.kms;
 
-import com.amazonaws.SdkBaseException;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.model.*;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.*;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.utils.Json;
@@ -40,7 +41,7 @@ class AwsKeyManagementServiceImplTest {
   String preferredRegion = US_WEST_1;
 
   @Mock
-  AWSKMS awsKmsClient;
+  KmsClient awsKmsClient;
   @Mock
   AeadEnvelopeCrypto crypto;
   @Mock
@@ -54,7 +55,7 @@ class AwsKeyManagementServiceImplTest {
   void setUp() {
     // This will be fragile since it's used in the constructor itself. If unit tests need to mock different clients
     // being returned, they'll likely need to create their own new flavors of this mock and the main spy.
-    when(awsKmsClientFactory.createAwsKmsClient(any())).thenReturn(awsKmsClient);
+    when(awsKmsClientFactory.build(any())).thenReturn(awsKmsClient);
 
     awsKeyManagementServiceImpl =
         spy(new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, crypto, awsKmsClientFactory));
@@ -139,7 +140,7 @@ class AwsKeyManagementServiceImplTest {
     ));
     // apparently not needed since we tell the call that uses it to fail anyway?
     //when(awsKmsClientFactory.createAwsKmsClient(any())).thenReturn(awsKmsClient);
-    doThrow(SdkBaseException.class)
+    doThrow(SdkException.class)
         .when(awsKeyManagementServiceImpl).decryptKmsEncryptedKey(any(), any(), any(), any(), anyBoolean());
 
     assertThrows(KmsException.class,
@@ -175,8 +176,10 @@ class AwsKeyManagementServiceImplTest {
     byte[] keyEncryptionKey = new byte[]{2, 3};
     boolean revoked = false;
     byte[] plaintextBackingBytes = new byte[]{4, 5};
-    DecryptResult decryptResult = new DecryptResult().withPlaintext(ByteBuffer.wrap(plaintextBackingBytes));
-    when(awsKmsClient.decrypt(any())).thenReturn(decryptResult);
+    DecryptResponse decryptResponse = DecryptResponse.builder()
+      .plaintext(SdkBytes.fromByteArrayUnsafe(plaintextBackingBytes))
+      .build();
+    when(awsKmsClient.decrypt(any(DecryptRequest.class))).thenReturn(decryptResponse);
     when(crypto.generateKeyFromBytes(plaintextBackingBytes)).thenReturn(cryptoKey);
     CryptoKey expectedKey = mock(CryptoKey.class);
     when(crypto.decryptKey(cipherText, now, cryptoKey, revoked)).thenReturn(expectedKey);
@@ -191,9 +194,9 @@ class AwsKeyManagementServiceImplTest {
   void testDecryptKmsEncryptedKeyWithKmsFailureShouldThrowException() {
     byte[] cipherText = new byte[]{0, 1};
     byte[] keyEncryptionKey = new byte[]{2, 3};
-    when(awsKmsClient.decrypt(any())).thenThrow(SdkBaseException.class);
+    when(awsKmsClient.decrypt(any(DecryptRequest.class))).thenThrow(SdkException.class);
 
-    assertThrows(SdkBaseException.class,
+    assertThrows(SdkException.class,
         () -> awsKeyManagementServiceImpl
             .decryptKmsEncryptedKey(awsKmsClient, cipherText, Instant.now(), keyEncryptionKey, false));
   }
@@ -205,8 +208,10 @@ class AwsKeyManagementServiceImplTest {
     byte[] keyEncryptionKey = new byte[]{2, 3};
     boolean revoked = false;
     byte[] plaintextBackingBytes = new byte[]{4, 5};
-    DecryptResult decryptResult = new DecryptResult().withPlaintext(ByteBuffer.wrap(plaintextBackingBytes));
-    when(awsKmsClient.decrypt(any())).thenReturn(decryptResult);
+    DecryptResponse decryptResponse = DecryptResponse.builder()
+      .plaintext(SdkBytes.fromByteArrayUnsafe(plaintextBackingBytes))
+      .build();
+    when(awsKmsClient.decrypt(any(DecryptRequest.class))).thenReturn(decryptResponse);
     when(crypto.generateKeyFromBytes(plaintextBackingBytes)).thenReturn(cryptoKey);
     when(crypto.decryptKey(cipherText, now, cryptoKey, revoked)).thenThrow(AppEncryptionException.class);
 
@@ -228,20 +233,21 @@ class AwsKeyManagementServiceImplTest {
   @Test
   void testGenerateDataKeySuccessful() {
     Map<String, AwsKmsArnClient> sortedRegionToArnAndClient = awsKeyManagementServiceImpl.getRegionToArnAndClientMap();
-    GenerateDataKeyRequest expectedRequest = new GenerateDataKeyRequest()
-        .withKeyId(ARN_US_WEST_1) // preferred regions's ARN, verify it's the first and hence returned
-        .withKeySpec("AES_256");
-    GenerateDataKeyResult dataKeyResult = mock(GenerateDataKeyResult.class);
+    GenerateDataKeyRequest expectedRequest = GenerateDataKeyRequest.builder()
+        .keyId(ARN_US_WEST_1) // preferred regions's ARN, verify it's the first and hence returned
+        .keySpec("AES_256")
+        .build();
+    GenerateDataKeyResponse dataKeyResponse = mock(GenerateDataKeyResponse.class);
 
-    when(awsKmsClient.generateDataKey(eq(expectedRequest))).thenReturn(dataKeyResult);
-    GenerateDataKeyResult dataKeyResultActual = awsKeyManagementServiceImpl.generateDataKey(sortedRegionToArnAndClient);
-    assertEquals(dataKeyResult, dataKeyResultActual);
+    when(awsKmsClient.generateDataKey(eq(expectedRequest))).thenReturn(dataKeyResponse);
+    GenerateDataKeyResponse dataKeyResponseActual = awsKeyManagementServiceImpl.generateDataKey(sortedRegionToArnAndClient);
+    assertEquals(dataKeyResponse, dataKeyResponseActual);
   }
 
   @Test
   void testGenerateDataKeyWithKmsFailureShouldThrowKmsException() {
     Map<String, AwsKmsArnClient> sortedRegionToArnAndClient = awsKeyManagementServiceImpl.getRegionToArnAndClientMap();
-    when(awsKmsClient.generateDataKey(any(GenerateDataKeyRequest.class))).thenThrow(SdkBaseException.class);
+    when(awsKmsClient.generateDataKey(any(GenerateDataKeyRequest.class))).thenThrow(SdkException.class);
 
     assertThrows(KmsException.class,
         () -> awsKeyManagementServiceImpl.generateDataKey(sortedRegionToArnAndClient));
@@ -250,9 +256,11 @@ class AwsKeyManagementServiceImplTest {
   @Test
   void testEncryptKeyAndBuildResult() {
     byte[] encryptedKey = new byte[] {0,1};
-    EncryptResult encryptResult = new EncryptResult().withCiphertextBlob(ByteBuffer.wrap(encryptedKey));
+    EncryptResponse encryptResponse = EncryptResponse.builder()
+      .ciphertextBlob(SdkBytes.fromByteArrayUnsafe(encryptedKey))
+      .build();
 
-    when(awsKmsClient.encrypt(any())).thenReturn(encryptResult);
+    when(awsKmsClient.encrypt(any(EncryptRequest.class))).thenReturn(encryptResponse);
     byte[] dataKeyPlainText = new byte[] {2,3};
     Optional<JSONObject> actualResult =
         awsKeyManagementServiceImpl
@@ -265,7 +273,7 @@ class AwsKeyManagementServiceImplTest {
   @Test
   void testEncryptKeyAndBuildResultReturnEmptyOptional() {
     byte[] dataKeyPlainText = new byte[] {0,1};
-   when(awsKmsClient.encrypt(any())).thenThrow(SdkBaseException.class);
+   when(awsKmsClient.encrypt(any(EncryptRequest.class))).thenThrow(SdkException.class);
     Optional<JSONObject> actualResult =
         awsKeyManagementServiceImpl
             .encryptKeyAndBuildResult(awsKmsClient, preferredRegion, ARN_US_WEST_1, dataKeyPlainText);
@@ -297,18 +305,18 @@ class AwsKeyManagementServiceImplTest {
         ENCRYPTED_KEY, Base64.getEncoder().encodeToString(encryptedKey)
     ));
 
-    GenerateDataKeyResult dataKeyMock = mock(GenerateDataKeyResult.class);
+    GenerateDataKeyResponse dataKeyMock = mock(GenerateDataKeyResponse.class);
     CryptoKey generatedDataKeyCryptoKey = mock(CryptoKey.class);
 
     when(awsKeyManagementServiceImpl.generateDataKey(awsKeyManagementServiceImpl.getRegionToArnAndClientMap()))
         .thenReturn(dataKeyMock);
-    when(dataKeyMock.getPlaintext()).thenReturn(dataKeyPlainText);
+    when(dataKeyMock.plaintext()).thenReturn(SdkBytes.fromByteArrayUnsafe(dataKeyPlainText.array()));
     when(crypto.generateKeyFromBytes(dataKeyPlainText.array())).thenReturn(generatedDataKeyCryptoKey);
     when(crypto.encryptKey(cryptoKey, generatedDataKeyCryptoKey)).thenReturn(encryptedKey);
-    when(dataKeyMock.getKeyId()).thenReturn(ARN_US_WEST_1);
+    when(dataKeyMock.keyId()).thenReturn(ARN_US_WEST_1);
     doReturn(Optional.of(encryptKeyAndBuildResultJson)).when(awsKeyManagementServiceImpl)
         .encryptKeyAndBuildResult(eq(awsKmsClient), eq(US_EAST_1), eq(ARN_US_EAST_1), eq(dataKeyPlainText.array()));
-    when(dataKeyMock.getCiphertextBlob()).thenReturn(dataKeyCipherText);
+    when(dataKeyMock.ciphertextBlob()).thenReturn(SdkBytes.fromByteArrayUnsafe(dataKeyCipherText.array()));
 
     byte[] encryptedResult = awsKeyManagementServiceImpl.encryptKey(cryptoKey);
     Json kmsKeyEnvelopeResult = new Json(encryptedResult);
@@ -322,12 +330,12 @@ class AwsKeyManagementServiceImplTest {
     ByteBuffer dataKeyPlainText = ByteBuffer.wrap(new byte[] {1,2});
     byte[] encryptedKey = new byte[] {3,4};
 
-    GenerateDataKeyResult dataKeyMock = mock(GenerateDataKeyResult.class);
+    GenerateDataKeyResponse dataKeyMock = mock(GenerateDataKeyResponse.class);
     CryptoKey generatedDataKeyCryptoKey = mock(CryptoKey.class);
 
     when(awsKeyManagementServiceImpl.generateDataKey(awsKeyManagementServiceImpl.getRegionToArnAndClientMap()))
         .thenReturn(dataKeyMock);
-    when(dataKeyMock.getPlaintext()).thenReturn(dataKeyPlainText);
+    when(dataKeyMock.plaintext()).thenReturn(SdkBytes.fromByteArrayUnsafe(dataKeyPlainText.array()));
     when(crypto.generateKeyFromBytes(dataKeyPlainText.array())).thenReturn(generatedDataKeyCryptoKey);
     // Inject unexpected exception so the CompleteableFuture.join throws a CompletionException
     doThrow(RuntimeException.class).when(awsKeyManagementServiceImpl)

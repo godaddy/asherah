@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.2.5</version>
+  <version>0.3.0</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -45,6 +45,7 @@
     <apache.commons.version>3.12.0</apache.commons.version>
     <amazonaws.version>1.21.1</amazonaws.version>
     <aws.sdk.version>1.12.468</aws.sdk.version>
+    <aws.sdk-v2.version>2.20.69</aws.sdk-v2.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.6</caffeine.version>
@@ -299,21 +300,15 @@
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-core</artifactId>
-      <version>${aws.sdk.version}</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>kms</artifactId>
+      <version>${aws.sdk-v2.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-kms</artifactId>
-      <version>${aws.sdk.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-dynamodb</artifactId>
-      <version>${aws.sdk.version}</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>dynamodb</artifactId>
+      <version>${aws.sdk-v2.version}</version>
     </dependency>
 
     <dependency>
@@ -323,6 +318,12 @@
     </dependency>
 
     <!-- Test Dependencies -->
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-dynamodb</artifactId>
+      <version>${aws.sdk.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
