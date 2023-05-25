@@ -8,11 +8,15 @@ import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.utils.PayloadGenerator;
 import com.godaddy.asherah.utils.SessionFactoryGenerator;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Arrays;
 
@@ -44,18 +48,18 @@ class DynamoDbGlobalTableIT {
       request
         .tableName(TABLE_NAME)
         .keySchema(
-          software.amazon.awssdk.services.dynamodb.model.KeySchemaElement.builder()
+          KeySchemaElement.builder()
             .attributeName(PARTITION_KEY)
-            .keyType(software.amazon.awssdk.services.dynamodb.model.KeyType.HASH)
+            .keyType(KeyType.HASH)
             .build(),
           KeySchemaElement.builder()
             .attributeName(SORT_KEY)
             .keyType(KeyType.RANGE)
             .build())
         .attributeDefinitions(
-          software.amazon.awssdk.services.dynamodb.model.AttributeDefinition.builder()
+          AttributeDefinition.builder()
             .attributeName(PARTITION_KEY)
-            .attributeType(software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType.S)
+            .attributeType(ScalarAttributeType.S)
             .build(),
           AttributeDefinition.builder()
             .attributeName(SORT_KEY)
