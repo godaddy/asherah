@@ -190,6 +190,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       else if (object instanceof JSONObject jsonObject) {
         result.put(key, AttributeValue.fromM(toDynamoDbItem(jsonObject)));
       }
+      else {
+        throw new IllegalArgumentException("Unsupported type: " + object.getClass().getName());
+      }
     }
     return result;
   }
@@ -209,6 +212,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       }
       else if (value.m() != null) {
         result.put(entry.getKey(), toJSONObject(value.m()));
+      }
+      else {
+        throw new IllegalArgumentException("Unsupported type: " + value.type());
       }
     }
     return result;

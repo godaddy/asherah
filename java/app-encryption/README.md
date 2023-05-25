@@ -42,7 +42,8 @@ You can specify the current release of Asherah as a project dependency using the
 
 Starting with version 0.3.0 Asherah uses AWS SDK v2. AWS SDK both major versions can be used in the same project,
 and v2 dependencies will be provided as transitive. There is single breaking change around DynamoDB metastore configuration:
-Previous DynamoDB client was initialized withing metastore builder, now it should be provided as a parameter.
+
+Previously DynamoDB client was initialized withing metastore builder, now it should be provided as a parameter.
 
 Assuming you had previously used `DynamoDbMetastoreImpl`, you can replace it with new equivalent:
 ```java
