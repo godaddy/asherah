@@ -1,5 +1,6 @@
 package com.godaddy.asherah.appencryption.persistence;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
@@ -17,6 +19,7 @@ import io.micrometer.core.instrument.Timer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import software.amazon.awssdk.services.dynamodb.model.Condition;
@@ -52,12 +55,13 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
 
   /**
    * Initialize a {@code DynamoDbMetastoreImpl} builder with the given region.
-   * @param preferredRegion The preferred region for the DynamoDb. This can be overridden in DynamoDB client.
-   * @param dynamoDbClient DynamoDB client.
+   *
+   * @param region The preferred region for the DynamoDb. This can be overridden using the
+   * {@link Builder#withRegion(String)} builder step.
    * @return The current {@code Builder} instance.
    */
-  public static Builder newBuilder(final String preferredRegion, final DynamoDbClient dynamoDbClient) {
-    return new Builder(preferredRegion, dynamoDbClient);
+  public static Builder newBuilder(final String region) {
+    return new Builder(region);
   }
 
   DynamoDbMetastoreImpl(final Builder builder) {
@@ -236,50 +240,132 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return dynamoDbClient;
   }
 
-  public static final class Builder {
+  public static final class Builder implements BuildStep, EndPointStep, RegionStep {
     static final String DEFAULT_TABLE_NAME = "EncryptionKey";
 
+    private DynamoDbClient dynamoDbClient;
+
     private final String preferredRegion;
-    private final DynamoDbClient dynamoDbClient;
+    private final DynamoDbClientBuilder clientBuilder = DynamoDbClient.builder();
 
     private String tableName = DEFAULT_TABLE_NAME;
+    private boolean hasEndPoint = false;
     private boolean hasKeySuffix = false;
+    private boolean hasRegion = false;
 
-    private Builder(final String preferredRegion, final DynamoDbClient dynamoDbClient) {
-      this.preferredRegion = preferredRegion;
-      this.dynamoDbClient = dynamoDbClient;
+    private DynamoDbClient clientOverride;
+
+    private Builder(final String region) {
+      this.preferredRegion = region;
     }
 
+    @Override
+    public BuildStep withTableName(final String table) {
+      this.tableName = table;
+      return this;
+    }
+
+    @Override
+    public BuildStep withEndPointConfiguration(final String endPoint, final String signingRegion) {
+      if (!hasRegion) {
+        hasEndPoint = true;
+        clientBuilder
+            .endpointOverride(URI.create(endPoint))
+            .region(Region.of(signingRegion));
+      }
+      return this;
+    }
+
+    @Override
+    public BuildStep withKeySuffix() {
+      this.hasKeySuffix = true;
+      return this;
+    }
+
+    @Override
+    public BuildStep withRegion(final String region) {
+      if (!hasEndPoint) {
+        hasRegion = true;
+        clientBuilder.region(Region.of(region));
+      }
+      return this;
+    }
+
+    @Override
+    public BuildStep withClientOverride(final DynamoDbClient client) {
+      this.clientOverride = client;
+      return this;
+    }
+
+    @Override
+    public DynamoDbMetastoreImpl build() {
+      if (clientOverride != null) {
+        dynamoDbClient = clientOverride;
+        return new DynamoDbMetastoreImpl(this);
+      }
+      if (!hasEndPoint && !hasRegion) {
+        clientBuilder.region(Region.of(preferredRegion));
+      }
+      dynamoDbClient = clientBuilder.build();
+      return new DynamoDbMetastoreImpl(this);
+    }
+  }
+
+  public interface EndPointStep {
+    /**
+     * Adds Endpoint config to the AWS DynamoDb client.
+     *
+     * @param endPoint The service endpoint either with or without the protocol.
+     * @param signingRegion The region to use for SigV4 signing of requests (e.g. us-west-1).
+     * @return The current {@code BuildStep} instance with end point configuration.
+     */
+    BuildStep withEndPointConfiguration(String endPoint, String signingRegion);
+  }
+
+  public interface RegionStep {
+    /**
+     * Specifies the region for the AWS DynamoDb client.
+     *
+     * @param region The region for the DynamoDb client.
+     * @return The current {@code BuildStep} instance with a client region. This overrides the region specified as the
+     *         {@code newBuilder} input parameter.
+     */
+    BuildStep withRegion(String region);
+  }
+
+  public interface BuildStep {
     /**
      * Specifies the name of the table.
      *
-     * @param name A custom name for the table.
-     * @return The current {@code Builder} instance.
+     * @param tableName A custom name for the table.
+     * @return The current {@code BuildStep} instance.
      */
-    public Builder withTableName(final String name) {
-      this.tableName = name;
-      return this;
-    }
+    BuildStep withTableName(String tableName);
 
     /**
      * Specifies whether key suffix should be enabled for DynamoDB. This should be enabled for Global Table support.
      * Adding a suffix to keys prevents multi-region writes from clobbering each other and ensures that no keys are
      * lost.
      *
-     * @return The current {@code Builder} instance.
+     * @return The current {@code BuildStep} instance.
      */
-    public Builder withKeySuffix() {
-      this.hasKeySuffix = true;
-      return this;
-    }
+    BuildStep withKeySuffix();
+
 
     /**
-     * Build the {@code DynamoDbMetastoreImpl} instance.
+     * Specifies a custom DynamoDb client to be used instead of the default. Custom client will ignore any region
+     * or endpoint configuration specified in the builder.
      *
-     * @return The {@code DynamoDbMetastoreImpl} instance.
-     * */
-    public DynamoDbMetastoreImpl build() {
-      return new DynamoDbMetastoreImpl(this);
-    }
+     * @param client A custom DynamoDb client.
+     * @return The current {@code BuildStep} instance.
+     */
+    BuildStep withClientOverride(DynamoDbClient client);
+
+    /**
+     * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.
+     *
+     * @return The fully instantiated {@code DynamoDbMetastoreImpl}.
+     */
+    DynamoDbMetastoreImpl build();
   }
 }

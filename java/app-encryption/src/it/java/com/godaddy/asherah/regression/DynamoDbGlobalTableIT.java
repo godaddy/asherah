@@ -81,7 +81,8 @@ class DynamoDbGlobalTableIT {
   private SessionFactory getSessionFactory(boolean withKeySuffix, String region) {
     DynamoDbClient dynamoDbClient =
       TestSetup.createDynamoDbClient("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
-    DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(region, dynamoDbClient);
+    DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(region);
+    builder.withClientOverride(dynamoDbClient);
 
     if (withKeySuffix) {
       builder.withKeySuffix();

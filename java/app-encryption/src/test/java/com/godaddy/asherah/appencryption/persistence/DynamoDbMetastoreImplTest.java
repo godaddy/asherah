@@ -87,7 +87,8 @@ class DynamoDbMetastoreImplTest {
       .endpointOverride(URI.create("http://localhost:" + DYNAMO_DB_PORT))
       .credentialsProvider(testCredentialsProvider)
       .build();
-    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .build();
     tableName = dynamoDbMetastoreImpl.getTableName();
 
@@ -164,7 +165,8 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testLoadLatestWithSingleRecordAndSuffix() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
@@ -212,7 +214,8 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testStoreSuccess() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
     boolean actualValue = dynamoDbMetastoreImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
@@ -245,7 +248,8 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testBuilderPathWithKeySuffix() {
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
 
@@ -254,7 +258,8 @@ class DynamoDbMetastoreImplTest {
 
   @Test
   void testBuilderPathWithoutKeySuffix() {
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .build();
 
     assertEquals("", dynamoDbMetastore.getKeySuffix());
@@ -270,7 +275,8 @@ class DynamoDbMetastoreImplTest {
     putItem(tableName, TEST_KEY, instant.getEpochSecond(), keyRecord);
 
     // Create a metastore object using the withTableName step
-    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION, dynamoDbClient)
+    DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .withTableName(tableName)
       .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastore.load(TEST_KEY, instant);
