@@ -118,10 +118,6 @@ jobs:
         sudo prlimit --pid $$ --core=-1
         sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/integration_test.sh
-    - name: Install
-      run: |
-        cd java/app-encryption
-        ./scripts/install.sh
 
   release-java-app-Encryption:
     if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'

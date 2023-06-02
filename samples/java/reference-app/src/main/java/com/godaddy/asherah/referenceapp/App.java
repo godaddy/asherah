@@ -1,6 +1,5 @@
 package com.godaddy.asherah.referenceapp;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -41,9 +40,6 @@ import io.micrometer.core.instrument.util.HierarchicalNameMapper;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 
 @Command(mixinStandardHelpOptions = true, description = "Runs an example end-to-end encryption and decryption round "
                                                       + "trip. NOTE: Some metastore and kms types depend on required "
@@ -129,20 +125,17 @@ public final class App implements Callable<Void> {
         dynamoDbRegion = "us-west-2";
         logger.info("configuring metastore with default region: {}.", dynamoDbRegion);
       }
+      DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(dynamoDbRegion);
 
       // Check for region and endpoint configuration.
       // The client can use either withRegion or withEndPointConfiguration but not both
-      DynamoDbClientBuilder dynamoDbClientBuilder = DynamoDbClient.builder();
       if (dynamoDbEndpoint != null) {
         if (dynamoDbRegion == null || dynamoDbRegion.trim().isEmpty() || dynamoDbEndpoint.trim().isEmpty()) {
           logger.error("One or more parameter(s) for endpoint configuration missing.");
           return null;
         }
-        dynamoDbClientBuilder.endpointOverride(URI.create(dynamoDbEndpoint)).region(Region.of(dynamoDbRegion));
+        builder.withEndPointConfiguration(dynamoDbEndpoint, dynamoDbRegion);
       }
-
-      DynamoDbMetastoreImpl.Builder builder =
-          DynamoDbMetastoreImpl.newBuilder(dynamoDbRegion, dynamoDbClientBuilder.build());
       // Check for table name
       if (dynamoDbTableName != null) {
         if (dynamoDbTableName.trim().isEmpty()) {

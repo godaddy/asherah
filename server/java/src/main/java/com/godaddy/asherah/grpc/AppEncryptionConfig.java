@@ -13,11 +13,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 
-import java.net.URI;
 import java.util.Map;
 
 class AppEncryptionConfig {
@@ -86,17 +82,17 @@ class AppEncryptionConfig {
           logger.info("configuring metastore with default region: {}.", region);
         }
 
-        DynamoDbClientBuilder dynamoDbClientBuilder = DynamoDbClient.builder()
-            .region(Region.of(region));
+        DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(region);
 
         // Check for region and endpoint configuration.
+        // The client can use either withRegion or withEndPointConfiguration but not both
         if (endPoint != null) {
-          dynamoDbClientBuilder.endpointOverride(URI.create(endPoint));
+          if (region == null || region.trim().isEmpty() || endPoint.trim().isEmpty()) {
+            logger.error("One or more parameter(s) for endpoint configuration missing.");
+            return null;
+          }
+          builder.withEndPointConfiguration(endPoint, region);
         }
-
-        DynamoDbMetastoreImpl.Builder builder =
-            DynamoDbMetastoreImpl.newBuilder(region, dynamoDbClientBuilder.build());
-
         //Check for table name
         if (tableName != null) {
           if (tableName.trim().isEmpty()) {
