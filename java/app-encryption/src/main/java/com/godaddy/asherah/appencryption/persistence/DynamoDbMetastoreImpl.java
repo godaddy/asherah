@@ -1,23 +1,15 @@
 package com.godaddy.asherah.appencryption.persistence;
 
+import java.net.URI;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
-import com.amazonaws.SdkBaseException;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.GetItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 
@@ -27,6 +19,13 @@ import io.micrometer.core.instrument.Timer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
 /**
  * Provides an AWS DynamoDB based implementation of {@link Metastore} to store and retrieve
@@ -48,12 +47,11 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
       Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.loadlatest");
   private final Timer storeTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".metastore.dynamodb.store");
 
-  private final DynamoDB client;
+  private final DynamoDbClient dynamoDbClient;
   private final String tableName;
   private final String preferredRegion;
   private final boolean hasKeySuffix;
-  // Table instance can be cached since thread-safe and no state other than description, which we don't use
-  private final Table table;
+
 
   /**
    * Initialize a {@code DynamoDbMetastoreImpl} builder with the given region.
@@ -67,30 +65,32 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
   }
 
   DynamoDbMetastoreImpl(final Builder builder) {
-    this.client = new DynamoDB(builder.client);
+    this.dynamoDbClient = builder.dynamoDbClient;
     this.tableName = builder.tableName;
     this.preferredRegion = builder.preferredRegion;
     this.hasKeySuffix = builder.hasKeySuffix;
-    this.table = client.getTable(tableName);
   }
 
   @Override
   public Optional<JSONObject> load(final String keyId, final Instant created) {
     return loadTimer.record(() -> {
       try {
-        GetItemOutcome outcome = table.getItemOutcome(new GetItemSpec()
-            .withPrimaryKey(
-                PARTITION_KEY, keyId,
-                SORT_KEY, created.getEpochSecond())
-            .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
-            .withConsistentRead(true)); // always use strong consistency
-
-        Item item = outcome.getItem();
-        if (item != null) {
-          return Optional.of(new JSONObject(item.getMap(ATTRIBUTE_KEY_RECORD)));
+        GetItemResponse getItemResponse = dynamoDbClient.getItem(request ->
+            request
+              .tableName(tableName)
+              .key(Map.of(
+                PARTITION_KEY, AttributeValue.fromS(keyId),
+                SORT_KEY, AttributeValue.fromN(Long.toString(created.getEpochSecond()))
+              ))
+              .attributesToGet(ATTRIBUTE_KEY_RECORD)
+              .consistentRead(true)  // always use strong consistency
+        );
+        Map<String, AttributeValue> item = getItemResponse.item();
+        if (item != null && item.containsKey(ATTRIBUTE_KEY_RECORD)) {
+          return Optional.of(toJSONObject(item.get(ATTRIBUTE_KEY_RECORD).m()));
         }
       }
-      catch (SdkBaseException se) {
+      catch (SdkException se) {
         logger.error("Metastore error", se);
       }
 
@@ -109,20 +109,27 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return loadLatestTimer.record(() -> {
       try {
         // Have to use query api to use limit and reverse sort order
-        ItemCollection<QueryOutcome> itemCollection = table.query(new QuerySpec()
-            .withHashKey(PARTITION_KEY, keyId)
-            .withProjectionExpression(ATTRIBUTE_KEY_RECORD)
-            .withScanIndexForward(false) // sorts descending
-            .withMaxResultSize(1) // limit 1
-            .withConsistentRead(true)); // always use strong consistency
-
-        Iterator<Item> iterator = itemCollection.iterator();
+        QueryResponse queryResponse = dynamoDbClient.query(request ->
+            request
+              .tableName(tableName)
+              .keyConditions(Map.of(
+                PARTITION_KEY, Condition.builder()
+                  .attributeValueList(AttributeValue.fromS(keyId))
+                  .comparisonOperator(ComparisonOperator.EQ)
+                  .build()
+                ))
+              .attributesToGet(ATTRIBUTE_KEY_RECORD)
+              .scanIndexForward(false) // sorts descending
+              .limit(1) // limit 1
+              .consistentRead(true) // limit 1
+        );
+        Iterator<Map<String, AttributeValue>> iterator = queryResponse.items().iterator();
         if (iterator.hasNext()) {
-          Item item = iterator.next();
-          return Optional.of(new JSONObject(item.getMap(ATTRIBUTE_KEY_RECORD)));
+          Map<String, AttributeValue> item = iterator.next();
+          return Optional.of(toJSONObject(item.get(ATTRIBUTE_KEY_RECORD).m()));
         }
       }
-      catch (SdkBaseException se) {
+      catch (SdkException se) {
         logger.error("Metastore error", se);
       }
 
@@ -147,15 +154,16 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         // sort key alone to guarantee primary key uniqueness. It automatically checks for existence of this item's
         // composite primary key and if it contains the specified attribute name, either of which is inherently
         // required.
-        Item item = new Item()
-            .withPrimaryKey(
-                PARTITION_KEY, keyId,
-                SORT_KEY, created.getEpochSecond())
-            .withMap(ATTRIBUTE_KEY_RECORD, value.toMap());
-        table.putItem(new PutItemSpec()
-            .withItem(item)
-            .withConditionExpression("attribute_not_exists(" + PARTITION_KEY + ")"));
-
+        dynamoDbClient.putItem(request ->
+            request
+              .tableName(tableName)
+              .item(Map.of(
+                PARTITION_KEY, AttributeValue.fromS(keyId),
+                SORT_KEY, AttributeValue.fromN(Long.toString(created.getEpochSecond())),
+                ATTRIBUTE_KEY_RECORD, AttributeValue.fromM(toDynamoDbItem(value))
+              ))
+              .conditionExpression("attribute_not_exists(" + PARTITION_KEY + ")")
+        );
         return true;
       }
       catch (ConditionalCheckFailedException e) {
@@ -163,11 +171,57 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
         logger.info("Attempted to create duplicate key: {} {}", keyId, created);
         return false;
       }
-      catch (SdkBaseException se) {
+      catch (SdkException se) {
         logger.error("Metastore error during store", se);
         throw new AppEncryptionException("Metastore error", se);
       }
     });
+  }
+
+  static Map<String, AttributeValue> toDynamoDbItem(final JSONObject value) {
+    Map<String, AttributeValue> result = new HashMap<>();
+    for (final var key : value.keySet()) {
+      final var object = value.get(key);
+      if (object instanceof String stringObject) {
+        result.put(key, AttributeValue.fromS(stringObject));
+      }
+      else if (object instanceof Long longObject) {
+        result.put(key, AttributeValue.fromN(Long.toString(longObject)));
+      }
+      else if (object instanceof Boolean booleanObject) {
+        result.put(key, AttributeValue.fromBool(booleanObject));
+      }
+      else if (object instanceof JSONObject jsonObject) {
+        result.put(key, AttributeValue.fromM(toDynamoDbItem(jsonObject)));
+      }
+      else {
+        throw new IllegalArgumentException("Unsupported type: " + object.getClass().getName());
+      }
+    }
+    return result;
+  }
+
+  static JSONObject toJSONObject(final Map<String, AttributeValue> item) {
+    JSONObject result = new JSONObject();
+    for (final var entry : item.entrySet()) {
+      final var value = entry.getValue();
+      if (value.s() != null) {
+        result.put(entry.getKey(), value.s());
+      }
+      else if (value.n() != null) {
+        result.put(entry.getKey(), Long.parseLong(value.n()));
+      }
+      else if (value.bool() != null) {
+        result.put(entry.getKey(), value.bool());
+      }
+      else if (value.m() != null) {
+        result.put(entry.getKey(), toJSONObject(value.m()));
+      }
+      else {
+        throw new IllegalArgumentException("Unsupported type: " + value.type());
+      }
+    }
+    return result;
   }
 
   @Override
@@ -182,22 +236,24 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     return tableName;
   }
 
-  DynamoDB getClient() {
-    return client;
+  DynamoDbClient getClient() {
+    return dynamoDbClient;
   }
 
   public static final class Builder implements BuildStep, EndPointStep, RegionStep {
     static final String DEFAULT_TABLE_NAME = "EncryptionKey";
 
-    private AmazonDynamoDB client;
+    private DynamoDbClient dynamoDbClient;
 
     private final String preferredRegion;
-    private final AmazonDynamoDBClientBuilder standardBuilder = AmazonDynamoDBClientBuilder.standard();
+    private final DynamoDbClientBuilder clientBuilder = DynamoDbClient.builder();
 
     private String tableName = DEFAULT_TABLE_NAME;
     private boolean hasEndPoint = false;
     private boolean hasKeySuffix = false;
     private boolean hasRegion = false;
+
+    private DynamoDbClient clientOverride;
 
     private Builder(final String region) {
       this.preferredRegion = region;
@@ -213,7 +269,9 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     public BuildStep withEndPointConfiguration(final String endPoint, final String signingRegion) {
       if (!hasRegion) {
         hasEndPoint = true;
-        standardBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, signingRegion));
+        clientBuilder
+            .endpointOverride(URI.create(endPoint))
+            .region(Region.of(signingRegion));
       }
       return this;
     }
@@ -228,17 +286,27 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
     public BuildStep withRegion(final String region) {
       if (!hasEndPoint) {
         hasRegion = true;
-        standardBuilder.withRegion(region);
+        clientBuilder.region(Region.of(region));
       }
       return this;
     }
 
     @Override
+    public BuildStep withClientOverride(final DynamoDbClient client) {
+      this.clientOverride = client;
+      return this;
+    }
+
+    @Override
     public DynamoDbMetastoreImpl build() {
-      if (!hasEndPoint && !hasRegion) {
-        standardBuilder.withRegion(preferredRegion);
+      if (clientOverride != null) {
+        dynamoDbClient = clientOverride;
+        return new DynamoDbMetastoreImpl(this);
       }
-      client = standardBuilder.build();
+      if (!hasEndPoint && !hasRegion) {
+        clientBuilder.region(Region.of(preferredRegion));
+      }
+      dynamoDbClient = clientBuilder.build();
       return new DynamoDbMetastoreImpl(this);
     }
   }
@@ -282,6 +350,16 @@ public class DynamoDbMetastoreImpl implements Metastore<JSONObject> {
      * @return The current {@code BuildStep} instance.
      */
     BuildStep withKeySuffix();
+
+
+    /**
+     * Specifies a custom DynamoDb client to be used instead of the default. Custom client will ignore any region
+     * or endpoint configuration specified in the builder.
+     *
+     * @param client A custom DynamoDb client.
+     * @return The current {@code BuildStep} instance.
+     */
+    BuildStep withClientOverride(DynamoDbClient client);
 
     /**
      * Builds the finalized {@code DynamoDbMetastoreImpl} with the parameters specified in the builder.

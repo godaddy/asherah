@@ -30,7 +30,7 @@ You can specify the current release of Asherah as a project dependency using the
   <dependency>
     <groupId>com.godaddy.asherah</groupId>
     <artifactId>appencryption</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
   </dependency>
 </dependencies>
 ```
@@ -97,13 +97,14 @@ build the metastore by calling the `build` method.
  - **withTableName**: Specifies the name of the DynamoDb table.
  - **withRegion**: Specifies the region for the AWS DynamoDb client.
  - **withEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+ - **withClientOverride**: Specifies a custom AWS DynamoDb client. Region and endpoint configuration will be ignored if custom client is provided.
 
 Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
 ```java
-Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder()
-      .withKeySuffix("us-west-2")
+Metastore dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder("us-west-2")
       .withTableName("TestTable")
+      .withKeySuffix()
       .build();
 ```
 
@@ -128,6 +129,17 @@ Map<String, String> regionMap = ImmutableMap.of("us-east-1", "arn_of_us-east-1",
 // Build the Key Management Service using the region map and your preferred (usually current) region
 KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1").build();
 ```
+
+It is possible to specify AWS KMS client factory to be used, instead of default one:
+```java
+// Define AWS KMS client factory
+AwsKmsClientFactory awsKmsClientFactory = ...;
+
+// Build the Key Management Service using the region map and your preferred (usually current) region and custom AWS KMS client factory
+KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1")
+    .withAwsKmsClientFactory(awsKmsClientFactory)
+    .build();
+``` 
 
 #### Static KMS (FOR TESTING ONLY)
 
