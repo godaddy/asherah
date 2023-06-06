@@ -1,12 +1,13 @@
 package com.godaddy.asherah.appencryption.kms;
 
-import com.amazonaws.SdkBaseException;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.model.DecryptRequest;
-import com.amazonaws.services.kms.model.EncryptRequest;
-import com.amazonaws.services.kms.model.EncryptResult;
-import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
-import com.amazonaws.services.kms.model.GenerateDataKeyResult;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.DecryptRequest;
+import software.amazon.awssdk.services.kms.model.EncryptRequest;
+import software.amazon.awssdk.services.kms.model.EncryptResponse;
+import software.amazon.awssdk.services.kms.model.GenerateDataKeyRequest;
+import software.amazon.awssdk.services.kms.model.GenerateDataKeyResponse;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.utils.Json;
@@ -109,7 +110,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
             regionPriorityComparator.compare(regionToArn1.getKey(), regionToArn2.getKey()))
         .forEach(regionToArn -> regionToArnAndClientMap.put(regionToArn.getKey(),
             new AwsKmsArnClient(regionToArn.getValue(),
-                this.awsKmsClientFactory.createAwsKmsClient(regionToArn.getKey()))));
+                this.awsKmsClientFactory.build(regionToArn.getKey()))));
   }
 
   /**
@@ -131,8 +132,8 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
       // We generate a KMS datakey (plaintext and encrypted) and encrypt its plaintext key against remaining regions.
       // This allows us to be able to decrypt from any of the regions locally later.
 
-      GenerateDataKeyResult dataKey = generateDataKey(this.regionToArnAndClientMap);
-      byte[] dataKeyPlainText = dataKey.getPlaintext().array();
+      GenerateDataKeyResponse dataKey = generateDataKey(this.regionToArnAndClientMap);
+      byte[] dataKeyPlainText = dataKey.plaintext().asByteArrayUnsafe();
 
       // Using thread pool just for lifetime of method. Keys should be cached anyway. Use daemons so we don't block
       // JVM shutdown
@@ -146,13 +147,13 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
         regionToArnAndClientMap.forEach((region, arnAndClient) ->
             tasks.add(() -> {
               // If the ARN is different than the datakey's, call encrypt since it's another region
-              if (!arnAndClient.arn.equals(dataKey.getKeyId())) {
+              if (!arnAndClient.arn.equals(dataKey.keyId())) {
                 return encryptKeyAndBuildResult(arnAndClient.awsKmsClient, region, arnAndClient.arn, dataKeyPlainText);
               }
               else {
                 // This is the datakey, so build kmsKey json for it
-                return Optional.of(buildKmsRegionKeyJson(region, dataKey.getKeyId(),
-                    dataKey.getCiphertextBlob().array()));
+                return Optional.of(buildKmsRegionKeyJson(region, dataKey.keyId(),
+                    dataKey.ciphertextBlob().asByteArrayUnsafe()));
               }
             })
         );
@@ -184,23 +185,24 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
     });
   }
 
-  Optional<JSONObject> encryptKeyAndBuildResult(final AWSKMS kmsClient, final String region, final String arn,
+  Optional<JSONObject> encryptKeyAndBuildResult(final KmsClient kmsClient, final String region, final String arn,
       final byte[] dataKeyPlainText) {
     try {
       Timer encryptTimer = Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".kms.aws.encrypt." + region);
       return encryptTimer.record(() -> {
         // Note we can't wipe plaintext key till end of calling method since underlying buffer shared by all requests
-        EncryptRequest encryptRequest = new EncryptRequest()
-            .withKeyId(arn)
-            .withPlaintext(ByteBuffer.wrap(dataKeyPlainText));
-        EncryptResult encryptResult = kmsClient.encrypt(encryptRequest);
+        EncryptRequest encryptRequest = EncryptRequest.builder()
+            .keyId(arn)
+            .plaintext(SdkBytes.fromByteBuffer(ByteBuffer.wrap(dataKeyPlainText)))
+            .build();
+        EncryptResponse encryptResponse = kmsClient.encrypt(encryptRequest);
 
-        byte[] encryptedKeyEncryptionKey = encryptResult.getCiphertextBlob().array();
+        byte[] encryptedKeyEncryptionKey = encryptResponse.ciphertextBlob().asByteArrayUnsafe();
 
         return Optional.of(buildKmsRegionKeyJson(region, arn, encryptedKeyEncryptionKey));
       });
     }
-    catch (SdkBaseException e) {
+    catch (SdkException e) {
       logger.warn("Failed to encrypt generated data key via region {} KMS", region, e);
       // TODO Consider adding notification/CW alert
       return Optional.empty();
@@ -211,24 +213,25 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
    * Attempt to generate a KMS datakey using the first successful response using a sorted map of available KMS clients.
    *
    * @param sortedRegionToArnAndClient A sorted dictionary mapping regions and their arns and kms clients.
-   * @return A {@link GenerateDataKeyResult} object that contains the plain text key and the ciphertext for that key.
+   * @return A {@link GenerateDataKeyResponse} object that contains the plain text key and the ciphertext for that key.
    * @exception KmsException Throws a {@link KmsException} if we're unable to generate a datakey in any AWS region.
    */
-  GenerateDataKeyResult generateDataKey(final Map<String, AwsKmsArnClient> sortedRegionToArnAndClient) {
+  GenerateDataKeyResponse generateDataKey(final Map<String, AwsKmsArnClient> sortedRegionToArnAndClient) {
     for (Map.Entry<String, AwsKmsArnClient> regionToArnAndClient : sortedRegionToArnAndClient.entrySet()) {
       try {
         Timer generateDataKeyTimer =
             Metrics.timer(MetricsUtil.AEL_METRICS_PREFIX + ".kms.aws.generatedatakey." +
                 regionToArnAndClient.getKey());
         return generateDataKeyTimer.record(() -> {
-          AWSKMS kmsClient = regionToArnAndClient.getValue().awsKmsClient;
-          GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest()
-              .withKeyId(regionToArnAndClient.getValue().arn)
-              .withKeySpec("AES_256");
+          KmsClient kmsClient = regionToArnAndClient.getValue().awsKmsClient;
+          GenerateDataKeyRequest dataKeyRequest = GenerateDataKeyRequest.builder()
+              .keyId(regionToArnAndClient.getValue().arn)
+              .keySpec("AES_256")
+              .build();
           return kmsClient.generateDataKey(dataKeyRequest);
         });
       }
-      catch (SdkBaseException e) {
+      catch (SdkException e) {
         logger.warn("Failed to generate data key via region {}, trying next region", regionToArnAndClient.getKey(), e);
         // TODO Consider adding notification/CW alert
       }
@@ -273,7 +276,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
             decryptKmsEncryptedKey(arnAndClient.awsKmsClient, encryptedKey, keyCreated, kmsKeyEncryptionKey, revoked)
           );
         }
-        catch (SdkBaseException e) {
+        catch (SdkException e) {
           logger.warn("Failed to decrypt via region {} KMS, trying next region", region, e);
           // TODO Consider adding notification/CW alert
         }
@@ -299,11 +302,12 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
         .collect(Collectors.toList());
   }
 
-  CryptoKey decryptKmsEncryptedKey(final AWSKMS awsKmsClient, final byte[] cipherText, final Instant keyCreated,
+  CryptoKey decryptKmsEncryptedKey(final KmsClient awsKmsClient, final byte[] cipherText, final Instant keyCreated,
                                    final byte[] kmsKeyEncryptionKey, final boolean revoked) {
-    DecryptRequest decryptRequest = new DecryptRequest()
-        .withCiphertextBlob(ByteBuffer.wrap(kmsKeyEncryptionKey));
-    byte[] plaintextBackingBytes = awsKmsClient.decrypt(decryptRequest).getPlaintext().array();
+    DecryptRequest decryptRequest = DecryptRequest.builder()
+        .ciphertextBlob(SdkBytes.fromByteBuffer(ByteBuffer.wrap(kmsKeyEncryptionKey)))
+        .build();
+    byte[] plaintextBackingBytes = awsKmsClient.decrypt(decryptRequest).plaintext().asByteArrayUnsafe();
     try {
       return crypto.decryptKey(cipherText, keyCreated, crypto.generateKeyFromBytes(plaintextBackingBytes), revoked);
     }
@@ -314,9 +318,9 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
 
   static final class AwsKmsArnClient {
     private final String arn;
-    private final AWSKMS awsKmsClient;
+    private final KmsClient awsKmsClient;
 
-    private AwsKmsArnClient(final String arn, final AWSKMS awsKmsClient) {
+    private AwsKmsArnClient(final String arn, final KmsClient awsKmsClient) {
       this.arn = arn;
       this.awsKmsClient = awsKmsClient;
     }
@@ -326,10 +330,21 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
 
     private final Map<String, String> regionToArnMap;
     private final String preferredRegion;
+    private AwsKmsClientFactory kmsClientFactory = new AwsKmsClientFactory.DefaultAwsKmsClientFactory();
 
     private Builder(final Map<String, String> regionToArnMap, final String region) {
       this.regionToArnMap = regionToArnMap;
       this.preferredRegion = region;
+    }
+
+    /** Specifies custom kms client factory to use.
+     *
+     * @param clientFactory The AWS KMS client factory.
+     * @return The current {@code BuildStep} instance.
+     */
+    public Builder withKmsClientFactory(final AwsKmsClientFactory clientFactory) {
+      kmsClientFactory = clientFactory;
+      return this;
     }
 
     /**
@@ -339,7 +354,7 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
      */
     public AwsKeyManagementServiceImpl build() {
       return new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, new BouncyAes256GcmCrypto(),
-          new AwsKmsClientFactory());
+        kmsClientFactory);
     }
   }
 }

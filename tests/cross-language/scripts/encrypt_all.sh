@@ -14,7 +14,7 @@ ASHERAH_SOCKET_FILE="${ASHERAH_SOCKET_FILE:-/tmp/appencryption.sock}"
 # Run encrypt tests for all languages
 cd java
 echo "----------------------Encrypting payload using Java---------------------"
-mvn -Drevision=${JAVA_AE_VERSION} -Dtest=RunEncryptTest test
+mvn --no-transfer-progress -Drevision=${JAVA_AE_VERSION} -Dtest=RunEncryptTest test
 cd ..
 
 cd csharp

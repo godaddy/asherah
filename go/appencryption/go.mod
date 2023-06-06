@@ -3,7 +3,7 @@ module github.com/godaddy/asherah/go/appencryption
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.190
+	github.com/aws/aws-sdk-go v1.44.265
 	github.com/goburrow/cache v0.1.4
 	github.com/godaddy/asherah/go/securememory v0.1.4
 	github.com/google/uuid v1.3.0

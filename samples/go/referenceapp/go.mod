@@ -3,7 +3,7 @@ module referenceapp
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.193
+	github.com/aws/aws-sdk-go v1.44.265
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/godaddy/asherah/go/appencryption v0.2.6
 	github.com/google/logger v1.1.1

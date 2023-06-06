@@ -1,22 +1,19 @@
 package com.godaddy.asherah.regression;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.Session;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl;
 import com.godaddy.asherah.utils.PayloadGenerator;
 import com.godaddy.asherah.utils.SessionFactoryGenerator;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,22 +40,37 @@ class DynamoDbGlobalTableIT {
     server.start();
 
     // Setup client pointing to our local dynamodb
-    DynamoDB dynamoDbDocumentClient = new DynamoDB(
-      AmazonDynamoDBClientBuilder.standard()
-        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-          "http://localhost:" + DYNAMO_DB_PORT, "us-west-2"))
-        .build());
+    DynamoDbClient dynamoDbClient =
+      TestSetup.createDynamoDbClient("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
 
     // Create table schema
-    dynamoDbDocumentClient.createTable(new CreateTableRequest()
-      .withTableName(TABLE_NAME)
-      .withKeySchema(
-        new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
-        new KeySchemaElement(SORT_KEY, KeyType.RANGE))
-      .withAttributeDefinitions(
-        new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
-        new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
-      .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+    dynamoDbClient.createTable(request ->
+      request
+        .tableName(TABLE_NAME)
+        .keySchema(
+          KeySchemaElement.builder()
+            .attributeName(PARTITION_KEY)
+            .keyType(KeyType.HASH)
+            .build(),
+          KeySchemaElement.builder()
+            .attributeName(SORT_KEY)
+            .keyType(KeyType.RANGE)
+            .build())
+        .attributeDefinitions(
+          AttributeDefinition.builder()
+            .attributeName(PARTITION_KEY)
+            .attributeType(ScalarAttributeType.S)
+            .build(),
+          AttributeDefinition.builder()
+            .attributeName(SORT_KEY)
+            .attributeType(ScalarAttributeType.N)
+            .build())
+        .provisionedThroughput(ProvisionedThroughput.builder()
+          .readCapacityUnits(1L)
+          .writeCapacityUnits(1L)
+          .build()));
+
+    dynamoDbClient.close();
   }
 
   @AfterEach
@@ -67,11 +79,13 @@ class DynamoDbGlobalTableIT {
   }
 
   private SessionFactory getSessionFactory(boolean withKeySuffix, String region) {
-    DynamoDbMetastoreImpl.BuildStep builder = DynamoDbMetastoreImpl.newBuilder(region)
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
+    DynamoDbClient dynamoDbClient =
+      TestSetup.createDynamoDbClient("http://localhost:" + DYNAMO_DB_PORT, "us-west-2");
+    DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.newBuilder(region);
+    builder.withClientOverride(dynamoDbClient);
 
     if (withKeySuffix) {
-      builder = builder.withKeySuffix();
+      builder.withKeySuffix();
     }
 
     DynamoDbMetastoreImpl dynamoDbMetastore = builder.build();

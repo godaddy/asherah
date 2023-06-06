@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption"
@@ -27,28 +25,27 @@ type IntegrationTestSuite struct {
 	kms    *kms.StaticKMS
 }
 
-func (suite *IntegrationTestSuite) SetupTest() {
-	suite.c = aead.NewAES256GCM()
-	suite.config = appencryption.Config{
+func (s *IntegrationTestSuite) SetupTest() {
+	s.c = aead.NewAES256GCM()
+	s.config = appencryption.Config{
 		Policy:  appencryption.NewCryptoPolicy(),
 		Product: product,
 		Service: service,
 	}
 
 	var err error
-	suite.kms, err = kms.NewStatic(staticKey, suite.c)
-	assert.NoError(suite.T(), err)
+	s.kms, err = kms.NewStatic(staticKey, s.c)
+	s.NoError(err)
 }
 
-func (suite *IntegrationTestSuite) TestIntegration() {
+func (s *IntegrationTestSuite) TestIntegration() {
 	metastore := persistence.NewMemoryMetastore()
-	verify := assert.New(suite.T())
 
 	factory := appencryption.NewSessionFactory(
-		&suite.config,
+		&s.config,
 		metastore,
-		suite.kms,
-		suite.c,
+		s.kms,
+		s.c,
 	)
 	defer factory.Close()
 
@@ -58,128 +55,128 @@ func (suite *IntegrationTestSuite) TestIntegration() {
 	ctx := context.Background()
 
 	dr, err := session.Encrypt(ctx, []byte(original))
-	if verify.NoError(err) && verify.NotNil(dr) {
-		verify.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), dr.Key.ParentKeyMeta.ID)
+	if s.NoError(err) && s.NotNil(dr) {
+		s.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), dr.Key.ParentKeyMeta.ID)
 
-		if after, err := session.Decrypt(ctx, *dr); verify.NoError(err) {
-			verify.Equal(original, string(after))
+		if after, err := session.Decrypt(ctx, *dr); s.NoError(err) {
+			s.Equal(original, string(after))
 		}
 	}
 }
 
-func (suite *IntegrationTestSuite) TestCrossPartitionDecryptShouldFail() {
+func (s *IntegrationTestSuite) TestCrossPartitionDecryptShouldFail() {
 	metastore := persistence.NewMemoryMetastore()
-	verify := assert.New(suite.T())
-	must := require.New(suite.T())
+	require := s.Require()
 
 	factory := appencryption.NewSessionFactory(
-		&suite.config,
+		&s.config,
 		metastore,
-		suite.kms,
-		suite.c,
+		s.kms,
+		s.c,
 	)
 	defer factory.Close()
 
 	session, err := factory.GetSession(partitionID)
-	must.NoError(err)
+	require.NoError(err)
 
 	defer session.Close()
 
 	ctx := context.Background()
 
 	dr, err := session.Encrypt(ctx, []byte(original))
-	must.NoError(err)
-	must.NotNil(dr)
+	require.NoError(err)
+	require.NotNil(dr)
 
 	after, err := session.Decrypt(ctx, *dr)
-	must.NoError(err)
-	verify.Equal(original, string(after), "decrypted value does not match the original")
+	require.NoError(err)
+	require.Equal(original, string(after), "decrypted value does not match the original")
 
 	// Now create a new session using a different partition ID and veriry
 	// the new session is unable to decrypt the other session's DRR.
 	altPartition := partitionID + "alt"
 	altSession, err := factory.GetSession(altPartition)
-	must.NoError(err)
+	require.NoError(err)
 
 	defer altSession.Close()
 
 	_, err = altSession.Decrypt(ctx, *dr)
-	must.Error(err, "decrypt expected to return error")
+	require.Error(err, "decrypt expected to return error")
 }
 
-func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibility() {
+func (s *IntegrationTestSuite) TestDynamoDBRegionSuffixBackwardsCompatibility() {
 	if testing.Short() {
-		suite.T().Skip("too slow for testing.Short")
+		s.T().Skip("too slow for testing.Short")
 	}
 
 	instant := time.Now().Add(-24 * time.Hour).Unix()
-	verify := assert.New(suite.T())
+	require := s.Require()
 
-	testContext := persistencetest.NewDynamoDBTestContext(instant)
-	defer testContext.CleanDB()
+	testContext := persistencetest.NewDynamoDBTestContext(s.T(), instant)
+	defer testContext.CleanDB(s.T())
 
-	testContext.SeedDB()
+	testContext.SeedDB(s.T())
 
 	var drr *appencryption.DataRowRecord
 
 	// First, encrypt the original using a default, non-suffixed DynamoDBMetastore
 	func() {
 		factory := appencryption.NewSessionFactory(
-			&suite.config,
+			&s.config,
 			testContext.NewMetastore(),
-			suite.kms,
-			suite.c,
+			s.kms,
+			s.c,
 		)
 		defer factory.Close()
 
 		session, err := factory.GetSession(partitionID)
-		verify.NoError(err)
+		require.NoError(err)
 
 		defer session.Close()
 
 		ctx := context.Background()
 
 		drr, err = session.Encrypt(ctx, []byte(original))
-		if verify.NoError(err) && verify.NotNil(drr) {
-			verify.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), drr.Key.ParentKeyMeta.ID)
+		require.NoError(err)
+		require.NotNil(drr)
 
-			if after, err := session.Decrypt(ctx, *drr); verify.NoError(err) {
-				verify.Equal(original, string(after))
-			}
-		}
+		require.Equal(fmt.Sprintf("_IK_%s_%s_%s", partitionID, service, product), drr.Key.ParentKeyMeta.ID)
+
+		after, err := session.Decrypt(ctx, *drr)
+		require.NoError(err)
+		require.Equal(original, string(after))
 	}()
 
 	// Now decrypt the encrypted data via a new factory and session using a suffixed DynamoDBMetastore
 	factory := appencryption.NewSessionFactory(
-		&suite.config,
+		&s.config,
 		testContext.NewMetastore(persistence.WithDynamoDBRegionSuffix(true)),
-		suite.kms,
-		suite.c,
+		s.kms,
+		s.c,
 	)
 	defer factory.Close()
 
 	session, err := factory.GetSession(partitionID)
-	verify.NoError(err)
+	require.NoError(err)
 
 	defer session.Close()
 
-	if after, err := session.Decrypt(context.Background(), *drr); verify.NoError(err) {
-		verify.Equal(original, string(after))
-	}
+	after, err := session.Decrypt(context.Background(), *drr)
+	require.NoError(err)
+	require.Equal(original, string(after))
 }
 
-func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
+func (s *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 	if testing.Short() {
-		suite.T().Skip("too slow for testing.Short")
+		s.T().Skip("too slow for testing.Short")
 	}
 
 	instant := time.Now().Add(-24 * time.Hour).Unix()
-	verify := assert.New(suite.T())
+	require := s.Require()
 
-	testContext := persistencetest.NewDynamoDBTestContext(instant)
-	defer testContext.CleanDB()
+	testContext := persistencetest.NewDynamoDBTestContext(s.T(), instant)
+	defer testContext.CleanDB(s.T())
 
-	testContext.SeedDB()
+	testContext.SeedDB(s.T())
 
 	var drr *appencryption.DataRowRecord
 
@@ -187,39 +184,41 @@ func (suite *IntegrationTestSuite) TestDynamoDBRegionSuffix() {
 	metastore := testContext.NewMetastore(persistence.WithDynamoDBRegionSuffix(true))
 
 	factory := appencryption.NewSessionFactory(
-		&suite.config,
+		&s.config,
 		metastore,
-		suite.kms,
-		suite.c,
+		s.kms,
+		s.c,
 	)
 	defer factory.Close()
 
 	// encrypt and decrypt the DRR with a session and dispose of it asap
 	func() {
 		session, err := factory.GetSession(partitionID)
-		verify.NoError(err)
+		require.NoError(err)
 
 		defer session.Close()
 
 		ctx := context.Background()
 
 		drr, err = session.Encrypt(ctx, []byte(original))
-		if verify.NoError(err) && verify.NotNil(drr) {
-			if after, err := session.Decrypt(ctx, *drr); verify.NoError(err) {
-				verify.Equal(original, string(after))
-			}
-		}
+		require.NoError(err)
+		require.NotNil(drr)
+
+		after, err := session.Decrypt(ctx, *drr)
+		require.NoError(err)
+		require.Equal(original, string(after))
 	}()
 
 	// now decrypt the DRR with a new session using the same (suffixed) partition
 	session, err := factory.GetSession(partitionID)
-	verify.NoError(err)
+	require.NoError(err)
 
 	defer session.Close()
 
-	if after, err := session.Decrypt(context.Background(), *drr); verify.NoError(err) {
-		verify.Equal(original, string(after))
-	}
+	after, err := session.Decrypt(context.Background(), *drr)
+	require.NoError(err)
+
+	require.Equal(original, string(after))
 }
 
 func TestIntegrationSuite(t *testing.T) {

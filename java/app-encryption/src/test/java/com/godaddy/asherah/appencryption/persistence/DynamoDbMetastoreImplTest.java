@@ -1,11 +1,35 @@
 package com.godaddy.asherah.appencryption.persistence;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
+import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
+import com.google.common.collect.ImmutableMap;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -13,23 +37,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
-import com.google.common.collect.ImmutableMap;
+
 
 import static com.godaddy.asherah.appencryption.persistence.DynamoDbMetastoreImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,19 +50,21 @@ class DynamoDbMetastoreImplTest {
   static final String TEST_KEY_WITH_SUFFIX = "some_key_" + REGION;
   static DynamoDBProxyServer server;
 
-  // Note we need to use BigDecimals here to make the asserts play nice. SDK is always converting numbers to BigDecimal
   final Map<String, ?> keyRecord = ImmutableMap.of(
       "ParentKeyMeta", ImmutableMap.of(
           "KeyId", "_SK_api_ecomm",
-          "Created", new BigDecimal(1541461380)),
+          "Created", 1541461380L),
       "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr",
-      "Created", new BigDecimal(1541461381));
+      "Created", 1541461381L);
 
   final Instant instant = Instant.now().minus(1, ChronoUnit.DAYS);
 
-  Table table;
-  DynamoDB dynamoDbDocumentClient;
+  final AwsCredentialsProvider testCredentialsProvider = StaticCredentialsProvider.create(
+      AwsBasicCredentials.create("test", "test"));
+
   DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
+  DynamoDbClient dynamoDbClient;
+  String tableName;
 
   @BeforeAll
   public static void setupClass() throws Exception {
@@ -72,46 +82,56 @@ class DynamoDbMetastoreImplTest {
 
   @BeforeEach
   void setUp() {
-    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+    dynamoDbClient = DynamoDbClient.builder()
+      .region(Region.of(REGION))
+      .endpointOverride(URI.create("http://localhost:" + DYNAMO_DB_PORT))
+      .credentialsProvider(testCredentialsProvider)
       .build();
-    dynamoDbDocumentClient = dynamoDbMetastoreImpl.getClient();
+    dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
+      .build();
+    tableName = dynamoDbMetastoreImpl.getTableName();
 
     // Create table schema
-    createTableSchema(dynamoDbDocumentClient, dynamoDbMetastoreImpl.getTableName());
+    createTableSchema(dynamoDbClient, dynamoDbMetastoreImpl.getTableName());
 
-    table = dynamoDbDocumentClient.getTable(dynamoDbMetastoreImpl.getTableName());
-    Item item = new Item()
-        .withPrimaryKey(
-            PARTITION_KEY, TEST_KEY,
-            SORT_KEY, instant.getEpochSecond())
-        .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
-    table.putItem(item);
-    Item itemWithSuffix = new Item()
-      .withPrimaryKey(
-        PARTITION_KEY, TEST_KEY_WITH_SUFFIX,
-        SORT_KEY, instant.getEpochSecond())
-      .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
-    table.putItem(itemWithSuffix);
+    putItem(TEST_KEY, instant.getEpochSecond(), keyRecord);
+    putItem(TEST_KEY_WITH_SUFFIX, instant.getEpochSecond(), keyRecord);
   }
 
-  public void createTableSchema(final DynamoDB client,final String tableName) {
+  public void createTableSchema(final DynamoDbClient dynamoDbClient, final String tableName) {
     // Create table schema
-    client.createTable(new CreateTableRequest()
-      .withTableName(tableName)
-      .withKeySchema(
-        new KeySchemaElement(PARTITION_KEY, KeyType.HASH),
-        new KeySchemaElement(SORT_KEY, KeyType.RANGE))
-      .withAttributeDefinitions(
-        new AttributeDefinition(PARTITION_KEY, ScalarAttributeType.S),
-        new AttributeDefinition(SORT_KEY, ScalarAttributeType.N))
-      .withProvisionedThroughput(new ProvisionedThroughput(1L, 1L)));
+    dynamoDbClient.createTable(request ->
+      request
+        .tableName(tableName)
+        .keySchema(
+          KeySchemaElement.builder()
+            .attributeName(PARTITION_KEY)
+            .keyType(KeyType.HASH)
+            .build(),
+          KeySchemaElement.builder()
+            .attributeName(SORT_KEY)
+            .keyType(KeyType.RANGE)
+            .build())
+        .attributeDefinitions(
+          AttributeDefinition.builder()
+            .attributeName(PARTITION_KEY)
+            .attributeType(ScalarAttributeType.S)
+            .build(),
+          AttributeDefinition.builder()
+            .attributeName(SORT_KEY)
+            .attributeType(ScalarAttributeType.N)
+            .build())
+        .provisionedThroughput(ProvisionedThroughput.builder()
+          .readCapacityUnits(1L)
+          .writeCapacityUnits(1L)
+          .build()));
   }
 
   @AfterEach
   void tearDown() {
     // Blow out the whole table so we have clean slate each time
-    dynamoDbDocumentClient.getTable(dynamoDbMetastoreImpl.getTableName()).delete();
+    dynamoDbClient.deleteTable(request -> request.tableName(dynamoDbMetastoreImpl.getTableName()));
   }
 
   @Test
@@ -146,7 +166,7 @@ class DynamoDbMetastoreImplTest {
   @Test
   void testLoadLatestWithSingleRecordAndSuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
@@ -161,35 +181,16 @@ class DynamoDbMetastoreImplTest {
     Instant instantPlusOneHour = instant.plus(1, ChronoUnit.HOURS);
     Instant instantMinusOneDay = instant.minus(1, ChronoUnit.DAYS);
     Instant instantPlusOneDay = instant.plus(1, ChronoUnit.DAYS);
-    Item itemMinusOneHour = new Item()
-        .withPrimaryKey(
-            PARTITION_KEY, TEST_KEY,
-            SORT_KEY, instantMinusOneHour.getEpochSecond())
-        .withMap(ATTRIBUTE_KEY_RECORD, ImmutableMap.of(
-            "mytime", instantMinusOneHour.getEpochSecond()));
-    Item itemPlusOneHour = new Item()
-        .withPrimaryKey(
-            PARTITION_KEY, TEST_KEY,
-            SORT_KEY, instantPlusOneHour.getEpochSecond())
-        .withMap(ATTRIBUTE_KEY_RECORD, ImmutableMap.of(
-            "mytime", instantPlusOneHour.getEpochSecond()));
-    Item itemMinusOneDay = new Item()
-        .withPrimaryKey(
-            PARTITION_KEY, TEST_KEY,
-            SORT_KEY, instantMinusOneDay.getEpochSecond())
-        .withMap(ATTRIBUTE_KEY_RECORD, ImmutableMap.of(
-            "mytime", instantMinusOneDay.getEpochSecond()));
-    Item itemPlusOneDay = new Item()
-        .withPrimaryKey(
-            PARTITION_KEY, TEST_KEY,
-            SORT_KEY, instantPlusOneDay.getEpochSecond())
-        .withMap(ATTRIBUTE_KEY_RECORD, ImmutableMap.of(
-            "mytime", instantPlusOneDay.getEpochSecond()));
+
     // intentionally mixing up insertion order
-    table.putItem(itemPlusOneHour);
-    table.putItem(itemPlusOneDay);
-    table.putItem(itemMinusOneHour);
-    table.putItem(itemMinusOneDay);
+    putItem(TEST_KEY, instantPlusOneHour.getEpochSecond(), ImmutableMap.of(
+      "mytime", instantPlusOneHour.getEpochSecond()));
+    putItem(TEST_KEY, instantMinusOneDay.getEpochSecond(), ImmutableMap.of(
+      "mytime", instantMinusOneDay.getEpochSecond()));
+    putItem(TEST_KEY, instantMinusOneHour.getEpochSecond(), ImmutableMap.of(
+      "mytime", instantMinusOneHour.getEpochSecond()));
+    putItem(TEST_KEY, instantPlusOneDay.getEpochSecond(), ImmutableMap.of(
+      "mytime", instantPlusOneDay.getEpochSecond()));
 
     Optional<JSONObject> actualJsonObject = dynamoDbMetastoreImpl.loadLatest(TEST_KEY);
 
@@ -214,7 +215,7 @@ class DynamoDbMetastoreImplTest {
   @Test
   void testStoreSuccess() {
     DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
     boolean actualValue = dynamoDbMetastoreImpl.store(TEST_KEY, Instant.now(), new JSONObject(keyRecord));
@@ -246,34 +247,9 @@ class DynamoDbMetastoreImplTest {
   }
 
   @Test
-  void testPrimaryBuilderPath() {
-    // Hack to inject default region since we don't explicitly require one be specified as we do in KMS impl
-    System.setProperty(SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY, "us-west-2");
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION).build();
-
-    assertNotNull(dynamoDbMetastoreImpl);
-  }
-
-  @Test
-  void testBuilderPathWithRegion() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl =
-      DynamoDbMetastoreImpl.newBuilder(REGION).withRegion("us-west-1").build();
-
-    assertNotNull(dynamoDbMetastoreImpl);
-  }
-
-  @Test
-  void testBuilderPathWithEndPointConfiguration() {
-    DynamoDbMetastoreImpl dynamoDbMetastoreImpl = DynamoDbMetastoreImpl.newBuilder(REGION)
-      .withEndPointConfiguration("http://localhost:" + DYNAMO_DB_PORT, "us-west-2")
-      .build();
-
-    assertNotNull(dynamoDbMetastoreImpl);
-  }
-
-  @Test
   void testBuilderPathWithKeySuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .withKeySuffix()
       .build();
 
@@ -283,6 +259,7 @@ class DynamoDbMetastoreImplTest {
   @Test
   void testBuilderPathWithoutKeySuffix() {
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
+      .withClientOverride(dynamoDbClient)
       .build();
 
     assertEquals("", dynamoDbMetastore.getKeySuffix());
@@ -292,26 +269,14 @@ class DynamoDbMetastoreImplTest {
   void testBuilderPathWithTableName() {
     String tableName = "DummyTable";
 
-    // Use AWS SDK to create client
-    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-      .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
-      .build();
-    DynamoDB dynamoDBclient = new DynamoDB(client);
-
-    createTableSchema(dynamoDBclient, tableName);
+    createTableSchema(dynamoDbClient, tableName);
 
     // Put the object in DummyTable
-    Table table = dynamoDBclient.getTable(tableName);
-    Item item = new Item()
-      .withPrimaryKey(
-        PARTITION_KEY, TEST_KEY,
-        SORT_KEY, instant.getEpochSecond())
-      .withMap(ATTRIBUTE_KEY_RECORD, keyRecord);
-    table.putItem(item);
+    putItem(tableName, TEST_KEY, instant.getEpochSecond(), keyRecord);
 
     // Create a metastore object using the withTableName step
     DynamoDbMetastoreImpl dynamoDbMetastore = DynamoDbMetastoreImpl.newBuilder(REGION)
-      .withEndPointConfiguration("http://localhost:8000", "us-west-2")
+      .withClientOverride(dynamoDbClient)
       .withTableName(tableName)
       .build();
     Optional<JSONObject> actualJsonObject = dynamoDbMetastore.load(TEST_KEY, instant);
@@ -320,5 +285,57 @@ class DynamoDbMetastoreImplTest {
     //metastore object created withTableName
     assertTrue(actualJsonObject.isPresent());
     assertEquals(keyRecord, actualJsonObject.get().toMap());
+  }
+
+  @Test
+  void testBackwardCompatibility() {
+    // use sdk v1 to store keyrecord
+    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+      .withCredentials(new AWSStaticCredentialsProvider(
+        new BasicAWSCredentials("test", "test")))
+      .withEndpointConfiguration(
+        new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
+      .build();
+
+    Table table = new DynamoDB(client).getTable(tableName);
+
+    final Map<String, ?> keyRecordBeforeUpgrade = ImmutableMap.of(
+      "ParentKeyMeta", ImmutableMap.of(
+        "KeyId", "_SK_api_ecomm",
+        "Created", new BigDecimal(1541461380L)),
+      "Key", "mWT/x4RvIFVFE2BEYV1IB9FMM8sWN1sK6YN5bS2UyGR+9RSZVTvp/bcQ6PycW6kxYEqrpA+aV4u04jOr",
+      "Created", new BigDecimal(1541461380L));
+
+    Item item = new Item()
+      .withPrimaryKey(
+        PARTITION_KEY, "backward-test-key",
+        SORT_KEY, instant.getEpochSecond())
+      .withMap(ATTRIBUTE_KEY_RECORD, keyRecordBeforeUpgrade);
+    table.putItem(item);
+
+    // use sdk v2 to load keyrecord
+    JSONObject actualJsonObject = dynamoDbMetastoreImpl.load("backward-test-key", instant).orElse(null);
+
+    // verify
+    assertNotNull(actualJsonObject);
+    assertEquals(actualJsonObject.get("Key"), keyRecordBeforeUpgrade.get("Key"));
+    assertEquals(actualJsonObject.get("Created"), ((BigDecimal) keyRecordBeforeUpgrade.get("Created")).longValueExact());
+  }
+
+
+  private void putItem(String partitionKey, Long sortKey, Map<String, ?> keyRecord) {
+    putItem(tableName, partitionKey, sortKey, keyRecord);
+  }
+
+  private void putItem(String tableName, String partitionKey, Long sortKey, Map<String, ?> keyRecord) {
+    dynamoDbClient.putItem(request ->
+      request
+        .tableName(tableName)
+        .item(Map.of(
+          PARTITION_KEY, AttributeValue.fromS(partitionKey),
+          SORT_KEY, AttributeValue.fromN(Long.toString(sortKey)),
+          ATTRIBUTE_KEY_RECORD, AttributeValue.fromM(DynamoDbMetastoreImpl.toDynamoDbItem(new JSONObject(keyRecord)))
+        ))
+    );
   }
 }

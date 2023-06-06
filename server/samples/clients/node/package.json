@@ -11,9 +11,9 @@
     "yargs": "^17.0.0"
   },
   "devDependencies": {
-    "babel-eslint": "10.1.0",
+    "@babel/eslint-parser": "7.11.0",
     "eslint": "8.33.0",
-    "eslint-config-godaddy": "6.1.0"
+    "eslint-config-godaddy": "7.0.2"
   },
   "author": "Asherah Developers",
   "license": "MIT",
