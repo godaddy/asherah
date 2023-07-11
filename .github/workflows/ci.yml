@@ -18,7 +18,7 @@ env:
   MYSQL_USERNAME: root
   MYSQL_PASSWORD: Password123
   DISABLE_TESTCONTAINERS: true
-  AWS_ACCESS_KEY_ID: dummy_key
+  AWS_ACCESS_KEY_ID: dummykey
   AWS_SECRET_ACCESS_KEY: dummy_secret
   AWS_DEFAULT_REGION: us-west-2
   AWS_REGION: us-west-2
