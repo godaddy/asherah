@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,9 +16,9 @@ import (
 )
 
 const (
-	loadKeyQuery    = "SELECT key_record FROM encryption_key WHERE id = ? AND created = ?"
-	storeKeyQuery   = "INSERT INTO encryption_key (id, created, key_record) VALUES (?, ?, ?)"
-	loadLatestQuery = "SELECT key_record from encryption_key WHERE id = ? ORDER BY created DESC LIMIT 1"
+	defaultLoadKeyQuery    = "SELECT key_record FROM encryption_key WHERE id = ? AND created = ?"
+	defaultStoreKeyQuery   = "INSERT INTO encryption_key (id, created, key_record) VALUES (?, ?, ?)"
+	defaultLoadLatestQuery = "SELECT key_record from encryption_key WHERE id = ? ORDER BY created DESC LIMIT 1"
 )
 
 var (
@@ -28,18 +30,83 @@ var (
 	loadLatestSQLTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.sql.loadlatest", appencryption.MetricsPrefix), nil)
 )
 
+// SQLMetastoreDBType identifies a specific database/sql driver
+type SQLMetastoreDBType string
+
+const (
+	Postgres SQLMetastoreDBType = "postgres"
+	Oracle   SQLMetastoreDBType = "oracle"
+	MySQL    SQLMetastoreDBType = "mysql"
+
+	DefaultDBType = MySQL
+)
+
+var qrx = regexp.MustCompile(`\?`)
+
+// q converts "?" characters to $1, $2, $n on postgres, :1, :2, :n on Oracle.
+//
+// This function is based on a function of the same name found in the Go
+// sql test project: https://github.com/bradfitz/go-sql-test.
+func (t SQLMetastoreDBType) q(sql string) string {
+	var pref string
+	switch t {
+	case Postgres:
+		pref = "$"
+	case Oracle:
+		pref = ":"
+	default:
+		return sql
+	}
+	n := 0
+	return qrx.ReplaceAllStringFunc(sql, func(string) string {
+		n++
+		return pref + strconv.Itoa(n)
+	})
+}
+
+// SQLMetastoreOption is used to configure additional options in a SQLMetastore.
+type SQLMetastoreOption func(*SQLMetastore)
+
+// WithSQLMetastoreDBType configures the SQLMetastore for use with the specified
+// family of database/sql drivers such as Postgres, Oracle, or MySQL (default).
+func WithSQLMetastoreDBType(t SQLMetastoreDBType) SQLMetastoreOption {
+	return func(s *SQLMetastore) {
+		s.dbType = t
+		s.loadKeyQuery = t.q(s.loadKeyQuery)
+		s.storeKeyQuery = t.q(s.storeKeyQuery)
+		s.loadLatestQuery = t.q(s.loadLatestQuery)
+	}
+}
+
 // SQLMetastore implements the Metastore interface for a RDBMS metastore.
-// See scripts/encryption_key.sql for table structure and required
-// stored procedures.
+//
+// See https://github.com/godaddy/asherah/blob/master/docs/Metastore.md#rdbms for the
+// required table structure and other relevent information.
 type SQLMetastore struct {
 	db *sql.DB
+
+	dbType          SQLMetastoreDBType
+	loadKeyQuery    string
+	storeKeyQuery   string
+	loadLatestQuery string
 }
 
 // NewSQLMetastore returns a new SQLMetastore with the provided policy and sql connection.
-func NewSQLMetastore(dbHandle *sql.DB) *SQLMetastore {
-	return &SQLMetastore{
+func NewSQLMetastore(dbHandle *sql.DB, opts ...SQLMetastoreOption) *SQLMetastore {
+	metastore := &SQLMetastore{
 		db: dbHandle,
+
+		dbType:          DefaultDBType,
+		loadKeyQuery:    defaultLoadKeyQuery,
+		storeKeyQuery:   defaultStoreKeyQuery,
+		loadLatestQuery: defaultLoadLatestQuery,
 	}
+
+	for _, opt := range opts {
+		opt(metastore)
+	}
+
+	return metastore
 }
 
 type scanner interface {
@@ -73,14 +140,14 @@ func (s *SQLMetastore) Load(ctx context.Context, keyID string, created int64) (*
 
 	t := time.Unix(created, 0)
 
-	return parseEnvelope(s.db.QueryRowContext(ctx, loadKeyQuery, keyID, t))
+	return parseEnvelope(s.db.QueryRowContext(ctx, s.loadKeyQuery, keyID, t))
 }
 
 // LoadLatest returns the newest record matching the ID.
 func (s *SQLMetastore) LoadLatest(ctx context.Context, keyID string) (*appencryption.EnvelopeKeyRecord, error) {
 	defer loadLatestSQLTimer.UpdateSince(time.Now())
 
-	return parseEnvelope(s.db.QueryRowContext(ctx, loadLatestQuery, keyID))
+	return parseEnvelope(s.db.QueryRowContext(ctx, s.loadLatestQuery, keyID))
 }
 
 // Store attempts to insert the key into the metastore if one is not
@@ -99,7 +166,7 @@ func (s *SQLMetastore) Store(ctx context.Context, keyID string, created int64, e
 
 	createdAt := time.Unix(created, 0)
 
-	if _, err := s.db.ExecContext(ctx, storeKeyQuery, keyID, createdAt, string(bytes)); err != nil {
+	if _, err := s.db.ExecContext(ctx, s.storeKeyQuery, keyID, createdAt, string(bytes)); err != nil {
 		// Go sql package does not provide a specific integrity violation error for duplicate detection
 		// at this time, so it's treated similar to other errors to avoid error parsing.
 		// The caller is left to assume any false/error return value may be a duplicate.

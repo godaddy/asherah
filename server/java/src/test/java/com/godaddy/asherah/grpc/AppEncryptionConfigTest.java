@@ -69,7 +69,7 @@ class AppEncryptionConfigTest {
 
   @Test
   void testDynamoDbWithEndpointConfigurationSetupMetastore() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "us-west-2", false, null);
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("https://endPoint", "us-west-2", false, null);
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNotNull(metastore);
@@ -78,7 +78,7 @@ class AppEncryptionConfigTest {
 
   @Test
   void testDynamoDbWithTableNameSetupMetastore() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "us-west-2", false, "CustomTableName");
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("https://endPoint", "us-west-2", false, "CustomTableName");
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNotNull(metastore);
@@ -87,7 +87,7 @@ class AppEncryptionConfigTest {
 
   @Test
   void testDynamoDbWithEmptyTableNameSetupMetastoreReturnsNull() {
-    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("endPoint", "us-west-2", false, "");
+    DynamoDbConfig dynamoDbConfig = new DynamoDbConfig("https://endPoint", "us-west-2", false, "");
     Metastore<JSONObject> metastore = appEncryptionConfig.setupMetastore("dyNaModb", null, dynamoDbConfig);
 
     assertNull(metastore);
