@@ -105,6 +105,17 @@ if err != nil {
 metastore := persistence.NewSQLMetastore(db)
 ```
 
+You can also use the `WithSQLMetastoreDBType` option to configure the metastore for use with a
+specific type of `database/sql` driver. **This is required when using an Oracle or PostgreSQL database.**
+
+```go
+// Build the Metastore for use with a Postgres DB
+metastore := persistence.NewSQLMetastore(
+    db,
+    persistence.WithSQLMetastoreDBType(persistence.Postgres),
+)
+```
+
 #### DynamoDB Metastore
 
 ```go
