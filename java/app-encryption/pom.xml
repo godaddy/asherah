@@ -49,7 +49,7 @@
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.6</caffeine.version>
-    <checkerframework.version>3.35.0</checkerframework.version>
+    <checkerframework.version>3.36.0</checkerframework.version>
     <commons.codec.version>1.15</commons.codec.version>
     <commons.logging.version>1.2</commons.logging.version>
     <commons.text.version>1.10.0</commons.text.version>
