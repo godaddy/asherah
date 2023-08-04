@@ -9,15 +9,10 @@ No matter how you want to get involved, we ask that you first learn what’s
 expected of anyone who participates in the project by reading this Contribution
 Guidelines document.
 
-**Please Note:** GitHub is for bug reports and contributions primarily - if you
-have a support question head over to [GoDaddy's Open Source Software Slack
-workspace][slack]. You can request an invite
-[here](https://godaddy-oss-slack.herokuapp.com).
-
 ## Answering Questions
 
 One of the most important and immediate ways you can support this project is to
-answer questions on [Slack][slack] or [Github][issues]. Whether you’re helping a
+answer questions on [Github][issues]. Whether you’re helping a
 newcomer understand a feature or troubleshooting an edge case with a seasoned
 developer, your knowledge and experience with a programming language can go a
 long way to help others.
@@ -61,7 +56,7 @@ If you are new to this process, consider taking a look at the whole flow overvie
 If you are interested in making a large change and feel unsure about its overall
 effect, start with opening an Issue in the project's [Issue Tracker][issues]
 with a high-level proposal and discuss it with the core contributors through
-Github comments or in [Slack][slack]. After reaching a consensus with core
+Github comments. After reaching a consensus with core
 contributors about the change, discuss the best way to go about implementing it.
 
 ## Code Review
@@ -80,9 +75,6 @@ patches:
 willing to do the same for you.
 - Split your change into multiple smaller changes. The smaller your change,
 the higher the probability that somebody will take a quick look at it.
-- Mention the change on [Slack][slack]. If it is urgent, provide reasons why it
-is important to get this change landed. Remember that you are asking for valuable
-time from other professional developers.
 
 **Note that anyone is welcome to review and give feedback on a change, but only
 people with commit access to the repository can approve it.**
@@ -105,4 +97,3 @@ guide with respect to patterns, naming, documentation and testing.
 - [GitHub Pull Request documentation](https://help.github.com/send-pull-requests/)
 
 [issues]: https://github.com/godaddy/asherah/issues
-[slack]: https://godaddy-oss.slack.com/
