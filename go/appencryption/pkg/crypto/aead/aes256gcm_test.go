@@ -70,6 +70,10 @@ func TestAES256GCM_EncryptDecryptKey(t *testing.T) {
 }
 
 func TestAES256GCM_EncryptTooLargePayload(t *testing.T) {
+	// This test is skipped as the memory requirements are too great for our current CI workflows
+	// Temporarily remove the following for local testing, if desired.
+	t.SkipNow()
+
 	data := []byte("some secret string")
 
 	payload := make([]byte, gcmMaxDataSize+1)
