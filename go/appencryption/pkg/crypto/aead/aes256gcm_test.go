@@ -22,10 +22,10 @@ func Test_AESCipherFactory(t *testing.T) {
 	assert.NotNil(t, c)
 
 	// ensure we're using the standard gcm nonce size of 12
-	assert.Equal(t, 12, c.NonceSize())
+	assert.Equal(t, gcmNonceSize, c.NonceSize())
 
 	// Couldn't figure out how to access interface/struct method for this, but GCM uses 128-bit blocks
-	assert.Equal(t, 128/8, c.Overhead())
+	assert.Equal(t, gcmTagSize, c.Overhead())
 }
 
 func Test_AESCipherFactory_InvalidKeyLength(t *testing.T) {
@@ -67,6 +67,56 @@ func TestAES256GCM_EncryptDecryptKey(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, payload, decBytes)
+}
+
+func TestAES256GCM_EncryptTooLargePayload(t *testing.T) {
+	data := []byte("some secret string")
+
+	payload := make([]byte, gcmMaxDataSize+1)
+
+	dataPosition := len(payload) - len(data)
+	copy(payload[dataPosition:], data)
+
+	key, err := internal.GenerateKey(secretFactory, time.Now().Unix(), appencryption.AES256KeySize)
+	assert.NoError(t, err)
+
+	defer key.Close()
+
+	_, err = internal.WithKeyFunc(key, func(keyBytes []byte) ([]byte, error) {
+		return aes256GCMCrypto.Encrypt(payload, keyBytes)
+	})
+	assert.ErrorContains(t, err, "data too large for GCM")
+}
+
+func TestAES256GCM_EncryptDecryptMaxPayload(t *testing.T) {
+	// This test is skipped due to its excessive memory requirements (>100GB).
+	// Temporarily remove the following for local testing, if desired.
+	t.SkipNow()
+
+	data := []byte("some secret string")
+	payload := make([]byte, gcmMaxDataSize)
+
+	dataPosition := len(payload) - len(data)
+	copy(payload[dataPosition:], data)
+
+	key, err := internal.GenerateKey(secretFactory, time.Now().Unix(), appencryption.AES256KeySize)
+	assert.NoError(t, err)
+
+	defer key.Close()
+
+	encBytes, err := internal.WithKeyFunc(key, func(keyBytes []byte) ([]byte, error) {
+		return aes256GCMCrypto.Encrypt(payload, keyBytes)
+	})
+	assert.NoError(t, err)
+
+	payload = nil
+
+	decBytes, err := internal.WithKeyFunc(key, func(keyBytes []byte) ([]byte, error) {
+		return aes256GCMCrypto.Decrypt(encBytes, keyBytes)
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, data, decBytes[dataPosition:])
 }
 
 func TestAES256GCM_EncryptDecryptKey_VerifyOutputSize(t *testing.T) {
