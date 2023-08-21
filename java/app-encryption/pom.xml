@@ -48,12 +48,12 @@
     <aws.sdk-v2.version>2.20.69</aws.sdk-v2.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
-    <caffeine.version>3.1.6</caffeine.version>
+    <caffeine.version>3.1.7</caffeine.version>
     <checkerframework.version>3.36.0</checkerframework.version>
     <commons.codec.version>1.15</commons.codec.version>
     <commons.logging.version>1.2</commons.logging.version>
     <commons.text.version>1.10.0</commons.text.version>
-    <guava.version>32.1.0-jre</guava.version>
+    <guava.version>32.1.1-jre</guava.version>
     <jackson.version>2.14.2</jackson.version>
     <jacoco.version>0.8.10</jacoco.version>
     <json.version>20230227</json.version>
@@ -68,7 +68,7 @@
     <maven.scm.version>2.0.0</maven.scm.version>
     <maven.source.version>3.2.1</maven.source.version>
     <maven.surefire.version>3.1.0</maven.surefire.version>
-    <micrometer.version>1.11.1</micrometer.version>
+    <micrometer.version>1.11.2</micrometer.version>
     <mockito.core.version>5.1.1</mockito.core.version>
     <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>
     <securememory.version>0.1.2</securememory.version>
