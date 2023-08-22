@@ -58,8 +58,10 @@ class AppEncryptionServerTest {
 
   @Test
   void testBlockTillShutDown() throws InterruptedException, IOException {
+    server = spy(new AppEncryptionServer(sessionFactory));
+    assertNotNull(server);
+
     new Thread(() -> {
-      server = spy(new AppEncryptionServer(sessionFactory));
       try {
         server.start();
         server.blockUntilShutdown();
