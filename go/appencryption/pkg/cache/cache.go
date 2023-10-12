@@ -1,0 +1,336 @@
+// Package cache provides a cache implementation with support for multiple
+// eviction policies.
+//
+// Currently supported eviction policies:
+//   - LRU (least recently used)
+//   - LFU (least frequently used)
+//   - SLRU (segmented least recently used)
+//   - TinyLFU (tiny least frequently used)
+//
+// The cache is safe for concurrent access.
+package cache
+
+import (
+	"container/list"
+	"fmt"
+	"sync"
+)
+
+// Interface is intended to be a generic interface for cache implementations.
+type Interface[K comparable, V any] interface {
+	Get(key K) (V, bool)
+	GetOrPanic(key K) V
+	Set(key K, value V)
+	Delete(key K) bool
+	Len() int
+	Capacity() int
+	Close() error
+}
+
+// CachePolicy is an enum for the different eviction policies.
+type CachePolicy string
+
+const (
+	// LRU is the least recently used cache policy.
+	LRU CachePolicy = "lru"
+	// LFU is the least frequently used cache policy.
+	LFU CachePolicy = "lfu"
+	// SLRU is the segmented least recently used cache policy.
+	SLRU CachePolicy = "slru"
+	// TinyLFU is the tiny least frequently used cache policy.
+	TinyLFU CachePolicy = "tinylfu"
+)
+
+// String returns the string representation of the eviction policy.
+func (e CachePolicy) String() string {
+	return string(e)
+}
+
+// EvictFunc is called when an item is evicted from the cache. The key and
+// value of the evicted item are passed to the function.
+type EvictFunc[K comparable, V any] func(key K, value V)
+
+// NopEvict is a no-op EvictFunc.
+func NopEvict[K comparable, V any](K, V) {}
+
+// Option is a functional option for the cache.
+type Option[K comparable, V any] func(*cache[K, V])
+
+// WithEvictFunc sets the EvictFunc for the cache.
+func WithEvictFunc[K comparable, V any](fn EvictFunc[K, V]) Option[K, V] {
+	return func(c *cache[K, V]) {
+		c.onEvictCallback = fn
+	}
+}
+
+// WithPolicy sets the eviction policy for the cache.
+func WithPolicy[K comparable, V any](policy CachePolicy) Option[K, V] {
+	return func(c *cache[K, V]) {
+		switch policy {
+		case LRU:
+			c.policy = new(lru[K, V])
+		case LFU:
+			c.policy = new(lfu[K, V])
+		case SLRU:
+			c.policy = new(slru[K, V])
+		case TinyLFU:
+			c.policy = new(tinyLFU[K, V])
+		default:
+			panic("cache: unsupported policy " + policy.String())
+		}
+	}
+}
+
+// event is the cache event (evictItem or closeCache).
+type event int
+
+const (
+	// evictItem is sent on the events channel when an item is evicted from the cache.
+	evictItem event = iota
+	// closeCache is sent on the events channel when the cache is closed.
+	closeCache
+)
+
+type cacheItem[K comparable, V any] struct {
+	key    K
+	value  V
+	parent *list.Element // Pointer to the frequencyParent
+}
+
+// cacheEvent is the event sent on the events channel.
+type cacheEvent[K comparable, V any] struct {
+	event event
+	item  *cacheItem[K, V]
+}
+
+// policy is the generic interface for eviction policies.
+type policy[K comparable, V any] interface {
+	// init initializes the policy with the given capacity.
+	init(int)
+	// capacity returns the capacity of the policy.
+	capacity() int
+	// close removes all items from the cache, sends a close event to the event
+	// processing goroutine, and waits for it to exit.
+	close()
+	// admit is called when an item is admit to the cache.
+	admit(item *cacheItem[K, V])
+	// access is called when an item is access.
+	access(item *cacheItem[K, V])
+	// victim returns the victim item to be evicted.
+	victim() *cacheItem[K, V]
+	// remove is called when an item is remove from the cache.
+	remove(item *cacheItem[K, V])
+}
+
+// cache is the generic cache type.
+type cache[K comparable, V any] struct {
+	byKey  map[K]*cacheItem[K, V] // Hashmap containing *CacheItems for O(1) access
+	size   int                    // Current number of items in the cache
+	events chan cacheEvent[K, V]  // Channel to events when an item is evicted
+	policy policy[K, V]           // Eviction policy
+
+	mux sync.RWMutex // synchronize access to the cache
+
+	closing bool
+	closeWG sync.WaitGroup
+
+	// onEvictCallback is called when an item is evicted from the cache. The key, value,
+	// and frequency of the evicted item are passed to the function. Set to
+	// a custom function to handle evicted items. The default is a no-op.
+	onEvictCallback EvictFunc[K, V]
+}
+
+// New returns a new cache with the given capacity, eviction policy, and
+// options.
+func New[K comparable, V any](capacity int, options ...Option[K, V]) Interface[K, V] {
+	return new(cache[K, V]).init(capacity, options...)
+}
+
+// init initializes the cache with the given capacity and options. It must be
+// called before the cache can be used.
+func (c *cache[K, V]) init(capacity int, opts ...Option[K, V]) *cache[K, V] {
+	c.byKey = make(map[K]*cacheItem[K, V])
+	c.events = make(chan cacheEvent[K, V], 100)
+	c.onEvictCallback = NopEvict[K, V]
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	if c.policy == nil {
+		c.policy = new(lru[K, V])
+	}
+
+	c.policy.init(capacity)
+
+	c.closeWG.Add(1)
+	go c.processEvents()
+
+	return c
+}
+
+// processEvents processes events in a separate goroutine.
+func (c *cache[K, V]) processEvents() {
+	defer c.closeWG.Done()
+
+	for event := range c.events {
+		switch event.event {
+		case evictItem:
+			c.onEvictCallback(event.item.key, event.item.value)
+		case closeCache:
+			return
+		}
+	}
+}
+
+// Close the cache and remove all items. The cache cannot be used after it is
+// closed.
+func (c *cache[K, V]) Close() error {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// if the cache is already closed, do nothing
+	if c.closing {
+		return nil
+	}
+
+	c.closing = true
+
+	for c.size > 0 {
+		c.evict()
+	}
+
+	c.events <- cacheEvent[K, V]{event: closeCache}
+
+	c.closeWG.Wait()
+
+	close(c.events)
+
+	c.byKey = nil
+	c.events = nil
+
+	c.policy.close()
+
+	return nil
+}
+
+// Len returns the number of items in the cache.
+func (c *cache[K, V]) Len() int {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	return c.size
+}
+
+// Capacity returns the maximum number of items in the cache.
+func (c *cache[K, V]) Capacity() int {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	return c.policy.capacity()
+}
+
+// Set adds a value to the cache. If an item with the given key already exists,
+// its value is updated.
+func (c *cache[K, V]) Set(key K, value V) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if c.closing {
+		return
+	}
+
+	if item, ok := c.byKey[key]; ok {
+		item.value = value
+
+		c.policy.access(item)
+
+		return
+	}
+
+	// if the cache is full, evict the least recently used item
+	if c.size == c.policy.capacity() {
+		c.evict()
+	}
+
+	item := &cacheItem[K, V]{key: key, value: value}
+
+	c.byKey[key] = item
+
+	c.size++
+
+	c.policy.admit(item)
+}
+
+// Get returns a value from the cache. If an item with the given key does not
+// exist, the second return value will be false.
+func (c *cache[K, V]) Get(key K) (V, bool) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if c.closing {
+		return c.zeroValue(), false
+	}
+
+	item, ok := c.byKey[key]
+	if !ok {
+		return c.zeroValue(), false
+	}
+
+	c.policy.access(item)
+
+	return item.value, true
+}
+
+// GetOrPanic returns the value for the given key. If the key does not exist, a
+// panic is raised.
+func (c *cache[K, V]) GetOrPanic(key K) V {
+	if item, ok := c.Get(key); ok {
+		return item
+	}
+
+	panic(fmt.Sprintf("key does not exist: %v", key))
+}
+
+// Delete removes the given key from the cache. If the key does not exist, the
+// return value is false.
+func (c *cache[K, V]) Delete(key K) bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if c.closing {
+		return false
+	}
+
+	item, ok := c.byKey[key]
+	if !ok {
+		return false
+	}
+
+	delete(c.byKey, key)
+
+	c.size--
+
+	c.policy.remove(item)
+
+	return true
+}
+
+// zeroValue returns the zero value for type V.
+func (c *cache[K, V]) zeroValue() V {
+	var v V
+	return v
+}
+
+// evict removes an item from the cache and sends an evict event.
+func (c *cache[K, V]) evict() {
+	item := c.policy.victim()
+
+	delete(c.byKey, item.key)
+
+	c.size--
+
+	c.policy.remove(item)
+
+	c.events <- cacheEvent[K, V]{event: evictItem, item: item}
+}
