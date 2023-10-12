@@ -12,3 +12,10 @@ cmd/example/log.log
 hack
 .DS_Store
 **/checkstyle-result.xml
+
+integrationtest/traces/data/*.dat
+integrationtest/traces/data/*.bz2
+integrationtest/traces/data/*.gz
+integrationtest/traces/data/*.xz
+integrationtest/traces/data/*.tgz
+integrationtest/traces/out/
