@@ -9,6 +9,7 @@ const (
 	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
 	DefaultRevokedCheckInterval = time.Minute * 60
 	DefaultCreateDatePrecision  = time.Minute
+	DefaultKeyCacheMaxSize      = 1000
 	DefaultSessionCacheMaxSize  = 1000
 	DefaultSessionCacheDuration = time.Hour * 2
 	DefaultSessionCacheEngine   = "default"
@@ -27,8 +28,26 @@ type CryptoPolicy struct {
 	CreateDatePrecision time.Duration
 	// CacheIntermediateKeys determines whether Intermediate Keys will be cached.
 	CacheIntermediateKeys bool
+	// IntermediateKeyCacheMaxSize controls the maximum size of the cache if intermediate key caching is enabled.
+	IntermediateKeyCacheMaxSize int
+	// IntermediateKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
+	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "lru".
+	IntermediateKeyCacheEvictionPolicy string
+	// SharedIntermediateKeyCache determines whether Intermediate Keys will use a single shared cache. If enabled,
+	// Intermediate Keys will share a single cache across all sessions for a given factory.
+	// This option is useful if you have a large number of sessions and want to reduce the memory footprint of the
+	// cache.
+	//
+	// This option is ignored if CacheIntermediateKeys is disabled.
+	SharedIntermediateKeyCache bool
 	// CacheSystemKeys determines whether System Keys will be cached.
 	CacheSystemKeys bool
+	// SystemKeyCacheMaxSize controls the maximum size of the cache if system key caching is enabled. If
+	// SharedKeyCache is enabled, this value will determine the maximum size of the shared cache.
+	SystemKeyCacheMaxSize int
+	// SystemKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
+	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "lru".
+	SystemKeyCacheEvictionPolicy string
 	// CacheSessions determines whether sessions will be cached.
 	CacheSessions bool
 	// SessionCacheMaxSize controls the maximum size of the cache if session caching is enabled.
@@ -42,6 +61,9 @@ type CryptoPolicy struct {
 	// Deprecated: multiple cache implementations are no longer supported and this option will be removed
 	// in a future release.
 	SessionCacheEngine string
+	// SessionCacheEvictionPolicy controls the eviction policy to use for the shared cache.
+	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "slru".
+	SessionCacheEvictionPolicy string
 }
 
 // PolicyOption is used to configure a CryptoPolicy.
@@ -66,6 +88,14 @@ func WithNoCache() PolicyOption {
 	return func(policy *CryptoPolicy) {
 		policy.CacheSystemKeys = false
 		policy.CacheIntermediateKeys = false
+	}
+}
+
+// WithSharedKeyCache enables a shared cache for both System and Intermediate Keys with the provided capacity.
+func WithSharedKeyCache(capacity int) PolicyOption {
+	return func(policy *CryptoPolicy) {
+		policy.SharedIntermediateKeyCache = true
+		policy.SystemKeyCacheMaxSize = capacity
 	}
 }
 
@@ -106,15 +136,18 @@ func WithSessionCacheEngine(engine string) PolicyOption {
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
-		ExpireKeyAfter:        DefaultExpireAfter,
-		RevokeCheckInterval:   DefaultRevokedCheckInterval,
-		CreateDatePrecision:   DefaultCreateDatePrecision,
-		CacheSystemKeys:       true,
-		CacheIntermediateKeys: true,
-		CacheSessions:         false,
-		SessionCacheMaxSize:   DefaultSessionCacheMaxSize,
-		SessionCacheDuration:  DefaultSessionCacheDuration,
-		SessionCacheEngine:    DefaultSessionCacheEngine,
+		ExpireKeyAfter:              DefaultExpireAfter,
+		RevokeCheckInterval:         DefaultRevokedCheckInterval,
+		CreateDatePrecision:         DefaultCreateDatePrecision,
+		CacheSystemKeys:             true,
+		CacheIntermediateKeys:       true,
+		IntermediateKeyCacheMaxSize: DefaultKeyCacheMaxSize,
+		SystemKeyCacheMaxSize:       DefaultKeyCacheMaxSize,
+		SharedIntermediateKeyCache:  false,
+		CacheSessions:               false,
+		SessionCacheMaxSize:         DefaultSessionCacheMaxSize,
+		SessionCacheDuration:        DefaultSessionCacheDuration,
+		SessionCacheEngine:          DefaultSessionCacheEngine,
 	}
 
 	for _, opt := range opts {
@@ -122,12 +155,6 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	}
 
 	return policy
-}
-
-// isKeyExpired checks if the key's created timestamp is older than the
-// allowed number of days.
-func isKeyExpired(created int64, expireAfter time.Duration) bool {
-	return time.Now().After(time.Unix(created, 0).Add(expireAfter))
 }
 
 // newKeyTimestamp returns a unix timestamp in seconds truncated to the provided Duration.

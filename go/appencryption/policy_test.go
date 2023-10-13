@@ -17,6 +17,9 @@ func Test_NewCryptoPolicy_WithDefaults(t *testing.T) {
 	assert.Equal(t, DefaultCreateDatePrecision, p.CreateDatePrecision)
 	assert.True(t, p.CacheSystemKeys)
 	assert.True(t, p.CacheIntermediateKeys)
+	assert.Equal(t, DefaultKeyCacheMaxSize, p.SystemKeyCacheMaxSize)
+	assert.Equal(t, DefaultKeyCacheMaxSize, p.IntermediateKeyCacheMaxSize)
+	assert.False(t, p.SharedIntermediateKeyCache)
 	assert.False(t, p.CacheSessions)
 	assert.Equal(t, DefaultSessionCacheMaxSize, p.SessionCacheMaxSize)
 	assert.Equal(t, DefaultSessionCacheDuration, p.SessionCacheDuration)
@@ -44,6 +47,36 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 	assert.Equal(t, expireAfterDuration, policy.ExpireKeyAfter)
 	assert.False(t, policy.CacheSystemKeys)
 	assert.False(t, policy.CacheIntermediateKeys)
+	assert.True(t, policy.CacheSessions)
+	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
+	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
+	assert.Equal(t, sessionCacheEngine, policy.SessionCacheEngine)
+}
+
+func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
+	revokeCheckInterval := time.Second * 156
+	expireAfterDuration := time.Second * 100
+	keyCacheMaxSize := 10
+	sessionCacheMaxSize := 42
+	sessionCacheDuration := time.Second * 42
+	sessionCacheEngine := "deprecated"
+
+	policy := NewCryptoPolicy(
+		WithRevokeCheckInterval(revokeCheckInterval),
+		WithExpireAfterDuration(expireAfterDuration),
+		WithSharedKeyCache(keyCacheMaxSize),
+		WithSessionCache(),
+		WithSessionCacheMaxSize(sessionCacheMaxSize),
+		WithSessionCacheDuration(sessionCacheDuration),
+		WithSessionCacheEngine(sessionCacheEngine),
+	)
+
+	assert.Equal(t, revokeCheckInterval, policy.RevokeCheckInterval)
+	assert.Equal(t, expireAfterDuration, policy.ExpireKeyAfter)
+	assert.True(t, policy.CacheSystemKeys)
+	assert.True(t, policy.CacheIntermediateKeys)
+	assert.True(t, policy.SharedIntermediateKeyCache)
+	assert.Equal(t, keyCacheMaxSize, policy.SystemKeyCacheMaxSize)
 	assert.True(t, policy.CacheSessions)
 	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
 	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
@@ -78,7 +111,7 @@ func Test_IsKeyExpired(t *testing.T) {
 
 			key := internal.NewCryptoKeyForTest(tt.CreatedAt.Unix(), false)
 
-			verify.Equal(tt.Expect, isKeyExpired(key.Created(), time.Hour*24*time.Duration(tt.ExpireAfterDays)))
+			verify.Equal(tt.Expect, internal.IsKeyExpired(key.Created(), time.Hour*24*time.Duration(tt.ExpireAfterDays)))
 		})
 	}
 }

@@ -6,20 +6,58 @@ import (
 	"time"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/appencryption/pkg/cache"
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
+
+// cachedCryptoKey is a wrapper around a CryptoKey that tracks concurrent access.
+type cachedCryptoKey struct {
+	*internal.CryptoKey
+
+	rw   sync.RWMutex // protects concurrent access to the key's reference count
+	refs int          // number of references to this key
+}
+
+// Close decrements the reference count for this key. If the reference count
+// reaches zero, the underlying key is closed.
+func (c *cachedCryptoKey) Close() {
+	c.rw.Lock()
+	defer c.rw.Unlock()
+
+	c.refs--
+
+	if c.refs > 0 {
+		return
+	}
+
+	c.CryptoKey.Close()
+}
+
+// increment the reference count for this key.
+func (c *cachedCryptoKey) increment() {
+	c.rw.Lock()
+	defer c.rw.Unlock()
+
+	c.refs++
+}
 
 // cacheEntry contains a key and the time it was loaded from the metastore.
 type cacheEntry struct {
 	loadedAt time.Time
-	key      *internal.CryptoKey
+	key      *cachedCryptoKey
 }
 
 // newCacheEntry returns a cacheEntry with the current time and key.
 func newCacheEntry(k *internal.CryptoKey) cacheEntry {
 	return cacheEntry{
 		loadedAt: time.Now(),
-		key:      k,
+		key: &cachedCryptoKey{
+			CryptoKey: k,
+
+			// initialize with a reference count of 1 to represent the
+			// reference held by the cache
+			refs: 1,
+		},
 	}
 }
 
@@ -29,56 +67,88 @@ func cacheKey(id string, create int64) string {
 	return fmt.Sprintf("%s-%d", id, create)
 }
 
-// keyLoaderFunc is an adapter to allow the use of ordinary functions as key loaders.
-// If f is a function with the appropriate signature, keyLoaderFunc(f) is a keyLoader
-// that calls f.
-type keyLoaderFunc func() (*internal.CryptoKey, error)
-
-// Load calls f().
-func (f keyLoaderFunc) Load() (*internal.CryptoKey, error) {
-	return f()
-}
-
-// keyLoader is used by cache objects to retrieve keys on an as-needed basis.
-type keyLoader interface {
-	Load() (*internal.CryptoKey, error)
-}
-
-// keyReloader extends keyLoader by adding the ability to inspect loaded keys
-// and reload them when needed
-type keyReloader interface {
-	keyLoader
-
-	// IsInvalid returns true if the provided key is no longer valid
-	IsInvalid(*internal.CryptoKey) bool
-}
-
-// cache contains cached keys for reuse.
-type cache interface {
-	GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error)
-	GetOrLoadLatest(id string, loader keyLoader) (*internal.CryptoKey, error)
+// keyCacher contains cached keys for reuse.
+type keyCacher interface {
+	GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error)
+	GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error)
 	Close() error
 }
 
 // Verify keyCache implements the cache interface.
-var _ cache = (*keyCache)(nil)
+var _ keyCacher = (*keyCache)(nil)
 
 // keyCache is used to persist session based keys and destroys them on a call to close.
 type keyCache struct {
-	once   sync.Once
-	rw     sync.RWMutex
 	policy *CryptoPolicy
-	keys   map[string]cacheEntry
+
+	keys cache.Interface[string, cacheEntry]
+	rw   sync.RWMutex // protects concurrent access to the cache
+
+	latest map[string]KeyMeta
+
+	cacheType cacheKeyType
 }
 
-// newKeyCache constructs a cache object that is ready to use.
-func newKeyCache(policy *CryptoPolicy) *keyCache {
-	keys := make(map[string]cacheEntry)
+// cacheKeyType is used to identify the type of key cache.
+type cacheKeyType int
+
+// String returns a string representation of the cacheKeyType.
+func (t cacheKeyType) String() string {
+	switch t {
+	case CacheTypeSystemKeys:
+		return "system"
+	case CacheTypeIntermediateKeys:
+		return "intermediate"
+	default:
+		return "unknown"
+	}
+}
+
+const (
+	// CacheTypeSystemKeys is used to cache system keys.
+	CacheTypeSystemKeys cacheKeyType = iota
+	// CacheTypeIntermediateKeys is used to cache intermediate keys.
+	CacheTypeIntermediateKeys
+)
+
+// newKeyCacheWithCacheOptions constructs a cache object that is ready to use.
+func newKeyCacheWithCacheOptions(t cacheKeyType, policy *CryptoPolicy, opts ...cache.Option[string, cacheEntry]) *keyCache {
+	cacheMaxSize := DefaultKeyCacheMaxSize
+	cachePolicy := ""
+
+	switch t {
+	case CacheTypeSystemKeys:
+		cacheMaxSize = policy.SystemKeyCacheMaxSize
+		cachePolicy = policy.SystemKeyCacheEvictionPolicy
+	case CacheTypeIntermediateKeys:
+		cacheMaxSize = policy.IntermediateKeyCacheMaxSize
+		cachePolicy = policy.IntermediateKeyCacheEvictionPolicy
+	}
+
+	if cachePolicy != "" {
+		opts = append(opts, cache.WithPolicy[string, cacheEntry](cache.CachePolicy(cachePolicy)))
+	}
+
+	keys := cache.New(cacheMaxSize, opts...)
 
 	return &keyCache{
 		policy: policy,
 		keys:   keys,
+		latest: make(map[string]KeyMeta),
+
+		cacheType: t,
 	}
+}
+
+// newKeyCache constructs a cache object that is ready to use.
+func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
+	onEvict := func(key string, value cacheEntry) {
+		log.Debugf("%s eviction -- key: %s, id: %s\n", c, value.key, key)
+
+		value.key.Close()
+	}
+
+	return newKeyCacheWithCacheOptions(t, policy, cache.WithEvictFunc[string, cacheEntry](onEvict))
 }
 
 // isReloadRequired returns true if the check interval has elapsed
@@ -93,121 +163,145 @@ func isReloadRequired(entry cacheEntry, checkInterval time.Duration) bool {
 }
 
 // GetOrLoad returns a key from the cache if it's already been loaded. If the key
-// is not present in the cache it will retrieve the key using the provided keyLoader
+// is not present in the cache it will retrieve the key using the provided loader
 // and store the key if an error is not returned.
-func (c *keyCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
-	// get with "light" lock
-	c.rw.RLock()
-	k, ok := c.get(id)
-	c.rw.RUnlock()
-
-	if ok {
-		return k, nil
-	}
-
-	// load with heavy lock
+func (c *keyCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
 	c.rw.Lock()
 	defer c.rw.Unlock()
-	// exit early if the key doesn't need to be reloaded just in case it has been loaded by rw lock in front of us
-	if k, ok := c.get(id); ok {
-		return k, nil
+
+	if k, ok := c.getFresh(id); ok {
+		return tracked(k), nil
 	}
 
-	return c.load(id, loader)
+	k, err := c.load(id, loader)
+	if err != nil {
+		return nil, err
+	}
+
+	return tracked(k), nil
 }
 
-// get returns a key from the cache if present AND fresh.
+// tracked increments the reference count for the provided key, then returns it.
+func tracked(key *cachedCryptoKey) *cachedCryptoKey {
+	key.increment()
+	return key
+}
+
+// getFresh returns a key from the cache if present AND fresh.
 // A cached value is considered stale if its time in cache
 // has exceeded the RevokeCheckInterval.
 // The second return value indicates the successful retrieval of a
 // fresh key.
-func (c *keyCache) get(id KeyMeta) (*internal.CryptoKey, bool) {
-	key := cacheKey(id.ID, id.Created)
-
-	if e, ok := c.read(key); ok && !isReloadRequired(e, c.policy.RevokeCheckInterval) {
+func (c *keyCache) getFresh(meta KeyMeta) (*cachedCryptoKey, bool) {
+	if e, ok := c.read(meta); ok && !isReloadRequired(e, c.policy.RevokeCheckInterval) {
 		return e.key, true
+	} else if ok {
+		log.Debugf("%s stale -- id: %s-%d\n", c, meta.ID, e.key.Created())
+		return e.key, false
 	}
 
 	return nil, false
 }
 
-// load returns a key from the cache if it's already been loaded. If the key is
-// not present in the cache, or the cached entry needs to be reloaded, it will
-// retrieve the key using the provided keyLoader and cache the key for future use.
-// load maintains the latest entry for each distinct ID which can be accessed using
-// id.Created == 0.
-func (c *keyCache) load(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
-	key := cacheKey(id.ID, id.Created)
-
-	k, err := loader.Load()
+// load retrieves a key using the provided loader. If the key is present in the cache
+// it will be updated with the latest revocation status and last loaded time. Otherwise
+// a new cache entry will be created and stored in the cache.
+//
+// load maintains the latest entry for each distinct KeyMeta.ID which can be accessed using
+// KeyMeta.Created == 0.
+func (c *keyCache) load(meta KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
+	k, err := loader(meta)
 	if err != nil {
 		return nil, err
 	}
 
-	e, ok := c.read(key)
-	if ok && e.key.Created() == k.Created() {
+	e, ok := c.read(meta)
+
+	switch {
+	case ok:
 		// existing key in cache. update revoked status and last loaded time and close key
 		// we just loaded since we don't need it
 		e.key.SetRevoked(k.Revoked())
 		e.loadedAt = time.Now()
-		c.write(key, e)
 
 		k.Close()
-	} else {
+	default:
 		// first time loading this key into cache or we have an ID-only key with mismatched
 		// create timestamps
 		e = newCacheEntry(k)
-		c.write(key, e)
 	}
 
-	latestKey := cacheKey(id.ID, 0)
-	if key == latestKey {
-		// we've loaded a key using ID-only, ensure we've got a cache entry with a fully
-		// qualified cache key
-		c.write(cacheKey(id.ID, k.Created()), e)
-	} else if latest, ok := c.read(latestKey); !ok || latest.key.Created() < k.Created() {
-		// we've loaded a key using a fully qualified cache key and the ID-only entry is
-		// either missing or stale
-		c.write(latestKey, e)
-	}
+	c.write(meta, e)
 
 	return e.key, nil
 }
 
 // read retrieves the entry from the cache matching the provided ID if present. The second
 // return value indicates whether or not the key was present in the cache.
-func (c *keyCache) read(id string) (cacheEntry, bool) {
-	e, ok := c.keys[id]
+func (c *keyCache) read(meta KeyMeta) (cacheEntry, bool) {
+	id := cacheKey(meta.ID, meta.Created)
 
+	if meta.IsLatest() {
+		if latest, ok := c.getLatestKeyMeta(meta.ID); ok {
+			id = cacheKey(latest.ID, latest.Created)
+		}
+	}
+
+	e, ok := c.keys.Get(id)
 	if !ok {
 		log.Debugf("%s miss -- id: %s\n", c, id)
+	} else {
+		log.Debugf("%s hit -- id: %s\n", c, id)
 	}
 
 	return e, ok
 }
 
+// getLatestKeyMeta returns the KeyMeta for the latest key for the provided ID.
+// The second return value indicates whether or not the key was present in the cache.
+func (c *keyCache) getLatestKeyMeta(id string) (KeyMeta, bool) {
+	latest, ok := c.latest[cacheKey(id, 0)]
+
+	return latest, ok
+}
+
+// mapLatestKeyMeta maps the provided latest KeyMeta to the provided ID.
+func (c *keyCache) mapLatestKeyMeta(id string, latest KeyMeta) {
+	c.latest[cacheKey(id, 0)] = latest
+}
+
 // write entry e to the cache using id as the key.
-func (c *keyCache) write(id string, e cacheEntry) {
-	if existing, ok := c.keys[id]; ok {
+func (c *keyCache) write(meta KeyMeta, e cacheEntry) {
+	if meta.IsLatest() {
+		meta = KeyMeta{ID: meta.ID, Created: e.key.Created()}
+
+		c.mapLatestKeyMeta(meta.ID, meta)
+	} else if latest, ok := c.getLatestKeyMeta(meta.ID); !ok || latest.Created < e.key.Created() {
+		c.mapLatestKeyMeta(meta.ID, meta)
+	}
+
+	id := cacheKey(meta.ID, meta.Created)
+
+	if existing, ok := c.keys.Get(id); ok {
 		log.Debugf("%s update -> old: %s, new: %s, id: %s\n", c, existing.key, e.key, id)
 	}
 
 	log.Debugf("%s write -> key: %s, id: %s\n", c, e.key, id)
-	c.keys[id] = e
+	c.keys.Set(id, e)
 }
 
 // GetOrLoadLatest returns the latest key from the cache matching the provided ID
 // if it's already been loaded. If the key is not present in the cache it will
-// retrieve the key using the provided KeyLoader and store the key if an error is not returned.
-// If the provided loader implements the optional keyReloader interface then retrieved keys
-// will be inspected for validity and reloaded if necessary.
-func (c *keyCache) GetOrLoadLatest(id string, loader keyLoader) (*internal.CryptoKey, error) {
+// retrieve the key using the provided KeyLoader and store the key if successful.
+// In the event that the cached or loaded key is invalid (see [keyCache.IsInvalid]),
+// the key will be reloaded and the cache updated.
+func (c *keyCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
 	c.rw.Lock()
 	defer c.rw.Unlock()
 
 	meta := KeyMeta{ID: id}
 
-	key, ok := c.get(meta)
+	key, ok := c.getFresh(meta)
 	if !ok {
 		log.Debugf("%s.GetOrLoadLatest get miss -- id: %s\n", c, id)
 
@@ -219,64 +313,68 @@ func (c *keyCache) GetOrLoadLatest(id string, loader keyLoader) (*internal.Crypt
 		}
 	}
 
-	if reloader, ok := loader.(keyReloader); ok && reloader.IsInvalid(key) {
-		reloaded, ok := loader.Load()
+	if c.IsInvalid(key.CryptoKey) {
+		reloaded, err := loader(meta)
+		if err != nil {
+			return nil, err
+		}
+
 		log.Debugf("%s.GetOrLoadLatest reload -- invalid: %s, new: %s, id: %s\n", c, key, reloaded, id)
 
 		e := newCacheEntry(reloaded)
 
-		// update latest
-		latest := cacheKey(id, 0)
-		c.write(latest, e)
-
 		// ensure we've got a cache entry with a fully qualified cache key
-		c.write(cacheKey(id, reloaded.Created()), e)
+		c.write(KeyMeta{ID: id, Created: reloaded.Created()}, e)
 
-		return reloaded, ok
+		return tracked(e.key), nil
 	}
 
-	return key, nil
+	return tracked(key), nil
+}
+
+// IsInvalid returns true if the provided key is no longer valid.
+func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
+	return internal.IsKeyInvalid(key, c.policy.ExpireKeyAfter)
 }
 
 // Close frees all memory locked by the keys in this cache.
 // It MUST be called after a session is complete to avoid
 // running into MEMLOCK limits.
 func (c *keyCache) Close() error {
-	c.once.Do(c.close)
-
-	return nil
+	return c.keys.Close()
 }
 
-func (c *keyCache) close() {
-	c.rw.Lock()
-	defer c.rw.Unlock()
-
-	for k := range c.keys {
-		c.keys[k].key.Close()
-	}
-}
-
+// String returns a string representation of this cache.
 func (c *keyCache) String() string {
 	return fmt.Sprintf("keyCache(%p)", c)
 }
 
 // Verify neverCache implements the cache interface.
-var _ cache = (*neverCache)(nil)
+var _ keyCacher = (*neverCache)(nil)
 
-type neverCache struct {
-}
+type neverCache struct{}
 
 // GetOrLoad always executes the provided function to load the value. It never actually caches.
-func (neverCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
-	return loader.Load()
+func (neverCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
+	k, err := loader(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cachedCryptoKey{CryptoKey: k}, nil
 }
 
 // GetOrLoadLatest always executes the provided function to load the latest value. It never actually caches.
-func (neverCache) GetOrLoadLatest(id string, loader keyLoader) (*internal.CryptoKey, error) {
-	return loader.Load()
+func (neverCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
+	k, err := loader(KeyMeta{ID: id})
+	if err != nil {
+		return nil, err
+	}
+
+	return &cachedCryptoKey{CryptoKey: k}, nil
 }
 
-// Close is a no-op function to satisfy the cache interface
+// Close is a no-op function to satisfy the cache interface.
 func (neverCache) Close() error {
 	return nil
 }

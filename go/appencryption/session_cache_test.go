@@ -96,7 +96,7 @@ func TestNewSessionCache(t *testing.T) {
 		return &Session{}, nil
 	}
 
-	cache := newSessionCache(loader, NewCryptoPolicy())
+	cache := newMangoSessionCache(loader, NewCryptoPolicy())
 	defer cache.Close()
 
 	require.NotNil(t, cache)
@@ -109,7 +109,7 @@ func TestSessionCacheGetUsesLoader(t *testing.T) {
 		return session, nil
 	}
 
-	cache := newSessionCache(loader, NewCryptoPolicy())
+	cache := newMangoSessionCache(loader, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -129,7 +129,7 @@ func TestSessionCacheGetDoesNotUseLoaderOnHit(t *testing.T) {
 		return session, nil
 	}
 
-	cache := newSessionCache(loader, NewCryptoPolicy())
+	cache := newMangoSessionCache(loader, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -155,7 +155,7 @@ func TestSessionCacheGetReturnLoaderError(t *testing.T) {
 		return nil, assert.AnError
 	}
 
-	cache := newSessionCache(loader, NewCryptoPolicy())
+	cache := newMangoSessionCache(loader, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -169,7 +169,7 @@ func TestSessionCacheCount(t *testing.T) {
 	totalSessions := 10
 	b := newSessionBucket()
 
-	cache := newSessionCache(b.load, NewCryptoPolicy())
+	cache := newMangoSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -189,7 +189,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	policy := NewCryptoPolicy()
 	policy.SessionCacheMaxSize = maxSessions
 
-	cache := newSessionCache(b.load, policy)
+	cache := newMangoSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -235,7 +235,7 @@ func TestSessionCacheDuration(t *testing.T) {
 	policy := NewCryptoPolicy()
 	policy.SessionCacheDuration = ttl
 
-	cache := newSessionCache(b.load, policy)
+	cache := newMangoSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -270,7 +270,7 @@ func (t *testLogger) Debugf(f string, v ...interface{}) {
 func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 	b := newSessionBucket()
 
-	cache := newSessionCache(b.load, NewCryptoPolicy())
+	cache := newMangoSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	l := new(testLogger)
@@ -291,7 +291,7 @@ func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 	b := newSessionBucket()
 
-	cache := newSessionCache(b.load, NewCryptoPolicy())
+	cache := newMangoSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	s, err := cache.Get("my-item")
@@ -322,7 +322,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 
 	var firstBatch [max]*Session
 
-	cache := newSessionCache(b.load, policy)
+	cache := newMangoSessionCache(b.load, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -364,7 +364,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 func TestSharedSessionCloseDoesNotCloseUnderlyingSession(t *testing.T) {
 	b := newSessionBucket()
 
-	cache := newSessionCache(b.load, NewCryptoPolicy())
+	cache := newMangoSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
 
 	defer cache.Close()

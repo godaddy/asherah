@@ -39,6 +39,8 @@ const (
 	SLRU CachePolicy = "slru"
 	// TinyLFU is the tiny least frequently used cache policy.
 	TinyLFU CachePolicy = "tinylfu"
+	// DefaultCachePolicy is the default cache policy.
+	DefaultCachePolicy = LRU
 )
 
 // String returns the string representation of the eviction policy.
@@ -76,7 +78,7 @@ func WithPolicy[K comparable, V any](policy CachePolicy) Option[K, V] {
 		case TinyLFU:
 			c.policy = new(tinyLFU[K, V])
 		default:
-			panic("cache: unsupported policy " + policy.String())
+			panic(fmt.Sprintf("cache: unsupported policy \"%s\"", policy.String()))
 		}
 	}
 }
@@ -140,8 +142,7 @@ type cache[K comparable, V any] struct {
 	onEvictCallback EvictFunc[K, V]
 }
 
-// New returns a new cache with the given capacity, eviction policy, and
-// options.
+// New returns a new cache with the given capacity and options.
 func New[K comparable, V any](capacity int, options ...Option[K, V]) Interface[K, V] {
 	return new(cache[K, V]).init(capacity, options...)
 }

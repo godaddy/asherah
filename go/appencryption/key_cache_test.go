@@ -10,7 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -30,7 +29,7 @@ type CacheTestSuite struct {
 
 func (suite *CacheTestSuite) SetupTest() {
 	suite.policy = NewCryptoPolicy()
-	suite.keyCache = newKeyCache(suite.policy)
+	suite.keyCache = newKeyCache(CacheTypeIntermediateKeys, suite.policy)
 	suite.created = time.Now().Unix()
 }
 
@@ -46,13 +45,14 @@ func (suite *CacheTestSuite) Test_CacheKey() {
 }
 
 func (suite *CacheTestSuite) Test_NewKeyCache() {
-	cache := newKeyCache(NewCryptoPolicy())
+	cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 	defer cache.Close()
 
 	assert.NotNil(suite.T(), cache)
 	assert.IsType(suite.T(), new(keyCache), cache)
 	assert.NotNil(suite.T(), cache.keys)
 	assert.NotNil(suite.T(), cache.policy)
+	assert.Equal(suite.T(), DefaultKeyCacheMaxSize, cache.keys.Capacity())
 }
 
 func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalNotElapsed() {
@@ -60,7 +60,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalNotElapsed() {
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
 			loadedAt: time.Now(),
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 		}
 
 		defer key.Close()
@@ -74,7 +74,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalElapsed() {
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
 			loadedAt: time.Now().Add(-2 * time.Hour),
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 		}
 
 		defer key.Close()
@@ -89,7 +89,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithRevoked() {
 		entry := cacheEntry{
 			// Note this loadedAt would normally require reload
 			loadedAt: time.Now().Add(-2 * time.Hour),
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 		}
 
 		defer key.Close()
@@ -99,16 +99,16 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithRevoked() {
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyNoReloadRequired() {
-	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
+	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
 		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 
 		return cryptoKey, err
-	}))
+	})
 	assert.NoError(suite.T(), err)
 
-	key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		return nil, errors.New("should not be called")
-	}))
+	})
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
@@ -116,84 +116,86 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyNoReloadRequire
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithEmptyCache() {
-	key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
-		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
-		if err != nil {
-			return nil, err
-		}
-		return cryptoKey, nil
-	}))
+	meta := KeyMeta{ID: testKey, Created: suite.created}
+	key, err := suite.keyCache.GetOrLoad(meta, func(_ KeyMeta) (*internal.CryptoKey, error) {
+		return internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
+	})
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
 	assert.Equal(suite.T(), suite.created, key.Created())
-	assert.Equal(suite.T(), suite.created, suite.keyCache.keys[cacheKey(testKey, 0)].key.Created())
+
+	latestKey, _ := suite.keyCache.getLatestKeyMeta(testKey)
+	assert.Equal(suite.T(), latestKey, meta)
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_DoesNotSetKeyOnError() {
-	key, err := suite.keyCache.GetOrLoad(KeyMeta{}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := suite.keyCache.GetOrLoad(KeyMeta{}, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		return new(internal.CryptoKey), errors.New("error")
-	}))
+	})
 
 	if assert.Error(suite.T(), err) {
 		assert.Nil(suite.T(), key)
-		assert.Empty(suite.T(), suite.keyCache.keys)
+		assert.Zero(suite.T(), suite.keyCache.keys.Len())
 	}
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithOldCachedKeyLoadNewerUpdatesLatest() {
 	olderCreated := time.Now().Add(-(time.Hour * 24)).Unix()
 
-	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, olderCreated}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
+	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, olderCreated}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
 		cryptoKey, err := internal.NewCryptoKey(secretFactory, olderCreated, false, []byte("blah"))
 		if err != nil {
 			return nil, err
 		}
 		return cryptoKey, nil
-	}))
+	})
 	assert.NoError(suite.T(), err)
 
-	key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		cryptoKey, err2 := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("newerblah"))
 		if err2 != nil {
 			return nil, err2
 		}
 		return cryptoKey, nil
-	}))
+	})
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
 	assert.Equal(suite.T(), suite.created, key.Created())
-	assert.Equal(suite.T(), suite.created, suite.keyCache.keys[cacheKey(testKey, 0)].key.Created())
-	assert.Equal(suite.T(), suite.created, suite.keyCache.keys[cacheKey(testKey, suite.created)].key.Created())
-	assert.Equal(suite.T(), olderCreated, suite.keyCache.keys[cacheKey(testKey, olderCreated)].key.Created())
+
+	latestKey, _ := suite.keyCache.getLatestKeyMeta(testKey)
+	assert.Equal(suite.T(), latestKey, KeyMeta{ID: testKey, Created: key.Created()})
+
+	assert.Equal(suite.T(), suite.created, suite.keyCache.keys.GetOrPanic(cacheKey(testKey, suite.created)).key.Created())
+	assert.Equal(suite.T(), olderCreated, suite.keyCache.keys.GetOrPanic(cacheKey(testKey, olderCreated)).key.Created())
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredAndNowRevoked() {
 	key, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 			loadedAt: time.Now().Add(-2 * suite.policy.RevokeCheckInterval),
 		}
 
-		suite.keyCache.keys[cacheKey(testKey, suite.created)] = entry
-		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+		suite.keyCache.keys.Set(cacheKey(testKey, suite.created), entry)
+		suite.keyCache.keys.Set(cacheKey(testKey, 0), entry)
 
 		revokedKey, e := internal.NewCryptoKey(secretFactory, suite.created, true, []byte("blah"))
 		if assert.NoError(suite.T(), e) {
-			key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+			key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, func(_ KeyMeta) (*internal.CryptoKey, error) {
 				return revokedKey, nil
-			}))
+			})
 
 			assert.NoError(suite.T(), err)
 			assert.NotNil(suite.T(), key)
 			assert.Equal(suite.T(), suite.created, key.Created())
 			assert.True(suite.T(), key.Revoked())
-			assert.True(suite.T(), suite.keyCache.keys[cacheKey(testKey, 0)].key.Revoked())
+			assert.True(suite.T(), suite.keyCache.keys.GetOrPanic(cacheKey(testKey, 0)).key.Revoked())
 			// Verify we closed the new one we loaded and kept the cached one open
 			assert.True(suite.T(), revokedKey.IsClosed())
-			assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, suite.created)].key.IsClosed())
+			assert.False(suite.T(), suite.keyCache.keys.GetOrPanic(cacheKey(testKey, suite.created)).key.IsClosed())
 		}
 	}
 }
@@ -204,44 +206,44 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredB
 
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 			loadedAt: time.Unix(created, 0),
 		}
 
-		suite.keyCache.keys[cacheKey(testKey, created)] = entry
-		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+		suite.keyCache.keys.Set(cacheKey(testKey, created), entry)
+		suite.keyCache.keys.Set(cacheKey(testKey, 0), entry)
 
 		reloadedKey, e := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
 		assert.NoError(suite.T(), e)
 
-		key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+		key, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (*internal.CryptoKey, error) {
 			return reloadedKey, nil
-		}))
+		})
 
 		assert.NoError(suite.T(), err)
 		assert.NotNil(suite.T(), key)
 		assert.Equal(suite.T(), created, key.Created())
-		assert.Greater(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].loadedAt.Unix(), created)
+		assert.Greater(suite.T(), suite.keyCache.keys.GetOrPanic(cacheKey(testKey, created)).loadedAt.Unix(), created)
 
 		// Verify we closed the new one we loaded and kept the cached one open
 		assert.True(suite.T(), reloadedKey.IsClosed())
-		assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, created)].key.IsClosed())
+		assert.False(suite.T(), suite.keyCache.keys.GetOrPanic(cacheKey(testKey, created)).key.IsClosed())
 	}
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyNoReloadRequired() {
-	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
+	_, err := suite.keyCache.GetOrLoad(KeyMeta{testKey, suite.created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
 		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 		if err != nil {
 			return nil, err
 		}
 		return cryptoKey, nil
-	}))
+	})
 	assert.NoError(suite.T(), err)
 
-	key, err := suite.keyCache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := suite.keyCache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		return nil, errors.New("should not be called")
-	}))
+	})
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
@@ -249,110 +251,95 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyNoReloadR
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithEmptyCache() {
-	key, err := suite.keyCache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
-		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
-		if err != nil {
-			return nil, err
-		}
-		return cryptoKey, nil
-	}))
+	key, err := suite.keyCache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
+		return internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
+	})
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
 	assert.Equal(suite.T(), suite.created, key.Created())
-	assert.Equal(suite.T(), suite.created, suite.keyCache.keys[cacheKey(testKey, 0)].key.Created())
+
+	latestKey, _ := suite.keyCache.getLatestKeyMeta(testKey)
+	assert.Equal(suite.T(), latestKey, KeyMeta{ID: testKey, Created: suite.created})
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_DoesNotSetKeyOnError() {
-	key, err := suite.keyCache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := suite.keyCache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		return new(internal.CryptoKey), errors.New("error")
-	}))
+	})
 
 	if assert.Error(suite.T(), err) {
 		assert.Nil(suite.T(), key)
-		assert.Empty(suite.T(), suite.keyCache.keys)
+		assert.Zero(suite.T(), suite.keyCache.keys.Len())
 	}
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyReloadRequiredAndNowRevoked() {
 	key, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
-	if assert.NoError(suite.T(), err) {
-		entry := cacheEntry{
-			key:      key,
-			loadedAt: time.Now().Add(-2 * suite.policy.RevokeCheckInterval),
+	suite.Require().NoError(err)
+
+	entry := newCacheEntry(key)
+	entry.loadedAt = time.Now().Add(-2 * suite.policy.RevokeCheckInterval)
+
+	suite.keyCache.mapLatestKeyMeta(testKey, KeyMeta{ID: testKey, Created: suite.created})
+	suite.keyCache.keys.Set(cacheKey(testKey, suite.created), entry)
+
+	revokedKey, e := internal.NewCryptoKey(secretFactory, suite.created, true, []byte("blah"))
+	suite.Require().NoError(e)
+
+	first := true
+	calls := 0
+
+	// Because the entry's loadedAt is older than the revoke check interval, the key should be treated as "stale"
+	// which should trigger the following:
+	// 1. A cache miss is recorded because the key is no longer "fresh"
+	// 2. The key is loaded via the loader function below, which returns a revoked key on the first call
+	// 3. The cache, having received a revoked key, increments the reloaded count
+	// 4. The key is reloaded via the loader function, which returns a new key on subsequent calls
+	latest, err := suite.keyCache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
+		calls++
+
+		if first {
+			first = false
+			return revokedKey, nil
 		}
 
-		suite.keyCache.keys[cacheKey(testKey, suite.created)] = entry
-		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+		return internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
+	})
 
-		revokedKey, e := internal.NewCryptoKey(secretFactory, suite.created, true, []byte("blah"))
-		if assert.NoError(suite.T(), e) {
-			key, err := suite.keyCache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
-				return revokedKey, nil
-			}))
-
-			assert.NoError(suite.T(), err)
-			assert.NotNil(suite.T(), key)
-			assert.Equal(suite.T(), suite.created, key.Created())
-			assert.True(suite.T(), key.Revoked())
-			assert.True(suite.T(), suite.keyCache.keys[cacheKey(testKey, 0)].key.Revoked())
-			// Verify we closed the new one we loaded and kept the cached one open
-			assert.True(suite.T(), revokedKey.IsClosed())
-			assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, suite.created)].key.IsClosed())
-		}
-	}
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), latest)
+	assert.Equal(suite.T(), suite.created, latest.Created())
+	assert.Equal(suite.T(), 2, calls)
+	assert.False(suite.T(), latest.Revoked())
+	// Verify we closed the new one we loaded and kept the cached one open
+	assert.True(suite.T(), revokedKey.IsClosed())
+	assert.False(suite.T(), suite.keyCache.keys.GetOrPanic(cacheKey(testKey, suite.created)).key.IsClosed())
 }
 
-type mockKeyReloader struct {
-	mock.Mock
-
-	loader keyLoaderFunc
-}
-
-func (r *mockKeyReloader) Load() (*internal.CryptoKey, error) {
-	args := r.Called()
-
-	if r.loader != nil {
-		return r.loader()
-	}
-
-	return args.Get(0).(*internal.CryptoKey), args.Error(1)
-}
-
-func (r *mockKeyReloader) IsInvalid(key *internal.CryptoKey) bool {
-	args := r.Called(key.Created())
-	return args.Bool(0)
-}
-
-func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_KeyReloader_WithCachedKeyAndInvalidKey() {
+func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyAndInvalidKey() {
 	orig, err := internal.NewCryptoKey(secretFactory, suite.created, true, []byte("blah"))
 	require.NoError(suite.T(), err)
 
 	entry := cacheEntry{
-		key:      orig,
+		key:      &cachedCryptoKey{CryptoKey: orig},
 		loadedAt: time.Now(),
 	}
 
-	suite.keyCache.keys[cacheKey(testKey, suite.created)] = entry
-	suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+	suite.keyCache.mapLatestKeyMeta(testKey, KeyMeta{ID: testKey, Created: suite.created})
+	suite.keyCache.keys.Set(cacheKey(testKey, suite.created), entry)
 
 	newerCreated := time.Now().Add(1 * time.Second).Unix()
 	require.Greater(suite.T(), newerCreated, suite.created)
 
-	reloader := &mockKeyReloader{
-		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
-			reloadedKey, e := internal.NewCryptoKey(secretFactory, newerCreated, false, []byte("blah"))
-			assert.NoError(suite.T(), e)
+	loader := func(_ KeyMeta) (*internal.CryptoKey, error) {
+		reloadedKey, e := internal.NewCryptoKey(secretFactory, newerCreated, false, []byte("blah"))
+		assert.NoError(suite.T(), e)
 
-			return reloadedKey, e
-		}),
+		return reloadedKey, e
 	}
-	reloader.On("IsInvalid", orig.Created()).Return(true)
-	reloader.On("Load").Return().Once()
 
-	key, err := suite.keyCache.GetOrLoadLatest(testKey, reloader)
-
-	reloader.AssertExpectations(suite.T())
+	key, err := suite.keyCache.GetOrLoadLatest(testKey, loader)
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), key)
@@ -362,67 +349,83 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_KeyReloader_WithCached
 	assert.False(suite.T(), key.Revoked())
 
 	// cached key is still revoked
-	cached := suite.keyCache.keys[cacheKey(testKey, suite.created)]
+	cached := suite.keyCache.keys.GetOrPanic(cacheKey(testKey, suite.created))
 	assert.True(suite.T(), cached.key.Revoked(), fmt.Sprintf("%+v - created: %d", cached.key, cached.key.Created()))
 }
 
-func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_KeyReloader_WithCachedKeyAndValidKey() {
+func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyAndValidKey() {
 	key, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      key,
+			key:      &cachedCryptoKey{CryptoKey: key},
 			loadedAt: time.Now(),
 		}
 
-		suite.keyCache.keys[cacheKey(testKey, suite.created)] = entry
-		suite.keyCache.keys[cacheKey(testKey, 0)] = entry
+		suite.keyCache.keys.Set(cacheKey(testKey, suite.created), entry)
 
-		reloader := new(mockKeyReloader)
-		reloader.On("IsInvalid", key.Created()).Return(false)
-
-		key, err := suite.keyCache.GetOrLoadLatest(testKey, reloader)
+		key, err := suite.keyCache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
+			return key, nil
+		})
 
 		assert.NoError(suite.T(), err)
 		assert.NotNil(suite.T(), key)
 		assert.Equal(suite.T(), suite.created, key.Created())
-		assert.False(suite.T(), suite.keyCache.keys[cacheKey(testKey, 0)].key.Revoked())
-
-		reloader.AssertNotCalled(suite.T(), "Load", mock.Anything)
-		reloader.AssertExpectations(suite.T())
+		assert.False(suite.T(), key.Revoked())
 	}
 }
 
 func (suite *CacheTestSuite) TestKeyCache_Close() {
-	cache := newKeyCache(NewCryptoPolicy())
+	cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 
-	key, err := cache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+	key, err := cache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
 		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 		if err != nil {
 			return nil, err
 		}
+
 		return cryptoKey, nil
-	}))
+	})
 	assert.NoError(suite.T(), err)
+
+	key.Close()
+	assert.False(suite.T(), key.IsClosed(), "key should not be closed yet, as it is still in the cache")
 
 	err = cache.Close()
 
 	assert.NoError(suite.T(), err)
 	assert.True(suite.T(), key.IsClosed())
-	assert.True(suite.T(), cache.keys[cacheKey(testKey, suite.created)].key.IsClosed())
-	assert.True(suite.T(), cache.keys[cacheKey(testKey, 0)].key.IsClosed())
 }
 
-func (suite *CacheTestSuite) TestKeyCache_Close_MultipleCallsNoError() {
-	cache := newKeyCache(NewCryptoPolicy())
+func (suite *CacheTestSuite) TestKeyCache_Close_CacheThenKey() {
+	cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 
-	key, err := cache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (*internal.CryptoKey, error) {
-		cryptoKey, err := internal.NewCryptoKey(secretFactory, time.Now().Unix(), false, []byte("blah"))
+	key, err := cache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
+		cryptoKey, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 		if err != nil {
 			return nil, err
 		}
+
 		return cryptoKey, nil
-	}))
+	})
 	assert.NoError(suite.T(), err)
+
+	err = cache.Close()
+	assert.NoError(suite.T(), err)
+	assert.False(suite.T(), key.IsClosed(), "key should not be closed yet, key reference still exists")
+
+	key.Close()
+	assert.True(suite.T(), key.IsClosed())
+}
+
+func (suite *CacheTestSuite) TestKeyCache_Close_MultipleCallsNoError() {
+	cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+
+	key, err := cache.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
+		return internal.NewCryptoKey(secretFactory, time.Now().Unix(), false, []byte("blah"))
+	})
+	assert.NoError(suite.T(), err)
+
+	key.Close()
 
 	err = cache.Close()
 
@@ -430,12 +433,11 @@ func (suite *CacheTestSuite) TestKeyCache_Close_MultipleCallsNoError() {
 	assert.True(suite.T(), key.IsClosed())
 
 	err = cache.Close()
-
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *CacheTestSuite) TestKeyCache_String() {
-	cache := newKeyCache(NewCryptoPolicy())
+	cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 	defer cache.Close()
 
 	assert.Contains(suite.T(), cache.String(), "keyCache(")
@@ -443,13 +445,9 @@ func (suite *CacheTestSuite) TestKeyCache_String() {
 
 func (suite *CacheTestSuite) TestNeverCache_GetOrLoad() {
 	var cache neverCache
-	key, err := cache.GetOrLoad(KeyMeta{testKey, created}, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
-		cryptoKey, err := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
-		if err != nil {
-			return nil, err
-		}
-		return cryptoKey, nil
-	}))
+	key, err := cache.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
+		return internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
+	})
 
 	if assert.NoError(suite.T(), err) {
 		// neverCache can't close keys we create
@@ -462,13 +460,9 @@ func (suite *CacheTestSuite) TestNeverCache_GetOrLoad() {
 
 func (suite *CacheTestSuite) TestNeverCache_GetOrLoadLatest() {
 	var cache neverCache
-	key, err := cache.GetOrLoadLatest(testKey, keyLoaderFunc(func() (key *internal.CryptoKey, e error) {
-		cryptoKey, err := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
-		if err != nil {
-			return nil, err
-		}
-		return cryptoKey, nil
-	}))
+	key, err := cache.GetOrLoadLatest(testKey, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
+		return internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
+	})
 
 	if assert.NoError(suite.T(), err) {
 		// neverCache can't close keys we create
@@ -487,26 +481,31 @@ func (suite *CacheTestSuite) TestNeverCache_Close() {
 	assert.NoError(suite.T(), err)
 }
 
-func (suite *CacheTestSuite) TestSharedKeyCache_GetOrLoad() {
+func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_Concurrent_100() {
 	if testing.Short() {
 		suite.T().Skip("too slow for testing.Short")
 	}
 
 	var (
-		cache   = newKeyCache(NewCryptoPolicy())
+		cache   = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 		i       = 0
 		wg      sync.WaitGroup
 		counter int32
 	)
 
-	loadFunc := keyLoaderFunc(func() (*internal.CryptoKey, error) {
-		<-time.After(time.Nanosecond * time.Duration(rand.Intn(30)))
+	loadFunc := func(_ KeyMeta) (*internal.CryptoKey, error) {
+		<-time.After(time.Millisecond * time.Duration(rand.Intn(30)))
 		atomic.AddInt32(&counter, 1)
 
 		return new(internal.CryptoKey), nil
-	})
+	}
 
 	meta := KeyMeta{ID: "testing", Created: time.Now().Unix()}
+
+	_, err := cache.GetOrLoad(meta, loadFunc)
+	if err != nil {
+		suite.T().Error(err)
+	}
 
 	for ; i < 100; i++ {
 		wg.Add(1)
@@ -517,24 +516,22 @@ func (suite *CacheTestSuite) TestSharedKeyCache_GetOrLoad() {
 			key, err := cache.GetOrLoad(meta, loadFunc)
 			if key == nil {
 				suite.T().Error("key == nil")
-				suite.T().Fail()
 			}
 
 			if err != nil {
 				suite.T().Error(err)
-				suite.T().Fail()
 			}
 		}()
 	}
 
 	wg.Wait()
 
-	// This seems to be causing intermittent issues with go2xunit parsing
-	//d := time.Since(startTime)
-	//
-	//fmt.Printf("Finished %d loops in: %s (%f/s)", i, d, float64(i)/d.Seconds())
-
 	assert.Equal(suite.T(), int32(1), counter)
+	assert.Equal(suite.T(), 1, cache.keys.Len())
+
+	// metrics := cache.GetMetrics()
+	// assert.Equal(suite.T(), int64(1), metrics.MissCount)
+	// assert.Equal(suite.T(), int64(100), metrics.HitCount)
 }
 
 func TestCacheTestSuite(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/godaddy/asherah/go/securememory"
 )
@@ -43,6 +44,11 @@ func (k *CryptoKey) Close() {
 
 // Close destroys the underlying buffer for this key.
 func (k *CryptoKey) close() {
+	// k.secret is nil when the key is created for test.
+	if k.secret == nil {
+		return
+	}
+
 	k.secret.Close()
 }
 
@@ -53,6 +59,16 @@ func (k *CryptoKey) IsClosed() bool {
 
 func (k *CryptoKey) String() string {
 	return fmt.Sprintf("CryptoKey(%p){secret(%p)}", k, k.secret)
+}
+
+// WithBytes implements BytesAccessor.
+func (k *CryptoKey) WithBytes(action func([]byte) error) error {
+	return k.secret.WithBytes(action)
+}
+
+// WithBytesFunc implements BytesFuncAccessor.
+func (k *CryptoKey) WithBytesFunc(action func([]byte) ([]byte, error)) ([]byte, error) {
+	return k.secret.WithBytesFunc(action)
 }
 
 // NewCryptoKey creates a CryptoKey using the given key. Note that the underlying array will be wiped after the function
@@ -104,16 +120,43 @@ func GenerateKey(factory securememory.SecretFactory, created int64, size int) (*
 	}, nil
 }
 
-// WithKey takes in a CryptoKey, makes the underlying bytes readable, and passes them to the function provided.
-// A reference MUST not be stored to the provided bytes. The underlying array will be wiped after the function
-// exits.
-func WithKey(key *CryptoKey, action func([]byte) error) error {
-	return key.secret.WithBytes(action)
+type BytesAccessor interface {
+	WithBytes(action func([]byte) error) error
 }
 
-// WithKeyFunc takes in a CryptoKey, makes the underlying bytes readable, and passes them to the function provided.
-// A reference MUST not be stored to the provided bytes. The underlying array will be wiped after the function
-// exits.
-func WithKeyFunc(key *CryptoKey, action func([]byte) ([]byte, error)) ([]byte, error) {
-	return key.secret.WithBytesFunc(action)
+// WithKey takes in BytesAccessor, e.g., a CryptoKey, makes the underlying bytes readable, and passes them to the
+// function provided. A reference MUST not be stored to the provided bytes. The underlying array will be wiped after
+// the function exits.
+func WithKey(key BytesAccessor, action func([]byte) error) error {
+	return key.WithBytes(action)
+}
+
+type BytesFuncAccessor interface {
+	WithBytesFunc(action func([]byte) ([]byte, error)) ([]byte, error)
+}
+
+// WithKeyFunc takes in a BytesFuncAccessor, e.g., a CryptoKey, makes the underlying bytes readable, and passes them to
+// the function provided. A reference MUST not be stored to the provided bytes. The underlying array will be wiped after
+// the function exits.
+func WithKeyFunc(key BytesFuncAccessor, action func([]byte) ([]byte, error)) ([]byte, error) {
+	return key.WithBytesFunc(action)
+}
+
+type Revokable interface {
+	// Revoked returns true if the key is revoked.
+	Revoked() bool
+
+	// Created returns the time the CryptoKey was created as a Unix epoch in seconds.
+	Created() int64
+}
+
+// IsKeyInvalid checks if the key is revoked or expired.
+func IsKeyInvalid(key Revokable, expireAfter time.Duration) bool {
+	return key.Revoked() || IsKeyExpired(key.Created(), expireAfter)
+}
+
+// IsKeyExpired checks if the key's created timestamp is older than the
+// allowed duration.
+func IsKeyExpired(created int64, expireAfter time.Duration) bool {
+	return time.Now().After(time.Unix(created, 0).Add(expireAfter))
 }

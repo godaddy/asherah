@@ -6,6 +6,7 @@ import (
 
 	mango "github.com/goburrow/cache"
 
+	"github.com/godaddy/asherah/go/appencryption/pkg/cache"
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
@@ -250,9 +251,9 @@ func (s *sharedEncryption) Remove() {
 // sessionLoaderFunc retrieves a Session corresponding to the given partition ID.
 type sessionLoaderFunc func(id string) (*Session, error)
 
-// newSessionCache returns a new SessionCache with the configured cache implementation
+// newMangoSessionCache returns a new SessionCache with the configured cache implementation
 // using the provided SessionLoaderFunc and CryptoPolicy.
-func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCache {
+func newMangoSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCache {
 	wrapper := func(id string) (*Session, error) {
 		s, err := loader(id)
 		if err != nil {
@@ -284,4 +285,102 @@ func sessionInjectEncryption(s *Session, e Encryption) {
 	log.Debugf("injecting Encryption(%p) into Session(%p)", e, s)
 
 	s.encryption = e
+}
+
+// newSessionCacheWithCache returns a new SessionCache with the provided cache implementation
+// using the provided SessionLoaderFunc and CryptoPolicy.
+func newSessionCacheWithCache(loader sessionLoaderFunc, policy *CryptoPolicy, cache cache.Interface[string, *Session]) sessionCache {
+	return &cacheWrapper{
+		loader: func(id string) (*Session, error) {
+			s, err := loader(id)
+			if err != nil {
+				return nil, err
+			}
+
+			_, ok := s.encryption.(*sharedEncryption)
+			if !ok {
+				mu := new(sync.Mutex)
+				orig := s.encryption
+				wrapped := &sharedEncryption{
+					Encryption: orig,
+					mu:         mu,
+					cond:       sync.NewCond(mu),
+					created:    time.Now(),
+				}
+
+				sessionInjectEncryption(s, wrapped)
+			}
+
+			return s, nil
+		},
+		policy: policy,
+		cache:  cache,
+	}
+}
+
+type cacheWrapper struct {
+	loader sessionLoaderFunc
+	policy *CryptoPolicy
+	cache  cache.Interface[string, *Session]
+
+	mu sync.Mutex
+}
+
+func (c *cacheWrapper) Get(id string) (*Session, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	val, err := c.getOrAdd(id)
+	if err != nil {
+		return nil, err
+	}
+
+	incrementSharedSessionUsage(val)
+
+	return val, nil
+}
+
+func (c *cacheWrapper) getOrAdd(id string) (*Session, error) {
+	if val, ok := c.cache.Get(id); ok {
+		return val, nil
+	}
+
+	val, err := c.loader(id)
+	if err != nil {
+		return nil, err
+	}
+
+	c.cache.Set(id, val)
+
+	return val, nil
+}
+
+func (c *cacheWrapper) Count() int {
+	return c.cache.Len()
+}
+
+func (c *cacheWrapper) Close() {
+	c.cache.Close()
+}
+
+func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCache {
+	switch policy.SessionCacheEvictionPolicy {
+	case "":
+		log.Debugf("policy.SessionCacheEvictionPolicy is empty\n")
+
+		// TODO: remove mango cache
+		return newMangoSessionCache(loader, policy)
+	default:
+		log.Debugf("policy.SessionCacheEvictionPolicy is \"%s\"\n", policy.SessionCacheEvictionPolicy)
+
+		inner := cache.New[string, *Session](
+			policy.SessionCacheMaxSize,
+			cache.WithPolicy[string, *Session](cache.CachePolicy(policy.SessionCacheEvictionPolicy)),
+			cache.WithEvictFunc[string, *Session](func(k string, v *Session) {
+				go v.encryption.(*sharedEncryption).Remove()
+			}),
+		)
+
+		return newSessionCacheWithCache(loader, policy, inner)
+	}
 }

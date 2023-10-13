@@ -168,6 +168,8 @@ type options struct {
 
 var policies = []string{
 	"session-legacy",
+	"session-slru",
+	"shared-slru",
 }
 
 const (
@@ -256,6 +258,15 @@ func getConfig(opt options) *appencryption.Config {
 	case "session-legacy":
 		policy.CacheSessions = true
 		policy.SessionCacheMaxSize = opt.cacheSize
+	case "session-slru":
+		policy.CacheSessions = true
+		policy.SessionCacheMaxSize = opt.cacheSize
+		policy.SessionCacheEvictionPolicy = "slru"
+	case "shared-slru":
+		policy.CacheSessions = false
+		policy.IntermediateKeyCacheMaxSize = opt.cacheSize
+		policy.IntermediateKeyCacheEvictionPolicy = "slru"
+		policy.SharedIntermediateKeyCache = true
 	default:
 		panic(fmt.Sprintf("unknown policy: %s", opt.policy))
 	}
