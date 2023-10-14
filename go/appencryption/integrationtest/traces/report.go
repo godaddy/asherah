@@ -170,6 +170,10 @@ var policies = []string{
 	"session-legacy",
 	"session-slru",
 	"shared-slru",
+
+	"shared-lru",
+	"shared-tinylfu",
+	"shared-lfu",
 }
 
 const (
@@ -266,6 +270,21 @@ func getConfig(opt options) *appencryption.Config {
 		policy.CacheSessions = false
 		policy.IntermediateKeyCacheMaxSize = opt.cacheSize
 		policy.IntermediateKeyCacheEvictionPolicy = "slru"
+		policy.SharedIntermediateKeyCache = true
+	case "shared-lru":
+		policy.CacheSessions = false
+		policy.IntermediateKeyCacheMaxSize = opt.cacheSize
+		policy.IntermediateKeyCacheEvictionPolicy = "lru"
+		policy.SharedIntermediateKeyCache = true
+	case "shared-tinylfu":
+		policy.CacheSessions = false
+		policy.IntermediateKeyCacheMaxSize = opt.cacheSize
+		policy.IntermediateKeyCacheEvictionPolicy = "tinylfu"
+		policy.SharedIntermediateKeyCache = true
+	case "shared-lfu":
+		policy.CacheSessions = false
+		policy.IntermediateKeyCacheMaxSize = opt.cacheSize
+		policy.IntermediateKeyCacheEvictionPolicy = "lfu"
 		policy.SharedIntermediateKeyCache = true
 	default:
 		panic(fmt.Sprintf("unknown policy: %s", opt.policy))
