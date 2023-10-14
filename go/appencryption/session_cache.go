@@ -373,14 +373,19 @@ func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCach
 	default:
 		log.Debugf("policy.SessionCacheEvictionPolicy is \"%s\"\n", policy.SessionCacheEvictionPolicy)
 
-		inner := cache.New[string, *Session](
-			policy.SessionCacheMaxSize,
-			cache.WithPolicy[string, *Session](cache.CachePolicy(policy.SessionCacheEvictionPolicy)),
-			cache.WithEvictFunc[string, *Session](func(k string, v *Session) {
-				go v.encryption.(*sharedEncryption).Remove()
-			}),
-		)
+		cb := cache.New[string, *Session](policy.SessionCacheMaxSize)
+		cb.WithEvictFunc(func(k string, v *Session) {
+			go v.encryption.(*sharedEncryption).Remove()
+		})
 
-		return newSessionCacheWithCache(loader, policy, inner)
+		if policy.SessionCacheDuration > 0 {
+			cb.WithExpiry(policy.SessionCacheDuration)
+		}
+
+		if policy.SessionCacheEvictionPolicy != "" {
+			cb.WithPolicy(cache.CachePolicy(policy.SessionCacheEvictionPolicy))
+		}
+
+		return newSessionCacheWithCache(loader, policy, cb.Build())
 	}
 }

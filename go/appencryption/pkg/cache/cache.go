@@ -14,6 +14,7 @@ import (
 	"container/list"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // Interface is intended to be a generic interface for cache implementations.
@@ -55,34 +56,6 @@ type EvictFunc[K comparable, V any] func(key K, value V)
 // NopEvict is a no-op EvictFunc.
 func NopEvict[K comparable, V any](K, V) {}
 
-// Option is a functional option for the cache.
-type Option[K comparable, V any] func(*cache[K, V])
-
-// WithEvictFunc sets the EvictFunc for the cache.
-func WithEvictFunc[K comparable, V any](fn EvictFunc[K, V]) Option[K, V] {
-	return func(c *cache[K, V]) {
-		c.onEvictCallback = fn
-	}
-}
-
-// WithPolicy sets the eviction policy for the cache.
-func WithPolicy[K comparable, V any](policy CachePolicy) Option[K, V] {
-	return func(c *cache[K, V]) {
-		switch policy {
-		case LRU:
-			c.policy = new(lru[K, V])
-		case LFU:
-			c.policy = new(lfu[K, V])
-		case SLRU:
-			c.policy = new(slru[K, V])
-		case TinyLFU:
-			c.policy = new(tinyLFU[K, V])
-		default:
-			panic(fmt.Sprintf("cache: unsupported policy \"%s\"", policy.String()))
-		}
-	}
-}
-
 // event is the cache event (evictItem or closeCache).
 type event int
 
@@ -94,9 +67,12 @@ const (
 )
 
 type cacheItem[K comparable, V any] struct {
-	key    K
-	value  V
+	key   K
+	value V
+
 	parent *list.Element // Pointer to the frequencyParent
+
+	expiration time.Time // Expiration time
 }
 
 // cacheEvent is the event sent on the events channel.
@@ -124,6 +100,115 @@ type policy[K comparable, V any] interface {
 	remove(item *cacheItem[K, V])
 }
 
+// Clock is an interface for getting the current time.
+type Clock interface {
+	Now() time.Time
+}
+
+// realClock is the default Clock implementation.
+type realClock struct{}
+
+// Now returns the current time.
+func (c *realClock) Now() time.Time {
+	return time.Now()
+}
+
+type builder[K comparable, V any] struct {
+	capacity  int
+	policy    policy[K, V]
+	evictFunc EvictFunc[K, V]
+	clock     Clock
+	expiry    time.Duration
+}
+
+// New returns a new cache builder with the given capacity. Use the builder to
+// set the eviction policy, eviction callback, and other options. Call Build()
+// to create the cache.
+func New[K comparable, V any](capacity int) *builder[K, V] {
+	return &builder[K, V]{
+		capacity:  capacity,
+		policy:    new(lru[K, V]),
+		evictFunc: NopEvict[K, V],
+		clock:     new(realClock),
+	}
+}
+
+// WithEvictFunc sets the EvictFunc for the cache.
+func (b *builder[K, V]) WithEvictFunc(fn EvictFunc[K, V]) *builder[K, V] {
+	b.evictFunc = fn
+	return b
+}
+
+// WithPolicy sets the eviction policy for the cache. The default policy is LRU.
+func (b *builder[K, V]) WithPolicy(policy CachePolicy) *builder[K, V] {
+	switch policy {
+	case LRU:
+		b.policy = new(lru[K, V])
+	case LFU:
+		b.policy = new(lfu[K, V])
+	case SLRU:
+		b.policy = new(slru[K, V])
+	case TinyLFU:
+		b.policy = new(tinyLFU[K, V])
+	default:
+		panic(fmt.Sprintf("cache: unsupported policy \"%s\"", policy.String()))
+	}
+
+	return b
+}
+
+// LRU sets the cache eviction policy to LRU (least recently used).
+func (b *builder[K, V]) LRU() *builder[K, V] {
+	return b.WithPolicy(LRU)
+}
+
+// LFU sets the cache eviction policy to LFU (least frequently used).
+func (b *builder[K, V]) LFU() *builder[K, V] {
+	return b.WithPolicy(LFU)
+}
+
+// SLRU sets the cache eviction policy to SLRU (segmented least recently used).
+func (b *builder[K, V]) SLRU() *builder[K, V] {
+	return b.WithPolicy(SLRU)
+}
+
+// TinyLFU sets the cache eviction policy to TinyLFU (tiny least frequently used).
+func (b *builder[K, V]) TinyLFU() *builder[K, V] {
+	return b.WithPolicy(TinyLFU)
+}
+
+// WithClock sets the Clock for the cache.
+func (b *builder[K, V]) WithClock(clock Clock) *builder[K, V] {
+	b.clock = clock
+	return b
+}
+
+// WithExpiry sets the expiry for the cache.
+func (b *builder[K, V]) WithExpiry(expiry time.Duration) *builder[K, V] {
+	b.expiry = expiry
+	return b
+}
+
+// Build creates the cache.
+func (b *builder[K, V]) Build() Interface[K, V] {
+	c := &cache[K, V]{
+		byKey:  make(map[K]*cacheItem[K, V]),
+		events: make(chan cacheEvent[K, V], 100),
+
+		policy:          b.policy,
+		clock:           b.clock,
+		expiry:          b.expiry,
+		onEvictCallback: b.evictFunc,
+	}
+
+	c.policy.init(b.capacity)
+
+	c.closeWG.Add(1)
+	go c.processEvents()
+
+	return c
+}
+
 // cache is the generic cache type.
 type cache[K comparable, V any] struct {
 	byKey  map[K]*cacheItem[K, V] // Hashmap containing *CacheItems for O(1) access
@@ -140,34 +225,14 @@ type cache[K comparable, V any] struct {
 	// and frequency of the evicted item are passed to the function. Set to
 	// a custom function to handle evicted items. The default is a no-op.
 	onEvictCallback EvictFunc[K, V]
-}
 
-// New returns a new cache with the given capacity and options.
-func New[K comparable, V any](capacity int, options ...Option[K, V]) Interface[K, V] {
-	return new(cache[K, V]).init(capacity, options...)
-}
+	// clock is used to get the current time. Set to a custom Clock to use a
+	// custom clock. The default is the real time clock.
+	clock Clock
 
-// init initializes the cache with the given capacity and options. It must be
-// called before the cache can be used.
-func (c *cache[K, V]) init(capacity int, opts ...Option[K, V]) *cache[K, V] {
-	c.byKey = make(map[K]*cacheItem[K, V])
-	c.events = make(chan cacheEvent[K, V], 100)
-	c.onEvictCallback = NopEvict[K, V]
-
-	for _, opt := range opts {
-		opt(c)
-	}
-
-	if c.policy == nil {
-		c.policy = new(lru[K, V])
-	}
-
-	c.policy.init(capacity)
-
-	c.closeWG.Add(1)
-	go c.processEvents()
-
-	return c
+	// expiry is the duration after which an item is considered expired. Set to
+	// a custom duration to use a custom expiry. The default is no expiry.
+	expiry time.Duration
 }
 
 // processEvents processes events in a separate goroutine.
@@ -244,6 +309,10 @@ func (c *cache[K, V]) Set(key K, value V) {
 	if item, ok := c.byKey[key]; ok {
 		item.value = value
 
+		if c.expiry > 0 {
+			item.expiration = c.clock.Now().Add(c.expiry)
+		}
+
 		c.policy.access(item)
 
 		return
@@ -254,7 +323,14 @@ func (c *cache[K, V]) Set(key K, value V) {
 		c.evict()
 	}
 
-	item := &cacheItem[K, V]{key: key, value: value}
+	item := &cacheItem[K, V]{
+		key:   key,
+		value: value,
+	}
+
+	if c.expiry > 0 {
+		item.expiration = c.clock.Now().Add(c.expiry)
+	}
 
 	c.byKey[key] = item
 
@@ -275,6 +351,11 @@ func (c *cache[K, V]) Get(key K) (V, bool) {
 
 	item, ok := c.byKey[key]
 	if !ok {
+		return c.zeroValue(), false
+	}
+
+	if c.expiry > 0 && item.expiration.Before(c.clock.Now()) {
+		c.evictItem(item)
 		return c.zeroValue(), false
 	}
 
@@ -326,7 +407,11 @@ func (c *cache[K, V]) zeroValue() V {
 // evict removes an item from the cache and sends an evict event.
 func (c *cache[K, V]) evict() {
 	item := c.policy.victim()
+	c.evictItem(item)
+}
 
+// evictItem removes the given item from the cache and sends an evict event.
+func (c *cache[K, V]) evictItem(item *cacheItem[K, V]) {
 	delete(c.byKey, item.key)
 
 	c.size--

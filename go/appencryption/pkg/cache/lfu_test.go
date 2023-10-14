@@ -20,7 +20,7 @@ func TestLFUSuite(t *testing.T) {
 }
 
 func (suite *LFUSuite) SetupTest() {
-	suite.cache = cache.New[int, string](2, cache.WithPolicy[int, string](cache.LFU))
+	suite.cache = cache.New[int, string](2).LFU().Build()
 }
 
 func (suite *LFUSuite) TestNewLFU() {
@@ -170,13 +170,12 @@ func (suite *LFUSuite) TestClose() {
 func (suite *LFUSuite) TestWithEvictFunc() {
 	evicted := map[int]int{}
 
-	suite.cache = cache.New[int, string](
-		100,
-		cache.WithPolicy[int, string](cache.LFU),
-		cache.WithEvictFunc(func(key int, _ string) {
+	suite.cache = cache.New[int, string](100).
+		WithEvictFunc(func(key int, _ string) {
 			evicted[key] = 1
-		}),
-	)
+		}).
+		LFU().
+		Build()
 
 	// overfill the cache
 	for i := 0; i < 105; i++ {

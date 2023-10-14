@@ -19,7 +19,7 @@ func TestLRUSuite(t *testing.T) {
 }
 
 func (suite *LRUSuite) SetupTest() {
-	suite.cache = cache.New[int, string](10)
+	suite.cache = cache.New[int, string](10).Build()
 }
 
 func (suite *LRUSuite) TestNewLRU() {
@@ -117,14 +117,14 @@ func (suite *LRUSuite) TestWithEvictFunc() {
 	done := make(chan struct{})
 
 	evicted := false
-	cache := cache.New[int, string](1, cache.WithEvictFunc(func(key int, value string) {
+	cache := cache.New[int, string](1).WithEvictFunc(func(key int, value string) {
 		evicted = true
 
 		suite.Assert().Equal(1, key)
 		suite.Assert().Equal("one", value)
 
 		close(done)
-	}))
+	}).Build()
 
 	cache.Set(1, "one")
 	cache.Set(2, "two")
@@ -145,7 +145,7 @@ func TestSLRUSuite(t *testing.T) {
 }
 
 func (suite *SLRUSuite) SetupTest() {
-	suite.cache = cache.New[int, string](10, cache.WithPolicy[int, string](cache.SLRU))
+	suite.cache = cache.New[int, string](10).SLRU().Build()
 }
 
 func (suite *SLRUSuite) TestNewSLRU() {
@@ -257,14 +257,14 @@ func (suite *SLRUSuite) TestWithEvictFunc() {
 	done := make(chan struct{})
 
 	evicted := false
-	cache := cache.New[int, string](10, cache.WithPolicy[int, string](cache.SLRU), cache.WithEvictFunc(func(key int, value string) {
+	cache := cache.New[int, string](10).SLRU().WithEvictFunc(func(key int, value string) {
 		evicted = true
 
 		suite.Assert().Equal(1, key)
 		suite.Assert().Equal("#1", value)
 
 		close(done)
-	}))
+	}).Build()
 
 	// fill the cache to capacity
 	for i := 0; i < cache.Capacity(); i++ {

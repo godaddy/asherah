@@ -9,14 +9,16 @@ import (
 func ExampleNew() {
 	evictionMsg := make(chan string)
 
-	// Create a new LFU cache with a capacity of 3 items and an eviction callback.
-	cache := cache.New[int, string](3, cache.WithPolicy[int, string](cache.LFU), cache.WithEvictFunc(func(key int, value string) {
-		// This callback is executed via a background goroutine whenever an
-		// item is evicted from the cache. We use a channel to synchronize
-		// the goroutine with this example function so we can verify the
-		// item that was evicted.
+	// This callback is executed via a background goroutine whenever an
+	// item is evicted from the cache. We use a channel to synchronize
+	// the goroutine with this example function so we can verify the
+	// item that was evicted.
+	evict := func(key int, value string) {
 		evictionMsg <- fmt.Sprintln("evicted:", key, value)
-	}))
+	}
+
+	// Create a new LFU cache with a capacity of 3 items and an eviction callback.
+	cache := cache.New[int, string](3).LFU().WithEvictFunc(evict).Build()
 
 	// Add some items to the cache.
 	cache.Set(1, "foo")

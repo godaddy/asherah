@@ -111,10 +111,15 @@ const (
 	CacheTypeIntermediateKeys
 )
 
-// newKeyCacheWithCacheOptions constructs a cache object that is ready to use.
-func newKeyCacheWithCacheOptions(t cacheKeyType, policy *CryptoPolicy, opts ...cache.Option[string, cacheEntry]) *keyCache {
+// newKeyCache constructs a cache object that is ready to use.
+func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 	cacheMaxSize := DefaultKeyCacheMaxSize
 	cachePolicy := ""
+	onEvict := func(key string, value cacheEntry) {
+		log.Debugf("%s eviction -- key: %s, id: %s\n", c, value.key, key)
+
+		value.key.Close()
+	}
 
 	switch t {
 	case CacheTypeSystemKeys:
@@ -125,11 +130,13 @@ func newKeyCacheWithCacheOptions(t cacheKeyType, policy *CryptoPolicy, opts ...c
 		cachePolicy = policy.IntermediateKeyCacheEvictionPolicy
 	}
 
+	cb := cache.New[string, cacheEntry](cacheMaxSize)
+
 	if cachePolicy != "" {
-		opts = append(opts, cache.WithPolicy[string, cacheEntry](cache.CachePolicy(cachePolicy)))
+		cb.WithPolicy(cache.CachePolicy(cachePolicy))
 	}
 
-	keys := cache.New(cacheMaxSize, opts...)
+	keys := cb.WithEvictFunc(onEvict).Build()
 
 	return &keyCache{
 		policy: policy,
@@ -138,17 +145,6 @@ func newKeyCacheWithCacheOptions(t cacheKeyType, policy *CryptoPolicy, opts ...c
 
 		cacheType: t,
 	}
-}
-
-// newKeyCache constructs a cache object that is ready to use.
-func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
-	onEvict := func(key string, value cacheEntry) {
-		log.Debugf("%s eviction -- key: %s, id: %s\n", c, value.key, key)
-
-		value.key.Close()
-	}
-
-	return newKeyCacheWithCacheOptions(t, policy, cache.WithEvictFunc[string, cacheEntry](onEvict))
 }
 
 // isReloadRequired returns true if the check interval has elapsed

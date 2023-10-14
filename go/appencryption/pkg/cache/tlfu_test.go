@@ -20,7 +20,7 @@ func TestTinyLFUSuite(t *testing.T) {
 }
 
 func (suite *TinyLFUSuite) SetupTest() {
-	suite.cache = cache.New[int, string](100, cache.WithPolicy[int, string](cache.TinyLFU))
+	suite.cache = cache.New[int, string](100).TinyLFU().Build()
 }
 
 func (suite *TinyLFUSuite) TestNewTinyLFU() {
