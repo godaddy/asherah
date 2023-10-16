@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -90,53 +91,6 @@ func (suite *LFUSuite) TestDelete() {
 	suite.Assert().Equal(0, suite.cache.Len())
 }
 
-// func (suite *LFUSuite) TestEach() {
-// 	suite.cache.Set(1, "one")
-// 	suite.cache.Set(1, "one") // increment frequency
-// 	suite.cache.Set(2, "two")
-// 	suite.cache.Set(3, "three") // evict 2
-
-// 	var (
-// 		keys   []int
-// 		values []string
-// 	)
-
-// 	suite.cache.Each(func(key int, value string) bool {
-// 		keys = append(keys, key)
-// 		values = append(values, value)
-
-// 		return true
-// 	})
-
-// 	// Each() iterates in order of least frequently used
-// 	suite.Assert().Equal([]int{3, 1}, keys)
-// 	suite.Assert().Equal([]string{"three", "one"}, values)
-// }
-
-// func (suite *LFUSuite) TestEachWithEarlyExit() {
-// 	suite.cache.Set(1, "one")
-// 	suite.cache.Set(1, "one") // increment frequency
-// 	suite.cache.Set(2, "two")
-// 	suite.cache.Set(3, "three") // evict 2
-
-// 	var (
-// 		keys   []int
-// 		values []string
-// 	)
-
-// 	suite.cache.Each(func(key int, value string) bool {
-// 		keys = append(keys, key)
-// 		values = append(values, value)
-
-// 		// early exit
-// 		return false
-// 	})
-
-// 	// Each() iterates in order of least frequently used
-// 	suite.Assert().Equal([]int{3}, keys)
-// 	suite.Assert().Equal([]string{"three"}, values)
-// }
-
 func (suite *LFUSuite) TestEviction() {
 	suite.cache.Set(1, "one")
 	suite.cache.Set(2, "two")
@@ -168,11 +122,14 @@ func (suite *LFUSuite) TestClose() {
 }
 
 func (suite *LFUSuite) TestWithEvictFunc() {
+	mux := sync.Mutex{}
 	evicted := map[int]int{}
 
 	suite.cache = cache.New[int, string](100).
 		WithEvictFunc(func(key int, _ string) {
+			mux.Lock()
 			evicted[key] = 1
+			mux.Unlock()
 		}).
 		LFU().
 		Build()
@@ -184,6 +141,9 @@ func (suite *LFUSuite) TestWithEvictFunc() {
 
 	// wait for the background goroutine to evict items
 	suite.Assert().Eventually(func() bool {
+		mux.Lock()
+		defer mux.Unlock()
+
 		return len(evicted) == 5
 	}, 100*time.Millisecond, 10*time.Millisecond, "eviction callback was not called")
 
