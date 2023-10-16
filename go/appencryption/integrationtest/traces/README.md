@@ -6,7 +6,7 @@ different cache configurations.
 
 The source code for this package is derived from the package of the same
 name in the [Mango Cache](https://github.com/goburrow/cache) project. See
-[LICENSE](../../pkg/cache/internal/LICENSE) for copyright and
+[NOTICE](../../pkg/cache/internal/NOTICE) for copyright and
 licensing information.
 
 ## Traces
