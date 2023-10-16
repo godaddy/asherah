@@ -100,6 +100,8 @@ func TestNewSessionCache(t *testing.T) {
 	defer cache.Close()
 
 	require.NotNil(t, cache)
+
+	assert.Equal(t, cache.(*cacheWrapper).policy.SessionCacheEvictionPolicy, "slru")
 }
 
 func TestSessionCacheGetUsesLoader(t *testing.T) {

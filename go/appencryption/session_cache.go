@@ -160,9 +160,11 @@ func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCach
 		cb.WithExpiry(policy.SessionCacheDuration)
 	}
 
-	if policy.SessionCacheEvictionPolicy != "" {
-		cb.WithPolicy(cache.CachePolicy(policy.SessionCacheEvictionPolicy))
+	if policy.SessionCacheEvictionPolicy == "" {
+		policy.SessionCacheEvictionPolicy = "slru"
 	}
+
+	cb.WithPolicy(cache.CachePolicy(policy.SessionCacheEvictionPolicy))
 
 	return newSessionCacheWithCache(loader, policy, cb.Build())
 }
