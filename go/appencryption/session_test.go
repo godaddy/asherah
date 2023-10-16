@@ -121,9 +121,9 @@ func TestNewSessionFactory(t *testing.T) {
 }
 
 func TestNewSessionFactory_WithSessionCache(t *testing.T) {
-	policy := &CryptoPolicy{
-		CacheSessions: true,
-	}
+	policy := NewCryptoPolicy()
+	policy.CacheSessions = true
+
 	factory := NewSessionFactory(&Config{
 		Policy: policy,
 	}, nil, nil, nil)
