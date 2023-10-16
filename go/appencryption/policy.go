@@ -55,12 +55,6 @@ type CryptoPolicy struct {
 	// SessionCacheDuration controls the amount of time a session will remain cached without being accessed
 	// if session caching is enabled.
 	SessionCacheDuration time.Duration
-	// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
-	// if session caching is enabled.
-	//
-	// Deprecated: multiple cache implementations are no longer supported and this option will be removed
-	// in a future release.
-	SessionCacheEngine string
 	// SessionCacheEvictionPolicy controls the eviction policy to use for the shared cache.
 	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "slru".
 	SessionCacheEvictionPolicy string
@@ -122,17 +116,6 @@ func WithSessionCacheDuration(d time.Duration) PolicyOption {
 	}
 }
 
-// WithSessionCacheEngine determines the underlying cache implemenataion in use by the session cache
-// if session caching is enabled.
-//
-// Deprecated: multiple cache implementations are no longer supported and this option will be removed
-// in a future release.
-func WithSessionCacheEngine(engine string) PolicyOption {
-	return func(policy *CryptoPolicy) {
-		policy.SessionCacheEngine = engine
-	}
-}
-
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
@@ -147,7 +130,6 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CacheSessions:               false,
 		SessionCacheMaxSize:         DefaultSessionCacheMaxSize,
 		SessionCacheDuration:        DefaultSessionCacheDuration,
-		SessionCacheEngine:          DefaultSessionCacheEngine,
 	}
 
 	for _, opt := range opts {

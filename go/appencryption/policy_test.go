@@ -23,7 +23,6 @@ func Test_NewCryptoPolicy_WithDefaults(t *testing.T) {
 	assert.False(t, p.CacheSessions)
 	assert.Equal(t, DefaultSessionCacheMaxSize, p.SessionCacheMaxSize)
 	assert.Equal(t, DefaultSessionCacheDuration, p.SessionCacheDuration)
-	assert.Equal(t, DefaultSessionCacheEngine, p.SessionCacheEngine)
 }
 
 func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
@@ -31,7 +30,6 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 	expireAfterDuration := time.Second * 100
 	sessionCacheMaxSize := 42
 	sessionCacheDuration := time.Second * 42
-	sessionCacheEngine := "deprecated"
 
 	policy := NewCryptoPolicy(
 		WithRevokeCheckInterval(revokeCheckInterval),
@@ -40,7 +38,6 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 		WithSessionCache(),
 		WithSessionCacheMaxSize(sessionCacheMaxSize),
 		WithSessionCacheDuration(sessionCacheDuration),
-		WithSessionCacheEngine(sessionCacheEngine),
 	)
 
 	assert.Equal(t, revokeCheckInterval, policy.RevokeCheckInterval)
@@ -50,7 +47,6 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 	assert.True(t, policy.CacheSessions)
 	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
 	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
-	assert.Equal(t, sessionCacheEngine, policy.SessionCacheEngine)
 }
 
 func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
@@ -59,7 +55,6 @@ func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
 	keyCacheMaxSize := 10
 	sessionCacheMaxSize := 42
 	sessionCacheDuration := time.Second * 42
-	sessionCacheEngine := "deprecated"
 
 	policy := NewCryptoPolicy(
 		WithRevokeCheckInterval(revokeCheckInterval),
@@ -68,7 +63,6 @@ func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
 		WithSessionCache(),
 		WithSessionCacheMaxSize(sessionCacheMaxSize),
 		WithSessionCacheDuration(sessionCacheDuration),
-		WithSessionCacheEngine(sessionCacheEngine),
 	)
 
 	assert.Equal(t, revokeCheckInterval, policy.RevokeCheckInterval)
@@ -80,7 +74,6 @@ func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
 	assert.True(t, policy.CacheSessions)
 	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
 	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
-	assert.Equal(t, sessionCacheEngine, policy.SessionCacheEngine)
 }
 
 func Test_IsKeyExpired(t *testing.T) {
