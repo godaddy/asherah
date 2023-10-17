@@ -651,7 +651,7 @@ jobs:
   server-samples:
     name: Server Samples
     needs: [ java-server, go-server ]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
