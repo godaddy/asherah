@@ -85,11 +85,12 @@ func WithNoCache() PolicyOption {
 	}
 }
 
-// WithSharedKeyCache enables a shared cache for both System and Intermediate Keys with the provided capacity.
-func WithSharedKeyCache(capacity int) PolicyOption {
+// WithSharedIntermediateKeyCache enables a shared cache for Intermediate Keys with the provided capacity. The shared
+// cache will be used by all sessions for a given factory.
+func WithSharedIntermediateKeyCache(capacity int) PolicyOption {
 	return func(policy *CryptoPolicy) {
 		policy.SharedIntermediateKeyCache = true
-		policy.SystemKeyCacheMaxSize = capacity
+		policy.IntermediateKeyCacheMaxSize = capacity
 	}
 }
 

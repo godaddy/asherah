@@ -49,7 +49,7 @@ func Test_NewCryptoPolicy_WithOptions(t *testing.T) {
 	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
 }
 
-func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
+func Test_NewCryptoPolicy_WithOptions_SharedIntermediateKeyCache(t *testing.T) {
 	revokeCheckInterval := time.Second * 156
 	expireAfterDuration := time.Second * 100
 	keyCacheMaxSize := 10
@@ -59,7 +59,7 @@ func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
 	policy := NewCryptoPolicy(
 		WithRevokeCheckInterval(revokeCheckInterval),
 		WithExpireAfterDuration(expireAfterDuration),
-		WithSharedKeyCache(keyCacheMaxSize),
+		WithSharedIntermediateKeyCache(keyCacheMaxSize),
 		WithSessionCache(),
 		WithSessionCacheMaxSize(sessionCacheMaxSize),
 		WithSessionCacheDuration(sessionCacheDuration),
@@ -70,7 +70,7 @@ func Test_NewCryptoPolicy_WithOptions_SharedKeyCache(t *testing.T) {
 	assert.True(t, policy.CacheSystemKeys)
 	assert.True(t, policy.CacheIntermediateKeys)
 	assert.True(t, policy.SharedIntermediateKeyCache)
-	assert.Equal(t, keyCacheMaxSize, policy.SystemKeyCacheMaxSize)
+	assert.Equal(t, keyCacheMaxSize, policy.IntermediateKeyCacheMaxSize)
 	assert.True(t, policy.CacheSessions)
 	assert.Equal(t, sessionCacheMaxSize, policy.SessionCacheMaxSize)
 	assert.Equal(t, sessionCacheDuration, policy.SessionCacheDuration)
