@@ -30,6 +30,7 @@ func (c *cachedCryptoKey) Close() {
 		return
 	}
 
+	log.Debugf("closing cached key: %s, refs=%d", c.CryptoKey, c.refs)
 	c.CryptoKey.Close()
 }
 
@@ -115,11 +116,6 @@ const (
 func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 	cacheMaxSize := DefaultKeyCacheMaxSize
 	cachePolicy := ""
-	onEvict := func(key string, value cacheEntry) {
-		log.Debugf("%s eviction -- key: %s, id: %s\n", c, value.key, key)
-
-		value.key.Close()
-	}
 
 	switch t {
 	case CacheTypeSystemKeys:
@@ -130,21 +126,36 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 		cachePolicy = policy.IntermediateKeyCacheEvictionPolicy
 	}
 
-	cb := cache.New[string, cacheEntry](cacheMaxSize)
-
-	if cachePolicy != "" {
-		cb.WithPolicy(cache.CachePolicy(cachePolicy))
-	}
-
-	keys := cb.WithEvictFunc(onEvict).Build()
-
-	return &keyCache{
+	c = &keyCache{
 		policy: policy,
-		keys:   keys,
 		latest: make(map[string]KeyMeta),
 
 		cacheType: t,
 	}
+
+	onEvict := func(key string, value cacheEntry) {
+		log.Debugf("[onEvict] closing key -- id: %s\n", key)
+
+		value.key.Close()
+	}
+
+	cb := cache.New[string, cacheEntry](cacheMaxSize)
+
+	if cachePolicy != "" {
+		log.Debugf("setting cache policy to %s", cachePolicy)
+
+		cb.WithPolicy(cache.CachePolicy(cachePolicy))
+	}
+
+	if cacheMaxSize < 100 {
+		log.Debugf("cache size is less than 100, setting synchronous eviction policy")
+
+		cb.Synchronous()
+	}
+
+	c.keys = cb.WithEvictFunc(onEvict).Build()
+
+	return c
 }
 
 // isReloadRequired returns true if the check interval has elapsed
@@ -246,8 +257,6 @@ func (c *keyCache) read(meta KeyMeta) (cacheEntry, bool) {
 	e, ok := c.keys.Get(id)
 	if !ok {
 		log.Debugf("%s miss -- id: %s\n", c, id)
-	} else {
-		log.Debugf("%s hit -- id: %s\n", c, id)
 	}
 
 	return e, ok
@@ -337,12 +346,14 @@ func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
 // It MUST be called after a session is complete to avoid
 // running into MEMLOCK limits.
 func (c *keyCache) Close() error {
+	log.Debugf("%s closing\n", c)
+
 	return c.keys.Close()
 }
 
 // String returns a string representation of this cache.
 func (c *keyCache) String() string {
-	return fmt.Sprintf("keyCache(%p)", c)
+	return fmt.Sprintf("keyCache(%p){type=%s,size=%d,cap=%d}", c, c.cacheType, c.keys.Len(), c.keys.Capacity())
 }
 
 // Verify neverCache implements the cache interface.

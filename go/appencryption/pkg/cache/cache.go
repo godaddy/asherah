@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
 // Interface is intended to be a generic interface for cache implementations.
@@ -119,6 +121,7 @@ type builder[K comparable, V any] struct {
 	evictFunc EvictFunc[K, V]
 	clock     Clock
 	expiry    time.Duration
+	isSync    bool
 }
 
 // New returns a new cache builder with the given capacity. Use the builder to
@@ -136,6 +139,7 @@ func New[K comparable, V any](capacity int) *builder[K, V] {
 // WithEvictFunc sets the EvictFunc for the cache.
 func (b *builder[K, V]) WithEvictFunc(fn EvictFunc[K, V]) *builder[K, V] {
 	b.evictFunc = fn
+
 	return b
 }
 
@@ -180,31 +184,43 @@ func (b *builder[K, V]) TinyLFU() *builder[K, V] {
 // WithClock sets the Clock for the cache.
 func (b *builder[K, V]) WithClock(clock Clock) *builder[K, V] {
 	b.clock = clock
+
 	return b
 }
 
 // WithExpiry sets the expiry for the cache.
 func (b *builder[K, V]) WithExpiry(expiry time.Duration) *builder[K, V] {
 	b.expiry = expiry
+
+	return b
+}
+
+// Synchronous sets the cache to use a synchronous eviction process. By
+// default, the cache uses a concurrent eviction process which executes the
+// eviction callback in a separate goroutine.
+// Use this option to ensure eviction is processed inline, prior to adding
+// a new item to the cache.
+func (b *builder[K, V]) Synchronous() *builder[K, V] {
+	b.isSync = true
+
 	return b
 }
 
 // Build creates the cache.
 func (b *builder[K, V]) Build() Interface[K, V] {
 	c := &cache[K, V]{
-		byKey:  make(map[K]*cacheItem[K, V]),
-		events: make(chan cacheEvent[K, V], 100),
+		byKey: make(map[K]*cacheItem[K, V]),
 
 		policy:          b.policy,
 		clock:           b.clock,
 		expiry:          b.expiry,
 		onEvictCallback: b.evictFunc,
+		isSync:          b.isSync,
 	}
 
 	c.policy.init(b.capacity)
 
-	c.closeWG.Add(1)
-	go c.processEvents()
+	c.startup()
 
 	return c
 }
@@ -233,6 +249,10 @@ type cache[K comparable, V any] struct {
 	// expiry is the duration after which an item is considered expired. Set to
 	// a custom duration to use a custom expiry. The default is no expiry.
 	expiry time.Duration
+
+	// isSync is true if the cache uses a synchronized eviction process. The default
+	// is false, which uses a concurrent eviction process.
+	isSync bool
 }
 
 // processEvents processes events in a separate goroutine.
@@ -242,8 +262,11 @@ func (c *cache[K, V]) processEvents() {
 	for event := range c.events {
 		switch event.event {
 		case evictItem:
+			log.Debugf("%s executing evict callback for item: %v", c, event.item.key)
 			c.onEvictCallback(event.item.key, event.item.value)
 		case closeCache:
+			log.Debugf("%s closed, exiting event loop", c)
+
 			return
 		}
 	}
@@ -266,18 +289,43 @@ func (c *cache[K, V]) Close() error {
 		c.evict()
 	}
 
+	c.shutdown()
+
+	c.byKey = nil
+
+	c.policy.close()
+
+	return nil
+}
+
+// startup starts the cache event processing goroutine.
+func (c *cache[K, V]) startup() {
+	if c.isSync {
+		// no need to start the event processing goroutine
+		return
+	}
+
+	c.events = make(chan cacheEvent[K, V])
+
+	c.closeWG.Add(1)
+
+	go c.processEvents()
+}
+
+// shutdown closes the events channel and waits for the event processing
+// goroutine to exit.
+func (c *cache[K, V]) shutdown() {
+	if c.isSync {
+		return
+	}
+
 	c.events <- cacheEvent[K, V]{event: closeCache}
 
 	c.closeWG.Wait()
 
 	close(c.events)
 
-	c.byKey = nil
 	c.events = nil
-
-	c.policy.close()
-
-	return nil
 }
 
 // Len returns the number of items in the cache.
@@ -318,7 +366,7 @@ func (c *cache[K, V]) Set(key K, value V) {
 		return
 	}
 
-	// if the cache is full, evict the least recently used item
+	// if the cache is full, evict an item
 	if c.size == c.policy.capacity() {
 		c.evict()
 	}
@@ -404,7 +452,8 @@ func (c *cache[K, V]) zeroValue() V {
 	return v
 }
 
-// evict removes an item from the cache and sends an evict event.
+// evict removes an item from the cache and sends an evict event or, if the
+// cache uses a synchronized eviction process, calls the evict callback.
 func (c *cache[K, V]) evict() {
 	item := c.policy.victim()
 	c.evictItem(item)
@@ -418,5 +467,19 @@ func (c *cache[K, V]) evictItem(item *cacheItem[K, V]) {
 
 	c.policy.remove(item)
 
+	if c.isSync {
+		log.Debugf("%s executing evict callback for item (synchronous): %v", c, item.key)
+
+		c.onEvictCallback(item.key, item.value)
+
+		return
+	}
+
+	log.Debugf("%s sending evict event for item: %v", c, item.key)
 	c.events <- cacheEvent[K, V]{event: evictItem, item: item}
+}
+
+// String returns a string representation of this cache.
+func (c *cache[K, V]) String() string {
+	return fmt.Sprintf("cache[%T, %T](%p)", *new(K), *new(V), c)
 }

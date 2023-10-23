@@ -11,7 +11,6 @@ import (
 
 type CacheSuite struct {
 	suite.Suite
-	cache  cache.Interface[int, string]
 	clock  *fakeClock
 	expiry time.Duration
 }
@@ -41,42 +40,52 @@ func (suite *CacheSuite) SetupTest() {
 	}
 
 	suite.expiry = time.Hour
-
-	suite.cache = cache.New[int, string](2).WithClock(suite.clock).WithExpiry(suite.expiry).Build()
 }
 
-func (suite *CacheSuite) TestNew() {
-	suite.Assert().Equal(0, suite.cache.Len())
-	suite.Assert().Equal(2, suite.cache.Capacity())
+func (suite *CacheSuite) newCache() cache.Interface[int, string] {
+	cb := cache.New[int, string](2).WithClock(suite.clock).WithExpiry(suite.expiry)
+
+	return cb.Build()
+}
+
+func (suite *CacheSuite) TestBuild() {
+	c := suite.newCache()
+
+	suite.Assert().Equal(0, c.Len())
+	suite.Assert().Equal(2, c.Capacity())
 }
 
 func (suite *CacheSuite) TestClosing() {
-	suite.Assert().NoError(suite.cache.Close())
+	c := suite.newCache()
+
+	suite.Assert().NoError(c.Close())
 
 	// set/get do nothing after closing
-	suite.cache.Set(1, "one")
-	suite.Assert().Equal(0, suite.cache.Len())
+	c.Set(1, "one")
+	suite.Assert().Equal(0, c.Len())
 
 	// getting a value does nothing, returns false
-	_, ok := suite.cache.Get(1)
+	_, ok := c.Get(1)
 	suite.Assert().False(ok)
 
 	// delete does nothing
-	suite.Assert().False(suite.cache.Delete(1))
+	suite.Assert().False(c.Delete(1))
 
 	// closing again does nothing
-	suite.Assert().NoError(suite.cache.Close())
+	suite.Assert().NoError(c.Close())
 }
 
 func (suite *CacheSuite) TestExpiry() {
-	suite.cache.Set(1, "one")
-	suite.cache.Set(2, "two")
+	c := suite.newCache()
 
-	one, ok := suite.cache.Get(1)
+	c.Set(1, "one")
+	c.Set(2, "two")
+
+	one, ok := c.Get(1)
 	suite.Assert().Equal("one", one)
 	suite.Assert().True(ok)
 
-	two, ok := suite.cache.Get(2)
+	two, ok := c.Get(2)
 	suite.Assert().Equal("two", two)
 	suite.Assert().True(ok)
 
@@ -84,9 +93,61 @@ func (suite *CacheSuite) TestExpiry() {
 	suite.clock.SetNow(suite.clock.Now().Add(suite.expiry + time.Second))
 
 	// get should return false
-	_, ok = suite.cache.Get(1)
+	_, ok = c.Get(1)
 	suite.Assert().False(ok)
 
-	_, ok = suite.cache.Get(2)
+	_, ok = c.Get(2)
 	suite.Assert().False(ok)
+}
+
+func (suite *CacheSuite) TestSynchronousEviction() {
+	evicted := false
+
+	cb := cache.New[int, string](2).Synchronous()
+	cb.WithEvictFunc(func(key int, value string) {
+		suite.Assert().Equal(1, key)
+		suite.Assert().Equal("one", value)
+
+		evicted = true
+	})
+
+	c := cb.Build()
+
+	c.Set(1, "one")
+	c.Set(2, "two")
+	c.Set(3, "three")
+
+	suite.Assert().True(evicted)
+
+	// 1 should be evicted
+	_, ok := c.Get(1)
+	suite.Assert().False(ok)
+
+	_, ok = c.Get(2)
+	suite.Assert().True(ok)
+
+	// 3 should still be there
+	three, ok := c.Get(3)
+	suite.Assert().Equal("three", three)
+	suite.Assert().True(ok)
+}
+
+func (suite *CacheSuite) TestSynchronousClosing() {
+	c := cache.New[int, string](2).Synchronous().Build()
+
+	suite.Assert().NoError(c.Close())
+
+	// set/get do nothing after closing
+	c.Set(1, "one")
+	suite.Assert().Equal(0, c.Len())
+
+	// getting a value does nothing, returns false
+	_, ok := c.Get(1)
+	suite.Assert().False(ok)
+
+	// delete does nothing
+	suite.Assert().False(c.Delete(1))
+
+	// closing again does nothing
+	suite.Assert().NoError(c.Close())
 }
