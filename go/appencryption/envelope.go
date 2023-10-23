@@ -10,6 +10,7 @@ import (
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
 // MetricsPrefix prefixes all metrics names
@@ -377,12 +378,14 @@ func (e *envelopeEncryption) EncryptPayload(ctx context.Context, data []byte) (*
 	defer encryptTimer.UpdateSince(time.Now())
 
 	loader := func(meta KeyMeta) (*internal.CryptoKey, error) {
+		log.Debugf("[EncryptPayload] loadLatestOrCreateIntermediateKey: %s", meta.ID)
 		return e.loadLatestOrCreateIntermediateKey(ctx, meta.ID)
 	}
 
 	// Try to get latest from cache.
 	ik, err := e.ikCache.GetOrLoadLatest(e.partition.IntermediateKeyID(), loader)
 	if err != nil {
+		log.Debugf("[EncryptPayload] GetOrLoadLatest failed: %s", err.Error())
 		return nil, err
 	}
 
@@ -392,6 +395,7 @@ func (e *envelopeEncryption) EncryptPayload(ctx context.Context, data []byte) (*
 	// to prevent excessive IK/SK creation (we always create new DRK on each write, so not a concern there)
 	drk, err := internal.GenerateKey(e.SecretFactory, time.Now().Unix(), AES256KeySize)
 	if err != nil {
+		log.Debugf("[EncryptPayload] GenerateKey failed: %s", err.Error())
 		return nil, err
 	}
 
@@ -401,6 +405,7 @@ func (e *envelopeEncryption) EncryptPayload(ctx context.Context, data []byte) (*
 		return e.Crypto.Encrypt(data, bytes)
 	})
 	if err != nil {
+		log.Debugf("[EncryptPayload] WithKeyFunc failed to encrypt data using DRK: %s", err.Error())
 		return nil, err
 	}
 
@@ -410,6 +415,7 @@ func (e *envelopeEncryption) EncryptPayload(ctx context.Context, data []byte) (*
 		})
 	})
 	if err != nil {
+		log.Debugf("[EncryptPayload] WithKeyFunc failed to encrypt DRK using IK: %s", err.Error())
 		return nil, err
 	}
 
@@ -444,11 +450,15 @@ func (e *envelopeEncryption) DecryptDataRowRecord(ctx context.Context, drr DataR
 	}
 
 	loader := func(meta KeyMeta) (*internal.CryptoKey, error) {
+		log.Debugf("[DecryptDataRowRecord] loadIntermediateKey: %s", meta.ID)
+
 		return e.loadIntermediateKey(ctx, meta)
 	}
 
 	ik, err := e.ikCache.GetOrLoad(*drr.Key.ParentKeyMeta, loader)
 	if err != nil {
+		log.Debugf("[DecryptDataRowRecord] GetOrLoad IK failed: %s", err.Error())
+
 		return nil, err
 	}
 
