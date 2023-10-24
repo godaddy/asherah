@@ -24,7 +24,7 @@
     <hikaricp.version>5.0.1</hikaricp.version>
     <io.netty.version>4.1.100.Final</io.netty.version>
     <commons.lang3.version>3.13.0</commons.lang3.version>
-    <slf4j.version>2.0.7</slf4j.version>
+    <slf4j.version>2.0.9</slf4j.version>
     <jacoco.version>0.8.10</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <suppressions.config>${project.basedir}/suppressions.xml</suppressions.config>
