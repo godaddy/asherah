@@ -94,11 +94,11 @@ type policy[K comparable, V any] interface {
 	close()
 	// admit is called when an item is admitted to the cache.
 	admit(item *cacheItem[K, V])
-	// access is called when an item is access.
+	// access is called when an item is accessed.
 	access(item *cacheItem[K, V])
 	// victim returns the victim item to be evicted.
 	victim() *cacheItem[K, V]
-	// remove is called when an item is remove from the cache.
+	// remove is called when an item is removed from the cache.
 	remove(item *cacheItem[K, V])
 }
 
