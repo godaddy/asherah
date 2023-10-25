@@ -92,7 +92,7 @@ type policy[K comparable, V any] interface {
 	// close removes all items from the cache, sends a close event to the event
 	// processing goroutine, and waits for it to exit.
 	close()
-	// admit is called when an item is admit to the cache.
+	// admit is called when an item is admitted to the cache.
 	admit(item *cacheItem[K, V])
 	// access is called when an item is access.
 	access(item *cacheItem[K, V])
