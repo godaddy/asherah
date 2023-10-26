@@ -1,4 +1,3 @@
-[![Join Slack](https://img.shields.io/badge/Join%20us%20on-Slack-e01563.svg)](https://godaddy-oss-slack.herokuapp.com/)
 [![License](https://img.shields.io/github/license/godaddy/asherah.svg)](https://github.com/godaddy/asherah/blob/master/LICENSE)
 [![CircleCI](https://img.shields.io/circleci/build/gh/godaddy/asherah.svg)](https://circleci.com/gh/godaddy/asherah)
 [![Codecov](https://codecov.io/gh/godaddy/asherah/graph/badge.svg)](https://codecov.io/gh/godaddy/asherah)
