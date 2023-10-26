@@ -275,7 +275,7 @@ jobs:
     needs: csharp-logging
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:7.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -290,7 +290,6 @@ jobs:
     - name: Build
       run: |
         cd csharp/SecureMemory
-        ./scripts/install-dotnet-3.1.sh
         ./scripts/clean.sh
         ./scripts/build.sh
     - name: Test
