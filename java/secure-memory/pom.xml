@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>securememory</artifactId>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
   <name>SecureMemory</name>
   <description>Secure off-heap memory storage for application secrets (like cryptographic keys)</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -39,9 +39,9 @@
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.10</jacoco.version>
     <jna.version>5.13.0</jna.version>
-    <junit.jupiter.version>5.9.3</junit.jupiter.version>
+    <junit.jupiter.version>5.10.0</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
-    <logback.version>1.4.7</logback.version>
+    <logback.version>1.4.11</logback.version>
     <maven.checkstyle.version>3.2.2</maven.checkstyle.version>
     <maven.compiler.version>3.10.1</maven.compiler.version>
     <maven.gpg.version>3.0.1</maven.gpg.version>
@@ -49,7 +49,7 @@
     <maven.scm.version>2.0.0</maven.scm.version>
     <maven.source.version>3.2.1</maven.source.version>
     <maven.surefire.version>3.1.0</maven.surefire.version>
-    <mockito.core.version>5.1.1</mockito.core.version>
+    <mockito.core.version>5.6.0</mockito.core.version>
     <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>
     <slf4j.version>2.0.9</slf4j.version>
   </properties>
