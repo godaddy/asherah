@@ -100,6 +100,8 @@ func TestNewSessionCache(t *testing.T) {
 	defer cache.Close()
 
 	require.NotNil(t, cache)
+
+	assert.Equal(t, cache.(*cacheWrapper).policy.SessionCacheEvictionPolicy, "slru")
 }
 
 func TestSessionCacheGetUsesLoader(t *testing.T) {
@@ -227,15 +229,20 @@ func TestSessionCacheMaxCount(t *testing.T) {
 func TestSessionCacheDuration(t *testing.T) {
 	ttl := time.Millisecond * 100
 
-	// can't use more than 16 sessions here as that is the max drain
-	// for the mango cache implementation
 	totalSessions := 16
 	b := newSessionBucket()
 
 	policy := NewCryptoPolicy()
 	policy.SessionCacheDuration = ttl
 
-	cache := newSessionCache(b.load, policy)
+	loaded := 0
+
+	loader := func(id string) (*Session, error) {
+		loaded++
+		return b.load(id)
+	}
+
+	cache := newSessionCache(loader, policy)
 	require.NotNil(t, cache)
 
 	defer cache.Close()
@@ -244,18 +251,23 @@ func TestSessionCacheDuration(t *testing.T) {
 		cache.Get(strconv.Itoa(i))
 	}
 
+	expectedCount := totalSessions
+
+	// assert we have a load for each session
+	require.Equal(t, expectedCount, loaded)
+
 	// ensure the ttl has elapsed
 	time.Sleep(ttl + time.Millisecond*50)
 
-	expectedCount := 0
-
-	// mango cache implementation only reaps expired entries following a write, so we'll write a new
-	// cache entry and ensure it's the only one left
-	_, _ = cache.Get("99") // IDs 0-15 were created above
-	expectedCount = 1
-
 	assert.Eventually(t, func() bool {
-		return cache.Count() == expectedCount
+		for i := 0; i < totalSessions; i++ {
+			cache.Get(strconv.Itoa(i))
+		}
+
+		// now that the ttl has elapsed, we should have loaded the sessions again
+		// and the total loaded should be greater than the expected count
+		return loaded > expectedCount
+
 	}, time.Second*10, time.Millisecond*10)
 }
 
@@ -283,7 +295,7 @@ func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 
 	// assert additional debug info was written to log
 	assert.NotEqual(t, 0, l.Len())
-	assert.Contains(t, l.String(), "session cache stash len = 0")
+	assert.Contains(t, l.String(), "closing session cache")
 
 	log.SetLogger(nil)
 }
@@ -384,52 +396,4 @@ func TestSharedSessionCloseDoesNotCloseUnderlyingSession(t *testing.T) {
 
 	// shared sessions aren't actually closed until evicted from the cache
 	assert.False(t, b.IsClosed(s1))
-}
-
-func TestCacheStash(t *testing.T) {
-	id := "stashed item"
-	stash := newCacheStash()
-
-	complete := make(chan bool)
-
-	go func() {
-		stash.process()
-
-		complete <- true
-	}()
-
-	// stash is empty
-	s, ok := stash.get(id)
-	assert.Nil(t, s)
-	assert.False(t, ok)
-	assert.Equal(t, 0, stash.len())
-
-	// create a new session and stash it
-	sess := new(Session)
-	stash.add(id, sess)
-
-	// stash now contains the session we just added
-	s, ok = stash.get(id)
-	assert.Equal(t, sess, s)
-	assert.True(t, ok)
-	assert.Equal(t, 1, stash.len())
-
-	// now remove the stashed session
-	stash.remove(id)
-
-	// remove events are queued asynchronously
-	assert.Eventually(t, func() bool {
-		_, ok := stash.get(id)
-
-		return !ok
-	}, 500*time.Millisecond, 10*time.Millisecond)
-
-	// and verify it's gone
-	s, ok = stash.get(id)
-	assert.Nil(t, s)
-	assert.False(t, ok)
-	assert.Equal(t, 0, stash.len())
-
-	stash.close()
-	assert.True(t, <-complete)
 }

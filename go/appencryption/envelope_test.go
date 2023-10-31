@@ -29,8 +29,8 @@ var (
 type EnvelopeSuite struct {
 	suite.Suite
 	crypto        AEAD
-	ikCache       cache
-	skCache       cache
+	ikCache       keyCacher
+	skCache       keyCacher
 	partition     partition
 	e             envelopeEncryption
 	metastore     Metastore
@@ -53,14 +53,14 @@ func (suite *EnvelopeSuite) SetupTest() {
 	suite.secretFactory = new(MockSecretFactory)
 
 	suite.e = envelopeEncryption{
-		partition:        suite.partition,
-		Metastore:        suite.metastore,
-		KMS:              suite.kms,
-		Policy:           NewCryptoPolicy(),
-		Crypto:           suite.crypto,
-		SecretFactory:    suite.secretFactory,
-		systemKeys:       suite.skCache,
-		intermediateKeys: suite.ikCache,
+		partition:     suite.partition,
+		Metastore:     suite.metastore,
+		KMS:           suite.kms,
+		Policy:        NewCryptoPolicy(),
+		Crypto:        suite.crypto,
+		SecretFactory: suite.secretFactory,
+		skCache:       suite.skCache,
+		ikCache:       suite.ikCache,
 	}
 
 	var err error
@@ -874,66 +874,6 @@ func (suite *EnvelopeSuite) TestEnvelopeEncryption_DecryptDataRowRecord_ReturnsE
 	mock.AssertExpectationsForObjects(suite.T(), suite.ikCache)
 }
 
-func (suite *EnvelopeSuite) Test_KeyReloader_Load() {
-	called := false
-
-	reloader := &reloader{
-		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
-			called = true
-			return nil, nil
-		}),
-	}
-
-	k, err := reloader.Load()
-	assert.Nil(suite.T(), k)
-	assert.NoError(suite.T(), err)
-	assert.True(suite.T(), called)
-}
-
-func (suite *EnvelopeSuite) Test_KeyReloader_IsInvalid() {
-	k, _ := getKeyAndKeyBytes(suite.T())
-	called := false
-
-	reloader := &reloader{
-		isInvalidFunc: func(key *internal.CryptoKey) bool {
-			called = true
-
-			assert.Equal(suite.T(), k, key)
-			return false
-		},
-	}
-
-	reloader.IsInvalid(k)
-
-	assert.True(suite.T(), called)
-}
-
-func (suite *EnvelopeSuite) Test_KeyReloader_Close() {
-	reloader := &reloader{
-		loader: keyLoaderFunc(func() (*internal.CryptoKey, error) {
-			k, _ := getKeyAndKeyBytes(suite.T())
-			return k, nil
-		}),
-	}
-	loadTestKey := func() *internal.CryptoKey {
-		k, _ := reloader.Load()
-		return k
-	}
-
-	var keys []*internal.CryptoKey
-	keys = append(keys, loadTestKey(), loadTestKey())
-
-	for _, k := range keys {
-		assert.False(suite.T(), k.IsClosed())
-	}
-
-	reloader.Close()
-
-	for _, k := range keys {
-		assert.True(suite.T(), k.IsClosed())
-	}
-}
-
 func TestKeyMeta_String(t *testing.T) {
 	meta := KeyMeta{
 		Created: someTimestamp,
@@ -968,17 +908,19 @@ func TestEnvelopeEncryption_Close(t *testing.T) {
 	sec, err := secretFactory.New(data)
 	if assert.NoError(t, err) {
 		m := new(MockSecretFactory)
+
 		m.On("New", data).Return(sec, nil)
 
-		cache := newKeyCache(NewCryptoPolicy())
+		cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+
 		key, _ := internal.NewCryptoKey(m, 123456, false, data)
 
-		cache.keys["testing"] = cacheEntry{
-			key: key,
-		}
+		cache.keys.Set("testing", cacheEntry{
+			key: &cachedCryptoKey{CryptoKey: key, refs: 1},
+		})
 
 		e := &envelopeEncryption{
-			intermediateKeys: cache,
+			ikCache: cache,
 		}
 
 		assert.False(t, sec.IsClosed())
