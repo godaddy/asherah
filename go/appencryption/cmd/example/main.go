@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -63,6 +64,13 @@ type Options struct {
 	CheckInterval      time.Duration `long:"check" description:"Interval to check for expired keys"`
 	ConnectionString   string        `short:"C" long:"conn" description:"MySQL Connection String"`
 	NoExit             bool          `short:"x" long:"no-exit" description:"Prevent app from closing once tests are completed. Especially useful for profiling."`
+
+	SessionCacheSize    int           `long:"session-cache-size" description:"Number of sessions to cache in the shared session cache."`
+	SessionCacheExpiry  time.Duration `long:"session-cache-expiry" description:"Duration after which a session is evicted from the shared session cache."`
+	EnableSharedIKCache bool          `long:"enable-shared-ik-cache" description:"Enables the shared IK cache."`
+	IKCacheSize         int           `long:"ik-cache-size" description:"Number of IKs to cache in the IK cache."`
+	SKCacheSize         int           `long:"sk-cache-size" description:"Number of SKs to cache in the SK cache."`
+	RandomizePartition  bool          `long:"randomize-partition" description:"Randomize the partition ID for each session using a Zipfian distribution."`
 }
 
 var (
@@ -232,17 +240,37 @@ func main() {
 		return func(*appencryption.CryptoPolicy) { /* noop */ }
 	}
 
+	policy := appencryption.NewCryptoPolicy(
+		appencryption.WithExpireAfterDuration(expireAfter),
+		appencryption.WithRevokeCheckInterval(checkInterval),
+		withCacheOption(),
+		withSessionCacheOption(),
+	)
+
+	if opts.SessionCacheSize > 0 {
+		policy.SessionCacheMaxSize = opts.SessionCacheSize
+	}
+
+	if opts.SessionCacheExpiry > 0 {
+		policy.SessionCacheDuration = opts.SessionCacheExpiry
+	}
+
+	if opts.IKCacheSize > 0 {
+		policy.IntermediateKeyCacheMaxSize = opts.IKCacheSize
+	}
+
+	if opts.SKCacheSize > 0 {
+		policy.SystemKeyCacheMaxSize = opts.SKCacheSize
+	}
+
+	policy.SharedIntermediateKeyCache = opts.EnableSharedIKCache
+
 	keyManager := CreateKMS()
 
 	conf := &appencryption.Config{
 		Service: "exampleService",
 		Product: "productId",
-		Policy: appencryption.NewCryptoPolicy(
-			appencryption.WithExpireAfterDuration(expireAfter),
-			appencryption.WithRevokeCheckInterval(checkInterval),
-			withCacheOption(),
-			withSessionCacheOption(),
-		),
+		Policy:  policy,
 	}
 
 	secrets := new(memguard.SecretFactory)
@@ -293,9 +321,26 @@ func main() {
 		}()
 	}
 
+	var partitioner func() int
+	if opts.RandomizePartition {
+		r := rand.New(rand.NewSource(1))
+		zipf := rand.NewZipf(r, 1.01, 1.0, 1<<16-1)
+
+		partitioner = func() int {
+			return int(zipf.Uint64())
+		}
+	}
+
 	for i := 0; i < opts.Iterations; i++ {
-		log.Println("Run iteration:", i)
-		RunSessionIteration(time.Now(), factory)
+		if opts.Verbose {
+			log.Printf(
+				"[run iteration %d] secrets: allocs=%d, inuse=%d\n",
+				i,
+				securememory.AllocCounter.Count(),
+				securememory.InUseCounter.Count())
+		}
+
+		RunSessionIteration(time.Now(), factory, partitioner)
 	}
 
 	done <- true
@@ -364,14 +409,30 @@ func main() {
 	}
 }
 
-func RunSessionIteration(start time.Time, factory *appencryption.SessionFactory) {
+func RunSessionIteration(start time.Time, factory *appencryption.SessionFactory, partitioner func() int) {
 	var wg sync.WaitGroup
 
 	for i := 0; i < opts.Sessions; i++ {
 		wg.Add(1)
 
+		partitionID := i
+
+		if partitioner != nil {
+			partitionID = partitioner()
+		}
+
 		go func(i int) {
-			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf(
+						"[panic] secrets: allocs=%d, inuse=%d\n",
+						securememory.AllocCounter.Count(),
+						securememory.InUseCounter.Count())
+					panic(r)
+				}
+
+				wg.Done()
+			}()
 
 			runFunc := func(shopper string) {
 				session, err := factory.GetSession(shopper)
@@ -407,7 +468,7 @@ func RunSessionIteration(start time.Time, factory *appencryption.SessionFactory)
 
 				runFunc(shopper)
 			}
-		}(i)
+		}(partitionID)
 	}
 
 	wg.Wait()

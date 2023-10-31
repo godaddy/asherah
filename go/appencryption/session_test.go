@@ -80,7 +80,7 @@ type MockCache struct {
 	mock.Mock
 }
 
-func (c *MockCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey, error) {
+func (c *MockCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
 	var (
 		ret = c.Called(id, loader)
 		key *internal.CryptoKey
@@ -90,10 +90,10 @@ func (c *MockCache) GetOrLoad(id KeyMeta, loader keyLoader) (*internal.CryptoKey
 		key = b.(*internal.CryptoKey)
 	}
 
-	return key, ret.Error(1)
+	return &cachedCryptoKey{CryptoKey: key}, ret.Error(1)
 }
 
-func (c *MockCache) GetOrLoadLatest(id string, loader keyLoader) (*internal.CryptoKey, error) {
+func (c *MockCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
 	var (
 		ret = c.Called(id, loader)
 		key *internal.CryptoKey
@@ -103,7 +103,7 @@ func (c *MockCache) GetOrLoadLatest(id string, loader keyLoader) (*internal.Cryp
 		key = b.(*internal.CryptoKey)
 	}
 
-	return key, ret.Error(1)
+	return &cachedCryptoKey{CryptoKey: key}, ret.Error(1)
 }
 
 func (c *MockCache) Close() error {
@@ -121,9 +121,9 @@ func TestNewSessionFactory(t *testing.T) {
 }
 
 func TestNewSessionFactory_WithSessionCache(t *testing.T) {
-	policy := &CryptoPolicy{
-		CacheSessions: true,
-	}
+	policy := NewCryptoPolicy()
+	policy.CacheSessions = true
+
 	factory := NewSessionFactory(&Config{
 		Policy: policy,
 	}, nil, nil, nil)
@@ -169,7 +169,7 @@ func TestSessionFactory_GetSession(t *testing.T) {
 	sess, err := sessionFactory.GetSession("testing")
 	if assert.NoError(t, err) {
 		assert.NotNil(t, sess.encryption)
-		ik := sess.encryption.(*envelopeEncryption).intermediateKeys
+		ik := sess.encryption.(*envelopeEncryption).ikCache
 		assert.IsType(t, new(neverCache), ik)
 	}
 }
@@ -184,7 +184,7 @@ func TestSessionFactory_GetSession_CanCacheIntermediateKeys(t *testing.T) {
 	sess, err := sessionFactory.GetSession("testing")
 	if assert.NoError(t, err) {
 		assert.NotNil(t, sess.encryption)
-		ik := sess.encryption.(*envelopeEncryption).intermediateKeys
+		ik := sess.encryption.(*envelopeEncryption).ikCache
 		assert.IsType(t, new(keyCache), ik)
 	}
 }

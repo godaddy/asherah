@@ -14,13 +14,14 @@ import (
 // SessionFactory is used to create new encryption sessions and manage
 // the lifetime of the intermediate keys.
 type SessionFactory struct {
-	sessionCache  sessionCache
-	systemKeys    cache
-	Config        *Config
-	Metastore     Metastore
-	Crypto        AEAD
-	KMS           KeyManagementService
-	SecretFactory securememory.SecretFactory
+	sessionCache     sessionCache
+	systemKeys       keyCacher
+	intermediateKeys keyCacher // only used if shared key cache is enabled
+	Config           *Config
+	Metastore        Metastore
+	Crypto           AEAD
+	KMS              KeyManagementService
+	SecretFactory    securememory.SecretFactory
 }
 
 // FactoryOption is used to configure additional options in a SessionFactory.
@@ -48,21 +49,28 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 		config.Policy = NewCryptoPolicy()
 	}
 
-	var skCache cache
+	var skCache keyCacher
 	if config.Policy.CacheSystemKeys {
-		skCache = newKeyCache(config.Policy)
+		skCache = newKeyCache(CacheTypeSystemKeys, config.Policy)
 		log.Debugf("new skCache: %v\n", skCache)
 	} else {
 		skCache = new(neverCache)
 	}
 
+	var ikCache keyCacher
+	if config.Policy.SharedIntermediateKeyCache {
+		ikCache = newKeyCache(CacheTypeIntermediateKeys, config.Policy)
+		log.Debugf("new shared ikCache: %v\n", ikCache)
+	}
+
 	factory := &SessionFactory{
-		systemKeys:    skCache,
-		Config:        config,
-		Metastore:     store,
-		Crypto:        crypto,
-		KMS:           kms,
-		SecretFactory: new(memguard.SecretFactory),
+		systemKeys:       skCache,
+		intermediateKeys: ikCache,
+		Config:           config,
+		Metastore:        store,
+		Crypto:           crypto,
+		KMS:              kms,
+		SecretFactory:    new(memguard.SecretFactory),
 	}
 
 	if config.Policy.CacheSessions {
@@ -85,6 +93,10 @@ func (f *SessionFactory) Close() error {
 		f.sessionCache.Close()
 	}
 
+	if f.Config.Policy.SharedIntermediateKeyCache {
+		f.intermediateKeys.Close()
+	}
+
 	return f.systemKeys.Close()
 }
 
@@ -102,17 +114,29 @@ func (f *SessionFactory) GetSession(id string) (*Session, error) {
 }
 
 func newSession(f *SessionFactory, id string) (*Session, error) {
+	skCache := f.systemKeys
+
+	var ikCache keyCacher
+	if f.Config.Policy.SharedIntermediateKeyCache {
+		ikCache = f.intermediateKeys
+	} else {
+		ikCache = f.newIKCache()
+	}
+
 	s := &Session{
 		encryption: &envelopeEncryption{
-			partition:        f.newPartition(id),
-			Metastore:        f.Metastore,
-			KMS:              f.KMS,
-			Policy:           f.Config.Policy,
-			Crypto:           f.Crypto,
-			SecretFactory:    f.SecretFactory,
-			systemKeys:       f.systemKeys,
-			intermediateKeys: f.newIKCache(),
+			partition:     f.newPartition(id),
+			Metastore:     f.Metastore,
+			KMS:           f.KMS,
+			Policy:        f.Config.Policy,
+			Crypto:        f.Crypto,
+			SecretFactory: f.SecretFactory,
+			skCache:       skCache,
+			ikCache:       ikCache,
 		},
+
+		ikCache: ikCache,
+		skCache: skCache,
 	}
 
 	log.Debugf("[newSession] for id %s. Session(%p){Encryption(%p)}", id, s, s.encryption)
@@ -128,9 +152,9 @@ func (f *SessionFactory) newPartition(id string) partition {
 	return newPartition(id, f.Config.Service, f.Config.Product)
 }
 
-func (f *SessionFactory) newIKCache() cache {
+func (f *SessionFactory) newIKCache() keyCacher {
 	if f.Config.Policy.CacheIntermediateKeys {
-		return newKeyCache(f.Config.Policy)
+		return newKeyCache(CacheTypeIntermediateKeys, f.Config.Policy)
 	}
 
 	return new(neverCache)
@@ -139,6 +163,9 @@ func (f *SessionFactory) newIKCache() cache {
 // Session is used to encrypt and decrypt data related to a specific partition ID.
 type Session struct {
 	encryption Encryption
+
+	ikCache keyCacher
+	skCache keyCacher
 }
 
 // Encrypt encrypts a provided slice of bytes and returns a DataRowRecord, which contains required

@@ -187,25 +187,25 @@ func createRevokedKey(src *internal.CryptoKey, factory securememory.SecretFactor
 }
 
 func createSession(crypto AEAD, metastore Metastore, kms KeyManagementService, factory securememory.SecretFactory,
-	policy *CryptoPolicy, partition partition, ikCache cache, skCache cache) *Session {
+	policy *CryptoPolicy, partition partition, ikCache keyCacher, skCache keyCacher) *Session {
 	return &Session{
 		encryption: &envelopeEncryption{
-			partition:        partition,
-			Metastore:        metastore,
-			KMS:              kms,
-			Policy:           policy,
-			Crypto:           crypto,
-			SecretFactory:    factory,
-			systemKeys:       skCache,
-			intermediateKeys: ikCache,
+			partition:     partition,
+			Metastore:     metastore,
+			KMS:           kms,
+			Policy:        policy,
+			Crypto:        crypto,
+			SecretFactory: factory,
+			skCache:       skCache,
+			ikCache:       ikCache,
 		}}
 }
 
 func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, systemKey *internal.CryptoKey,
-	policy *CryptoPolicy) (cache, cache) {
-	var ikCache, skCache cache
-	skCache = newKeyCache(policy)
-	ikCache = newKeyCache(policy)
+	policy *CryptoPolicy) (keyCacher, keyCacher) {
+	var ikCache, skCache keyCacher
+	skCache = newKeyCache(CacheTypeSystemKeys, policy)
+	ikCache = newKeyCache(CacheTypeIntermediateKeys, policy)
 
 	sk := systemKey
 	ik := intermediateKey
@@ -222,9 +222,9 @@ func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, 
 		}
 
 		// Preload the cache with the system keys
-		_, _ = skCache.GetOrLoad(*meta, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+		_, _ = skCache.GetOrLoad(*meta, func(_ KeyMeta) (*internal.CryptoKey, error) {
 			return sk, nil
-		}))
+		})
 	}
 
 	if cacheIK != EMPTY {
@@ -239,9 +239,9 @@ func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, 
 		}
 
 		// Preload the cache with the intermediate keys
-		_, _ = ikCache.GetOrLoad(*meta, keyLoaderFunc(func() (*internal.CryptoKey, error) {
+		_, _ = ikCache.GetOrLoad(*meta, func(_ KeyMeta) (*internal.CryptoKey, error) {
 			return ik, nil
-		}))
+		})
 	}
 
 	return ikCache, skCache
