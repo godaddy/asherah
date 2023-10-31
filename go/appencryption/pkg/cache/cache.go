@@ -42,8 +42,6 @@ const (
 	SLRU CachePolicy = "slru"
 	// TinyLFU is the tiny least frequently used cache policy.
 	TinyLFU CachePolicy = "tinylfu"
-	// DefaultCachePolicy is the default cache policy.
-	DefaultCachePolicy = LRU
 )
 
 // String returns the string representation of the eviction policy.
