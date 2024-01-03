@@ -14,7 +14,7 @@
     <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/Logging</RepositoryUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/Logging</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
