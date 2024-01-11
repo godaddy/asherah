@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>GoDaddy.Asherah.AppEncryption</PackageId>
     <Title>AppEncryption</Title>
@@ -16,7 +16,7 @@
     <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/godaddy/asherah/tree/master/csharp/AppEncryption</RepositoryUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/AppEncryption</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

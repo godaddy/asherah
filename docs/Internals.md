@@ -64,7 +64,7 @@ Create and write DRR to data persistence
 
 The following diagram summarizes the entire encrypt path.
 
-![Encrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/encrypt.svg?sanitize=true)
+![Encrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/main/docs/images/encrypt.svg?sanitize=true)
 
 ### Decrypt
 
@@ -105,7 +105,7 @@ Return decrypted data
 
 The following diagram summarizes the entire decrypt path.
 
-![Decrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/master/docs/images/decrypt.svg?sanitize=true)
+![Decrypt Flow](https://raw.githubusercontent.com/godaddy/asherah/main/docs/images/decrypt.svg?sanitize=true)
 
 ### Future Consideration: Queued Rotation
 

@@ -34,7 +34,7 @@
     <!-- GRPC dependencies
     Note: we can't use grpc-netty-shaded due to our use of netty-specific APIs, so related
     dependencies must be maintained independently to ensure version compatability. For a table of known version
-    combonations, see https://github.com/grpc/grpc-java/blob/master/SECURITY.md#netty -->
+    combonations, see https://github.com/grpc/grpc-java/blob/main/SECURITY.md#netty -->
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-core</artifactId>
