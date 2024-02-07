@@ -46,7 +46,7 @@
     <amazonaws.version>1.21.1</amazonaws.version>
     <aws.sdk.version>1.12.468</aws.sdk.version>
     <aws.sdk-v2.version>2.21.46</aws.sdk-v2.version>
-    <bouncycastle.version>1.70</bouncycastle.version>
+    <bouncycastle.version>1.77</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <checkerframework.version>3.41.0</checkerframework.version>
@@ -295,7 +295,7 @@
     <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk15on</artifactId>
+      <artifactId>bcprov-jdk18on</artifactId>
       <version>${bouncycastle.version}</version>
     </dependency>
 
