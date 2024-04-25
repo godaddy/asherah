@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 
 	"github.com/godaddy/asherah/go/appencryption/integrationtest/persistence/persistencetest"
 )

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
 func TestDynamoDBMetastore_WithDynamoDBRegionSuffix(t *testing.T) {

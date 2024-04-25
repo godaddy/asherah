@@ -19,3 +19,6 @@ integrationtest/traces/data/*.gz
 integrationtest/traces/data/*.xz
 integrationtest/traces/data/*.tgz
 integrationtest/traces/out/
+
+# asdf
+.tool-versions
