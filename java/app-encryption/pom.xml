@@ -46,7 +46,7 @@
     <amazonaws.version>1.21.1</amazonaws.version>
     <aws.sdk.version>1.12.468</aws.sdk.version>
     <aws.sdk-v2.version>2.21.46</aws.sdk-v2.version>
-    <bouncycastle.version>1.77</bouncycastle.version>
+    <bouncycastle.version>1.78</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <checkerframework.version>3.41.0</checkerframework.version>
