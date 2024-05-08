@@ -12,8 +12,8 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
-	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/kms"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
 type Stats struct {

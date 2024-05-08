@@ -16,7 +16,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 
 	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
 const (
