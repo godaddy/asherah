@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/pkg/errors"
@@ -34,7 +34,7 @@ var (
 
 // DynamoDBMetastore implements the Metastore interface.
 type DynamoDBMetastore struct {
-	svc          dynamodbiface.DynamoDBAPI
+	svc          DynamoDBClientAPI
 	regionSuffix string
 	tableName    string
 }
@@ -47,6 +47,18 @@ func (d *DynamoDBMetastore) GetRegionSuffix() string {
 // GetTableName returns the DynamoDB table name.
 func (d *DynamoDBMetastore) GetTableName() string {
 	return d.tableName
+}
+
+// DynamoDBClientAPI is an interface that defines the methods used from the DynamoDB client.
+type DynamoDBClientAPI interface {
+	GetItemWithContext(aws.Context, *dynamodb.GetItemInput, ...request.Option) (*dynamodb.GetItemOutput, error)
+	PutItemWithContext(aws.Context, *dynamodb.PutItemInput, ...request.Option) (*dynamodb.PutItemOutput, error)
+	QueryWithContext(aws.Context, *dynamodb.QueryInput, ...request.Option) (*dynamodb.QueryOutput, error)
+}
+
+// GetClient returns the DynamoDB client.
+func (d *DynamoDBMetastore) GetClient() DynamoDBClientAPI {
+	return d.svc
 }
 
 // DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
@@ -73,6 +85,16 @@ func WithTableName(table string) DynamoDBMetastoreOption {
 	}
 }
 
+// WithClient configures the DynamoDBMetastore to use the provided client.
+//
+// This is useful for testing or when you want to use a custom DynamoDB client.
+func WithClient(c DynamoDBClientAPI) DynamoDBMetastoreOption {
+	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+		d.svc = c
+	}
+}
+
+// NewDynamoDBMetastore creates a new DynamoDBMetastore with the provided session and options.
 func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
 	d := &DynamoDBMetastore{
 		svc:       dynamodb.New(sess),

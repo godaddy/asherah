@@ -31,6 +31,15 @@ func WithTableName(table string) DynamoDBMetastoreOption {
 	return awsV1Persistence.WithTableName(table)
 }
 
+type DynamoDBClientAPI = awsV1Persistence.DynamoDBClientAPI
+
+// WithClient configures the DynamoDBMetastore to use the specified DynamoDB client.
+//
+// DEPRECATED: Use github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence.WithClient instead.
+func WithClient(c DynamoDBClientAPI) DynamoDBMetastoreOption {
+	return awsV1Persistence.WithClient(c)
+}
+
 // NewDynamoDBMetastore returns a new DynamoDBMetastore.
 //
 // DEPRECATED: Use github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence.NewDynamoDBMetastore instead.
