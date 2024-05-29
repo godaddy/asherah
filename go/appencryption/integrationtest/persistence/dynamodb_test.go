@@ -12,27 +12,29 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 
-	"github.com/godaddy/asherah/go/appencryption/integrationtest/persistence/persistencetest"
+	"github.com/godaddy/asherah/go/appencryption/integrationtest/dynamodbtest"
 )
 
+// DynamoDBSuite is the test suite for the DynamoDBMetastore.
+// Tests are run against a local DynamoDB instance using testcontainers.
 type DynamoDBSuite struct {
 	suite.Suite
 	instant           int64
 	dynamodbMetastore *persistence.DynamoDBMetastore
-	testContext       *persistencetest.DynamoDBTestContext
+	testContext       *dynamodbtest.DynamoDBTestContext
 }
 
 const (
-	ikCreated          = persistencetest.IKCreated
-	skCreated          = persistencetest.SKCreated
-	encryptedKeyString = persistencetest.EncryptedKeyString
-	skKeyID            = persistencetest.SKKeyID
-	testKey            = persistencetest.TestKey
+	ikCreated          = dynamodbtest.IKCreated
+	skCreated          = dynamodbtest.SKCreated
+	encryptedKeyString = dynamodbtest.EncryptedKeyString
+	skKeyID            = dynamodbtest.SKKeyID
+	testKey            = dynamodbtest.TestKey
 )
 
 func (suite *DynamoDBSuite) SetupSuite() {
 	suite.instant = time.Now().Add(-24 * time.Hour).Unix()
-	suite.testContext = persistencetest.NewDynamoDBTestContext(suite.T(), suite.instant)
+	suite.testContext = dynamodbtest.NewDynamoDBTestContext(suite.T(), suite.instant)
 }
 
 func (suite *DynamoDBSuite) TearDownSuite() {
@@ -100,7 +102,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithMultipleRecords
 	suite.testContext.InsertTestItem(suite.T(), timeMinusOneHour)
 	suite.testContext.InsertTestItem(suite.T(), timeMinusOneDay)
 
-	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), persistencetest.TestKey)
+	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), dynamodbtest.TestKey)
 
 	assert.NotNil(suite.T(), envelope)
 	assert.Equal(suite.T(), timePlusOneDay, envelope.Created)

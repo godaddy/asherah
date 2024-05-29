@@ -3,7 +3,7 @@ module github.com/godaddy/asherah/go/appencryption/integrationtest
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.265
+	github.com/aws/aws-sdk-go v1.51.21
 	github.com/docker/go-connections v0.4.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/godaddy/asherah/go/appencryption v0.2.6
@@ -26,10 +26,10 @@ require (
 	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/goburrow/cache v0.1.4 // indirect
-	github.com/godaddy/asherah/go/securememory v0.1.4 // indirect
+	github.com/godaddy/asherah/go/securememory v0.1.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
