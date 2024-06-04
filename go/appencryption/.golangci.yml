@@ -81,7 +81,7 @@ linters:
     - format
     - import
     # - metalinter
-    # - module
+    - module
     # - performance
     # - sql
     # - style
