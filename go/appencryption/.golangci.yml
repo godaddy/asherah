@@ -68,6 +68,7 @@ linters:
 
   disable:
     - contextcheck
+    - err113
     - godox
     - testifylint
     - wrapcheck
@@ -78,7 +79,7 @@ linters:
     - complexity
     - error
     - format
-    # - import
+    - import
     # - metalinter
     # - module
     # - performance
@@ -92,6 +93,24 @@ linters-settings:
     # The maximal code complexity to report.
     # Default: 10
     max-complexity: 20
+
+  depguard:
+    rules:
+      main:
+        list-mode: lax
+        files:
+          - "!$test"
+          - "!**/plugins/**"
+        deny:
+          - pkg: github.com/aws/aws-sdk-go
+            desc: "aws-sdk-go dependants must be in plugins/aws-v1"
+      errors:
+        list-mode: lax
+        files:
+          - "$all"
+        deny:
+          - pkg: github.com/pkg/errors
+            desc: "pkg/errors is deprecated, use errors package from stdlib"
 
   gci:
     sections:
@@ -108,6 +127,5 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-        - err113
         - godot
         - gosec

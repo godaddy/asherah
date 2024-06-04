@@ -2,11 +2,11 @@ package appencryption
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"

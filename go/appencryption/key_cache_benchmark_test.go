@@ -1,6 +1,7 @@
 package appencryption
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"sync/atomic"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory/memguard"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"

@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption"
@@ -123,13 +123,13 @@ func parseEnvelope(s scanner) (*appencryption.EnvelopeKeyRecord, error) {
 			return nil, nil
 		}
 
-		return nil, errors.Wrap(err, "error from scanner")
+		return nil, fmt.Errorf("error from scanner: %w", err)
 	}
 
 	var keyRecord *appencryption.EnvelopeKeyRecord
 
 	if err := json.Unmarshal([]byte(keyRecordString), &keyRecord); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal key")
+		return nil, fmt.Errorf("unable to unmarshal key: %w", err)
 	}
 
 	return keyRecord, nil
@@ -163,7 +163,7 @@ func (s *SQLMetastore) Store(ctx context.Context, keyID string, created int64, e
 
 	bytes, err := json.Marshal(envelope)
 	if err != nil {
-		return false, errors.Wrap(err, "error marshaling envelope")
+		return false, fmt.Errorf("error marshaling envelope: %w", err)
 	}
 
 	createdAt := time.Unix(created, 0)
@@ -172,7 +172,7 @@ func (s *SQLMetastore) Store(ctx context.Context, keyID string, created int64, e
 		// Go sql package does not provide a specific integrity violation error for duplicate detection
 		// at this time, so it's treated similar to other errors to avoid error parsing.
 		// The caller is left to assume any false/error return value may be a duplicate.
-		return false, errors.Wrapf(err, "error storing key: %s, %d", keyID, created)
+		return false, fmt.Errorf("error storing key: %s, %d: %w", keyID, created, err)
 	}
 
 	return true, nil

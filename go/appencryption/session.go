@@ -2,10 +2,10 @@ package appencryption
 
 import (
 	"context"
+	"errors"
 
 	"github.com/godaddy/asherah/go/securememory"
 	"github.com/godaddy/asherah/go/securememory/memguard"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"

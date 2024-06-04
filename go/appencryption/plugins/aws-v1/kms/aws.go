@@ -3,6 +3,7 @@ package kms
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -13,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption"
@@ -63,7 +63,7 @@ func newAWSKMSClient(sess client.ConfigProvider, region, arn string) AWSKMSClien
 func createAWSKMSClients(arnMap map[string]string) ([]AWSKMSClient, error) {
 	sess, err := session.NewSession()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create new session")
+		return nil, fmt.Errorf("unable to create new session: %w", err)
 	}
 
 	clients := make([]AWSKMSClient, 0)
@@ -264,7 +264,7 @@ func (m *AWSKMS) DecryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	var en envelope
 
 	if err := json.Unmarshal(keyBytes, &en); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal envelope")
+		return nil, fmt.Errorf("unable to unmarshal envelope: %w", err)
 	}
 
 	for i := range m.Clients {

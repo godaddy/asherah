@@ -1,8 +1,6 @@
 package persistence
 
 import (
-	"github.com/aws/aws-sdk-go/aws/client"
-
 	awsV1Persistence "github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
@@ -44,7 +42,7 @@ func WithClient(c DynamoDBClientAPI) DynamoDBMetastoreOption {
 // NewDynamoDBMetastore returns a new DynamoDBMetastore.
 //
 // DEPRECATED: Use github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence.NewDynamoDBMetastore instead.
-func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
+func NewDynamoDBMetastore(sess awsV1Persistence.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
 	return awsV1Persistence.NewDynamoDBMetastore(sess, opts...)
 }
 
