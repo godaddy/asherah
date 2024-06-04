@@ -82,22 +82,26 @@ type cacheEvent[K comparable, V any] struct {
 }
 
 // policy is the generic interface for eviction policies.
+//
+// Note: methods are exported solely as a workaround for [staticcheck#1294]
+//
+// [staticcheck#1294]: https://github.com/dominikh/go-tools/issues/1294
 type policy[K comparable, V any] interface {
-	// init initializes the policy with the given capacity.
-	init(int)
-	// capacity returns the capacity of the policy.
-	capacity() int
-	// close removes all items from the cache, sends a close event to the event
+	// Init initializes the policy with the given capacity.
+	Init(int)
+	// Capacity returns the capacity of the policy.
+	Capacity() int
+	// Close removes all items from the cache, sends a Close event to the event
 	// processing goroutine, and waits for it to exit.
-	close()
-	// admit is called when an item is admitted to the cache.
-	admit(item *cacheItem[K, V])
-	// access is called when an item is accessed.
-	access(item *cacheItem[K, V])
-	// victim returns the victim item to be evicted.
-	victim() *cacheItem[K, V]
-	// remove is called when an item is removed from the cache.
-	remove(item *cacheItem[K, V])
+	Close()
+	// Admit is called when an item is admitted to the cache.
+	Admit(item *cacheItem[K, V])
+	// Access is called when an item is accessed.
+	Access(item *cacheItem[K, V])
+	// Victim returns the victim item to be evicted.
+	Victim() *cacheItem[K, V]
+	// Remove is called when an item is removed from the cache.
+	Remove(item *cacheItem[K, V])
 }
 
 // Clock is an interface for getting the current time.
@@ -216,7 +220,7 @@ func (b *builder[K, V]) Build() Interface[K, V] {
 		isSync:          b.isSync,
 	}
 
-	c.policy.init(b.capacity)
+	c.policy.Init(b.capacity)
 
 	c.startup()
 
@@ -291,7 +295,7 @@ func (c *cache[K, V]) Close() error {
 
 	c.byKey = nil
 
-	c.policy.close()
+	c.policy.Close()
 
 	return nil
 }
@@ -339,7 +343,7 @@ func (c *cache[K, V]) Capacity() int {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	return c.policy.capacity()
+	return c.policy.Capacity()
 }
 
 // Set adds a value to the cache. If an item with the given key already exists,
@@ -359,13 +363,13 @@ func (c *cache[K, V]) Set(key K, value V) {
 			item.expiration = c.clock.Now().Add(c.expiry)
 		}
 
-		c.policy.access(item)
+		c.policy.Access(item)
 
 		return
 	}
 
 	// if the cache is full, evict an item
-	if c.size == c.policy.capacity() {
+	if c.size == c.policy.Capacity() {
 		c.evict()
 	}
 
@@ -382,7 +386,7 @@ func (c *cache[K, V]) Set(key K, value V) {
 
 	c.size++
 
-	c.policy.admit(item)
+	c.policy.Admit(item)
 }
 
 // Get returns a value from the cache. If an item with the given key does not
@@ -405,7 +409,7 @@ func (c *cache[K, V]) Get(key K) (V, bool) {
 		return c.zeroValue(), false
 	}
 
-	c.policy.access(item)
+	c.policy.Access(item)
 
 	return item.value, true
 }
@@ -439,7 +443,7 @@ func (c *cache[K, V]) Delete(key K) bool {
 
 	c.size--
 
-	c.policy.remove(item)
+	c.policy.Remove(item)
 
 	return true
 }
@@ -453,7 +457,7 @@ func (c *cache[K, V]) zeroValue() V {
 // evict removes an item from the cache and sends an evict event or, if the
 // cache uses a synchronized eviction process, calls the evict callback.
 func (c *cache[K, V]) evict() {
-	item := c.policy.victim()
+	item := c.policy.Victim()
 	c.evictItem(item)
 }
 
@@ -463,7 +467,7 @@ func (c *cache[K, V]) evictItem(item *cacheItem[K, V]) {
 
 	c.size--
 
-	c.policy.remove(item)
+	c.policy.Remove(item)
 
 	if c.isSync {
 		log.Debugf("%s executing evict callback for item (synchronous): %v", c, item.key)

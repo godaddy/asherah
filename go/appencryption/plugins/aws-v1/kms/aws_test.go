@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,8 +32,6 @@ var (
 		],
 		"encryptedKey": "+FEJWwhJA3FDFY0rMjZ9/dLqfW4pbrLZ6b4UdlWCQd2TGQ2slCdVRtBDwQm4vtWCrYiOJV6nmcPrxqjI"
 	  }`
-
-	secretFactory = new(memguard.SecretFactory)
 
 	// us-west-2 is the preferred region for our tests
 	preferredRegion     = "us-west-2"
@@ -316,10 +313,12 @@ func TestAWSKMS_DecryptKey_ReturnsErrorIfKMSDecryptFails(t *testing.T) {
 		},
 	}
 
-	enBytes, _ := json.Marshal(en)
-	decBytes, er := m.DecryptKey(context.Background(), enBytes)
+	enBytes, err := json.Marshal(en)
+	assert.NoError(t, err)
 
-	assert.Error(t, er)
+	decBytes, err := m.DecryptKey(context.Background(), enBytes)
+
+	assert.Error(t, err)
 	assert.Nil(t, decBytes)
 }
 
@@ -364,10 +363,12 @@ func TestAWSKMS_DecryptKey_ReturnsErrorIfDEKDecryptFails(t *testing.T) {
 		},
 	}
 
-	enBytes, _ := json.Marshal(en)
-	decBytes, er := m.DecryptKey(context.Background(), enBytes)
+	enBytes, err := json.Marshal(en)
+	assert.NoError(t, err)
 
-	assert.Error(t, er)
+	decBytes, err := m.DecryptKey(context.Background(), enBytes)
+
+	assert.Error(t, err)
 	assert.Nil(t, decBytes)
 }
 

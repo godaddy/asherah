@@ -50,8 +50,8 @@ func (m KeyMeta) AsLatest() KeyMeta {
 // required to decrypt the key encryption key. This struct should be stored in your
 // data persistence as it's required to decrypt data.
 type DataRowRecord struct {
-	Key  *EnvelopeKeyRecord
-	Data []byte
+	Key  *EnvelopeKeyRecord `json:"Key"`
+	Data []byte             `json:"Data"`
 }
 
 // EnvelopeKeyRecord represents an encrypted key and is the data structure used

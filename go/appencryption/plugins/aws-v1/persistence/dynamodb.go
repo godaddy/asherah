@@ -227,7 +227,8 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 		ConditionExpression: aws.String("attribute_not_exists(" + partitionKey + ")"),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+		var awsErr awserr.Error
+		if errors.As(err, &awsErr) && awsErr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
 			return false, errors.Wrapf(err, "attempted to create duplicate key: %s, %d", keyID, created)
 		}
 

@@ -49,6 +49,8 @@ var qrx = regexp.MustCompile(`\?`)
 // sql test project: https://github.com/bradfitz/go-sql-test.
 func (t SQLMetastoreDBType) q(sql string) string {
 	var pref string
+
+	//nolint:exhaustive
 	switch t {
 	case Postgres:
 		pref = "$"
@@ -117,7 +119,7 @@ func parseEnvelope(s scanner) (*appencryption.EnvelopeKeyRecord, error) {
 	var keyRecordString string
 
 	if err := s.Scan(&keyRecordString); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 
