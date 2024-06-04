@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.24.0
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.59.0
+
+./bin/golangci-lint --version
+
 ./bin/golangci-lint run --config .golangci.yml
 
 # golint is designed to return zero even it finds lint
