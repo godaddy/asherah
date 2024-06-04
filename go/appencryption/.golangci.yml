@@ -74,7 +74,7 @@ linters:
   presets:
     - bugs
     - comment
-    # - complexity
+    - complexity
     # - error
     # - format
     # - import
@@ -85,6 +85,15 @@ linters:
     # - style
     # - test
     # - unused
+
+linters-settings:
+  cyclop:
+    # The maximal code complexity to report.
+    # Default: 10
+    max-complexity: 20
+
+  funlen:
+    lines: 70
 
 issues:
   exclude-rules:
