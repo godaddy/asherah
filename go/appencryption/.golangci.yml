@@ -70,12 +70,13 @@ linters:
     - contextcheck
     - godox
     - testifylint
+    - wrapcheck
 
   presets:
     - bugs
     - comment
     - complexity
-    # - error
+    - error
     # - format
     # - import
     # - metalinter
@@ -100,5 +101,6 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
+        - err113
         - godot
         - gosec
