@@ -25,9 +25,9 @@ var (
 	// Verify SQLMetastore implements the Metastore interface.
 	_ appencryption.Metastore = (*SQLMetastore)(nil)
 
-	storeSQLTimer      = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.sql.store", appencryption.MetricsPrefix), nil)
-	loadSQLTimer       = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.sql.load", appencryption.MetricsPrefix), nil)
-	loadLatestSQLTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.sql.loadlatest", appencryption.MetricsPrefix), nil)
+	storeSQLTimer      = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".metastore.sql.store", nil)
+	loadSQLTimer       = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".metastore.sql.load", nil)
+	loadLatestSQLTimer = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".metastore.sql.loadlatest", nil)
 )
 
 // SQLMetastoreDBType identifies a specific database/sql driver.

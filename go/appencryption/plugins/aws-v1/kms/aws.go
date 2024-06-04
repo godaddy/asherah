@@ -30,8 +30,8 @@ var (
 	generateDataKeyFunc   = generateDataKey
 	encryptAllRegionsFunc = encryptAllRegions
 
-	encryptKeyTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.kms.aws.encryptkey", appencryption.MetricsPrefix), nil)
-	decryptKeyTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.kms.aws.decryptkey", appencryption.MetricsPrefix), nil)
+	encryptKeyTimer = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".kms.aws.encryptkey", nil)
+	decryptKeyTimer = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".kms.aws.decryptkey", nil)
 )
 
 // KMS is implemented by the client in the kms package from the AWS SDK.

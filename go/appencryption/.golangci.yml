@@ -82,7 +82,7 @@ linters:
     - import
     # - metalinter
     - module
-    # - performance
+    - performance
     # - sql
     # - style
     # - test
@@ -129,3 +129,4 @@ issues:
         - errcheck
         - godot
         - gosec
+        - perfsprint

@@ -18,8 +18,8 @@ const MetricsPrefix = "ael"
 
 // Envelope metrics.
 var (
-	decryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.decrypt", MetricsPrefix), nil)
-	encryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.encrypt", MetricsPrefix), nil)
+	decryptTimer = metrics.GetOrRegisterTimer(MetricsPrefix+".drr.decrypt", nil)
+	encryptTimer = metrics.GetOrRegisterTimer(MetricsPrefix+".drr.encrypt", nil)
 )
 
 // KeyMeta contains the ID and Created timestamp for an encryption key.

@@ -220,7 +220,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 			id := fmt.Sprintf(testKey+"-%d", curr)
 			key, err := c.GetOrLoad(KeyMeta{id, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
 				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New(fmt.Sprintf("loader should not be executed for id=%s", id))
+				return nil, errors.New("loader should not be executed for id=" + id)
 			})
 			assert.NoError(b, err)
 			assert.Equal(b, created, key.Created())
@@ -401,7 +401,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.
 
 			key, err := c.GetOrLoadLatest(keyID, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
 				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New(fmt.Sprintf("loader should not be executed for id=%s", keyID))
+				return nil, errors.New("loader should not be executed for id=" + keyID)
 			})
 			if err != nil {
 				b.Error(err)
