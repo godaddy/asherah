@@ -493,6 +493,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_Concurrent_100() {
 		counter int32
 	)
 
+	//nolint:unparam // error param is required by the interface
 	loadFunc := func(_ KeyMeta) (*internal.CryptoKey, error) {
 		<-time.After(time.Millisecond * time.Duration(rand.Intn(30)))
 		atomic.AddInt32(&counter, 1)

@@ -86,7 +86,7 @@ linters:
     - sql
     # - style
     # - test
-    # - unused
+    - unused
 
 linters-settings:
   cyclop:
