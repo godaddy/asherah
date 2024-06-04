@@ -17,7 +17,7 @@ const (
 	gcmMaxDataSize = ((1 << 32) - 2) * gcmBlockSize
 )
 
-// aesGCMCipherFactory returns a AEAD cipher using AES/GCM
+// aesGCMCipherFactory returns a AEAD cipher using AES/GCM.
 func aesGCMCipherFactory(key []byte) (cipher.AEAD, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {

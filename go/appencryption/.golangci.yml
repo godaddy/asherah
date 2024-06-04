@@ -68,11 +68,12 @@ linters:
 
   disable:
     - contextcheck
+    - godox
     - testifylint
 
   presets:
     - bugs
-    # - comment
+    - comment
     # - complexity
     # - error
     # - format
@@ -90,4 +91,5 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
+        - godot
         - gosec

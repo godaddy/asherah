@@ -30,7 +30,7 @@ var (
 	loadLatestSQLTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.metastore.sql.loadlatest", appencryption.MetricsPrefix), nil)
 )
 
-// SQLMetastoreDBType identifies a specific database/sql driver
+// SQLMetastoreDBType identifies a specific database/sql driver.
 type SQLMetastoreDBType string
 
 const (
@@ -83,7 +83,7 @@ func WithSQLMetastoreDBType(t SQLMetastoreDBType) SQLMetastoreOption {
 // SQLMetastore implements the Metastore interface for a RDBMS metastore.
 //
 // See https://github.com/godaddy/asherah/blob/master/docs/Metastore.md#rdbms for the
-// required table structure and other relevent information.
+// required table structure and other relevant information.
 type SQLMetastore struct {
 	db *sql.DB
 

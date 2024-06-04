@@ -23,7 +23,7 @@ type StaticKMS struct {
 }
 
 // NewStatic constructs a new StaticKMS. The provided key MUST be
-// be 32 bytes in length.
+// 32 bytes in length.
 func NewStatic(key string, crypto appencryption.AEAD) (*StaticKMS, error) {
 	if len(key) != staticKMSKeySize {
 		return nil, errors.Errorf("invalid key size %d, must be 32 bytes", len(key))

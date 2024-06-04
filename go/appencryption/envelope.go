@@ -13,10 +13,10 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-// MetricsPrefix prefixes all metrics names
+// MetricsPrefix prefixes all metrics names.
 const MetricsPrefix = "ael"
 
-// Envelope metrics
+// Envelope metrics.
 var (
 	decryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.decrypt", MetricsPrefix), nil)
 	encryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.encrypt", MetricsPrefix), nil)

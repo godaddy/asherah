@@ -38,7 +38,7 @@ func (p defaultPartition) IntermediateKeyID() string {
 	return fmt.Sprintf("_IK_%s_%s_%s", p.id, p.service, p.product)
 }
 
-// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition
+// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition.
 func (p defaultPartition) IsValidIntermediateKeyID(id string) bool {
 	return id == p.IntermediateKeyID()
 }
@@ -69,7 +69,7 @@ func (p suffixedPartition) IntermediateKeyID() string {
 	return fmt.Sprintf("_IK_%s_%s_%s_%s", p.id, p.service, p.product, p.suffix)
 }
 
-// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition
+// IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition.
 func (p suffixedPartition) IsValidIntermediateKeyID(id string) bool {
 	return id == p.IntermediateKeyID() || strings.Index(id, p.defaultPartition.IntermediateKeyID()) == 0
 }

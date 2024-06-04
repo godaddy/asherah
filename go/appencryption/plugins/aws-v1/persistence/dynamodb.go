@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	// DynamoDB metastore metrics
+	// DynamoDB metastore metrics.
 	loadDynamoDBTimer       = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.load", nil)
 	loadLatestDynamoDBTimer = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.loadlatest", nil)
 	storeDynamoDBTimer      = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.store", nil)

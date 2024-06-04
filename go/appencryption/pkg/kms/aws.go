@@ -5,7 +5,7 @@ import (
 	awsV1kms "github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/kms"
 )
 
-// KMS Metrics Counters & Timers
+// KMS Metrics Counters & Timers.
 var (
 	_ appencryption.KeyManagementService = (*AWSKMS)(nil)
 )

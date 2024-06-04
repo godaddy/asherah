@@ -21,7 +21,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-// KMS Metrics Counters & Timers
+// KMS Metrics Counters & Timers.
 var (
 	_ appencryption.KeyManagementService = (*AWSKMS)(nil)
 
@@ -184,7 +184,7 @@ func (m *AWSKMS) EncryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	return b, nil
 }
 
-// encryptAllRegions encrypts the plain-text key using the KMS keys of all requested reegions
+// encryptAllRegions encrypts the plain-text key using the KMS keys of all requested regions.
 func encryptAllRegions(ctx context.Context, resp *kms.GenerateDataKeyOutput, clients []AWSKMSClient) <-chan encryptionKey {
 	var wg sync.WaitGroup
 
