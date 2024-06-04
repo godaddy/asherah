@@ -83,7 +83,7 @@ linters:
     # - metalinter
     - module
     - performance
-    # - sql
+    - sql
     # - style
     # - test
     # - unused
