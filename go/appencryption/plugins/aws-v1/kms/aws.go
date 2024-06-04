@@ -162,7 +162,6 @@ func (m *AWSKMS) EncryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	defer internal.MemClr(dataKey.Plaintext)
 
 	encKeyBytes, err := m.Crypto.Encrypt(keyBytes, dataKey.Plaintext)
-
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +208,6 @@ func encryptAllRegions(ctx context.Context, resp *kms.GenerateDataKeyOutput, cli
 					KeyId:     aws.String(c.ARN),
 					Plaintext: resp.Plaintext,
 				})
-
 				if err != nil {
 					return
 				}

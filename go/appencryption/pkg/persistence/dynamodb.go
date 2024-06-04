@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"github.com/aws/aws-sdk-go/aws/client"
+
 	awsV1Persistence "github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 

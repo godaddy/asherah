@@ -50,7 +50,6 @@ func (s *StaticKMS) EncryptKey(_ context.Context, bytes []byte) ([]byte, error) 
 	dst, err := internal.WithKeyFunc(s.key, func(keyBytes []byte) ([]byte, error) {
 		return s.Crypto.Encrypt(bytes, keyBytes)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,6 @@ func (s *StaticKMS) DecryptKey(ctx context.Context, encKey []byte) ([]byte, erro
 	keyBytes, err := internal.WithKeyFunc(s.key, func(kekBytes []byte) ([]byte, error) {
 		return s.Crypto.Decrypt(encKey, kekBytes)
 	})
-
 	if err != nil {
 		return nil, err
 	}

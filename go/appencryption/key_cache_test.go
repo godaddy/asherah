@@ -201,7 +201,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredA
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredButNotRevoked() {
-	var created = time.Now().Add(-2 * suite.policy.RevokeCheckInterval).Unix()
+	created := time.Now().Add(-2 * suite.policy.RevokeCheckInterval).Unix()
 	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
 
 	if assert.NoError(suite.T(), err) {

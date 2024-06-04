@@ -13,9 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
-	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
+
+	"github.com/godaddy/asherah/go/appencryption"
 )
 
 const (
@@ -123,8 +124,8 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 	defer loadDynamoDBTimer.UpdateSince(time.Now())
 
 	proj := expression.NamesList(expression.Name(keyRecord))
-	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 
+	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 	if err != nil {
 		return nil, errors.Wrap(err, "dynamodb expression error")
 	}
@@ -139,7 +140,6 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 		TableName:            aws.String(d.tableName),
 		ConsistentRead:       aws.Bool(true), // always use strong consistency
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "metastore error")
 	}
@@ -207,8 +207,8 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 		EncryptedKey:  base64.StdEncoding.EncodeToString(envelope.EncryptedKey),
 		ParentKeyMeta: envelope.ParentKeyMeta,
 	}
-	av, err := dynamodbattribute.MarshalMap(&en)
 
+	av, err := dynamodbattribute.MarshalMap(&en)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to marshal envelope")
 	}

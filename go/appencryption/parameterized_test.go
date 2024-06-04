@@ -24,9 +24,7 @@ const (
 	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
-var (
-	keyStates = [...]string{RETIRED, VALID, EMPTY}
-)
+var keyStates = [...]string{RETIRED, VALID, EMPTY}
 
 func TestParameters(t *testing.T) {
 	for i := 0; i < len(keyStates); i++ {
@@ -92,7 +90,8 @@ func runParameterizedTest(t *testing.T, cacheIK, metaIK, cacheSK, metaSK string)
 				assert.Equal(t, payload, bytes)
 				dkStates := &decryptKeyStates{
 					cacheIK: cacheIK,
-					cacheSK: cacheSK}
+					cacheSK: cacheSK,
+				}
 
 				verifyDecryptFlow(t, &metastore.Mock, dkStates, partition.IntermediateKeyID(), partition.SystemKeyID())
 			}
@@ -186,8 +185,7 @@ func createRevokedKey(src *internal.CryptoKey, factory securememory.SecretFactor
 	return key
 }
 
-func createSession(crypto AEAD, metastore Metastore, kms KeyManagementService, factory securememory.SecretFactory,
-	policy *CryptoPolicy, partition partition, ikCache keyCacher, skCache keyCacher) *Session {
+func createSession(crypto AEAD, metastore Metastore, kms KeyManagementService, factory securememory.SecretFactory, policy *CryptoPolicy, partition partition, ikCache keyCacher, skCache keyCacher) *Session {
 	return &Session{
 		encryption: &envelopeEncryption{
 			partition:     partition,
@@ -198,11 +196,11 @@ func createSession(crypto AEAD, metastore Metastore, kms KeyManagementService, f
 			SecretFactory: factory,
 			skCache:       skCache,
 			ikCache:       ikCache,
-		}}
+		},
+	}
 }
 
-func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, systemKey *internal.CryptoKey,
-	policy *CryptoPolicy) (keyCacher, keyCacher) {
+func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, systemKey *internal.CryptoKey, policy *CryptoPolicy) (keyCacher, keyCacher) {
 	var ikCache, skCache keyCacher
 	skCache = newKeyCache(CacheTypeSystemKeys, policy)
 	ikCache = newKeyCache(CacheTypeIntermediateKeys, policy)
@@ -247,8 +245,7 @@ func createCache(partition partition, cacheIK, cacheSK string, intermediateKey, 
 	return ikCache, skCache
 }
 
-func createMetastoreSpy(ctx context.Context, metaIK, metaSK string, intermediateKey, systemKey *internal.CryptoKey,
-	crypto AEAD, partition partition, km KeyManagementService) *spyMetastore {
+func createMetastoreSpy(ctx context.Context, metaIK, metaSK string, intermediateKey, systemKey *internal.CryptoKey, crypto AEAD, partition partition, km KeyManagementService) *spyMetastore {
 	metastore := spyMetastore{
 		envelopes: make(map[string]map[int64]*EnvelopeKeyRecord),
 	}

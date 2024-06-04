@@ -184,10 +184,10 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 				// Note: this function should only happen on first load (although could execute more than once currently), if it doesn't, then something is broken
 				return internal.NewCryptoKey(secretFactory, created, false, []byte("testing"))
 			})
-
 			if err != nil {
 				b.Error(err)
 			}
+
 			if created != k.Created() {
 				b.Error("created mismatch")
 			}
