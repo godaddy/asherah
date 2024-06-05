@@ -30,7 +30,8 @@ func main() {
 	parser := flags.NewParser(opts, flags.Default)
 
 	if _, err := parser.Parse(); err != nil {
-		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
+		var e *flags.Error
+		if errors.As(err, &e) && e.Type == flags.ErrHelp {
 			return
 		}
 

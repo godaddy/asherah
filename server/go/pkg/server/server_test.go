@@ -432,7 +432,7 @@ func Test_DefaultHandler_GetSession(t *testing.T) {
 	resp := h.GetSession(req)
 
 	assert.NotNil(t, resp)
-	assert.Nil(t, resp.Response)
+	assert.Nil(t, resp.GetResponse())
 	assert.Equal(t, session, h.session)
 	assert.Equal(t, id, h.partition)
 	m.AssertExpectations(t)
@@ -507,7 +507,7 @@ func Test_DefaultHandler_Encrypt(t *testing.T) {
 
 	resp := h.Encrypt(ctx, req)
 
-	assert.Equal(t, toProtobufDRR(drr), resp.GetEncryptResponse().DataRowRecord)
+	assert.Equal(t, toProtobufDRR(drr), resp.GetEncryptResponse().GetDataRowRecord())
 
 	m.AssertExpectations(t)
 }
