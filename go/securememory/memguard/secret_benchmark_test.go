@@ -2,7 +2,6 @@ package memguard
 
 import (
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,7 +66,7 @@ func BenchmarkMemguardReader_ReadAll(b *testing.B) {
 		for pb.Next() {
 			r := s.NewReader()
 
-			bytes, err := ioutil.ReadAll(r)
+			bytes, err := io.ReadAll(r)
 			if assert.NoError(b, err) {
 				assert.Equal(b, copyBytes, bytes)
 			}

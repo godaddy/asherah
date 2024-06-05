@@ -20,6 +20,8 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 )
 
+// SQLSuite is the test suite for the SQLMetastore.
+// Tests are run against a local MySQL instance using testcontainers.
 type SQLSuite struct {
 	suite.Suite
 	disableTestContainers bool

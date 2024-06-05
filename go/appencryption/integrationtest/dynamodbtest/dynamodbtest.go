@@ -1,4 +1,5 @@
-package persistencetest
+// Package dynamodbtest provides utilities for testing the DynamoDB persistence layer.
+package dynamodbtest
 
 import (
 	"context"
@@ -45,6 +46,85 @@ type DynamoDBTestContext struct {
 	dbSvc                 *dynamodb.DynamoDB
 }
 
+// NewDynamoDBTestContext creates a new DynamoDBTestContext.
+//
+// If the DISABLE_TESTCONTAINERS environment variable is set to true, the test context will use the local DynamoDB instance.
+// Otherwise, it will use a test container.
+//
+// Use NewMetastore to create a new DynamoDBMetastore instance based on the context.
+//
+// (Optionally) Use SeedDB to create the expected DynamoDB table and seed it with test data.
+// It may be skipped if the table already exists, or if the table is not needed for the test.
+//
+// Use CleanDB to clean the DynamoDB table as needed.
+func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
+	t.Helper()
+
+	ctx := context.Background()
+	d := &DynamoDBTestContext{
+		instant: instant,
+	}
+
+	// Setup client pointing to our local dynamodb
+	var (
+		err             error
+		host            string
+		dynamodbNatPort nat.Port
+	)
+
+	if val, ok := os.LookupEnv("DISABLE_TESTCONTAINERS"); ok {
+		d.disableTestContainers, err = strconv.ParseBool(val)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if d.disableTestContainers {
+		host = os.Getenv("DYNAMODB_HOSTNAME")
+		if len(host) == 0 {
+			host = "localhost"
+		}
+
+		dynamodbNatPort = portProtocolDynamoDB
+	} else {
+		request := testcontainers.ContainerRequest{
+			Image:        "amazon/dynamodb-local:latest",
+			ExposedPorts: []string{portProtocolDynamoDB},
+		}
+		d.container, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+			ContainerRequest: request,
+			Started:          true,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		if host, err = d.container.Host(ctx); err != nil {
+			panic(err)
+		}
+
+		if dynamodbNatPort, err = d.container.MappedPort(ctx, portProtocolDynamoDB); err != nil {
+			panic(err)
+		}
+	}
+
+	endpoint := "http://" + host + ":" + dynamodbNatPort.Port()
+
+	t.Logf("using dynamodb endpoint: %s", endpoint)
+
+	d.sess = session.Must(session.NewSession(&aws.Config{
+		Region:   aws.String("us-west-2"),
+		Endpoint: aws.String(endpoint),
+	}))
+
+	d.dbSvc = dynamodb.New(d.sess)
+
+	d.waitForDynamoDBPing(t)
+
+	return d
+}
+
+// NewMetastore creates a new DynamoDBMetastore instance based on the context.
 func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastoreOption) *persistence.DynamoDBMetastore {
 	combinedOpts := []persistence.DynamoDBMetastoreOption{
 		persistence.WithTableName(tableName),
@@ -57,6 +137,7 @@ func (d *DynamoDBTestContext) NewMetastore(opts ...persistence.DynamoDBMetastore
 	return persistence.NewDynamoDBMetastore(d.sess, combinedOpts...)
 }
 
+// SeedDB creates the DynamoDB table and seeds it with test data.
 func (d *DynamoDBTestContext) SeedDB(t *testing.T) {
 	t.Helper()
 	t.Log("seeding dynamodb")
@@ -118,6 +199,10 @@ func (d *DynamoDBTestContext) SeedDB(t *testing.T) {
 	d.putItemInDynamoDB(t, d.newDynamoDBPutItemInput(en, d.instant))
 }
 
+// CleanDB "cleans up" the DynamoDB table by deleting it.
+//
+// This is useful for resetting table state in between test runs.
+// Be sure to call SeedDB before running any additional tests that require the table to be populated.
 func (d *DynamoDBTestContext) CleanDB(t *testing.T) {
 	t.Helper()
 	t.Log("cleaning db")
@@ -217,71 +302,4 @@ func (d *DynamoDBTestContext) TearDown(t *testing.T) {
 			panic(err)
 		}
 	}
-}
-
-func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
-	t.Helper()
-
-	ctx := context.Background()
-	d := &DynamoDBTestContext{
-		instant: instant,
-	}
-
-	// Setup client pointing to our local dynamodb
-	var (
-		err             error
-		host            string
-		dynamodbNatPort nat.Port
-	)
-
-	if val, ok := os.LookupEnv("DISABLE_TESTCONTAINERS"); ok {
-		d.disableTestContainers, err = strconv.ParseBool(val)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if d.disableTestContainers {
-		host = os.Getenv("DYNAMODB_HOSTNAME")
-		if len(host) == 0 {
-			host = "localhost"
-		}
-
-		dynamodbNatPort = portProtocolDynamoDB
-	} else {
-		request := testcontainers.ContainerRequest{
-			Image:        "amazon/dynamodb-local:latest",
-			ExposedPorts: []string{portProtocolDynamoDB},
-		}
-		d.container, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-			ContainerRequest: request,
-			Started:          true,
-		})
-		if err != nil {
-			panic(err)
-		}
-
-		if host, err = d.container.Host(ctx); err != nil {
-			panic(err)
-		}
-
-		if dynamodbNatPort, err = d.container.MappedPort(ctx, portProtocolDynamoDB); err != nil {
-			panic(err)
-		}
-	}
-
-	endpoint := "http://" + host + ":" + dynamodbNatPort.Port()
-
-	t.Logf("using dynamodb endpoint: %s", endpoint)
-
-	d.sess = session.Must(session.NewSession(&aws.Config{
-		Region:   aws.String("us-west-2"),
-		Endpoint: aws.String(endpoint),
-	}))
-
-	d.dbSvc = dynamodb.New(d.sess)
-
-	d.waitForDynamoDBPing(t)
-
-	return d
 }

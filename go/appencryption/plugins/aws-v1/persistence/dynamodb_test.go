@@ -5,9 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
 func TestDynamoDBMetastore_WithDynamoDBRegionSuffix(t *testing.T) {
@@ -27,7 +28,6 @@ func getSession() *session.Session {
 		Region:   aws.String("us-west-2"),
 		Endpoint: aws.String("http://localhost:8000"),
 	})
-
 	if err != nil {
 		panic(err)
 	}
@@ -48,4 +48,12 @@ func TestDynamoDBMetastore_DefaultTableName(t *testing.T) {
 	db := persistence.NewDynamoDBMetastore(getSession())
 
 	assert.Equal(t, defaultTableName, db.GetTableName())
+}
+
+func TestDynamoDBMetastore_DefaultClient(t *testing.T) {
+	s := getSession()
+
+	db := persistence.NewDynamoDBMetastore(s)
+
+	assert.IsType(t, &dynamodb.DynamoDB{}, db.GetClient())
 }

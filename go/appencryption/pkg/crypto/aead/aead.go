@@ -2,8 +2,8 @@ package aead
 
 import (
 	"crypto/cipher"
-
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
 )
@@ -58,6 +58,9 @@ func (c cryptoFunc) Decrypt(data, key []byte) ([]byte, error) {
 	// as we don't control the its lifecycle. For instance, in the case of DEKs
 	// and KEKs this storage is wiped immediately after calling this function.
 	d, err := aeadCipher.Open(nil, data[noncePos:], data[:noncePos], nil)
+	if err != nil {
+		return d, fmt.Errorf("error decrypting data: %w", err)
+	}
 
-	return d, errors.Wrap(err, "error decrypting data")
+	return d, nil
 }

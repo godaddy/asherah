@@ -10,7 +10,7 @@ Resources:
           ASHERAH_KMS_KEY_ARN: arn:aws:kms:<region>:<account>:key/<id>
           ASHERAH_METASTORE_TABLE_NAME: EncryptionKey
       Handler: main
-      Runtime: go1.x
+      Runtime: provided.al2023
       CodeUri: function/.
       Description: Performs encrypt/decrypt operations via the Asherah SDK
       Timeout: 5

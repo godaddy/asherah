@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
 
-      - name: Merge master -> {RELEASE_TARGET}
+      - name: Merge main -> {RELEASE_TARGET}
         uses: devmasx/merge-branch@6ec8363d74aad4f1615d1234ae1908b4185c4313
         with:
           type: now
-          head_to_merge: master
+          head_to_merge: main
           target_branch: ${{ github.event.inputs.target }}
           github_token: ${{ secrets.MERGE_TOKEN }}

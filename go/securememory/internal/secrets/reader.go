@@ -7,7 +7,7 @@ type Reader struct {
 	i      int
 }
 
-// Read implements io.Reader
+// Read implements io.Reader.
 func (r *Reader) Read(p []byte) (n int, err error) {
 	err = r.secret.WithBytes(func(b []byte) error {
 		if r.i >= len(b) {

@@ -5,7 +5,7 @@ set -eo pipefail
 ARTIFACT_BUCKET=$(cat out/bucket-name.txt)
 
 cd function
-GOOS=linux go build main.go
+GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
 cd ../
 
 aws cloudformation package --template-file template.yml --s3-bucket $ARTIFACT_BUCKET --output-template-file out/out.yml

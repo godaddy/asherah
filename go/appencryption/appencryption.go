@@ -13,7 +13,7 @@ package appencryption
 
 import "context"
 
-// Encryption implements the required methods to perform encryption/decryption on a payload
+// Encryption implements the required methods to perform encryption/decryption on a payload.
 type Encryption interface {
 	// EncryptPayload encrypts a provided slice of bytes and returns a DataRowRecord which contains
 	// required information to decrypt the data in the future.
@@ -73,5 +73,5 @@ type Storer interface {
 	Store(ctx context.Context, d DataRowRecord) (interface{}, error)
 }
 
-// AES256KeySize is the size of the AES key used by the AEAD implementation
+// AES256KeySize is the size of the AES key used by the AEAD implementation.
 const AES256KeySize int = 32

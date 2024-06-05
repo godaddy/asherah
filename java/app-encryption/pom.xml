@@ -45,11 +45,11 @@
     <apache.commons.version>3.12.0</apache.commons.version>
     <amazonaws.version>1.21.1</amazonaws.version>
     <aws.sdk.version>1.12.468</aws.sdk.version>
-    <aws.sdk-v2.version>2.21.27</aws.sdk-v2.version>
-    <bouncycastle.version>1.70</bouncycastle.version>
+    <aws.sdk-v2.version>2.21.46</aws.sdk-v2.version>
+    <bouncycastle.version>1.78</bouncycastle.version>
     <build.helper.version>3.3.0</build.helper.version>
     <caffeine.version>3.1.8</caffeine.version>
-    <checkerframework.version>3.40.0</checkerframework.version>
+    <checkerframework.version>3.41.0</checkerframework.version>
     <commons.codec.version>1.15</commons.codec.version>
     <commons.logging.version>1.2</commons.logging.version>
     <commons.text.version>1.10.0</commons.text.version>
@@ -68,7 +68,7 @@
     <maven.scm.version>2.0.0</maven.scm.version>
     <maven.source.version>3.2.1</maven.source.version>
     <maven.surefire.version>3.1.0</maven.surefire.version>
-    <micrometer.version>1.12.0</micrometer.version>
+    <micrometer.version>1.12.1</micrometer.version>
     <mockito.core.version>5.1.1</mockito.core.version>
     <nexus.staging.maven.version>1.6.13</nexus.staging.maven.version>
     <securememory.version>0.1.4</securememory.version>
@@ -295,7 +295,7 @@
     <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk15on</artifactId>
+      <artifactId>bcprov-jdk18on</artifactId>
       <version>${bouncycastle.version}</version>
     </dependency>
 

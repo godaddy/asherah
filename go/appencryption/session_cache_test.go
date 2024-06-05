@@ -267,7 +267,6 @@ func TestSessionCacheDuration(t *testing.T) {
 		// now that the ttl has elapsed, we should have loaded the sessions again
 		// and the total loaded should be greater than the expected count
 		return loaded > expectedCount
-
 	}, time.Second*10, time.Millisecond*10)
 }
 

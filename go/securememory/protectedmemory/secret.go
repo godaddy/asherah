@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	// NOTE: If we ever remove the import of core, we'll need to add an init func that calls memcall.DisableCoreDumps
+	// NOTE: If we ever remove the import of core, we'll need to add an init func that calls memcall.DisableCoreDumps.
 	"github.com/awnumar/memguard/core"
 	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
@@ -106,7 +106,7 @@ func (s *secret) WithBytesFunc(action func([]byte) ([]byte, error)) (ret []byte,
 	return action(s.bytes)
 }
 
-// IsClosed returns true if the underlying data container has already been closed
+// IsClosed returns true if the underlying data container has already been closed.
 func (s *secret) IsClosed() bool {
 	return s.isClosed()
 }

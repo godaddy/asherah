@@ -23,37 +23,37 @@ type lfu[K comparable, V any] struct {
 	frequencies *list.List // Linked list containing all frequencyParents in order of least frequently used
 }
 
-// init initializes the LFU cache policy.
-func (c *lfu[K, V]) init(capacity int) {
+// Init initializes the LFU cache policy.
+func (c *lfu[K, V]) Init(capacity int) {
 	c.cap = capacity
 	c.frequencies = list.New()
 }
 
-// capacity returns the capacity of the cache.
-func (c *lfu[K, V]) capacity() int {
+// Capacity returns the capacity of the cache.
+func (c *lfu[K, V]) Capacity() int {
 	return c.cap
 }
 
-// access is called when an item is accessed in the cache. It increments the
+// Access is called when an item is accessed in the cache. It increments the
 // frequency of the item.
-func (c *lfu[K, V]) access(item *cacheItem[K, V]) {
+func (c *lfu[K, V]) Access(item *cacheItem[K, V]) {
 	c.increment(item)
 }
 
-// admit is called when an item is added to the cache. It increments the
+// Admit is called when an item is added to the cache. It increments the
 // frequency of the item.
-func (c *lfu[K, V]) admit(item *cacheItem[K, V]) {
+func (c *lfu[K, V]) Admit(item *cacheItem[K, V]) {
 	c.increment(item)
 }
 
-// remove is called when an item is removed from the cache. It removes the item
+// Remove is called when an item is removed from the cache. It removes the item
 // from the frequency.
-func (c *lfu[K, V]) remove(item *cacheItem[K, V]) {
+func (c *lfu[K, V]) Remove(item *cacheItem[K, V]) {
 	c.delete(item.parent, item)
 }
 
-// victim returns the least frequently used item in the cache.
-func (c *lfu[K, V]) victim() *cacheItem[K, V] {
+// Victim returns the least frequently used item in the cache.
+func (c *lfu[K, V]) Victim() *cacheItem[K, V] {
 	if frequency := c.frequencies.Front(); frequency != nil {
 		elem := frequency.Value.(*frequencyParent[K, V]).byAccess.Front()
 		if elem != nil {
@@ -144,9 +144,9 @@ func (c *lfu[K, V]) delete(frequency *list.Element, item *cacheItem[K, V]) {
 	}
 }
 
-// close removes all items from the cache, sends a close event on the events
+// Close removes all items from the cache, sends a close event on the events
 // channel, and waits for the cache to close.
-func (c *lfu[K, V]) close() {
+func (c *lfu[K, V]) Close() {
 	c.frequencies = nil
 	c.cap = 0
 }

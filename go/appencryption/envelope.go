@@ -2,24 +2,24 @@ package appencryption
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-// MetricsPrefix prefixes all metrics names
+// MetricsPrefix prefixes all metrics names.
 const MetricsPrefix = "ael"
 
-// Envelope metrics
+// Envelope metrics.
 var (
-	decryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.decrypt", MetricsPrefix), nil)
-	encryptTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.drr.encrypt", MetricsPrefix), nil)
+	decryptTimer = metrics.GetOrRegisterTimer(MetricsPrefix+".drr.decrypt", nil)
+	encryptTimer = metrics.GetOrRegisterTimer(MetricsPrefix+".drr.encrypt", nil)
 )
 
 // KeyMeta contains the ID and Created timestamp for an encryption key.
@@ -50,8 +50,8 @@ func (m KeyMeta) AsLatest() KeyMeta {
 // required to decrypt the key encryption key. This struct should be stored in your
 // data persistence as it's required to decrypt data.
 type DataRowRecord struct {
-	Key  *EnvelopeKeyRecord
-	Data []byte
+	Key  *EnvelopeKeyRecord `json:"Key"`
+	Data []byte             `json:"Data"`
 }
 
 // EnvelopeKeyRecord represents an encrypted key and is the data structure used

@@ -2,10 +2,10 @@ package appencryption
 
 import (
 	"context"
+	"errors"
 
 	"github.com/godaddy/asherah/go/securememory"
 	"github.com/godaddy/asherah/go/securememory/memguard"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
@@ -27,7 +27,7 @@ type SessionFactory struct {
 // FactoryOption is used to configure additional options in a SessionFactory.
 type FactoryOption func(*SessionFactory)
 
-// WithSecretFactory sets the factory to use for creating Secrets
+// WithSecretFactory sets the factory to use for creating Secrets.
 func WithSecretFactory(f securememory.SecretFactory) FactoryOption {
 	return func(factory *SessionFactory) {
 		factory.SecretFactory = f
@@ -87,7 +87,7 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 }
 
 // Close will close any open resources owned by this factory (e.g. cache of system keys). It should be called
-// when the factory is no longer required
+// when the factory is no longer required.
 func (f *SessionFactory) Close() error {
 	if f.Config.Policy.CacheSessions {
 		f.sessionCache.Close()

@@ -40,8 +40,8 @@ type tinyLFU[K comparable, V any] struct {
 	keys map[K]tinyLFUEntry[K, V] // Hashmap containing *tinyLFUEntry for O(1) access
 }
 
-// init initializes the tinyLFU cache policy.
-func (c *tinyLFU[K, V]) init(capacity int) {
+// Init initializes the tinyLFU cache policy.
+func (c *tinyLFU[K, V]) Init(capacity int) {
 	c.cap = capacity
 
 	c.keys = make(map[K]tinyLFUEntry[K, V])
@@ -58,30 +58,30 @@ func (c *tinyLFU[K, V]) init(capacity int) {
 	// Note that for small cache sizes the admission window may be 0, in which
 	// case the SLRU is the entire cache and the doorkeeper is not used.
 	lruCap := int(float64(capacity) * admissionRatio)
-	c.lru.init(lruCap)
+	c.lru.Init(lruCap)
 
 	slruCap := capacity - lruCap
-	c.slru.init(slruCap)
+	c.slru.Init(slruCap)
 }
 
-// capacity returns the capacity of the cache.
-func (c *tinyLFU[K, V]) capacity() int {
+// Capacity returns the capacity of the cache.
+func (c *tinyLFU[K, V]) Capacity() int {
 	return c.cap
 }
 
-// access is called when an item is accessed in the cache. It increments the
+// Access is called when an item is accessed in the cache. It increments the
 // frequency of the item.
-func (c *tinyLFU[K, V]) access(item *cacheItem[K, V]) {
+func (c *tinyLFU[K, V]) Access(item *cacheItem[K, V]) {
 	c.increment(item)
 
-	c.keys[item.key].parent.access(item)
+	c.keys[item.key].parent.Access(item)
 }
 
-// admit is called when an item is added to the cache. It increments the
+// Admit is called when an item is added to the cache. It increments the
 // frequency of the item.
-func (c *tinyLFU[K, V]) admit(item *cacheItem[K, V]) {
+func (c *tinyLFU[K, V]) Admit(item *cacheItem[K, V]) {
 	if c.bypassed() {
-		c.slru.admit(item)
+		c.slru.Admit(item)
 		return
 	}
 
@@ -94,10 +94,10 @@ func (c *tinyLFU[K, V]) admit(item *cacheItem[K, V]) {
 		return
 	}
 
-	victim := c.lru.victim()
+	victim := c.lru.Victim()
 
 	// Otherwise, promote the victim from the LRU to the SLRU
-	c.lru.remove(victim)
+	c.lru.Remove(victim)
 	c.admitTo(victim, &c.slru)
 
 	// then add the new item to the LRU
@@ -111,7 +111,7 @@ func (c *tinyLFU[K, V]) bypassed() bool {
 
 // admitTo adds the item to the provided eviction list.
 func (c *tinyLFU[K, V]) admitTo(item *cacheItem[K, V], list policy[K, V]) {
-	list.admit(item)
+	list.Admit(item)
 
 	c.keys[item.key] = tinyLFUEntry[K, V]{
 		hash:   internal.ComputeHash(item.key),
@@ -119,18 +119,18 @@ func (c *tinyLFU[K, V]) admitTo(item *cacheItem[K, V], list policy[K, V]) {
 	}
 }
 
-// victim returns the victim item to be evicted.
-func (c *tinyLFU[K, V]) victim() *cacheItem[K, V] {
-	candidate := c.lru.victim()
+// Victim returns the victim item to be evicted.
+func (c *tinyLFU[K, V]) Victim() *cacheItem[K, V] {
+	candidate := c.lru.Victim()
 
 	// If the LRU is empty, just return the SLRU victim.
 	// This is the case when the cache is closing and
 	// the items are being purged.
 	if candidate == nil {
-		return c.slru.victim()
+		return c.slru.Victim()
 	}
 
-	victim := c.slru.victim()
+	victim := c.slru.Victim()
 
 	// If the SLRU is empty, just return the LRU victim.
 	if victim == nil {
@@ -145,7 +145,7 @@ func (c *tinyLFU[K, V]) victim() *cacheItem[K, V] {
 	// If the candidate is more frequently accessed than the victim,
 	// remove the candidate from the LRU and add it to the SLRU.
 	if candidateFreq > victimFreq {
-		c.lru.remove(candidate)
+		c.lru.Remove(candidate)
 
 		c.admitTo(candidate, &c.slru)
 
@@ -165,10 +165,10 @@ func (c *tinyLFU[K, V]) estimate(h uint64) uint8 {
 	return freq
 }
 
-// remove is called when an item is removed from the cache. It removes the item
+// Remove is called when an item is removed from the cache. It removes the item
 // from the appropriate eviction list.
-func (c *tinyLFU[K, V]) remove(item *cacheItem[K, V]) {
-	c.keys[item.key].parent.remove(item)
+func (c *tinyLFU[K, V]) Remove(item *cacheItem[K, V]) {
+	c.keys[item.key].parent.Remove(item)
 }
 
 // increment increments the frequency of the item.
@@ -193,10 +193,10 @@ func (c *tinyLFU[K, V]) increment(item *cacheItem[K, V]) {
 	}
 }
 
-// close removes all items from the cache.
-func (c *tinyLFU[K, V]) close() {
-	c.lru.close()
-	c.slru.close()
+// Close removes all items from the cache.
+func (c *tinyLFU[K, V]) Close() {
+	c.lru.Close()
+	c.slru.Close()
 
 	c.cap = 0
 }

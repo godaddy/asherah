@@ -11,14 +11,14 @@ type lru[K comparable, V any] struct {
 	evictList *list.List
 }
 
-// init initializes the LRU cache policy.
-func (c *lru[K, V]) init(capacity int) {
+// Init initializes the LRU cache policy.
+func (c *lru[K, V]) Init(capacity int) {
 	c.cap = capacity
 	c.evictList = list.New()
 }
 
-// capacity returns the capacity of the cache.
-func (c *lru[K, V]) capacity() int {
+// Capacity returns the capacity of the cache.
+func (c *lru[K, V]) Capacity() int {
 	return c.cap
 }
 
@@ -27,26 +27,26 @@ func (c *lru[K, V]) len() int {
 	return c.evictList.Len()
 }
 
-// access is called when an item is accessed in the cache. It moves the item to
+// Access is called when an item is accessed in the cache. It moves the item to
 // the front of the eviction list.
-func (c *lru[K, V]) access(item *cacheItem[K, V]) {
+func (c *lru[K, V]) Access(item *cacheItem[K, V]) {
 	c.evictList.MoveToFront(item.parent)
 }
 
-// admit is called when an item is added to the cache. It adds the item to the
+// Admit is called when an item is added to the cache. It adds the item to the
 // front of the eviction list.
-func (c *lru[K, V]) admit(item *cacheItem[K, V]) {
+func (c *lru[K, V]) Admit(item *cacheItem[K, V]) {
 	item.parent = c.evictList.PushFront(item)
 }
 
-// remove is called when an item is removed from the cache. It removes the item
+// Remove is called when an item is removed from the cache. It removes the item
 // from the eviction list.
-func (c *lru[K, V]) remove(item *cacheItem[K, V]) {
+func (c *lru[K, V]) Remove(item *cacheItem[K, V]) {
 	c.evictList.Remove(item.parent)
 }
 
-// victim returns the least recently used item in the cache.
-func (c *lru[K, V]) victim() *cacheItem[K, V] {
+// Victim returns the least recently used item in the cache.
+func (c *lru[K, V]) Victim() *cacheItem[K, V] {
 	oldest := c.evictList.Back()
 	if oldest == nil {
 		return nil
@@ -55,8 +55,8 @@ func (c *lru[K, V]) victim() *cacheItem[K, V] {
 	return oldest.Value.(*cacheItem[K, V])
 }
 
-// close implements the policy interface.
-func (c *lru[K, V]) close() {
+// Close implements the policy interface.
+func (c *lru[K, V]) Close() {
 	c.evictList = nil
 	c.cap = 0
 }
@@ -80,8 +80,8 @@ type slru[K comparable, V any] struct {
 	probationList     *list.List
 }
 
-// init initializes the SLRU cache policy.
-func (c *slru[K, V]) init(capacity int) {
+// Init initializes the SLRU cache policy.
+func (c *slru[K, V]) Init(capacity int) {
 	c.cap = capacity
 
 	c.protectedList = list.New()
@@ -91,14 +91,14 @@ func (c *slru[K, V]) init(capacity int) {
 	c.probationCapacity = capacity - c.protectedCapacity
 }
 
-// capacity returns the capacity of the cache.
-func (c *slru[K, V]) capacity() int {
+// Capacity returns the capacity of the cache.
+func (c *slru[K, V]) Capacity() int {
 	return c.cap
 }
 
-// access is called when an item is accessed in the cache. It moves the item to
+// Access is called when an item is accessed in the cache. It moves the item to
 // the front of its respective eviction list.
-func (c *slru[K, V]) access(item *cacheItem[K, V]) {
+func (c *slru[K, V]) Access(item *cacheItem[K, V]) {
 	sitem := item.parent.Value.(*slruItem[K, V])
 	if sitem.protected {
 		c.protectedList.MoveToFront(item.parent)
@@ -124,9 +124,9 @@ func (c *slru[K, V]) access(item *cacheItem[K, V]) {
 	}
 }
 
-// admit is called when an item is added to the cache. It adds the item to the
+// Admit is called when an item is added to the cache. It adds the item to the
 // front of the probation list.
-func (c *slru[K, V]) admit(item *cacheItem[K, V]) {
+func (c *slru[K, V]) Admit(item *cacheItem[K, V]) {
 	newItem := &slruItem[K, V]{
 		cacheItem: item,
 		protected: false,
@@ -135,8 +135,8 @@ func (c *slru[K, V]) admit(item *cacheItem[K, V]) {
 	item.parent = c.probationList.PushFront(newItem)
 }
 
-// victim returns the least recently used item in the cache.
-func (c *slru[K, V]) victim() *cacheItem[K, V] {
+// Victim returns the least recently used item in the cache.
+func (c *slru[K, V]) Victim() *cacheItem[K, V] {
 	if c.probationList.Len() > 0 {
 		return c.probationList.Back().Value.(*slruItem[K, V]).cacheItem
 	}
@@ -148,9 +148,9 @@ func (c *slru[K, V]) victim() *cacheItem[K, V] {
 	return nil
 }
 
-// remove is called when an item is removed from the cache. It removes the item
+// Remove is called when an item is removed from the cache. It removes the item
 // from the eviction list.
-func (c *slru[K, V]) remove(item *cacheItem[K, V]) {
+func (c *slru[K, V]) Remove(item *cacheItem[K, V]) {
 	sitem := item.parent.Value.(*slruItem[K, V])
 	if sitem.protected {
 		c.protectedList.Remove(item.parent)
@@ -160,8 +160,8 @@ func (c *slru[K, V]) remove(item *cacheItem[K, V]) {
 	c.probationList.Remove(item.parent)
 }
 
-// close implements the policy interface.
-func (c *slru[K, V]) close() {
+// Close implements the policy interface.
+func (c *slru[K, V]) Close() {
 	c.protectedList = nil
 	c.probationList = nil
 	c.cap = 0

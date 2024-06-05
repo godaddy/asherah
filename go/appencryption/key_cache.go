@@ -322,7 +322,6 @@ func (c *keyCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.Cr
 
 		var err error
 		key, err = c.load(meta, loader)
-
 		if err != nil {
 			return nil, err
 		}

@@ -121,6 +121,8 @@ func hashString(data string) uint64 {
 
 func hashPointer(k interface{}) (uint64, bool) {
 	v := reflect.ValueOf(k)
+
+	//nolint:exhaustive
 	switch v.Kind() {
 	case reflect.Ptr, reflect.UnsafePointer, reflect.Func, reflect.Slice, reflect.Map, reflect.Chan:
 		return hashU64(uint64(v.Pointer())), true
