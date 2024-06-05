@@ -31,7 +31,7 @@ type Interface interface {
 	Unlocker
 }
 
-// wrapper implements Interface
+// wrapper implements Interface.
 type wrapper struct {
 }
 
