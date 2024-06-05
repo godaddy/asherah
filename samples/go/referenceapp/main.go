@@ -146,7 +146,8 @@ func createKMS(crypto appencryption.AEAD) (appencryption.KeyManagementService, e
 
 func main() {
 	if _, err := flags.Parse(&opts); err != nil {
-		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
+		var e *flags.Error
+		if errors.As(err, &e) && e.Type == flags.ErrHelp {
 			return
 		}
 
@@ -222,7 +223,7 @@ func main() {
 		}
 
 		// Consider this us "persisting" the DRR
-		// nolint: errcheck
+		//nolint: errchkjson
 		b, _ := json.Marshal(dataRow)
 		dataRowString = base64.StdEncoding.EncodeToString(b)
 		fmt.Println("\ndata row record as string:", dataRowString)
