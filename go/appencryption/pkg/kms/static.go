@@ -2,10 +2,10 @@ package kms
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory/memguard"
-	"github.com/pkg/errors"
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
@@ -23,10 +23,10 @@ type StaticKMS struct {
 }
 
 // NewStatic constructs a new StaticKMS. The provided key MUST be
-// be 32 bytes in length.
+// 32 bytes in length.
 func NewStatic(key string, crypto appencryption.AEAD) (*StaticKMS, error) {
 	if len(key) != staticKMSKeySize {
-		return nil, errors.Errorf("invalid key size %d, must be 32 bytes", len(key))
+		return nil, fmt.Errorf("invalid key size %d, must be 32 bytes", len(key))
 	}
 
 	// just hard-code the internal one being used
@@ -50,7 +50,6 @@ func (s *StaticKMS) EncryptKey(_ context.Context, bytes []byte) ([]byte, error) 
 	dst, err := internal.WithKeyFunc(s.key, func(keyBytes []byte) ([]byte, error) {
 		return s.Crypto.Encrypt(bytes, keyBytes)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,6 @@ func (s *StaticKMS) DecryptKey(ctx context.Context, encKey []byte) ([]byte, erro
 	keyBytes, err := internal.WithKeyFunc(s.key, func(kekBytes []byte) ([]byte, error) {
 		return s.Crypto.Decrypt(encKey, kekBytes)
 	})
-
 	if err != nil {
 		return nil, err
 	}

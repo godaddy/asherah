@@ -1,9 +1,9 @@
 package internal
 
 import (
+	"errors"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +23,7 @@ func TestMemClr(t *testing.T) {
 	assert.True(t, allZero)
 }
 
-type ErrorReader struct {
-}
+type ErrorReader struct{}
 
 func (ErrorReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("error reading from stream")

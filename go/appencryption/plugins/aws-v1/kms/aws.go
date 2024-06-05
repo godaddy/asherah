@@ -3,6 +3,7 @@ package kms
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -13,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption"
@@ -21,7 +21,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-// KMS Metrics Counters & Timers
+// KMS Metrics Counters & Timers.
 var (
 	_ appencryption.KeyManagementService = (*AWSKMS)(nil)
 
@@ -30,8 +30,8 @@ var (
 	generateDataKeyFunc   = generateDataKey
 	encryptAllRegionsFunc = encryptAllRegions
 
-	encryptKeyTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.kms.aws.encryptkey", appencryption.MetricsPrefix), nil)
-	decryptKeyTimer = metrics.GetOrRegisterTimer(fmt.Sprintf("%s.kms.aws.decryptkey", appencryption.MetricsPrefix), nil)
+	encryptKeyTimer = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".kms.aws.encryptkey", nil)
+	decryptKeyTimer = metrics.GetOrRegisterTimer(appencryption.MetricsPrefix+".kms.aws.decryptkey", nil)
 )
 
 // KMS is implemented by the client in the kms package from the AWS SDK.
@@ -63,7 +63,7 @@ func newAWSKMSClient(sess client.ConfigProvider, region, arn string) AWSKMSClien
 func createAWSKMSClients(arnMap map[string]string) ([]AWSKMSClient, error) {
 	sess, err := session.NewSession()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create new session")
+		return nil, fmt.Errorf("unable to create new session: %w", err)
 	}
 
 	clients := make([]AWSKMSClient, 0)
@@ -162,7 +162,6 @@ func (m *AWSKMS) EncryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	defer internal.MemClr(dataKey.Plaintext)
 
 	encKeyBytes, err := m.Crypto.Encrypt(keyBytes, dataKey.Plaintext)
-
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +183,7 @@ func (m *AWSKMS) EncryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	return b, nil
 }
 
-// encryptAllRegions encrypts the plain-text key using the KMS keys of all requested reegions
+// encryptAllRegions encrypts the plain-text key using the KMS keys of all requested regions.
 func encryptAllRegions(ctx context.Context, resp *kms.GenerateDataKeyOutput, clients []AWSKMSClient) <-chan encryptionKey {
 	var wg sync.WaitGroup
 
@@ -209,7 +208,6 @@ func encryptAllRegions(ctx context.Context, resp *kms.GenerateDataKeyOutput, cli
 					KeyId:     aws.String(c.ARN),
 					Plaintext: resp.Plaintext,
 				})
-
 				if err != nil {
 					return
 				}
@@ -266,7 +264,7 @@ func (m *AWSKMS) DecryptKey(ctx context.Context, keyBytes []byte) ([]byte, error
 	var en envelope
 
 	if err := json.Unmarshal(keyBytes, &en); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal envelope")
+		return nil, fmt.Errorf("unable to unmarshal envelope: %w", err)
 	}
 
 	for i := range m.Clients {

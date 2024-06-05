@@ -89,7 +89,7 @@ func (s *secret) WithBytesFunc(action func([]byte) ([]byte, error)) (ret []byte,
 	return action(s.buffer.Bytes())
 }
 
-// IsClosed returns true if the underlying data container has already been closed
+// IsClosed returns true if the underlying data container has already been closed.
 func (s *secret) IsClosed() bool {
 	s.rw.RLock()
 	defer s.rw.RUnlock()

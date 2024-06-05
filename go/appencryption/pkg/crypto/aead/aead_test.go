@@ -2,9 +2,9 @@ package aead
 
 import (
 	"crypto/cipher"
+	"errors"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

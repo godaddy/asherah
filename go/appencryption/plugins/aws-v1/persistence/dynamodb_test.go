@@ -28,7 +28,6 @@ func getSession() *session.Session {
 		Region:   aws.String("us-west-2"),
 		Endpoint: aws.String("http://localhost:8000"),
 	})
-
 	if err != nil {
 		panic(err)
 	}

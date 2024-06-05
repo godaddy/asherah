@@ -3,6 +3,8 @@ package persistence
 import (
 	"context"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -13,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
-	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
+
+	"github.com/godaddy/asherah/go/appencryption"
 )
 
 const (
@@ -26,11 +28,14 @@ const (
 )
 
 var (
-	// DynamoDB metastore metrics
+	// DynamoDB metastore metrics.
 	loadDynamoDBTimer       = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.load", nil)
 	loadLatestDynamoDBTimer = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.loadlatest", nil)
 	storeDynamoDBTimer      = metrics.GetOrRegisterTimer("ael.metastore.dynamodb.store", nil)
 )
+
+// ConfigProvider is an alias for the AWS SDK ConfigProvider interface.
+type ConfigProvider = client.ConfigProvider
 
 // DynamoDBMetastore implements the Metastore interface.
 type DynamoDBMetastore struct {
@@ -62,13 +67,13 @@ func (d *DynamoDBMetastore) GetClient() DynamoDBClientAPI {
 }
 
 // DynamoDBMetastoreOption is used to configure additional options in a DynamoDBMetastore.
-type DynamoDBMetastoreOption func(d *DynamoDBMetastore, p client.ConfigProvider)
+type DynamoDBMetastoreOption func(d *DynamoDBMetastore, p ConfigProvider)
 
 // WithDynamoDBRegionSuffix configures the DynamoDBMetastore to use a regional suffix for
 // all writes. This feature should be enabled when using DynamoDB global tables to avoid
 // write conflicts arising from the "last writer wins" method of conflict resolution.
 func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
-	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+	return func(d *DynamoDBMetastore, p ConfigProvider) {
 		if enabled {
 			config := p.ClientConfig(dynamodb.EndpointsID)
 			d.regionSuffix = *config.Config.Region
@@ -78,7 +83,7 @@ func WithDynamoDBRegionSuffix(enabled bool) DynamoDBMetastoreOption {
 
 // WithTableName configures the DynamoDBMetastore to use the specified table name.
 func WithTableName(table string) DynamoDBMetastoreOption {
-	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+	return func(d *DynamoDBMetastore, p ConfigProvider) {
 		if len(table) > 0 {
 			d.tableName = table
 		}
@@ -89,13 +94,13 @@ func WithTableName(table string) DynamoDBMetastoreOption {
 //
 // This is useful for testing or when you want to use a custom DynamoDB client.
 func WithClient(c DynamoDBClientAPI) DynamoDBMetastoreOption {
-	return func(d *DynamoDBMetastore, p client.ConfigProvider) {
+	return func(d *DynamoDBMetastore, p ConfigProvider) {
 		d.svc = c
 	}
 }
 
 // NewDynamoDBMetastore creates a new DynamoDBMetastore with the provided session and options.
-func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
+func NewDynamoDBMetastore(sess ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
 	d := &DynamoDBMetastore{
 		svc:       dynamodb.New(sess),
 		tableName: defaultTableName,
@@ -111,7 +116,7 @@ func NewDynamoDBMetastore(sess client.ConfigProvider, opts ...DynamoDBMetastoreO
 func parseResult(av *dynamodb.AttributeValue) (*appencryption.EnvelopeKeyRecord, error) {
 	var en appencryption.EnvelopeKeyRecord
 	if err := dynamodbattribute.Unmarshal(av, &en); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal record")
+		return nil, fmt.Errorf("failed to unmarshal record: %w", err)
 	}
 
 	return &en, nil
@@ -123,10 +128,10 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 	defer loadDynamoDBTimer.UpdateSince(time.Now())
 
 	proj := expression.NamesList(expression.Name(keyRecord))
-	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 
+	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 	if err != nil {
-		return nil, errors.Wrap(err, "dynamodb expression error")
+		return nil, fmt.Errorf("dynamodb expression error: %w", err)
 	}
 
 	res, err := d.svc.GetItemWithContext(ctx, &dynamodb.GetItemInput{
@@ -139,9 +144,8 @@ func (d *DynamoDBMetastore) Load(ctx context.Context, keyID string, created int6
 		TableName:            aws.String(d.tableName),
 		ConsistentRead:       aws.Bool(true), // always use strong consistency
 	})
-
 	if err != nil {
-		return nil, errors.Wrap(err, "metastore error")
+		return nil, fmt.Errorf("metastore error: %w", err)
 	}
 
 	if res.Item == nil {
@@ -161,7 +165,7 @@ func (d *DynamoDBMetastore) LoadLatest(ctx context.Context, keyID string) (*appe
 
 	expr, err := expression.NewBuilder().WithKeyCondition(cond).WithProjection(proj).Build()
 	if err != nil {
-		return nil, errors.Wrap(err, "dynamodb expression error")
+		return nil, fmt.Errorf("dynamodb expression error: %w", err)
 	}
 
 	// Have to use query api to use limit and reverse sort order
@@ -207,10 +211,10 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 		EncryptedKey:  base64.StdEncoding.EncodeToString(envelope.EncryptedKey),
 		ParentKeyMeta: envelope.ParentKeyMeta,
 	}
-	av, err := dynamodbattribute.MarshalMap(&en)
 
+	av, err := dynamodbattribute.MarshalMap(&en)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to marshal envelope")
+		return false, fmt.Errorf("failed to marshal envelope: %w", err)
 	}
 
 	// Note conditional expression using attribute_not_exists has special semantics. Can be used on partition OR
@@ -227,11 +231,12 @@ func (d *DynamoDBMetastore) Store(ctx context.Context, keyID string, created int
 		ConditionExpression: aws.String("attribute_not_exists(" + partitionKey + ")"),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-			return false, errors.Wrapf(err, "attempted to create duplicate key: %s, %d", keyID, created)
+		var awsErr awserr.Error
+		if errors.As(err, &awsErr) && awsErr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return false, fmt.Errorf("attempted to create duplicate key: %s, %d: %w", keyID, created, err)
 		}
 
-		return false, errors.Wrapf(err, "error storing key  key: %s, %d", keyID, created)
+		return false, fmt.Errorf("error storing key  key: %s, %d: %w", keyID, created, err)
 	}
 
 	return true, nil

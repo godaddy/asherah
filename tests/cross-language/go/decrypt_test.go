@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
@@ -20,7 +20,7 @@ var (
 )
 
 func iHaveEncryptedDataFrom(filename string) error {
-	data, err := ioutil.ReadFile(fmt.Sprintf("%s%s", fileDirectory, filename))
+	data, err := os.ReadFile(fmt.Sprintf("%s%s", fileDirectory, filename))
 	if err != nil {
 		return err
 	}

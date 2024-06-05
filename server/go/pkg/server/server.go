@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 
@@ -145,7 +146,7 @@ func (s *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 
 	for {
 		in, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil
 		}
 
@@ -162,7 +163,7 @@ func (s *streamer) Stream(stream pb.AppEncryption_SessionServer) error {
 }
 
 func (s *streamer) handleRequest(ctx context.Context, in *pb.SessionRequest) *pb.SessionResponse {
-	switch in.Request.(type) {
+	switch in.GetRequest().(type) {
 	case *pb.SessionRequest_Decrypt:
 		if s.handler == nil {
 			return UninitializedSessionResponse
@@ -226,13 +227,13 @@ func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.
 
 func fromProtobufDRR(drr *pb.DataRowRecord) *appencryption.DataRowRecord {
 	return &appencryption.DataRowRecord{
-		Data: drr.Data,
+		Data: drr.GetData(),
 		Key: &appencryption.EnvelopeKeyRecord{
-			EncryptedKey: drr.Key.Key,
-			Created:      drr.Key.Created,
+			EncryptedKey: drr.GetKey().GetKey(),
+			Created:      drr.GetKey().GetCreated(),
 			ParentKeyMeta: &appencryption.KeyMeta{
-				ID:      drr.Key.ParentKeyMeta.KeyId,
-				Created: drr.Key.ParentKeyMeta.Created,
+				ID:      drr.GetKey().GetParentKeyMeta().GetKeyId(),
+				Created: drr.GetKey().GetParentKeyMeta().GetCreated(),
 			},
 		},
 	}

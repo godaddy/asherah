@@ -1,6 +1,7 @@
 package appencryption
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -8,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -201,7 +201,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredA
 }
 
 func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredButNotRevoked() {
-	var created = time.Now().Add(-2 * suite.policy.RevokeCheckInterval).Unix()
+	created := time.Now().Add(-2 * suite.policy.RevokeCheckInterval).Unix()
 	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("blah"))
 
 	if assert.NoError(suite.T(), err) {
@@ -493,6 +493,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_Concurrent_100() {
 		counter int32
 	)
 
+	//nolint:unparam // error param is required by the interface
 	loadFunc := func(_ KeyMeta) (*internal.CryptoKey, error) {
 		<-time.After(time.Millisecond * time.Duration(rand.Intn(30)))
 		atomic.AddInt32(&counter, 1)

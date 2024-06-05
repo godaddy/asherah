@@ -2,11 +2,11 @@ package kms
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/godaddy/asherah/go/securememory/memguard"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -54,20 +54,20 @@ func TestStaticKMS_Encrypt(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		key, err := internal.GenerateKey(secretFactory, time.Now().Unix(), appencryption.AES256KeySize)
+		require.NoError(t, err)
+
+		encKey, err := internal.WithKeyFunc(key, func(keyBytes []byte) ([]byte, error) {
+			return m.EncryptKey(context.Background(), keyBytes)
+		})
+		require.NoError(t, err)
+
+		afterBytes, err := m.DecryptKey(context.Background(), encKey)
 		if assert.NoError(t, err) {
-			encKey, err := internal.WithKeyFunc(key, func(keyBytes []byte) ([]byte, error) {
-				return m.EncryptKey(context.Background(), keyBytes)
+			err := internal.WithKey(key, func(beforeBytes []byte) error {
+				assert.Equal(t, beforeBytes, afterBytes)
+				return nil
 			})
-			if assert.NoError(t, err) {
-				afterBytes, err := m.DecryptKey(context.Background(), encKey)
-				if assert.NoError(t, err) {
-					err := internal.WithKey(key, func(beforeBytes []byte) error {
-						assert.Equal(t, beforeBytes, afterBytes)
-						return nil
-					})
-					assert.NoError(t, err)
-				}
-			}
+			assert.NoError(t, err)
 		}
 	}
 }
