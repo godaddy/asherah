@@ -1,0 +1,140 @@
+name: '[Go] Run All'
+
+on:
+  workflow_dispatch:
+
+  # TODO: remove the push trigger before merging
+  push:
+    paths:
+      - 'go/appencryption/**'
+      - '.github/workflows/go-*'
+
+jobs:
+  securememory-main:
+    name: 'SecureMemory: Build & Test'
+    uses: ./.github/workflows/go-securememory-ci.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  securememory-benchmark:
+    name: 'SecureMemory: Bench'
+    needs: securememory-main
+    uses: ./.github/workflows/go-securememory-bench.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  appencryption-main:
+    name: 'AppEncryption: Build & Test'
+    needs: securememory-main
+    uses: ./.github/workflows/go-appencryption-ci.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  appencryption-integration:
+    name: 'AppEncryption: Integration'
+    needs: appencryption-main
+    uses: ./.github/workflows/go-appencryption-integration.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  appencryption-benchmark:
+    name: 'AppEncryption: Bench'
+    needs: appencryption-main
+    uses: ./.github/workflows/go-appencryption-bench.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  reference-app:
+    name: 'Reference App: Build and Lint'
+    needs: appencryption-main
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory  # needed for VCS stamping
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Set up Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: stable
+          cache-dependency-path: |
+            go/*/go.sum
+            samples/go/referenceapp/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd samples/go/referenceapp
+          go get .
+          go install gotest.tools/gotestsum@latest
+
+      - name: Build
+        run: |
+          cd samples/go/referenceapp
+          ./scripts/build.sh
+
+      - name: Run linters
+        run: |
+          cd samples/go/referenceapp
+          ./scripts/lint.sh
+
+  server:
+    name: 'Server: Build and Lint'
+    needs: appencryption-main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory  # needed for VCS stamping
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Set up Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: stable
+          cache-dependency-path: |
+            go/*/go.sum
+            server/go/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd server/go
+          go get .
+          go install gotest.tools/gotestsum@latest
+
+      - name: Build
+        run: |
+          cd server/go
+          ./scripts/build.sh
+
+      - name: Run unit tests
+        run: |
+          cd server/go
+          sudo prlimit --pid $$ --core=-1
+          sudo prlimit --pid $$ --memlock=-1:-1
+          ./scripts/test.sh
+
+      - name: Run linters
+        run: |
+          cd server/go
+          ./scripts/lint.sh
