@@ -1,0 +1,22 @@
+name: '[Go] SecureMemory CI'
+
+on:
+  workflow_dispatch:
+
+  push:
+    # branches:
+    #   - ci-refresh # TODO: remove/fix prior to PR
+    paths:
+      - 'go/securememory/**'
+      - '.github/workflows/go-securememory-*'
+
+jobs:
+  build:
+    name: Setup Go and build
+    uses: ./.github/workflows/go-securememory-build.yml
+
+  test:
+    name: Run Go tests and linters
+    needs: build
+    uses: ./.github/workflows/go-securememory-test.yml
+

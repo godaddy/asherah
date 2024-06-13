@@ -1,0 +1,73 @@
+name: '[Go] Run All'
+
+on:
+  workflow_dispatch:
+
+  # TODO: remove the push trigger before merging
+  # push:
+  #   paths:
+  #     - 'go/appencryption/**'
+  #     - '.github/workflows/go-*'
+
+jobs:
+  build-securememory:
+    uses: ./.github/workflows/go-securememory-build.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  test-securememory:
+    needs: build-securememory
+    uses: ./.github/workflows/go-securememory-test.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  benchmark-securememory:
+    needs: build-securememory
+    uses: ./.github/workflows/go-securememory-bench.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  build-appencryption:
+    needs: test-securememory
+    uses: ./.github/workflows/go-appencryption-build.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  test-appencryption:
+    needs: build-appencryption
+    uses: ./.github/workflows/go-appencryption-test.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  integration-appencryption:
+    needs: test-appencryption
+    uses: ./.github/workflows/go-appencryption-integration.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
+
+  benchmark-appencryption:
+    needs: test-appencryption
+    uses: ./.github/workflows/go-appencryption-bench.yml
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+    with:
+      go-version: ${{ matrix.go-version }}
