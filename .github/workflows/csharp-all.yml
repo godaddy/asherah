@@ -1,0 +1,54 @@
+name: '[C#] Run All'
+
+on:
+  workflow_dispatch:
+
+  # TODO: remove the push trigger before merging
+  push:
+    paths:
+      - 'csharp/AppEncryption/**'
+      - '.github/workflows/csharp-*'
+
+jobs:
+  logging-main:
+    name: 'Logging: Build & Test'
+    uses: ./.github/workflows/csharp-logging.yml
+
+  securememory-main:
+    name: 'SecureMemory: Build & Test'
+    uses: ./.github/workflows/csharp-securememory-ci.yml
+
+  appencryption-main:
+    name: 'AppEncryption: Build & Test'
+    needs: [logging-main, securememory-main]
+    uses: ./.github/workflows/csharp-appencryption-ci.yml
+
+  appencryption-integration:
+    name: 'AppEncryption: Integration'
+    needs: appencryption-main
+    uses: ./.github/workflows/csharp-appencryption-integration.yml
+
+  reference-app:
+    runs-on: ubuntu-latest
+    needs: appencryption-main
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Build
+        run: |
+          cd samples/csharp/ReferenceApp
+          ./scripts/clean.sh
+          ./scripts/build.sh

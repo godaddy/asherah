@@ -1,0 +1,90 @@
+name: '[C#] SecureMemory CI'
+
+on:
+  workflow_dispatch:
+
+  workflow_call:
+    outputs:
+      artifact:
+        description: 'Artifact ID'
+        value: ${{ jobs.build.outputs.artifact }}
+
+  push:
+    # branches:
+    #   - ci-refresh # TODO: remove/fix prior to PR
+    paths:
+      - 'csharp/SecureMemory/**'
+      - '.github/workflows/csharp-securememory-*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.upload-artifact.outputs.artifact_id }}
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Build
+        run: |
+          cd csharp/SecureMemory
+          ./scripts/clean.sh
+          ./scripts/build.sh
+
+      - name: Upload artifact
+        id: upload-artifact
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: csharp-secure-memory
+          path: |
+            csharp/SecureMemory/SecureMemory/bin/**
+            csharp/SecureMemory/SecureMemory/obj/**
+            csharp/SecureMemory/PlatformNative/bin/**
+            csharp/SecureMemory/PlatformNative/obj/**
+            csharp/SecureMemory/SecureMemory.Tests/bin/**
+            csharp/SecureMemory/SecureMemory.Tests/obj/**
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: csharp-secure-memory
+          path: ${{ github.workspace }}/csharp/SecureMemory
+
+      - name: Run unit tests
+        run: |
+          cd csharp/SecureMemory
+          ./scripts/test.sh
+
+      - name: Unit test summary
+        uses: test-summary/action@032c8a9cec6aaa3c20228112cae6ca10a3b29336 # v2.3.0
+        with:
+          paths: 'csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml'
+        if: always()
