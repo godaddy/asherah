@@ -11,8 +11,6 @@ on:
         default: '17'
 
   push:
-    # branches:
-    #   - ci-refresh # TODO: remove/fix prior to PR
     paths:
       - 'java/appencryption/**'
       - '.github/workflows/java-appencryption-*'

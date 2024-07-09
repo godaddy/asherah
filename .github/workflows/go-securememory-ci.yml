@@ -11,8 +11,6 @@ on:
         default: 'stable'
 
   push:
-    # branches:
-    #   - ci-refresh # TODO: remove/fix prior to PR
     paths:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'

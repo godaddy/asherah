@@ -3,11 +3,7 @@ name: '[Go] Run All'
 on:
   workflow_dispatch:
 
-  # TODO: remove the push trigger before merging
-  push:
-    paths:
-      - 'go/appencryption/**'
-      - '.github/workflows/go-*'
+  workflow_call:
 
 jobs:
   securememory-main:

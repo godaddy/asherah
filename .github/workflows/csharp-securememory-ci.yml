@@ -10,8 +10,6 @@ on:
         value: ${{ jobs.build.outputs.artifact }}
 
   push:
-    # branches:
-    #   - ci-refresh # TODO: remove/fix prior to PR
     paths:
       - 'csharp/SecureMemory/**'
       - '.github/workflows/csharp-securememory-*'

@@ -3,11 +3,7 @@ name: '[C#] Run All'
 on:
   workflow_dispatch:
 
-  # TODO: remove the push trigger before merging
-  push:
-    paths:
-      - 'csharp/AppEncryption/**'
-      - '.github/workflows/csharp-*'
+  workflow_call:
 
 jobs:
   logging-main:

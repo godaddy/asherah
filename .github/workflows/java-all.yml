@@ -3,11 +3,7 @@ name: '[Java] Run All'
 on:
   workflow_dispatch:
 
-  # TODO: remove the push trigger before merging
-  push:
-    paths:
-      - 'java/app-encryption/**'
-      - '.github/workflows/java-*'
+  workflow_call:
 
 jobs:
   securememory-main:
