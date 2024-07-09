@@ -86,5 +86,5 @@ jobs:
       - name: Unit test summary
         uses: test-summary/action@032c8a9cec6aaa3c20228112cae6ca10a3b29336 # v2.3.0
         with:
-          paths: 'csharp/SecureMemory/SecureMemory.Tests/coverage.opencover.xml'
+          paths: 'csharp/SecureMemory/SecureMemory.Tests/test-result.xml'
         if: always()
