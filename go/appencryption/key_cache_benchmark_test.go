@@ -1,7 +1,6 @@
 package appencryption
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"sync/atomic"
@@ -41,8 +40,8 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			key, err := c.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed")
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 
 			assert.NoError(b, err)
@@ -60,8 +59,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteSameKey(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := c.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// Add a delay to simulate time spent in performing a metastore read
-				time.Sleep(5 * time.Millisecond)
 				return internal.NewCryptoKeyForTest(created, false), nil
 			})
 
@@ -95,7 +92,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 			curr := atomic.AddInt64(&i, 1) - 1
 
 			loader := func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// Add a delay to simulate time spent in performing a metastore read
 				return internal.NewCryptoKeyForTest(created, false), nil
 			}
 
@@ -215,8 +211,8 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 
 			id := fmt.Sprintf(testKey+"-%d", curr)
 			key, err := c.GetOrLoad(KeyMeta{id, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed for id=" + id)
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			assert.NoError(b, err)
 			assert.Equal(b, created, key.Created())
@@ -237,8 +233,8 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			key, err := c.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, nil
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			assert.NoError(b, err)
 			assert.Equal(b, created, key.Created())
@@ -253,8 +249,6 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteSameKey(b *testing.B)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := c.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
-				// Add a delay to simulate time spent in performing a metastore read
-				time.Sleep(5 * time.Millisecond)
 				return internal.NewCryptoKeyForTest(created, false), nil
 			})
 			assert.NoError(b, err)
@@ -277,7 +271,6 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteUniqueKey(b *testing.
 		for pb.Next() {
 			curr := atomic.AddInt64(&i, 1) - 1
 			_, err := c.GetOrLoadLatest(cacheKey(testKey, curr), func(_ KeyMeta) (*internal.CryptoKey, error) {
-				time.Sleep(5 * time.Millisecond)
 				return internal.NewCryptoKeyForTest(created, false), nil
 			})
 			assert.NoError(b, err)
@@ -393,8 +386,8 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.
 			keyID := fmt.Sprintf(testKey+"-%d", curr)
 
 			key, err := c.GetOrLoadLatest(keyID, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed for id=" + keyID)
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			if err != nil {
 				b.Error(err)
