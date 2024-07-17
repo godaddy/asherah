@@ -51,8 +51,23 @@ func (suite *CacheTestSuite) Test_NewKeyCache() {
 	assert.NotNil(suite.T(), cache)
 	assert.IsType(suite.T(), new(keyCache), cache)
 	assert.NotNil(suite.T(), cache.keys)
+	assert.IsType(suite.T(), new(simpleCache), cache.keys)
 	assert.NotNil(suite.T(), cache.policy)
-	assert.Equal(suite.T(), DefaultKeyCacheMaxSize, cache.keys.Capacity())
+	assert.Equal(suite.T(), -1, cache.keys.Capacity())
+}
+
+func (suite *CacheTestSuite) Test_NewKeyCache_LRU() {
+	policy := NewCryptoPolicy()
+	policy.IntermediateKeyCacheEvictionPolicy = "lru"
+
+	c := newKeyCache(CacheTypeIntermediateKeys, policy)
+	defer c.Close()
+
+	assert.NotNil(suite.T(), c)
+	assert.IsType(suite.T(), new(keyCache), c)
+	assert.NotNil(suite.T(), c.keys)
+	assert.NotNil(suite.T(), c.policy)
+	assert.Equal(suite.T(), DefaultKeyCacheMaxSize, c.keys.Capacity())
 }
 
 func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalNotElapsed() {
@@ -60,7 +75,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalNotElapsed() {
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
 			loadedAt: time.Now(),
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 		}
 
 		defer key.Close()
@@ -74,7 +89,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithIntervalElapsed() {
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
 			loadedAt: time.Now().Add(-2 * time.Hour),
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 		}
 
 		defer key.Close()
@@ -89,7 +104,7 @@ func (suite *CacheTestSuite) Test_IsReloadRequired_WithRevoked() {
 		entry := cacheEntry{
 			// Note this loadedAt would normally require reload
 			loadedAt: time.Now().Add(-2 * time.Hour),
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 		}
 
 		defer key.Close()
@@ -175,7 +190,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredA
 	key, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 			loadedAt: time.Now().Add(-2 * suite.policy.RevokeCheckInterval),
 		}
 
@@ -206,7 +221,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoad_WithCachedKeyReloadRequiredB
 
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 			loadedAt: time.Unix(created, 0),
 		}
 
@@ -322,7 +337,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyAndInvali
 	require.NoError(suite.T(), err)
 
 	entry := cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: orig},
+		key:      newCachedCryptoKey(orig),
 		loadedAt: time.Now(),
 	}
 
@@ -357,7 +372,7 @@ func (suite *CacheTestSuite) TestKeyCache_GetOrLoadLatest_WithCachedKeyAndValidK
 	key, err := internal.NewCryptoKey(secretFactory, suite.created, false, []byte("blah"))
 	if assert.NoError(suite.T(), err) {
 		entry := cacheEntry{
-			key:      &cachedCryptoKey{CryptoKey: key},
+			key:      newCachedCryptoKey(key),
 			loadedAt: time.Now(),
 		}
 

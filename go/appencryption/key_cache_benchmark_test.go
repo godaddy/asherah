@@ -1,7 +1,6 @@
 package appencryption
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"sync/atomic"
@@ -33,7 +32,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 
 	c.keys.Set(cacheKey(testKey, created), cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: internal.NewCryptoKeyForTest(created, false)},
+		key:      newCachedCryptoKey(internal.NewCryptoKeyForTest(created, false)),
 		loadedAt: time.Now(),
 	})
 
@@ -41,8 +40,8 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			key, err := c.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed")
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 
 			assert.NoError(b, err)
@@ -60,8 +59,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteSameKey(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := c.GetOrLoad(KeyMeta{testKey, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// Add a delay to simulate time spent in performing a metastore read
-				time.Sleep(5 * time.Millisecond)
 				return internal.NewCryptoKeyForTest(created, false), nil
 			})
 
@@ -95,7 +92,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 			curr := atomic.AddInt64(&i, 1) - 1
 
 			loader := func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// Add a delay to simulate time spent in performing a metastore read
 				return internal.NewCryptoKeyForTest(created, false), nil
 			}
 
@@ -113,10 +109,6 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 	assert.NotNil(b, c.keys)
 
 	expected := i
-	if expected > DefaultKeyCacheMaxSize {
-		expected = DefaultKeyCacheMaxSize
-	}
-
 	assert.Equal(b, expected, int64(c.keys.Len()))
 }
 
@@ -131,7 +123,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadRevokedKey(b *testing.B) {
 	assert.NoError(b, err)
 
 	cacheEntry := cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: key},
+		key:      newCachedCryptoKey(key),
 		loadedAt: time.Unix(created, 0),
 	}
 
@@ -168,7 +160,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 	assert.NoError(b, err)
 
 	cacheEntry := cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: key},
+		key:      newCachedCryptoKey(key),
 		loadedAt: time.Unix(created, 0),
 	}
 
@@ -204,7 +196,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 
 		c.mapLatestKeyMeta(meta.ID, meta)
 		c.keys.Set(cacheKey(meta.ID, meta.Created), cacheEntry{
-			key:      &cachedCryptoKey{CryptoKey: internal.NewCryptoKeyForTest(created, false), refs: 1},
+			key:      newCachedCryptoKey(internal.NewCryptoKeyForTest(created, false)),
 			loadedAt: time.Now(),
 		})
 	}
@@ -219,8 +211,8 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 
 			id := fmt.Sprintf(testKey+"-%d", curr)
 			key, err := c.GetOrLoad(KeyMeta{id, created}, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed for id=" + id)
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			assert.NoError(b, err)
 			assert.Equal(b, created, key.Created())
@@ -233,7 +225,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing
 
 	c.mapLatestKeyMeta(testKey, KeyMeta{testKey, created})
 	c.keys.Set(cacheKey(testKey, created), cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: internal.NewCryptoKeyForTest(created, false)},
+		key:      newCachedCryptoKey(internal.NewCryptoKeyForTest(created, false)),
 		loadedAt: time.Now(),
 	})
 
@@ -241,8 +233,8 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			key, err := c.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, nil
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			assert.NoError(b, err)
 			assert.Equal(b, created, key.Created())
@@ -257,8 +249,6 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteSameKey(b *testing.B)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := c.GetOrLoadLatest(testKey, func(_ KeyMeta) (*internal.CryptoKey, error) {
-				// Add a delay to simulate time spent in performing a metastore read
-				time.Sleep(5 * time.Millisecond)
 				return internal.NewCryptoKeyForTest(created, false), nil
 			})
 			assert.NoError(b, err)
@@ -289,10 +279,6 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteUniqueKey(b *testing.
 	assert.NotNil(b, c.keys)
 
 	expected := i
-	if expected > DefaultKeyCacheMaxSize {
-		expected = DefaultKeyCacheMaxSize
-	}
-
 	assert.Equal(b, expected, int64(c.keys.Len()))
 }
 
@@ -306,7 +292,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadStaleRevokedKey(b *tes
 
 	key, err := internal.NewCryptoKey(secretFactory, created, false, []byte("testing"))
 	cacheEntry := cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: key, refs: 1},
+		key:      newCachedCryptoKey(key),
 		loadedAt: time.Unix(created, 0),
 	}
 
@@ -342,7 +328,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadRevokedKey(b *testing.
 
 	key, err := internal.NewCryptoKey(secretFactory, created, true, []byte("testing"))
 	cacheEntry := cacheEntry{
-		key:      &cachedCryptoKey{CryptoKey: key, refs: 1},
+		key:      newCachedCryptoKey(key),
 		loadedAt: time.Unix(created, 0),
 	}
 
@@ -384,7 +370,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.
 		meta := KeyMeta{ID: keyID, Created: created}
 		c.mapLatestKeyMeta(keyID, meta)
 		c.keys.Set(cacheKey(meta.ID, meta.Created), cacheEntry{
-			key:      &cachedCryptoKey{CryptoKey: internal.NewCryptoKeyForTest(created, false)},
+			key:      newCachedCryptoKey(internal.NewCryptoKeyForTest(created, false)),
 			loadedAt: time.Now(),
 		})
 	}
@@ -400,8 +386,8 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.
 			keyID := fmt.Sprintf(testKey+"-%d", curr)
 
 			key, err := c.GetOrLoadLatest(keyID, func(_ KeyMeta) (key *internal.CryptoKey, e error) {
-				// The passed function is irrelevant because we'll always find the value in the cache
-				return nil, errors.New("loader should not be executed for id=" + keyID)
+				// The passed function is irrelevant because we'll always find the value in the cache.
+				panic("loader should not be executed")
 			})
 			if err != nil {
 				b.Error(err)

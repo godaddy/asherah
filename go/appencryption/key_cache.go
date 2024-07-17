@@ -2,7 +2,9 @@ package appencryption
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
@@ -14,32 +16,38 @@ import (
 type cachedCryptoKey struct {
 	*internal.CryptoKey
 
-	rw   sync.RWMutex // protects concurrent access to the key's reference count
-	refs int          // number of references to this key
+	refs *atomic.Int64
+}
+
+// newCachedCryptoKey returns a new cachedCryptoKey ready for use.
+func newCachedCryptoKey(k *internal.CryptoKey) *cachedCryptoKey {
+	ref := &atomic.Int64{}
+
+	// initialize with a reference count of 1 to represent the
+	// reference held by the cache
+	ref.Add(1)
+
+	return &cachedCryptoKey{
+		CryptoKey: k,
+
+		refs: ref,
+	}
 }
 
 // Close decrements the reference count for this key. If the reference count
 // reaches zero, the underlying key is closed.
 func (c *cachedCryptoKey) Close() {
-	c.rw.Lock()
-	defer c.rw.Unlock()
-
-	c.refs--
-
-	if c.refs > 0 {
+	if c.refs.Add(-1) > 0 {
 		return
 	}
 
-	log.Debugf("closing cached key: %s, refs=%d", c.CryptoKey, c.refs)
+	log.Debugf("closing cached key: %s, refs=%d", c.CryptoKey, c.refs.Load())
 	c.CryptoKey.Close()
 }
 
 // increment the reference count for this key.
 func (c *cachedCryptoKey) increment() {
-	c.rw.Lock()
-	defer c.rw.Unlock()
-
-	c.refs++
+	c.refs.Add(1)
 }
 
 // cacheEntry contains a key and the time it was loaded from the metastore.
@@ -52,20 +60,78 @@ type cacheEntry struct {
 func newCacheEntry(k *internal.CryptoKey) cacheEntry {
 	return cacheEntry{
 		loadedAt: time.Now(),
-		key: &cachedCryptoKey{
-			CryptoKey: k,
-
-			// initialize with a reference count of 1 to represent the
-			// reference held by the cache
-			refs: 1,
-		},
+		key:      newCachedCryptoKey(k),
 	}
+}
+
+// simpleCache is a simple in-memory implementation of cache.Interface.
+//
+// It offers improved performance in scenarios where lockable memory is not a concern.
+// Conversely, it is not recommended for memory bound systems, as it does not evict keys.
+//
+// Note: simpleCache is not safe for concurrent use and is intended to be used as a backend for keyCache, which is.
+type simpleCache struct {
+	m map[string]cacheEntry
+}
+
+// newSimpleCache returns a new simpleCache that is ready to use.
+func newSimpleCache() *simpleCache {
+	return &simpleCache{
+		m: make(map[string]cacheEntry),
+	}
+}
+
+// Get retrieves a cache entry from the cache if it exists.
+func (s *simpleCache) Get(key string) (cacheEntry, bool) {
+	value, ok := s.m[key]
+	return value, ok
+}
+
+// GetOrPanic retrieves a cache entry from the cache if it exists, otherwise panics.
+func (s *simpleCache) GetOrPanic(key string) cacheEntry {
+	value, ok := s.m[key]
+	if !ok {
+		panic(fmt.Sprintf("key %s not found in cache", key))
+	}
+	return value
+}
+
+// Set stores a cache entry in the cache.
+func (s *simpleCache) Set(key string, value cacheEntry) {
+	s.m[key] = value
+}
+
+// Delete removes a cache entry from the cache.
+func (s *simpleCache) Delete(key string) bool {
+	_, ok := s.m[key]
+
+	return ok
+}
+
+// Len returns the number of entries in the cache.
+func (s *simpleCache) Len() int {
+	return len(s.m)
+}
+
+// Capacity returns the maximum number of entries the cache can hold.
+// The return value is -1 to indicate that the cache has no capacity limit.
+func (s *simpleCache) Capacity() int {
+	return -1
+}
+
+// Close closes the cache and frees all memory locked by the keys in this cache.
+func (s *simpleCache) Close() error {
+	for _, entry := range s.m {
+		entry.key.Close()
+	}
+
+	return nil
 }
 
 // cacheKey formats an id and create timestamp to a usable
 // key for storage in a cache.
 func cacheKey(id string, create int64) string {
-	return fmt.Sprintf("%s-%d", id, create)
+	return id + strconv.FormatInt(create, 10)
 }
 
 // keyCacher contains cached keys for reuse.
@@ -137,6 +203,11 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 		log.Debugf("[onEvict] closing key -- id: %s\n", key)
 
 		value.key.Close()
+	}
+
+	if cachePolicy == "" || cachePolicy == "simple" {
+		c.keys = newSimpleCache()
+		return c
 	}
 
 	cb := cache.New[string, cacheEntry](cacheMaxSize)
@@ -315,8 +386,8 @@ func (c *keyCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.Cr
 	defer c.rw.Unlock()
 
 	meta := KeyMeta{ID: id}
-
 	key, ok := c.getFresh(meta)
+
 	if !ok {
 		log.Debugf("%s.GetOrLoadLatest get miss -- id: %s\n", c, id)
 
@@ -377,7 +448,7 @@ func (neverCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKe
 		return nil, err
 	}
 
-	return &cachedCryptoKey{CryptoKey: k}, nil
+	return newCachedCryptoKey(k), nil
 }
 
 // GetOrLoadLatest always executes the provided function to load the latest value. It never actually caches.
@@ -387,7 +458,7 @@ func (neverCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.Cry
 		return nil, err
 	}
 
-	return &cachedCryptoKey{CryptoKey: k}, nil
+	return newCachedCryptoKey(k), nil
 }
 
 // Close is a no-op function to satisfy the cache interface.
