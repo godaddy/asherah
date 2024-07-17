@@ -90,7 +90,7 @@ func (c *MockCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.Crypto
 		key = b.(*internal.CryptoKey)
 	}
 
-	return &cachedCryptoKey{CryptoKey: key}, ret.Error(1)
+	return newCachedCryptoKey(key), ret.Error(1)
 }
 
 func (c *MockCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
@@ -103,7 +103,7 @@ func (c *MockCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.C
 		key = b.(*internal.CryptoKey)
 	}
 
-	return &cachedCryptoKey{CryptoKey: key}, ret.Error(1)
+	return newCachedCryptoKey(key), ret.Error(1)
 }
 
 func (c *MockCache) Close() error {

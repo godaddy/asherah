@@ -29,9 +29,11 @@ type CryptoPolicy struct {
 	// CacheIntermediateKeys determines whether Intermediate Keys will be cached.
 	CacheIntermediateKeys bool
 	// IntermediateKeyCacheMaxSize controls the maximum size of the cache if intermediate key caching is enabled.
+	//
+	// This value is ignored if IntermediateKeyCacheEvictionPolicy is set to "simple".
 	IntermediateKeyCacheMaxSize int
 	// IntermediateKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
-	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "lru".
+	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "simple".
 	IntermediateKeyCacheEvictionPolicy string
 	// SharedIntermediateKeyCache determines whether Intermediate Keys will use a single shared cache. If enabled,
 	// Intermediate Keys will share a single cache across all sessions for a given factory.
@@ -44,9 +46,11 @@ type CryptoPolicy struct {
 	CacheSystemKeys bool
 	// SystemKeyCacheMaxSize controls the maximum size of the cache if system key caching is enabled. If
 	// SharedKeyCache is enabled, this value will determine the maximum size of the shared cache.
+	//
+	// This value is ignored if SystemKeyCacheEvictionPolicy is set to "simple".
 	SystemKeyCacheMaxSize int
 	// SystemKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
-	// Supported values are "lru", "lfu", "slru", and "tinylfu". Default is "lru".
+	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "simple".
 	SystemKeyCacheEvictionPolicy string
 	// CacheSessions determines whether sessions will be cached.
 	CacheSessions bool

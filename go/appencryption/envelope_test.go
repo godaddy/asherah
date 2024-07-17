@@ -916,7 +916,7 @@ func TestEnvelopeEncryption_Close(t *testing.T) {
 		key, _ := internal.NewCryptoKey(m, 123456, false, data)
 
 		cache.keys.Set("testing", cacheEntry{
-			key: &cachedCryptoKey{CryptoKey: key, refs: 1},
+			key: newCachedCryptoKey(key),
 		})
 
 		e := &envelopeEncryption{
