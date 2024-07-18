@@ -19,7 +19,9 @@ go mod download
 go run main.go -s /tmp/appencryption.sock &
 ASHERAH_GO_SIDECAR_PID=$!
 cd -
-sleep 10
+
+# sleep until socket is created, fail after 30 seconds
+timeout 30 bash -c 'until [ -S /tmp/appencryption.sock ]; do echo waiting for socket file...; sleep 1; done' || exit 1
 
 cd python
 pip3.7 install -r requirements.txt
@@ -42,7 +44,9 @@ export ASHERAH_EXPIRE_AFTER=90
 export ASHERAH_CHECK_INTERVAL=10
 find ~/.m2 -name '*grpc-server*dependencies.jar' | xargs java -jar &
 ASHERAH_JAVA_SIDECAR_PID=$!
-sleep 10
+
+# sleep until socket is created, fail after 30 seconds
+timeout 30 bash -c 'until [ -S /tmp/appencryption.sock ]; do echo waiting for socket file...; sleep 1; done' || exit 1
 
 cd python
 python3.7 appencryption_client.py
