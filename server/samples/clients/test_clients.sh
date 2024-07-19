@@ -24,8 +24,8 @@ cd -
 timeout 30 bash -c 'until [ -S /tmp/appencryption.sock ]; do echo waiting for socket file...; sleep 1; done' || exit 1
 
 cd python
-pip3.7 install -r requirements.txt
-python3.7 appencryption_client.py
+pip3 install -r requirements.txt
+python3 appencryption_client.py
 cd ..
 
 cd node
@@ -49,7 +49,7 @@ ASHERAH_JAVA_SIDECAR_PID=$!
 timeout 30 bash -c 'until [ -S /tmp/appencryption.sock ]; do echo waiting for socket file...; sleep 1; done' || exit 1
 
 cd python
-python3.7 appencryption_client.py
+python3 appencryption_client.py
 cd ..
 
 cd node
