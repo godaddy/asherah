@@ -662,19 +662,19 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'maven'
-    - name: Set up Go 1.19
+    - name: Set up Go 1.22
       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
-        go-version: '1.19'
+        go-version: '1.22'
         cache-dependency-path: 'go/*/go.sum'
-    - name: Set up Python 3.7
+    - name: Set up Python 3.12
       uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
       with:
-        python-version: 3.7
-    - name: Set up NodeJS 13
+        python-version: 3.12
+    - name: Set up NodeJS 20
       uses: actions/setup-node@a9893b0cfb0821c9c7b5fec28a6a2e6cdd5e20a4
       with:
-        node-version: 13.x
+        node-version: 20.x
     - name: Extract branch name
       shell: bash
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
@@ -726,15 +726,15 @@ jobs:
       uses: actions/setup-dotnet@0f534f5829b2e991ed7d67169d882659f921a60d
       with:
         dotnet-version: '3.1.x'
-    - name: Set up Go 1.19
+    - name: Set up Go 1.22
       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
       with:
-        go-version: '1.19'
+        go-version: '1.22'
         cache-dependency-path: 'go/*/go.sum'
-    - name: Set up Python 3.8
+    - name: Set up Python 3.12
       uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
       with:
-        python-version: 3.8
+        python-version: 3.12
     - name: Extract branch name
       shell: bash
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
