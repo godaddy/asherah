@@ -8,6 +8,9 @@ on:
         type: string
         default: 'stable'
 
+permissions:
+  contents: read
+
 jobs:
   bench:
     runs-on: ubuntu-latest

@@ -15,6 +15,9 @@ on:
       - 'java/secure-memory/**'
       - '.github/workflows/java-securememory-*'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-java-sm-${{ github.ref }}
   # only cancel in-progress jobs if the workflow is root (not a called workflow)

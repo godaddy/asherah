@@ -14,6 +14,9 @@ on:
       - 'csharp/AppEncryption/**'
       - '.github/workflows/csharp-appencryption-*'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-csharp-ae-${{ github.ref }}
   # only cancel in-progress jobs if the workflow is root (not a called workflow)

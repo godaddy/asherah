@@ -15,6 +15,9 @@ on:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-go-sm-${{ inputs.go-version }}-${{ github.ref }}
   # only cancel in-progress jobs if the workflow is root (not a called workflow)

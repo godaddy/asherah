@@ -15,6 +15,9 @@ on:
       - 'java/appencryption/**'
       - '.github/workflows/java-appencryption-*'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-java-ae-${{ github.ref }}
   # only cancel in-progress jobs if the workflow is root (not a called workflow)

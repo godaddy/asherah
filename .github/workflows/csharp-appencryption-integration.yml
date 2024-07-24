@@ -3,6 +3,9 @@ name: '[C#] AppEncryption Integration Test'
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 env:
   DYNAMODB_HOSTNAME: dynamodb
   MYSQL_HOSTNAME: mysql

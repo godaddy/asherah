@@ -20,6 +20,9 @@ on:
       - '.github/workflows/cross-language-validation.yml'
       - 'server/**'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-cross-lang-${{ github.ref }}
   # only cancel in-progress jobs if the workflow is root (not a called workflow)

@@ -8,6 +8,9 @@ on:
         type: string
         default: '17'
 
+permissions:
+  contents: read
+
 env:
   DYNAMODB_HOSTNAME: dynamodb
   MYSQL_HOSTNAME: mysql
