@@ -14,6 +14,11 @@ on:
       - 'csharp/AppEncryption/**'
       - '.github/workflows/csharp-appencryption-*'
 
+concurrency:
+  group: ${{ github.workflow }}-csharp-ae-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == 'C# AppEncryption CI' }}
+
 env:
   DYNAMODB_HOSTNAME: dynamodb
   MYSQL_HOSTNAME: mysql

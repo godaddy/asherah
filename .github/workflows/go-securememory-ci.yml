@@ -15,6 +15,11 @@ on:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'
 
+concurrency:
+  group: ${{ github.workflow }}-go-sm-${{ inputs.go-version }}-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == '[Go] SecureMemory CI' }}
+
 jobs:
   init-defaults:
     runs-on: ubuntu-latest

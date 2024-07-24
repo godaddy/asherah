@@ -15,6 +15,11 @@ on:
       - 'java/secure-memory/**'
       - '.github/workflows/java-securememory-*'
 
+concurrency:
+  group: ${{ github.workflow }}-java-sm-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == '[Java] SecureMemory CI' }}
+
 jobs:
   init-defaults:
     runs-on: ubuntu-latest

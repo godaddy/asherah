@@ -5,6 +5,11 @@ on:
 
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-go-all-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == '[Go] Run All' }}
+
 jobs:
   securememory-main:
     name: 'SecureMemory: Build & Test'

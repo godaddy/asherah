@@ -14,6 +14,11 @@ on:
       - 'csharp/SecureMemory/**'
       - '.github/workflows/csharp-securememory-*'
 
+concurrency:
+  group: ${{ github.workflow }}-csharp-sm-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == 'C# SecureMemory CI' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -20,6 +20,11 @@ on:
       - '.github/workflows/cross-language-validation.yml'
       - 'server/**'
 
+concurrency:
+  group: ${{ github.workflow }}-cross-lang-${{ github.ref }}
+  # only cancel in-progress jobs if the workflow is root (not a called workflow)
+  cancel-in-progress: ${{ github.workflow == 'Cross Language Validation' }}
+
 env:
   DYNAMODB_HOSTNAME: dynamodb
   MYSQL_HOSTNAME: mysql
