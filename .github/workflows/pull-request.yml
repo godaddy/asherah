@@ -1,0 +1,35 @@
+name: Pull Request
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  csharp-all:
+    name: '[C#] Run All'
+    uses: ./.github/workflows/csharp-all.yml
+
+  java-all:
+    name: '[Java] Run All'
+    uses: ./.github/workflows/java-all.yml
+
+  go-all:
+    name: '[Go] Run All'
+    uses: ./.github/workflows/go-all.yml
+
+  cross-language:
+    name: 'Cross-Language: Run All'
+    needs: [csharp-all, java-all, go-all]
+    uses: ./.github/workflows/cross-language-validation.yml
