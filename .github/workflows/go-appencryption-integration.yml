@@ -26,6 +26,7 @@ env:
 
 jobs:
   integration-test:
+    name: 'Run Integration Tests'
     runs-on: ubuntu-latest
     container:
       image: golang:latest

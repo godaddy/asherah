@@ -23,6 +23,7 @@ jobs:
     uses: ./.github/workflows/csharp-appencryption-integration.yml
 
   reference-app:
+    name: 'Reference App: Build'
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/dotnet/sdk:6.0

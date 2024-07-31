@@ -27,6 +27,7 @@ jobs:
       java-version: '17'
 
   reference-app:
+    name: 'Reference App: Build'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

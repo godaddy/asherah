@@ -42,6 +42,7 @@ env:
 
 jobs:
   init-defaults:
+    name: Init Defaults
     runs-on: ubuntu-latest
     outputs:
       go-version: ${{ steps.init.outputs.go-version }}
@@ -67,6 +68,7 @@ jobs:
           echo "java-version=${java_version}" >> $GITHUB_OUTPUT
 
   server-samples:
+    name: 'Server Samples: Build & Test'
     runs-on: ubuntu-latest
     needs: init-defaults
     steps:
