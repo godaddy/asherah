@@ -1,4 +1,4 @@
-name: '[C#] Logging'
+name: '[C#] Logging CI'
 
 on:
   workflow_dispatch:
