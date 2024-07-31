@@ -1,42 +1,28 @@
-name: '[Go] Run All'
+name: '[Go] Pull Request'
 
+# This workflow is triggered on pull requests to the main branch and is designed to run in conjunction with the CI workflow(s).
 on:
-  workflow_dispatch:
-
-  workflow_call:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/go-*.yml'
+      - 'go/**'
+      - 'samples/go/**'
+      - 'server/go/**'
+      - 'server/protos/**'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-go-all-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == '[Go] Run All' }}
+  group: ${{ github.workflow }}-go-pr-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  securememory-main:
-    name: 'SecureMemory: Build & Test'
-    uses: ./.github/workflows/go-securememory-ci.yml
-    strategy:
-      matrix:
-        go-version: [stable, oldstable]
-    with:
-      go-version: ${{ matrix.go-version }}
-
   securememory-benchmark:
     name: 'SecureMemory: Bench'
-    needs: securememory-main
     uses: ./.github/workflows/go-securememory-bench.yml
-    strategy:
-      matrix:
-        go-version: [stable, oldstable]
-    with:
-      go-version: ${{ matrix.go-version }}
-
-  appencryption-main:
-    name: 'AppEncryption: Build & Test'
-    needs: securememory-main
-    uses: ./.github/workflows/go-appencryption-ci.yml
     strategy:
       matrix:
         go-version: [stable, oldstable]
@@ -45,7 +31,6 @@ jobs:
 
   appencryption-integration:
     name: 'AppEncryption: Integration'
-    needs: appencryption-main
     uses: ./.github/workflows/go-appencryption-integration.yml
     strategy:
       matrix:
@@ -55,7 +40,6 @@ jobs:
 
   appencryption-benchmark:
     name: 'AppEncryption: Bench'
-    needs: appencryption-main
     uses: ./.github/workflows/go-appencryption-bench.yml
     strategy:
       matrix:
@@ -65,7 +49,6 @@ jobs:
 
   reference-app:
     name: 'Reference App: Build and Lint'
-    needs: appencryption-main
     runs-on: ubuntu-latest
     container:
       image: golang:latest
@@ -103,7 +86,6 @@ jobs:
 
   server:
     name: 'Server: Build and Lint'
-    needs: appencryption-main
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

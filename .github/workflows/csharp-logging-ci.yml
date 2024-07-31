@@ -1,11 +1,14 @@
 name: '[C#] Logging'
 
 on:
-  workflow_call:
-    outputs:
-      artifact:
-        description: 'Artifact ID'
-        value: ${{ jobs.logging-main.outputs.artifact }}
+  workflow_dispatch:
+
+  push:
+    paths:
+      - 'csharp/Logging/**'
+      - '.github/workflows/csharp-logging-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read

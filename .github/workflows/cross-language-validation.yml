@@ -2,22 +2,23 @@ name: 'Cross Language Validation'
 
 on:
   workflow_dispatch:
-
-  workflow_call:
     inputs:
       go-version:
         description: 'Go version'
-        type: string
-        default: 'stable'
-
+        required: false
       java-version:
         description: 'Java version'
-        type: string
-        default: '17'
+        required: false
 
-  push:
+  pull_request:
+    branches:
+      - main
     paths:
       - '.github/workflows/cross-language-validation.yml'
+      - 'tests/cross-language/**'
+      - 'go/**'
+      - 'java/**'
+      - 'csharp/**'
       - 'server/**'
 
 permissions:
@@ -25,8 +26,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-cross-lang-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == 'Cross Language Validation' }}
+  cancel-in-progress: true
 
 env:
   DYNAMODB_HOSTNAME: dynamodb

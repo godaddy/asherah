@@ -2,26 +2,24 @@ name: '[Go] AppEncryption CI'
 
 on:
   workflow_dispatch:
-
-  workflow_call:
     inputs:
       go-version:
         description: 'Go version'
-        type: string
-        default: 'stable'
+        required: false
 
   push:
     paths:
       - 'go/appencryption/**'
       - '.github/workflows/go-appencryption-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-go-ae-${{ inputs.go-version }}-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == '[Go] AppEncryption CI' }}
+  group: ${{ github.workflow }}-go-ae-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   init-defaults:

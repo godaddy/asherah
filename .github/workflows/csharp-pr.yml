@@ -1,40 +1,29 @@
-name: '[C#] Run All'
+name: '[C#] Pull Request'
 
+# This workflow is triggered on pull requests to the main branch and is designed to run in conjunction with the CI workflow(s).
 on:
-  workflow_dispatch:
-
-  workflow_call:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/csharp-*.yml'
+      - 'csharp/**'
+      - 'samples/csharp/**'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-csharp-all-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == '[C#] Run All' }}
+  group: ${{ github.workflow }}-csharp-pr-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  logging-main:
-    name: 'Logging: Build & Test'
-    uses: ./.github/workflows/csharp-logging.yml
-
-  securememory-main:
-    name: 'SecureMemory: Build & Test'
-    uses: ./.github/workflows/csharp-securememory-ci.yml
-
-  appencryption-main:
-    name: 'AppEncryption: Build & Test'
-    needs: [logging-main, securememory-main]
-    uses: ./.github/workflows/csharp-appencryption-ci.yml
-
   appencryption-integration:
     name: 'AppEncryption: Integration'
-    needs: appencryption-main
     uses: ./.github/workflows/csharp-appencryption-integration.yml
 
   reference-app:
     runs-on: ubuntu-latest
-    needs: appencryption-main
     container:
       image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1

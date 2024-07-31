@@ -3,24 +3,19 @@ name: '[C#] AppEncryption CI'
 on:
   workflow_dispatch:
 
-  workflow_call:
-    outputs:
-      artifact:
-        description: 'Artifact ID'
-        value: ${{ jobs.build.outputs.artifact }}
-
   push:
     paths:
       - 'csharp/AppEncryption/**'
       - '.github/workflows/csharp-appencryption-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-csharp-ae-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == 'C# AppEncryption CI' }}
+  cancel-in-progress: true
 
 env:
   DYNAMODB_HOSTNAME: dynamodb

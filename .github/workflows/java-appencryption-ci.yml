@@ -2,8 +2,6 @@ name: '[Java] AppEncryption CI'
 
 on:
   workflow_dispatch:
-
-  workflow_call:
     inputs:
       java-version:
         description: 'Java version'

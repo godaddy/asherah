@@ -2,26 +2,24 @@ name: '[Go] SecureMemory CI'
 
 on:
   workflow_dispatch:
-
-  workflow_call:
     inputs:
       go-version:
         description: 'Go version'
-        type: string
-        default: 'stable'
+        required: false
 
   push:
     paths:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-go-sm-${{ inputs.go-version }}-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == '[Go] SecureMemory CI' }}
+  group: ${{ github.workflow }}-go-sm-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   init-defaults:

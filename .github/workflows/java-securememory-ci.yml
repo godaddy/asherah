@@ -2,8 +2,6 @@ name: '[Java] SecureMemory CI'
 
 on:
   workflow_dispatch:
-
-  workflow_call:
     inputs:
       java-version:
         description: 'Java version'
@@ -14,14 +12,15 @@ on:
     paths:
       - 'java/secure-memory/**'
       - '.github/workflows/java-securememory-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-java-sm-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == '[Java] SecureMemory CI' }}
+  cancel-in-progress: true
 
 jobs:
   init-defaults:

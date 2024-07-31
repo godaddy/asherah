@@ -1,6 +1,13 @@
 name: '[Go] SecureMemory Bench'
 
 on:
+  workflow_dispatch:
+    inputs:
+      go-version:
+        description: 'Go version'
+        type: string
+        default: 'stable'
+
   workflow_call:
     inputs:
       go-version:

@@ -3,24 +3,19 @@ name: '[C#] SecureMemory CI'
 on:
   workflow_dispatch:
 
-  workflow_call:
-    outputs:
-      artifact:
-        description: 'Artifact ID'
-        value: ${{ jobs.build.outputs.artifact }}
-
   push:
     paths:
       - 'csharp/SecureMemory/**'
       - '.github/workflows/csharp-securememory-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-csharp-sm-${{ github.ref }}
-  # only cancel in-progress jobs if the workflow is root (not a called workflow)
-  cancel-in-progress: ${{ github.workflow == 'C# SecureMemory CI' }}
+  cancel-in-progress: true
 
 jobs:
   build:
