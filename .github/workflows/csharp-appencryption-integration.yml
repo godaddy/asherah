@@ -1,0 +1,57 @@
+name: '[C#] AppEncryption Integration Test'
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  DYNAMODB_HOSTNAME: dynamodb
+  MYSQL_HOSTNAME: mysql
+  MYSQL_DATABASE: testdb
+  MYSQL_USERNAME: root
+  MYSQL_PASSWORD: Password123
+  DISABLE_TESTCONTAINERS: true
+  AWS_ACCESS_KEY_ID: dummykey
+  AWS_SECRET_ACCESS_KEY: dummy_secret
+  AWS_DEFAULT_REGION: us-west-2
+  AWS_REGION: us-west-2
+
+jobs:
+  integration-test:
+    name: 'Run Integration Tests'
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Build AppEncryption
+        run: |
+          cd csharp/AppEncryption
+          ./scripts/clean.sh
+          ./scripts/build.sh
+
+      - name: Run integration tests
+        run: |
+          cd csharp/AppEncryption
+          ./scripts/integration_test.sh
