@@ -10,19 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 
 	"github.com/godaddy/asherah/go/appencryption/integrationtest/dynamodbtest"
 )
-
-// DynamoDBSuite is the test suite for the DynamoDBMetastore.
-// Tests are run against a local DynamoDB instance using testcontainers.
-type DynamoDBSuite struct {
-	suite.Suite
-	instant           int64
-	dynamodbMetastore *persistence.DynamoDBMetastore
-	testContext       *dynamodbtest.DynamoDBTestContext
-}
 
 const (
 	ikCreated          = dynamodbtest.IKCreated
@@ -31,6 +21,21 @@ const (
 	skKeyID            = dynamodbtest.SKKeyID
 	testKey            = dynamodbtest.TestKey
 )
+
+// DynamoDBSuite is the test suite for the DynamoDBMetastore.
+// Tests are run against a local DynamoDB instance using testcontainers.
+type DynamoDBSuite struct {
+	suite.Suite
+
+	instant           int64
+	dynamodbMetastore appencryption.Metastore
+	testContext       *dynamodbtest.DynamoDBTestContext
+}
+
+// Metastore is the SUT for the test suite.
+func (suite *DynamoDBSuite) Metastore() appencryption.Metastore {
+	return suite.dynamodbMetastore
+}
 
 func (suite *DynamoDBSuite) SetupSuite() {
 	suite.instant = time.Now().Add(-24 * time.Hour).Unix()
@@ -53,7 +58,7 @@ func (suite *DynamoDBSuite) TearDownTest() {
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_Success() {
 	bytes, _ := base64.StdEncoding.DecodeString(encryptedKeyString)
 
-	envelope, _ := suite.dynamodbMetastore.Load(context.Background(), testKey, suite.instant)
+	envelope, _ := suite.Metastore().Load(context.Background(), testKey, suite.instant)
 
 	assert.NotNil(suite.T(), envelope)
 	assert.Equal(suite.T(), ikCreated, envelope.Created)
@@ -63,7 +68,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_Success() {
 }
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_WithNoResultShouldReturnEmpty() {
-	envelope, _ := suite.dynamodbMetastore.Load(context.Background(), "fake_key", suite.instant)
+	envelope, _ := suite.Metastore().Load(context.Background(), "fake_key", suite.instant)
 
 	assert.Nil(suite.T(), envelope)
 }
@@ -72,7 +77,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_WithFailureShouldReturnEm
 	// Explicitly delete the table to force an error
 	suite.testContext.CleanDB(suite.T())
 
-	envelope, _ := suite.dynamodbMetastore.Load(context.Background(), testKey, suite.instant)
+	envelope, _ := suite.Metastore().Load(context.Background(), testKey, suite.instant)
 
 	assert.Nil(suite.T(), envelope)
 }
@@ -80,7 +85,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Load_WithFailureShouldReturnEm
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithSingleRecord() {
 	bytes, _ := base64.StdEncoding.DecodeString(encryptedKeyString)
 
-	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), testKey)
+	envelope, _ := suite.Metastore().LoadLatest(context.Background(), testKey)
 
 	assert.NotNil(suite.T(), envelope)
 	assert.Equal(suite.T(), ikCreated, envelope.Created)
@@ -102,14 +107,14 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithMultipleRecords
 	suite.testContext.InsertTestItem(suite.T(), timeMinusOneHour)
 	suite.testContext.InsertTestItem(suite.T(), timeMinusOneDay)
 
-	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), dynamodbtest.TestKey)
+	envelope, _ := suite.Metastore().LoadLatest(context.Background(), dynamodbtest.TestKey)
 
 	assert.NotNil(suite.T(), envelope)
 	assert.Equal(suite.T(), timePlusOneDay, envelope.Created)
 }
 
 func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithNoResultShouldReturnEmpty() {
-	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), "fake_key")
+	envelope, _ := suite.Metastore().LoadLatest(context.Background(), "fake_key")
 
 	assert.Nil(suite.T(), envelope)
 }
@@ -118,7 +123,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_LoadLatest_WithFailureShouldRe
 	// Explicitly delete the table to force an error
 	suite.testContext.CleanDB(suite.T())
 
-	envelope, _ := suite.dynamodbMetastore.LoadLatest(context.Background(), testKey)
+	envelope, _ := suite.Metastore().LoadLatest(context.Background(), testKey)
 
 	assert.Nil(suite.T(), envelope)
 }
@@ -132,7 +137,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_Success() {
 		Created:       ikCreated,
 		ParentKeyMeta: &km,
 	}
-	res, _ := suite.dynamodbMetastore.Store(context.Background(), testKey, time.Now().Unix(), en)
+	res, _ := suite.Metastore().Store(context.Background(), testKey, time.Now().Unix(), en)
 
 	assert.True(suite.T(), res)
 }
@@ -148,8 +153,8 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithDuplicateShouldRetur
 	}
 	insertTime := time.Now().Unix()
 	ctx := context.Background()
-	firstAttempt, _ := suite.dynamodbMetastore.Store(ctx, testKey, insertTime, en)
-	secondAttempt, _ := suite.dynamodbMetastore.Store(ctx, testKey, insertTime, en)
+	firstAttempt, _ := suite.Metastore().Store(ctx, testKey, insertTime, en)
+	secondAttempt, _ := suite.Metastore().Store(ctx, testKey, insertTime, en)
 
 	assert.True(suite.T(), firstAttempt)
 	assert.False(suite.T(), secondAttempt)
@@ -167,7 +172,7 @@ func (suite *DynamoDBSuite) TestDynamoDBMetastore_Store_WithFailureShouldReturnE
 	// Explicitly delete the table to force an error
 	suite.testContext.CleanDB(suite.T())
 
-	res, err := suite.dynamodbMetastore.Store(context.Background(), testKey, time.Now().Unix(), en)
+	res, err := suite.Metastore().Store(context.Background(), testKey, time.Now().Unix(), en)
 
 	assert.False(suite.T(), res)
 	assert.NotNil(suite.T(), err)

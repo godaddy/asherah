@@ -38,30 +38,19 @@ const (
 	keyRecord            = "KeyRecord"
 )
 
-type DynamoDBTestContext struct {
+type BaseDynamoDBTestContext struct {
 	instant               int64
 	disableTestContainers bool
-	sess                  *session.Session
 	container             testcontainers.Container
-	dbSvc                 *dynamodb.DynamoDB
+
+	endpoint string
 }
 
-// NewDynamoDBTestContext creates a new DynamoDBTestContext.
-//
-// If the DISABLE_TESTCONTAINERS environment variable is set to true, the test context will use the local DynamoDB instance.
-// Otherwise, it will use a test container.
-//
-// Use NewMetastore to create a new DynamoDBMetastore instance based on the context.
-//
-// (Optionally) Use SeedDB to create the expected DynamoDB table and seed it with test data.
-// It may be skipped if the table already exists, or if the table is not needed for the test.
-//
-// Use CleanDB to clean the DynamoDB table as needed.
-func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
+func NewBaseContext(t *testing.T, instant int64) *BaseDynamoDBTestContext {
 	t.Helper()
 
 	ctx := context.Background()
-	d := &DynamoDBTestContext{
+	d := &BaseDynamoDBTestContext{
 		instant: instant,
 	}
 
@@ -108,13 +97,44 @@ func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
 		}
 	}
 
-	endpoint := "http://" + host + ":" + dynamodbNatPort.Port()
+	d.endpoint = "http://" + host + ":" + dynamodbNatPort.Port()
 
-	t.Logf("using dynamodb endpoint: %s", endpoint)
+	return d
+}
+
+// Endpoint returns the endpoint for the DynamoDB instance.
+func (d *BaseDynamoDBTestContext) Endpoint() string {
+	return d.endpoint
+}
+
+type DynamoDBTestContext struct {
+	BaseDynamoDBTestContext
+
+	sess  *session.Session
+	dbSvc *dynamodb.DynamoDB
+}
+
+// NewDynamoDBTestContext creates a new DynamoDBTestContext.
+//
+// If the DISABLE_TESTCONTAINERS environment variable is set to true, the test context will use the local DynamoDB instance.
+// Otherwise, it will use a test container.
+//
+// Use NewMetastore to create a new DynamoDBMetastore instance based on the context.
+//
+// (Optionally) Use SeedDB to create the expected DynamoDB table and seed it with test data.
+// It may be skipped if the table already exists, or if the table is not needed for the test.
+//
+// Use CleanDB to clean the DynamoDB table as needed.
+func NewDynamoDBTestContext(t *testing.T, instant int64) *DynamoDBTestContext {
+	d := &DynamoDBTestContext{
+		BaseDynamoDBTestContext: *NewBaseContext(t, instant),
+	}
+
+	t.Logf("using dynamodb endpoint: %s", d.Endpoint())
 
 	d.sess = session.Must(session.NewSession(&aws.Config{
 		Region:   aws.String("us-west-2"),
-		Endpoint: aws.String(endpoint),
+		Endpoint: aws.String(d.Endpoint()),
 	}))
 
 	d.dbSvc = dynamodb.New(d.sess)
