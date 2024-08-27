@@ -80,9 +80,11 @@ jobs:
           ./scripts/build.sh
 
       - name: Run linters
-        run: |
-          cd samples/go/referenceapp
-          ./scripts/lint.sh
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
+        with:
+          version: 'v1.60.1'
+          skip-cache: true
+          working-directory: 'samples/go/referenceapp'
 
   server:
     name: 'Server: Build and Lint'
@@ -121,6 +123,8 @@ jobs:
           ./scripts/test.sh
 
       - name: Run linters
-        run: |
-          cd server/go
-          ./scripts/lint.sh
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
+        with:
+          version: 'v1.60.1'
+          skip-cache: true
+          working-directory: 'server/go'
