@@ -18,7 +18,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/godaddy/asherah/go/securememory"
 	smlog "github.com/godaddy/asherah/go/securememory/log"
 	"github.com/godaddy/asherah/go/securememory/memguard"
@@ -32,6 +31,8 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
+	kmsv2 "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
 )
 
 const (
@@ -478,17 +479,18 @@ func CreateKMS() appencryption.KeyManagementService {
 	crypto := aead.NewAES256GCM()
 
 	if opts.KMS == awskms {
-
 		if opts.Region == "" || opts.RegionMap == "" {
 			panic(errors.Errorf("preferred region and <region>=<arn> tuples are mandatory with  KMS Type: AWS"))
 		}
+
 		regionArnMap := make(map[string]string)
 		splits := strings.Split(opts.RegionMap, ",")
 		for _, regionArn := range splits {
 			regionArnMap[strings.Split(regionArn, "=")[0]] = strings.Split(regionArn, "=")[1]
 		}
+
 		log.Printf("Using AWS KMS...")
-		kms, err := kms.NewAWS(crypto, opts.Region, regionArnMap)
+		kms, err := kmsv2.NewAWS(crypto, opts.Region, regionArnMap)
 		if err != nil {
 			panic(err)
 		}
@@ -524,15 +526,13 @@ func CreateMetastore() appencryption.Metastore {
 	}
 
 	if opts.Metastore == dynamodb {
-
 		log.Printf("Using dyamodb metastore...")
-		// Initialize a session that the AWS SDK will use to load
-		// credentials from the shared credentials file ~/.aws/credentials
-		// and region from the shared configuration file ~/.aws/config.
-		sess := session.Must(session.NewSessionWithOptions(session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-		}))
-		return persistence.NewDynamoDBMetastore(sess)
+		store, err := metastore.NewDynamoDB()
+		if err != nil {
+			panic(err)
+		}
+
+		return store
 	}
 
 	log.Printf("Using in-memory metastore...")
