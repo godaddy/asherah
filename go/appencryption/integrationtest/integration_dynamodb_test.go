@@ -8,7 +8,7 @@ import (
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/integrationtest/dynamodbtest"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence"
 )
 
 type metastoreFactory func(tc *dynamodbtest.DynamoDBTestContext, useRegionSuffix bool) appencryption.Metastore
