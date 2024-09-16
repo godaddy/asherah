@@ -453,7 +453,7 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-    - name: Set up Go 1.19
+    - name: Set up Go (stable)
       uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
         go-version: 'stable'
@@ -493,7 +493,7 @@ jobs:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
-      - name: Set up Go 1.19
+      - name: Set up Go (stable)
         uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version: 'stable'
@@ -525,7 +525,7 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-    - name: Set up Go 1.19
+    - name: Set up Go (stable)
       uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
         go-version: 'stable'
@@ -565,7 +565,7 @@ jobs:
           token: ${{ secrets.MERGE_TOKEN }}
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
-      - name: Set up Go 1.19
+      - name: Set up Go (stable)
         uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version: 'stable'
@@ -592,7 +592,7 @@ jobs:
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Set up Go 1.19
+    - name: Set up Go (stable)
       uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
         go-version: 'stable'
@@ -617,7 +617,7 @@ jobs:
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Set up Go 1.19
+    - name: Set up Go (stable)
       uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
         go-version: 'stable'
