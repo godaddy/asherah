@@ -1,0 +1,48 @@
+name: '[C#] Pull Request'
+
+# This workflow is triggered on pull requests to the main branch and is designed to run in conjunction with the CI workflow(s).
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/csharp-*.yml'
+      - 'csharp/**'
+      - 'samples/csharp/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-csharp-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  appencryption-integration:
+    name: 'AppEncryption: Integration'
+    uses: ./.github/workflows/csharp-appencryption-integration.yml
+
+  reference-app:
+    name: 'Reference App: Build'
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Build
+        run: |
+          cd samples/csharp/ReferenceApp
+          ./scripts/clean.sh
+          ./scripts/build.sh

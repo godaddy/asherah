@@ -1,0 +1,56 @@
+name: '[C#] Logging CI'
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - 'csharp/Logging/**'
+      - '.github/workflows/csharp-logging-*'
+    branches-ignore:
+      - 'release-*'
+
+permissions:
+  contents: read
+
+jobs:
+  logging-main:
+    name: 'Build & Test'
+    runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.upload-artifact.outputs.artifact_id }}
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Add workspace to safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache dotnet packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
+
+      - name: Build
+        run: |
+          cd csharp/Logging
+          ./scripts/clean.sh
+          ./scripts/build.sh
+
+      - name: Run unit tests
+        run: |
+          cd csharp/Logging
+          ./scripts/test.sh
+
+      - name: Upload artifact
+        id: upload-artifact
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: csharp-logging
+          path: |
+            csharp/Logging/Logging/bin/**
+            csharp/Logging/Logging/obj/**

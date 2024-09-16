@@ -28,7 +28,7 @@ godog ../features/decrypt.feature
 cd ..
 
 cd sidecar
-pip3.8 install -r requirements.txt
+pip3 install -r requirements.txt
 echo "------------Decrypting data with Go sidecar and python client-----------"
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m

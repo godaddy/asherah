@@ -1,0 +1,66 @@
+name: '[Go] AppEncryption Integration Test'
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version'
+        type: string
+        default: 'stable'
+
+permissions:
+  contents: read
+
+env:
+  DYNAMODB_HOSTNAME: dynamodb
+  MYSQL_HOSTNAME: mysql
+  MYSQL_DATABASE: testdb
+  MYSQL_USERNAME: root
+  MYSQL_PASSWORD: Password123
+  DISABLE_TESTCONTAINERS: true
+  AWS_ACCESS_KEY_ID: dummykey
+  AWS_SECRET_ACCESS_KEY: dummy_secret
+  AWS_DEFAULT_REGION: us-west-2
+  AWS_REGION: us-west-2
+  GO111MODULE: "on"
+
+jobs:
+  integration-test:
+    name: 'Run Integration Tests'
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: Password123
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Set up Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: 'go/*/go.sum'
+
+      - name: Install dependencies
+        run: |
+          cd go/appencryption
+          go get .
+          go install gotest.tools/gotestsum@latest
+
+      - name: Run integration tests
+        run: |
+          cd go/appencryption
+          ./scripts/integration_test.sh
+
+      - name: Integration test summary
+        uses: test-summary/action@032c8a9cec6aaa3c20228112cae6ca10a3b29336 # v2.3.0
+        with:
+          paths: 'go/appencryption/junit_integration_results.xml'
+        if: always()

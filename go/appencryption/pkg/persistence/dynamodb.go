@@ -1,3 +1,5 @@
+//go:build !nodeprecated
+
 package persistence
 
 import (

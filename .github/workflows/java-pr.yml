@@ -1,0 +1,76 @@
+name: '[Java] Pull Request'
+
+# This workflow is triggered on pull requests to the main branch and is designed to run in conjunction with the CI workflow(s).
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/java-*'
+      - 'java/**'
+      - 'samples/java/**'
+      - 'server/java/**'
+      - 'server/protos/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-java-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  appencryption-integration:
+    name: 'AppEncryption: Integration'
+    uses: ./.github/workflows/java-appencryption-integration.yml
+    with:
+      java-version: '17'
+
+  reference-app:
+    name: 'Reference App: Build'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Set up Java
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'java/*/pom.xml'
+
+      - name: Build
+        run: |
+          cd samples/java/reference-app
+          ./scripts/clean.sh
+          ./scripts/build.sh
+
+  server:
+    name: 'Server: Build & Test'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Set up Java
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'java/*/pom.xml'
+
+      - name: Build
+        run: |
+          cd server/java
+          ./scripts/clean.sh
+          ./scripts/build.sh
+
+      - name: Run unit tests
+        run: |
+          cd server/java
+          sudo prlimit --pid $$ --core=-1
+          sudo prlimit --pid $$ --memlock=-1:-1
+          ./scripts/test.sh
