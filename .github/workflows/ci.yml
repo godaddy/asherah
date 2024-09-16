@@ -454,9 +454,9 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Set up Go 1.19
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.19'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@latest
@@ -494,9 +494,9 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Go 1.19
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: '1.19'
+          go-version: 'stable'
           cache-dependency-path: 'go/*/go.sum'
       - name: Publish Go Secure Memory
         run: |
@@ -526,9 +526,9 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
     - name: Set up Go 1.19
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.19'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@latest
@@ -566,9 +566,9 @@ jobs:
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
       - name: Set up Go 1.19
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: '1.19'
+          go-version: 'stable'
           cache-dependency-path: 'go/*/go.sum'
       - name: Publish Go App Encryption
         run: |
@@ -593,9 +593,9 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Set up Go 1.19
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.19'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@latest
@@ -618,9 +618,9 @@ jobs:
     - name: Git config - set workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Set up Go 1.19
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.19'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Install gotestsum
       run: go install gotest.tools/gotestsum@latest
@@ -658,10 +658,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'maven'
-    - name: Set up Go 1.22
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+    - name: Set up Go (stable)
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.22'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Set up Python 3.12
       uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
@@ -722,10 +722,10 @@ jobs:
       uses: actions/setup-dotnet@0f534f5829b2e991ed7d67169d882659f921a60d
       with:
         dotnet-version: '3.1.x'
-    - name: Set up Go 1.22
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+    - name: Set up Go (stable)
+      uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
       with:
-        go-version: '1.22'
+        go-version: 'stable'
         cache-dependency-path: 'go/*/go.sum'
     - name: Set up Python 3.12
       uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
