@@ -119,30 +119,44 @@ metastore := persistence.NewSQLMetastore(
 #### DynamoDB Metastore
 
 ```go
-awsConfig := &aws.Config{
-    Region: aws.String("us-west-2"), // specify preferred region here
-}
+// import "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
 
-sess, err = session.NewSession(awsConfig)
+// Create a new DynamoDB Metastore using the default configuration
+metastore, err := metastore.NewDynamoDB()
 if err != nil {
     panic(err)
 }
-
-// To configure an endpoint
-awsConfig.Endpoint = aws.String("http://localhost:8000"),
 ```
 You can also either use the `WithXXX` functional options to configure the metastore properties.
 
- - **WithDynamoDBRegionSuffix**: Specifies whether regional suffixes should be enabled for DynamoDB. Enabling this
+ - **WithDynamoDBClient**: Specifies the DynamoDB client to use, useful when you want to use custom configurations.
+ - **WithRegionSuffix**: Specifies whether regional suffixes should be enabled for DynamoDB. Enabling this
   suffixes the keys with the DynamoDb preferred region. **This is required to enable Global Tables**.
  - **WithTableName**: Specifies the name of the DynamoDb table.
 
 ``` go
+// import "github.com/aws/aws-sdk-go-v2/aws"
+// import "github.com/aws/aws-sdk-go-v2/config"
+// import "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+// Load the default AWS SDK configuration with the desired region
+awsCfg, err := config.LoadDefaultConfig(context.TODO(),
+    config.WithRegion("us-west-2"),
+)
+if err != nil {
+    panic(err)
+}
+
+// Create a new DynamoDB client with the loaded configuration and a custom endpoint
+client := dynamodb.NewFromConfig(awsCfg, func(o *dynamodb.Options) {
+		o.BaseEndpoint = aws.String("http://localhost:8000")
+})
+
 // Build the Metastore
-metastore := persistence.NewDynamoDBMetastore(
-    sess,
-    persistence.WithDynamoDBRegionSuffix(true),
-    persistence.WithTableName("CustomTableName") ,
+store := metastore.NewDynamoDB(
+    metastore.WithDynamoDBClient(client),
+    metastore.WithRegionSuffix(true),
+    metastore.WithTableName("myTableName"),
 )
 ```
 
@@ -158,6 +172,8 @@ Detailed information about the Key Management Service can be found [here](../../
 #### AWS KMS
 
 ```go
+// import "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
+
 // Create a map of region and ARN pairs that will all be used when creating a System Key
 regionArnMap := map[string]string {
     "us-west-2": "ARN FOR US-WEST-2",
