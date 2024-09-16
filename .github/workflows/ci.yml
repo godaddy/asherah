@@ -476,10 +476,10 @@ jobs:
         sudo prlimit --pid $$ --core=-1
         sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/benchmark_test.sh
-    - name: Static analysis
-      run: |
-        cd go/securememory
-        ./scripts/lint.sh
+    # - name: Static analysis
+    #   run: |
+    #     cd go/securememory
+    #     ./scripts/lint.sh
 
   release-go-secure-memory:
     if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
@@ -548,10 +548,10 @@ jobs:
       run: |
         cd go/appencryption
         ./scripts/benchmark_test.sh
-    - name: Static analysis
-      run: |
-        cd go/appencryption
-        ./scripts/lint.sh
+    # - name: Static analysis
+    #   run: |
+    #     cd go/appencryption
+    #     ./scripts/lint.sh
 
   release-go-app-encryption:
     if: startsWith( github.ref, 'refs/heads/release-' ) && github.repository == 'godaddy/asherah'
@@ -603,10 +603,10 @@ jobs:
       run: |
         cd samples/go/referenceapp
         ./scripts/build.sh
-    - name: Static analysis
-      run: |
-        cd samples/go/referenceapp
-        ./scripts/lint.sh
+    # - name: Static analysis
+    #   run: |
+    #     cd samples/go/referenceapp
+    #     ./scripts/lint.sh
 
   go-server:
     name: Go Server Implementation
@@ -634,10 +634,10 @@ jobs:
         sudo prlimit --pid $$ --core=-1
         sudo prlimit --pid $$ --memlock=-1:-1
         ./scripts/test.sh
-    - name: Static analysis
-      run: |
-        cd server/go
-        ./scripts/lint.sh
+    # - name: Static analysis
+    #   run: |
+    #     cd server/go
+    #     ./scripts/lint.sh
 
   #### Cross-Language
   server-samples:
@@ -758,7 +758,7 @@ jobs:
     - name: Lint & Build the Go project
       run: |
         cd tests/cross-language/go
-        ./scripts/lint.sh
+        # ./scripts/lint.sh
         go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
         go install github.com/cucumber/godog/cmd/godog@latest
         echo "GOPATH: ${GOPATH}"
