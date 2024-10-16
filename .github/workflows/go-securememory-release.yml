@@ -1,0 +1,43 @@
+name: '[Go] SecureMemory Release'
+
+on:
+  workflow_run:
+    workflows:
+      - '[Go] SecureMemory CI'
+    types:
+      - completed
+    branches:
+      - 'release-*'
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Fetch all tags
+        run: git fetch --prune --unshallow --tags
+
+      - name: Initialize Envionment Variables
+        run: |
+          echo "BASE_VERSION=$(cat .versionfile)" >> $GITHUB_ENV
+          echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
+          echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+
+      - name: Publish Go SecureMemory
+        if: startsWith('release-', github.env.BRANCH) && github.env.VERSION_SUFFIX != 'alpha'
+        run: |
+          ./scripts/release_prod.sh
+        env:
+          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
+        working-directory: go/securememory
