@@ -72,7 +72,7 @@ updates:
     directories:
       - "/csharp/Logging"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
     schedule:
       interval: "weekly"
@@ -91,7 +91,7 @@ updates:
     directories:
       - "/csharp/SecureMemory"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
       - "securememory"
     schedule:
@@ -111,7 +111,7 @@ updates:
     directories:
       - "/csharp/AppEncryption"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
       - "appencryption"
     schedule:
