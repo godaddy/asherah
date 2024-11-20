@@ -1,0 +1,82 @@
+version: 2
+updates:
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  # Maintain dependencies for .NET (placeholder)
+  - package-ecosystem: "nuget"
+    directory: "/csharp"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for Java (placeholder)
+  - package-ecosystem: "maven"
+    directory: "/java"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for Go AppEncryption
+  - package-ecosystem: "gomod"
+    directories:
+      - "/go/appencryption"
+      - "/go/appencryption/integrationtest"
+    labels:
+      - "go"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for Go SecureMemory
+  - package-ecosystem: "gomod"
+    directory: "/go/securememory"
+    labels:
+      - "go"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/server/go"
+      - "/tests/cross-language/go"
+    labels:
+      - "go"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
