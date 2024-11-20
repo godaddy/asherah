@@ -1,6 +1,5 @@
 version: 2
 updates:
-
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -8,21 +7,7 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
 
-  # Maintain dependencies for .NET (placeholder)
-  - package-ecosystem: "nuget"
-    directory: "/csharp"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0 # Disable automatic PRs
-
-  # Maintain dependencies for Java (placeholder)
-  - package-ecosystem: "maven"
-    directory: "/java"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0 # Disable automatic PRs
-
-  # Maintain dependencies for Go AppEncryption
+ # Maintain dependencies for Go AppEncryption
   - package-ecosystem: "gomod"
     directories:
       - "/go/appencryption"
@@ -62,6 +47,7 @@ updates:
           - "patch"
     open-pull-requests-limit: 2
 
+  # Maintain dependencies for remaining Go projects (server and cross-language tests)
   - package-ecosystem: "gomod"
     directories:
       - "/server/go"
@@ -80,3 +66,114 @@ updates:
           - "minor"
           - "patch"
     open-pull-requests-limit: 2
+
+  # Maintain dependencies for .NET Logging
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/Logging"
+    labels:
+      - "csharp"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for .NET SecureMemory
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/SecureMemory"
+    labels:
+      - "csharp"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for .NET AppEncryption
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/AppEncryption"
+    labels:
+      - "csharp"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for Java SecureMemory
+  - package-ecosystem: "maven"
+    directory: "/java/secure-memory"
+    labels:
+      - "java"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for Java AppEncryption
+  - package-ecosystem: "maven"
+    directory: "/java/app-encryption"
+    labels:
+      - "java"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 0 # Disable automatic PRs
+
+  # Maintain dependencies for remaining Java projects (server and cross-language tests)
+  - package-ecosystem: "maven"
+    directories:
+      - "/server/java"
+      - "/tests/cross-language/java"
+    labels:
+      - "java"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    open-pull-requests-limit: 0 # Disable automatic PRs
