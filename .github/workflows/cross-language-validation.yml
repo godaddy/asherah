@@ -191,6 +191,14 @@ jobs:
           export MSBUILDSINGLELOADCONTEXT=1
           ./scripts/build.sh
 
+      - name: Download Go dependencies
+        run: |
+          cd tests/cross-language/go
+
+          # Workaround for https://github.com/golangci/golangci-lint/issues/825
+          # Without this, the linter may fail with "ERRO Running error: context loading failed: no go files to analyze"
+          go mod download
+
       - name: Lint the Go project
         uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
         with:
