@@ -87,7 +87,7 @@ jobs:
           ./scripts/test.sh
 
       - name: Unit test summary
-        uses: test-summary/action@032c8a9cec6aaa3c20228112cae6ca10a3b29336 # v2.3.0
+        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2.3.0
         with:
           paths: 'csharp/SecureMemory/SecureMemory.Tests/test-result.xml'
         if: always()
