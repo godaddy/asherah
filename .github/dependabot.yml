@@ -72,7 +72,7 @@ updates:
     directories:
       - "/csharp/Logging"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
     schedule:
       interval: "weekly"
@@ -91,7 +91,7 @@ updates:
     directories:
       - "/csharp/SecureMemory"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
       - "securememory"
     schedule:
@@ -111,7 +111,7 @@ updates:
     directories:
       - "/csharp/AppEncryption"
     labels:
-      - "csharp"
+      - "c#"
       - "dependencies"
       - "appencryption"
     schedule:
@@ -143,7 +143,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
 
   # Maintain dependencies for Java AppEncryption
   - package-ecosystem: "maven"
@@ -162,7 +162,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
 
   # Maintain dependencies for remaining Java projects (server and cross-language tests)
   - package-ecosystem: "maven"
@@ -176,4 +176,4 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "13:00"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
