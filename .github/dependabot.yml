@@ -84,7 +84,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
 
   # Maintain dependencies for .NET SecureMemory
   - package-ecosystem: "nuget"
@@ -104,7 +104,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
 
   # Maintain dependencies for .NET AppEncryption
   - package-ecosystem: "nuget"
@@ -124,7 +124,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    open-pull-requests-limit: 0 # Disable automatic PRs
+    open-pull-requests-limit: 2
 
   # Maintain dependencies for Java SecureMemory
   - package-ecosystem: "maven"
@@ -176,4 +176,10 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
     open-pull-requests-limit: 2
