@@ -1,6 +1,7 @@
 module github.com/godaddy/asherah/server/go
 
-go 1.21
+go 1.22.7
+
 toolchain go1.23.3
 
 require (
