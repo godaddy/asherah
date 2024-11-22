@@ -176,4 +176,10 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
     open-pull-requests-limit: 2
