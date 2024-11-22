@@ -11,6 +11,23 @@ TEST_DB_USER="${TEST_DB_USER:-root}"
 TEST_DB_PASSWORD="${TEST_DB_PASSWORD:-Password123}"
 ASHERAH_SOCKET_FILE="${ASHERAH_SOCKET_FILE:-/tmp/appencryption.sock}"
 
+# Function to wait for the socket to exist
+wait_for_socket() {
+    local timeout=60
+    local elapsed=0
+
+    echo "Waiting for ${ASHERAH_SOCKET_FILE} to appear (timeout: ${timeout} seconds)"
+
+    while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do
+        sleep 1
+        elapsed=$((elapsed + 1))
+        if [ $elapsed -ge $timeout ]; then
+            echo "Socket file did not appear after $timeout seconds"
+            exit 1
+        fi
+    done
+}
+
 # Run decrypt tests for all languages
 cd java
 echo "----------------------Decrypting data using Java------------------------"
@@ -41,8 +58,7 @@ go run main.go -s ${ASHERAH_SOCKET_FILE} &
 ASHERAH_GO_SIDECAR_PID=$!
 cd -
 
-# Wait for the socket to exist
-while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do sleep 1; done
+wait_for_socket
 
 # Run the tests
 behave features/decrypt.feature
@@ -59,8 +75,7 @@ export ASHERAH_CONNECTION_STRING="jdbc:mysql://127.0.0.1:${TEST_DB_PORT}/${TEST_
 find ~/.m2/ -name '*grpc-server*dependencies.jar' | xargs java -jar &
 ASHERAH_JAVA_SIDECAR_PID=$!
 
-# Wait for the socket to exist
-while [ ! -S ${ASHERAH_SOCKET_FILE} ]; do sleep 1; done
+wait_for_socket
 
 # Run the tests
 behave features/decrypt.feature
