@@ -47,11 +47,11 @@ public class EncryptDefinitions {
 
     // Create a session for the test
     try (SessionFactory sessionFactory = SessionFactory
-      .newBuilder(DefaultProductId, DefaultServiceId)
-      .withMetastore(metastore)
-      .withCryptoPolicy(cryptoPolicy)
-      .withKeyManagementService(keyManagementService)
-      .build()) {
+        .newBuilder(DefaultProductId, DefaultServiceId)
+        .withMetastore(metastore)
+        .withCryptoPolicy(cryptoPolicy)
+        .withKeyManagementService(keyManagementService)
+        .build()) {
 
       // Now create an actual session for a partition (which in our case is a dummy id). This session is used
       // for a transaction and is closed automatically after use due to the AutoCloseable implementation.
