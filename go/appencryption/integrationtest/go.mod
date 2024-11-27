@@ -12,7 +12,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/godaddy/asherah/go/appencryption v0.7.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.34.0
 )
 
