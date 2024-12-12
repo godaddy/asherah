@@ -11,8 +11,8 @@ require (
 	github.com/godaddy/asherah/go/securememory v0.1.5
 	github.com/golang/protobuf v1.5.4
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/stretchr/testify v1.9.0
-	google.golang.org/grpc v1.68.0
+	github.com/stretchr/testify v1.10.0
+	google.golang.org/grpc v1.69.0
 )
 
 require (
@@ -26,11 +26,11 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
