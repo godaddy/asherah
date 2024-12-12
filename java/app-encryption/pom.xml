@@ -43,7 +43,7 @@
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <!--      Project Dependencies-->
     <apache.commons.version>3.17.0</apache.commons.version>
-    <amazonaws.version>1.21.1</amazonaws.version>
+    <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.779</aws.sdk.version>
     <aws.sdk-v2.version>2.29.32</aws.sdk-v2.version>
     <bouncycastle.version>1.79</bouncycastle.version>
