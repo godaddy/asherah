@@ -26,7 +26,7 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.404.4" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.400.63" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="App.Metrics" Version="4.3.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
