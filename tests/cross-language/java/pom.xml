@@ -29,7 +29,7 @@
   <properties>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cucumber.version>5.4.0</cucumber.version>
+    <cucumber.version>7.20.1</cucumber.version>
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
     <hikaricp.version>6.2.1</hikaricp.version>
     <mysql.connector.version>8.0.30</mysql.connector.version>
