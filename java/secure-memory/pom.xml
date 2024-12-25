@@ -38,10 +38,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.12</jacoco.version>
-    <jna.version>5.15.0</jna.version>
+    <jna.version>5.16.0</jna.version>
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
-    <logback.version>1.5.13</logback.version>
+    <logback.version>1.5.15</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.13.0</maven.compiler.version>
     <maven.gpg.version>3.2.7</maven.gpg.version>
