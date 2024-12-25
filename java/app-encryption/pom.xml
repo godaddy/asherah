@@ -45,7 +45,7 @@
     <apache.commons.version>3.17.0</apache.commons.version>
     <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.780</aws.sdk.version>
-    <aws.sdk-v2.version>2.29.36</aws.sdk-v2.version>
+    <aws.sdk-v2.version>2.29.40</aws.sdk-v2.version>
     <bouncycastle.version>1.79</bouncycastle.version>
     <build.helper.version>3.6.0</build.helper.version>
     <caffeine.version>3.1.8</caffeine.version>
@@ -59,7 +59,7 @@
     <json.version>20240303</json.version>
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <logback.version>1.5.13</logback.version>
+    <logback.version>1.5.15</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.13.0</maven.compiler.version>
     <maven.dependency.version>3.8.1</maven.dependency.version>
