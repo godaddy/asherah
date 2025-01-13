@@ -101,4 +101,3 @@ jobs:
         with:
           paths: 'go/securememory/junit_results.xml'
         if: always()
-

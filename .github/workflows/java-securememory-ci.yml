@@ -90,4 +90,3 @@ jobs:
         with:
           paths: 'java/secure-memory/target/surefire-reports/TEST-*.xml'
         if: always()
-
