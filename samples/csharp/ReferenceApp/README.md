@@ -175,4 +175,3 @@ follows:
 
   --version                      Display version information.
 ```
-

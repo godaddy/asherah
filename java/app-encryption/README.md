@@ -139,7 +139,7 @@ AwsKmsClientFactory awsKmsClientFactory = ...;
 KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionMap, "us-east-1")
     .withAwsKmsClientFactory(awsKmsClientFactory)
     .build();
-``` 
+```
 
 #### Static KMS (FOR TESTING ONLY)
 
