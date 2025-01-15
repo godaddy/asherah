@@ -45,8 +45,8 @@
     <apache.commons.version>3.17.0</apache.commons.version>
     <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.780</aws.sdk.version>
-    <aws.sdk-v2.version>2.29.47</aws.sdk-v2.version>
-    <bouncycastle.version>1.79</bouncycastle.version>
+    <aws.sdk-v2.version>2.29.52</aws.sdk-v2.version>
+    <bouncycastle.version>1.80</bouncycastle.version>
     <build.helper.version>3.6.0</build.helper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <checkerframework.version>3.48.4</checkerframework.version>
@@ -68,7 +68,7 @@
     <maven.scm.version>2.1.0</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
     <maven.surefire.version>3.5.2</maven.surefire.version>
-    <micrometer.version>1.14.2</micrometer.version>
+    <micrometer.version>1.14.3</micrometer.version>
     <mockito.core.version>5.15.2</mockito.core.version>
     <nexus.staging.maven.version>1.7.0</nexus.staging.maven.version>
     <securememory.version>0.1.4</securememory.version>
