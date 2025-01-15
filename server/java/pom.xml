@@ -20,7 +20,7 @@
     <appencryption.version>0.3.1</appencryption.version>
     <info.picocli.version>4.7.6</info.picocli.version>
     <gson.version>2.11.0</gson.version>
-    <json.version>20240303</json.version>
+    <json.version>20250107</json.version>
     <hikaricp.version>6.2.1</hikaricp.version>
     <io.netty.version>4.1.117.Final</io.netty.version>
     <commons.lang3.version>3.17.0</commons.lang3.version>
