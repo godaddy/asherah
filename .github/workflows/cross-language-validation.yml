@@ -82,7 +82,7 @@ jobs:
           sudo apt-get install -y build-essential
 
       - name: Set up Go
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: ${{ needs.init-defaults.outputs.go-version }}
           cache-dependency-path: 'go/*/go.sum'
@@ -104,7 +104,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
-          node-version: 'current'
+          node-version: '20.x'
 
       - name: Build the Java project
         run: |
@@ -144,7 +144,7 @@ jobs:
             6.0.x
 
       - name: Set up Go
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: ${{ needs.init-defaults.outputs.go-version }}
           cache-dependency-path: 'go/*/go.sum'
@@ -191,8 +191,16 @@ jobs:
           export MSBUILDSINGLELOADCONTEXT=1
           ./scripts/build.sh
 
+      - name: Download Go dependencies
+        run: |
+          cd tests/cross-language/go
+
+          # Workaround for https://github.com/golangci/golangci-lint/issues/825
+          # Without this, the linter may fail with "ERRO Running error: context loading failed: no go files to analyze"
+          go mod download
+
       - name: Lint the Go project
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
+        uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
         with:
           version: 'v1.60.1'
           skip-cache: true

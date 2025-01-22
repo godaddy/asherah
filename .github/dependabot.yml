@@ -1,0 +1,185 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+ # Maintain dependencies for Go AppEncryption
+  - package-ecosystem: "gomod"
+    directories:
+      - "/go/appencryption"
+      - "/go/appencryption/integrationtest"
+    labels:
+      - "go"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for Go SecureMemory
+  - package-ecosystem: "gomod"
+    directory: "/go/securememory"
+    labels:
+      - "go"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for remaining Go projects (server and cross-language tests)
+  - package-ecosystem: "gomod"
+    directories:
+      - "/server/go"
+      - "/tests/cross-language/go"
+    labels:
+      - "go"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for .NET Logging
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/Logging"
+    labels:
+      - "c#"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for .NET SecureMemory
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/SecureMemory"
+    labels:
+      - "c#"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for .NET AppEncryption
+  - package-ecosystem: "nuget"
+    directories:
+      - "/csharp/AppEncryption"
+    labels:
+      - "c#"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for Java SecureMemory
+  - package-ecosystem: "maven"
+    directory: "/java/secure-memory"
+    labels:
+      - "java"
+      - "dependencies"
+      - "securememory"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for Java AppEncryption
+  - package-ecosystem: "maven"
+    directory: "/java/app-encryption"
+    labels:
+      - "java"
+      - "dependencies"
+      - "appencryption"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2
+
+  # Maintain dependencies for remaining Java projects (server and cross-language tests)
+  - package-ecosystem: "maven"
+    directories:
+      - "/server/java"
+      - "/tests/cross-language/java"
+    labels:
+      - "java"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "13:00"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 2

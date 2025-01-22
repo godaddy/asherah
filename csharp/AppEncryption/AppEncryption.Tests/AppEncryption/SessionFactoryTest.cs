@@ -166,7 +166,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                     }
                     catch (Exception e)
                     {
-                        Assert.True(false, e.Message);
+                        Assert.Fail(e.Message);
                     }
 
                     // Even after timeout, verify that we have one entry in cache
@@ -273,7 +273,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 }
                 catch (Exception e)
                 {
-                    Assert.True(false, e.Message);
+                    Assert.Fail(e.Message);
                 }
 
                 // Reset so we can examine 2nd session's interactions
@@ -330,7 +330,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
                 }
                 catch (Exception e)
                 {
-                    Assert.True(false, e.Message);
+                    Assert.Fail(e.Message);
                 }
 
                 // Reset so we can examine 2nd session's interactions
