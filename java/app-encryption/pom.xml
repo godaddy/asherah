@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -71,7 +71,7 @@
     <micrometer.version>1.14.3</micrometer.version>
     <mockito.core.version>5.15.2</mockito.core.version>
     <nexus.staging.maven.version>1.7.0</nexus.staging.maven.version>
-    <securememory.version>0.1.4</securememory.version>
+    <securememory.version>0.1.5</securememory.version>
     <slf4j.version>2.0.16</slf4j.version>
     <sqlite4java.version>1.0.392</sqlite4java.version>
     <testcontainers.version>1.11.2</testcontainers.version>
