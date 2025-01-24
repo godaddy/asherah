@@ -63,6 +63,7 @@ exclude-signatures = [
 exclude-path-patterns = [
     {path-pattern = '.*/go.mod', reason = 'Exclude go.mod files'},
     {path-pattern = '.*/go.sum', reason = 'Exclude go.sum files'},
+    {path-pattern = '.*/go.work.sum', reason = 'Exclude go.work.sum files'},
     {path-pattern = '.*/package.json', reason = 'Exclude node dependency files'},
     {path-pattern = '.*/package.lock.json', reason = 'Exclude node dependency files'},
     {path-pattern = 'tartufo.toml', reason = 'Exclude tartufo config file'},
