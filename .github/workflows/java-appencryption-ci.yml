@@ -12,6 +12,8 @@ on:
     paths:
       - 'java/appencryption/**'
       - '.github/workflows/java-appencryption-*'
+    branches-ignore:
+      - 'release-*'
 
 permissions:
   contents: read
