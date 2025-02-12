@@ -144,7 +144,7 @@ func createKMS(crypto appencryption.AEAD) (appencryption.KeyManagementService, e
 	}
 }
 
-func main() {
+func parseFlags() {
 	if _, err := flags.Parse(&opts); err != nil {
 		var e *flags.Error
 		if errors.As(err, &e) && e.Type == flags.ErrHelp {
@@ -153,7 +153,9 @@ func main() {
 
 		panic(err)
 	}
+}
 
+func initLogging() {
 	logger.Init("Default", opts.Verbose, false, new(bytes.Buffer))
 
 	if opts.Verbose {
@@ -161,6 +163,12 @@ func main() {
 			logger.Infof("AppEncryption DEBUG: %s", fmt.Sprintf(f, v...))
 		}))
 	}
+}
+
+func main() {
+	parseFlags()
+
+	initLogging()
 
 	if opts.Payload != "" && opts.Drr != "" {
 		panic(errors.Errorf("either payload or drr can be provided"))
