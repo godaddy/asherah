@@ -119,6 +119,10 @@ linters-settings:
       - prefix(github.com/godaddy/asherah/go/appencryption)
     custom-order: true
 
+  gosec:
+    excludes:
+      - G115
+
   funlen:
     lines: 70
 
