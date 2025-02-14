@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"testing"
 
 	"github.com/cucumber/godog"
 	"github.com/go-sql-driver/mysql"
@@ -143,4 +144,23 @@ func connectSQL() error {
 	connection = conn
 
 	return nil
+}
+
+func TestEncryptFeatures(t *testing.T) {
+	opts := godog.Options{
+		Paths:    []string{"../features/encrypt.feature"},
+		Format:   "pretty",
+		TestingT: t,
+	}
+
+	status := godog.TestSuite{
+		Name:                 "encrypt",
+		TestSuiteInitializer: InitializeTestSuite,
+		ScenarioInitializer:  InitializeScenario,
+		Options:              &opts,
+	}.Run()
+
+	if status != 0 {
+		t.Fatal("Non-zero status returned")
+	}
 }
