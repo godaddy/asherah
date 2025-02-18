@@ -41,7 +41,7 @@ cd ..
 
 cd go
 echo "----------------------Decrypting data using Go--------------------------"
-godog ../features/decrypt.feature
+go test -v -test.run '^TestDecryptFeatures$'
 cd ..
 
 cd sidecar

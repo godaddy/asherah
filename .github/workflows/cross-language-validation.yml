@@ -210,7 +210,6 @@ jobs:
         run: |
           cd tests/cross-language/go
           go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
-          go install github.com/cucumber/godog/cmd/godog@latest
           ./scripts/build.sh
 
       - name: Test
