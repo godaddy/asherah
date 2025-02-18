@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"testing"
@@ -22,7 +23,12 @@ var (
 	payloadString          string
 	encryptedPayloadString string
 	connection             *sql.DB
+	godogOpts              godog.Options
 )
+
+func init() {
+	godog.BindFlags("godog.", flag.CommandLine, &godogOpts)
+}
 
 func iHave(payload string) error {
 	payloadString = payload
@@ -146,12 +152,24 @@ func connectSQL() error {
 	return nil
 }
 
-func TestEncryptFeatures(t *testing.T) {
-	opts := godog.Options{
-		Paths:    []string{"../features/encrypt.feature"},
-		Format:   "pretty",
-		TestingT: t,
+func godogOptsWithDefaults(t *testing.T, defaultPath string) (opts godog.Options) {
+	opts = godogOpts
+
+	opts.TestingT = t
+
+	if opts.Paths == nil {
+		opts.Paths = []string{defaultPath}
 	}
+
+	if opts.Format == "" {
+		opts.Format = "pretty"
+	}
+
+	return
+}
+
+func TestEncryptFeatures(t *testing.T) {
+	opts := godogOptsWithDefaults(t, "../features/encrypt.feature")
 
 	status := godog.TestSuite{
 		Name:                 "encrypt",
@@ -163,4 +181,9 @@ func TestEncryptFeatures(t *testing.T) {
 	if status != 0 {
 		t.Fatal("Non-zero status returned")
 	}
+}
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	os.Exit(m.Run())
 }

@@ -96,11 +96,7 @@ func decryptedDataShouldBeEqualTo(payload string) error {
 }
 
 func TestDecryptFeatures(t *testing.T) {
-	opts := godog.Options{
-		Paths:    []string{"../features/decrypt.feature"},
-		Format:   "pretty",
-		TestingT: t,
-	}
+	opts := godogOptsWithDefaults(t, "../features/decrypt.feature")
 
 	status := godog.TestSuite{
 		Name:                 "decrypt",
