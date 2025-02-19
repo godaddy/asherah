@@ -6,7 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/cucumber/godog v0.15.0
-	github.com/go-sql-driver/mysql v1.8.1
+	github.com/go-sql-driver/mysql v1.9.0
 	github.com/godaddy/asherah/go/appencryption v0.7.1
 	github.com/pkg/errors v0.9.1
 )
