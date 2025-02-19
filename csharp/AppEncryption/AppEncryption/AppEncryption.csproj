@@ -24,7 +24,7 @@
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.405.16" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.400.94" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.400.97" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
