@@ -7,8 +7,6 @@ on:
     paths:
       - 'csharp/SecureMemory/**'
       - '.github/workflows/csharp-securememory-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read

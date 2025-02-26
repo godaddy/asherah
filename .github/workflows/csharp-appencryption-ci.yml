@@ -7,8 +7,6 @@ on:
     paths:
       - 'csharp/AppEncryption/**'
       - '.github/workflows/csharp-appencryption-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read
