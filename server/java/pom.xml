@@ -13,8 +13,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.11.4</junit.jupiter.version>
-    <junit.jupiter.api.version>5.11.4</junit.jupiter.api.version>
+    <junit.jupiter.version>5.12.0</junit.jupiter.version>
+    <junit.jupiter.api.version>5.12.0</junit.jupiter.api.version>
     <io.grpc.version>1.70.0</io.grpc.version>
     <protobuf.version>4.29.3</protobuf.version>
     <appencryption.version>0.3.2</appencryption.version>
@@ -22,9 +22,9 @@
     <gson.version>2.12.1</gson.version>
     <json.version>20250107</json.version>
     <hikaricp.version>6.2.1</hikaricp.version>
-    <io.netty.version>4.1.118.Final</io.netty.version>
+    <io.netty.version>4.1.119.Final</io.netty.version>
     <commons.lang3.version>3.17.0</commons.lang3.version>
-    <slf4j.version>2.0.16</slf4j.version>
+    <slf4j.version>2.0.17</slf4j.version>
     <jacoco.version>0.8.12</jacoco.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <suppressions.config>${project.basedir}/suppressions.xml</suppressions.config>
@@ -215,7 +215,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.14.0</version>
         <configuration>
           <source>8</source>
           <target>8</target>
