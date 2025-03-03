@@ -8,6 +8,13 @@ TAG=`echo java/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
+    # START dry run (TODO: Remove)
+    echo "Releasing (DRY RUN): ${ARTIFACT_NAME} v${BASE_VERSION}"
+    echo "Tag: ${TAG}, SHA: ${GITHUB_SHA}"
+    echo "Exiting without pushing changes"
+    exit 0
+    # END dry run
+
     echo "Releasing ${ARTIFACT_NAME} artifact"
     mvn -DskipTests deploy -Prelease
 
