@@ -3,7 +3,7 @@ name: '[Go] SecureMemory Release'
 on:
   workflow_run:
     workflows:
-      - '[Go] SecureMemory CI'
+      - '\[Go\] SecureMemory CI'
     types:
       - completed
     branches:

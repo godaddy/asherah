@@ -3,7 +3,7 @@ name: '[C#] Logging Release'
 on:
   workflow_run:
     workflows:
-      - '[C#] Logging CI'
+      - '\[C#\] Logging CI'
     types:
       - completed
     branches:
