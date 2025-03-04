@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
@@ -47,6 +49,7 @@ jobs:
           echo "BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        working-directory: csharp/Logging
 
       - name: Publish C# Logging
         if: startsWith('release-', github.env.BRANCH) && github.env.VERSION_SUFFIX != 'alpha'
