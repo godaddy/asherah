@@ -48,11 +48,12 @@ jobs:
         run: |
           echo "BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
-          echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+          echo "BRANCH=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_ENV
+          echo "GITHUB_SHA=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_ENV
         working-directory: csharp/Logging
 
       - name: Publish C# Logging
-        if: startsWith('release-', github.env.BRANCH) && github.env.VERSION_SUFFIX != 'alpha'
+        if: startsWith(github.env.BRANCH, 'release-') && github.env.VERSION_SUFFIX != 'alpha'
         run: |
           ./scripts/release_prod.sh
         env:
