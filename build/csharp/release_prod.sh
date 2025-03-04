@@ -2,12 +2,19 @@
 set -e
 
 CSPROJ_FILE=$(find . -name '*AppEncryption.csproj' -o -name '*SecureMemory.csproj' -o -name '*Logging.csproj')
-BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-ARTIFACT_NAME=$(xmllint --xpath "//Project/PropertyGroup/Title/text()" ${CSPROJ_FILE})
+BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')
+ARTIFACT_NAME=$(grep -o '<Title>.*<.*>' ${CSPROJ_FILE} | sed 's/<Title>\(.*\)<.*>/\1/')
 TAG=`echo csharp/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
+    # START dry run (TODO: Remove)
+    echo "Releasing (DRY RUN): ${ARTIFACT_NAME} v${BASE_VERSION}"
+    echo "Tag: ${TAG}, SHA: ${GITHUB_SHA}"
+    echo "Exiting without pushing changes"
+    exit 0
+    # END dry run
+
     dotnet pack -c Release
     echo "Releasing ${ARTIFACT_NAME} artifact"
     find . -name *${BASE_VERSION}.nupkg  | xargs -L1 -I '{}' dotnet nuget push {} -k ${NUGET_KEY} -s ${NUGET_SOURCE}

@@ -11,8 +11,6 @@ on:
     paths:
       - 'go/appencryption/**'
       - '.github/workflows/go-appencryption-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read

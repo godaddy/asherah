@@ -11,8 +11,6 @@ on:
     paths:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read
