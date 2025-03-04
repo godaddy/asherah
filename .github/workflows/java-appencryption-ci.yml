@@ -93,5 +93,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/heads/release-')
     needs: test
+    permissions:
+      contents: write
     name: Release
     uses: ./.github/workflows/java-appencryption-release.yml

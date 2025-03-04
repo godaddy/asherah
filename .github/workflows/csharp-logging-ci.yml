@@ -56,5 +56,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/heads/release-')
     needs: logging-main
+    permissions:
+      contents: write
     name: Release
     uses: ./.github/workflows/csharp-logging-release.yml
