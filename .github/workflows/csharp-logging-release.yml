@@ -35,11 +35,12 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
 
       - name: Download artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
-        with:
-          name: csharp-logging
-          path: ${{ github.workspace }}/csharp/Logging/Logging
-          run-id: ${{ github.event.workflow_run.id }}
+        run: |
+          gh run download ${RUN_ID} --repo godaddy/asherah --dir ${TARGET_DIR} --name csharp-logging
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_DIR: ${{ github.workspace }}/csharp/Logging/Logging
+          RUN_ID: ${{ github.event.workflow_run.id }}
 
       - name: Initialize Envionment Variables
         run: |
