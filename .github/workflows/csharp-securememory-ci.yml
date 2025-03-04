@@ -89,3 +89,9 @@ jobs:
         with:
           paths: 'csharp/SecureMemory/SecureMemory.Tests/test-result.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    name: Release
+    uses: ./.github/workflows/csharp-securememory-release.yml

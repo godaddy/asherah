@@ -99,3 +99,9 @@ jobs:
         with:
           paths: 'go/securememory/junit_results.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    name: Release
+    uses: ./.github/workflows/go-securememory-release.yml
