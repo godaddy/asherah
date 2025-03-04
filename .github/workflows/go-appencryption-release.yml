@@ -3,7 +3,7 @@ name: '[Go] AppEncryption Release'
 on:
   workflow_run:
     workflows:
-      - '[Go] AppEncryption CI'
+      - '\[Go\] AppEncryption CI'
     types:
       - completed
     branches:

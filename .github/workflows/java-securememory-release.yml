@@ -3,7 +3,7 @@ name: '[Java] SecureMemory Release'
 on:
   workflow_run:
     workflows:
-      - '[Java] SecureMemory CI'
+      - '\[Java\] SecureMemory CI'
     types:
       - completed
     branches:

@@ -3,7 +3,7 @@ name: '[C#] SecureMemory Release'
 on:
   workflow_run:
     workflows:
-      - '[C#] SecureMemory CI'
+      - '\[C#\] SecureMemory CI'
     types:
       - completed
     branches:

@@ -3,7 +3,7 @@ name: '[Java] AppEncryption Release'
 on:
   workflow_run:
     workflows:
-      - '[Java] AppEncryption CI'
+      - '\[Java\] AppEncryption CI'
     types:
       - completed
     branches:

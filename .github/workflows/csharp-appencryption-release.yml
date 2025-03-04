@@ -3,7 +3,7 @@ name: '[C#] AppEncryption Release'
 on:
   workflow_run:
     workflows:
-      - '[C#] AppEncryption CI'
+      - '\[C#\] AppEncryption CI'
     types:
       - completed
     branches:
