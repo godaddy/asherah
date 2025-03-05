@@ -1,13 +1,7 @@
 name: '[C#] Logging Release'
 
 on:
-  workflow_run:
-    workflows:
-      - '\[C#\] Logging CI'
-    types:
-      - completed
-    branches:
-      - 'release-*'
+  workflow_call:
 
 permissions:
   contents: write
@@ -18,14 +12,12 @@ defaults:
 
 jobs:
   release:
-    if: github.repository == 'godaddy/asherah' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository == 'godaddy/asherah'
     name: Release C# Logging
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Fetch all tags
         run: git fetch --prune --unshallow --tags
@@ -37,23 +29,20 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('csharp/**/*.csproj') }}-v2
 
       - name: Download artifact
-        run: |
-          gh run download ${RUN_ID} --repo godaddy/asherah --dir ${TARGET_DIR} --name csharp-logging
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_DIR: ${{ github.workspace }}/csharp/Logging/Logging
-          RUN_ID: ${{ github.event.workflow_run.id }}
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: csharp-logging
+          path: ${{ github.workspace }}/csharp/Logging/Logging
 
       - name: Initialize Envionment Variables
         run: |
           echo "BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
-          echo "BRANCH=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_ENV
-          echo "GITHUB_SHA=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_ENV
+          echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
         working-directory: csharp/Logging
 
       - name: Publish C# Logging
-        if: startsWith(github.env.BRANCH, 'release-') && github.env.VERSION_SUFFIX != 'alpha'
+        if: startsWith(env.BRANCH, 'release-') && env.VERSION_SUFFIX != 'alpha'
         run: |
           ./scripts/release_prod.sh
         env:

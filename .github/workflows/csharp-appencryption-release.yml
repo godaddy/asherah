@@ -1,13 +1,7 @@
 name: '[C#] AppEncryption Release'
 
 on:
-  workflow_run:
-    workflows:
-      - '\[C#\] AppEncryption CI'
-    types:
-      - completed
-    branches:
-      - 'release-*'
+  workflow_call:
 
 permissions:
   contents: write
@@ -18,7 +12,7 @@ defaults:
 
 jobs:
   release:
-    if: github.repository == 'godaddy/asherah' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository == 'godaddy/asherah'
     name: Release C# AppEncryption
     runs-on: ubuntu-latest
     steps:
@@ -41,16 +35,16 @@ jobs:
           path: |
             ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
             ${{ github.workspace }}/csharp/AppEncryption/Crypto
-          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Initialize Envionment Variables
         run: |
           echo "BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        working-directory: csharp/AppEncryption
 
       - name: Publish C# AppEncryption
-        if: startsWith('release-', github.env.BRANCH) && github.env.VERSION_SUFFIX != 'alpha'
+        if: startsWith(env.BRANCH, 'release-') && env.VERSION_SUFFIX != 'alpha'
         run: |
           ./scripts/release_prod.sh
         env:

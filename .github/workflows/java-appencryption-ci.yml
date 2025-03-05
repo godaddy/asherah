@@ -89,3 +89,11 @@ jobs:
         with:
           paths: 'java/app-encryption/target/surefire-reports/TEST-*.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/java-appencryption-release.yml

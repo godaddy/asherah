@@ -100,3 +100,11 @@ jobs:
         with:
           paths: 'go/appencryption/junit_results.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/go-appencryption-release.yml

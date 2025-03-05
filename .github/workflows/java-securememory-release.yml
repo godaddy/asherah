@@ -1,13 +1,7 @@
 name: '[Java] SecureMemory Release'
 
 on:
-  workflow_run:
-    workflows:
-      - '\[Java\] SecureMemory CI'
-    types:
-      - completed
-    branches:
-      - 'release-*'
+  workflow_call:
 
 permissions:
   contents: write
@@ -18,7 +12,7 @@ defaults:
 
 jobs:
   release:
-    if: github.repository == 'godaddy/asherah' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository == 'godaddy/asherah'
     name: Release Java SecureMemory
     runs-on: ubuntu-latest
     steps:
@@ -45,9 +39,10 @@ jobs:
           echo "BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        working-directory: java/securememory
 
       - name: Publish Java SecureMemory
-        if: startsWith('release-', github.env.BRANCH) && github.env.VERSION_SUFFIX != 'alpha'
+        if: startsWith(env.BRANCH, 'release-') && env.VERSION_SUFFIX != 'alpha'
         run: |
           ./scripts/release_prod.sh
         env:

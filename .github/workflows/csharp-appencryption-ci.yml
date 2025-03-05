@@ -110,3 +110,11 @@ jobs:
         with:
           paths: 'csharp/AppEncryption/AppEncryption.Tests/test-result.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/csharp-appencryption-release.yml
