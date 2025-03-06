@@ -11,7 +11,7 @@ if [[ "$RESULT" != ${TAG}  ]]; then
     PARENT_COMMIT=$(git rev-parse "${GITHUB_SHA}^2")
     echo "Releasing: ${ARTIFACT_NAME} v${BASE_VERSION}"
     echo "Creating new tag: ${TAG}, SHA: ${PARENT_COMMIT}"
-    git tag -f ${TAG} ${PARENT_COMMIT}
+    git tag ${TAG} ${PARENT_COMMIT}
     git push origin --tags
     echo "Created tag ${TAG}"
 else
