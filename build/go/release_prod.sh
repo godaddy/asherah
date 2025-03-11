@@ -7,16 +7,11 @@ TAG=`echo go/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG}  ]]; then
-    # START dry run (TODO: Remove)
-    echo "Releasing (DRY RUN): ${ARTIFACT_NAME} v${BASE_VERSION}"
-    echo "Tag: ${TAG}, SHA: ${GITHUB_SHA}"
-    echo "Exiting without pushing changes"
-    exit 0
-    # END dry run
-
     # Create tag
-    echo "Releasing ${ARTIFACT_NAME} artifact"
-    git tag -f ${TAG} ${GITHUB_SHA}
+    PARENT_COMMIT=$(git rev-parse "${GITHUB_SHA}^2")
+    echo "Releasing: ${ARTIFACT_NAME} v${BASE_VERSION}"
+    echo "Creating new tag: ${TAG}, SHA: ${PARENT_COMMIT}"
+    git tag ${TAG} ${PARENT_COMMIT}
     git push origin --tags
     echo "Created tag ${TAG}"
 else
