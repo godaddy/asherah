@@ -1,12 +1,11 @@
 module cltf
 
 go 1.21
-
-toolchain go1.23.3
+toolchain go1.24.1
 
 require (
 	github.com/cucumber/godog v0.15.0
-	github.com/go-sql-driver/mysql v1.9.0
+	github.com/go-sql-driver/mysql v1.9.1
 	github.com/godaddy/asherah/go/appencryption v0.7.1
 	github.com/pkg/errors v0.9.1
 )
