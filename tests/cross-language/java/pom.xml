@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <cucumber.version>6.11.0</cucumber.version>
     <junit.jupiter.version>5.12.1</junit.jupiter.version>
-    <hikaricp.version>6.2.1</hikaricp.version>
+    <hikaricp.version>6.3.0</hikaricp.version>
     <mysql.connector.version>9.2.0</mysql.connector.version>
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
   </properties>
