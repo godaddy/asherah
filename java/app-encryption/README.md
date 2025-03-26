@@ -320,10 +320,6 @@ The following are distro-specific notes that we know about:
   * If using the `adoptopenjdk/openjdk` base image, we need to add additional directories in the default library
   path using `-Djna.boot.library.path=/usr/lib/x86_64-linux-gnu/jni/`
 
-Our [test app repo's](../../tests/java/test-app/) Dockerfiles can be used for reference:
-[Alpine](../../tests/java/test-app/images/alpine/Dockerfile), [Debian](../../tests/java/test-app/images/debian/Dockerfile)
-and [Ubuntu](../../tests/java/test-app/images/ubuntu/Dockerfile) (uses [AdoptOpenJDK](https://adoptopenjdk.net/))
-
 ## Development Notes
 
 Some unit tests will use the AWS SDK, If you don’t already have a local

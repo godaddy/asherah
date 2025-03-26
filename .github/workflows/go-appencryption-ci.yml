@@ -11,8 +11,6 @@ on:
     paths:
       - 'go/appencryption/**'
       - '.github/workflows/go-appencryption-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read
@@ -84,9 +82,9 @@ jobs:
           go install gotest.tools/gotestsum@latest
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
+        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
         with:
-          version: 'v1.60.1'
+          version: 'v1.64.2'
           skip-cache: true
           working-directory: 'go/appencryption'
 
@@ -102,3 +100,11 @@ jobs:
         with:
           paths: 'go/appencryption/junit_results.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/go-appencryption-release.yml

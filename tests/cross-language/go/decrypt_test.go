@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"testing"
 
+	"github.com/cucumber/godog"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
@@ -91,4 +93,19 @@ func decryptedDataShouldBeEqualTo(payload string) error {
 	}
 
 	return nil
+}
+
+func TestDecryptFeatures(t *testing.T) {
+	opts := godogOptsWithDefaults(t, "../features/decrypt.feature")
+
+	status := godog.TestSuite{
+		Name:                 "decrypt",
+		TestSuiteInitializer: InitializeTestSuite,
+		ScenarioInitializer:  InitializeScenario,
+		Options:              &opts,
+	}.Run()
+
+	if status != 0 {
+		t.Fatal("Non-zero status returned")
+	}
 }

@@ -41,7 +41,7 @@ cd ..
 
 cd go
 echo "----------------------Decrypting data using Go--------------------------"
-godog ../features/decrypt.feature
+go test -v -test.run '^TestDecryptFeatures$' -godog.paths=../features/decrypt.feature
 cd ..
 
 cd sidecar

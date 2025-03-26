@@ -140,7 +140,6 @@ jobs:
         uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
         with:
           dotnet-version: |
-            3.1.x
             6.0.x
 
       - name: Set up Go
@@ -200,9 +199,9 @@ jobs:
           go mod download
 
       - name: Lint the Go project
-        uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
+        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
         with:
-          version: 'v1.60.1'
+          version: 'v1.64.2'
           skip-cache: true
           working-directory: 'tests/cross-language/go'
 
@@ -210,7 +209,6 @@ jobs:
         run: |
           cd tests/cross-language/go
           go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
-          go install github.com/cucumber/godog/cmd/godog@latest
           ./scripts/build.sh
 
       - name: Test

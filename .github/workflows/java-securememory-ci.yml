@@ -12,8 +12,6 @@ on:
     paths:
       - 'java/secure-memory/**'
       - '.github/workflows/java-securememory-*'
-    branches-ignore:
-      - 'release-*'
 
 permissions:
   contents: read
@@ -90,3 +88,11 @@ jobs:
         with:
           paths: 'java/secure-memory/target/surefire-reports/TEST-*.xml'
         if: always()
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/java-securememory-release.yml

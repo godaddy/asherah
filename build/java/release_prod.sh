@@ -8,11 +8,13 @@ TAG=`echo java/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
-    echo "Releasing ${ARTIFACT_NAME} artifact"
+    echo "Releasing: ${ARTIFACT_NAME} v${BASE_VERSION}"
     mvn -DskipTests deploy -Prelease
 
     # Create tag
-    git tag -f ${TAG} ${GITHUB_SHA}
+    PARENT_COMMIT=$(git rev-parse "${GITHUB_SHA}^2")
+    echo "Creating new tag: ${TAG}, SHA: ${PARENT_COMMIT}"
+    git tag ${TAG} ${PARENT_COMMIT}
     git push origin --tags
     echo "Created tag ${TAG}"
 else

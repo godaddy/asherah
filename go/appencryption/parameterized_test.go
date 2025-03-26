@@ -320,8 +320,6 @@ func createCryptoMock(payload []byte) *MockCrypto {
 }
 
 func generatePayload() []byte {
-	rand.Seed(time.Now().UnixNano())
-
 	payload := make([]byte, 32)
 	for i := range payload {
 		payload[i] = letterBytes[rand.Intn(len(letterBytes))]

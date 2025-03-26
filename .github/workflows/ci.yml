@@ -1,10 +1,7 @@
 name: Continuous Integration
 
 on:
-  push:
-    branches:
-      # Push events to branches matching refs/heads/release-
-      - 'release-*'
+  workflow_dispatch:
 
 #### Global environment variables
 env:

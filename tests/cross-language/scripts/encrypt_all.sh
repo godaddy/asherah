@@ -41,7 +41,7 @@ cd ..
 
 cd go
 echo "----------------------Encrypting payload using Go-----------------------"
-godog ../features/encrypt.feature
+go test -v -test.run '^TestEncryptFeatures$' -godog.paths=../features/encrypt.feature
 cd ..
 
 cd sidecar

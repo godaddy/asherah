@@ -2,18 +2,20 @@
 set -e
 
 CSPROJ_FILE=$(find . -name '*AppEncryption.csproj' -o -name '*SecureMemory.csproj' -o -name '*Logging.csproj')
-BASE_VERSION=$(xmllint --xpath "//Project/PropertyGroup/Version/text()" Directory.Build.props)
-ARTIFACT_NAME=$(xmllint --xpath "//Project/PropertyGroup/Title/text()" ${CSPROJ_FILE})
+BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')
+ARTIFACT_NAME=$(grep -o '<Title>.*<.*>' ${CSPROJ_FILE} | sed 's/<Title>\(.*\)<.*>/\1/')
 TAG=`echo csharp/${ARTIFACT_NAME}/v${BASE_VERSION}`
 
 RESULT=$(git tag -l ${TAG})
 if [[ "$RESULT" != ${TAG} ]]; then
+    echo "Releasing: ${ARTIFACT_NAME} v${BASE_VERSION}"
     dotnet pack -c Release
-    echo "Releasing ${ARTIFACT_NAME} artifact"
     find . -name *${BASE_VERSION}.nupkg  | xargs -L1 -I '{}' dotnet nuget push {} -k ${NUGET_KEY} -s ${NUGET_SOURCE}
 
     # Create tag
-    git tag -f ${TAG} ${GITHUB_SHA}
+    PARENT_COMMIT=$(git rev-parse "${GITHUB_SHA}^2")
+    echo "Creating new tag: ${TAG}, SHA: ${PARENT_COMMIT}"
+    git tag ${TAG} ${PARENT_COMMIT}
     git push origin --tags
     echo "Created tag ${TAG}"
 else
