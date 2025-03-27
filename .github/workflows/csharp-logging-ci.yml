@@ -60,3 +60,4 @@ jobs:
       contents: write
     name: Release
     uses: ./.github/workflows/csharp-logging-release.yml
+    secrets: inherit
