@@ -33,7 +33,4 @@ jobs:
         if: startsWith(env.BRANCH, 'release-') && env.VERSION_SUFFIX != 'alpha'
         run: |
           ./scripts/release_prod.sh
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-          NUGET_SOURCE: ${{ secrets.NUGET_SOURCE }}
         working-directory: go/appencryption
