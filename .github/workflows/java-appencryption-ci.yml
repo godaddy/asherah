@@ -10,7 +10,7 @@ on:
 
   push:
     paths:
-      - 'java/appencryption/**'
+      - 'java/app-encryption/**'
       - '.github/workflows/java-appencryption-*'
 
 permissions:

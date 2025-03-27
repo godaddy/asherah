@@ -39,7 +39,7 @@ jobs:
           echo "BASE_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-        working-directory: java/appencryption
+        working-directory: java/app-encryption
 
       - name: Publish Java AppEncryption
         if: startsWith(env.BRANCH, 'release-') && env.VERSION_SUFFIX != 'alpha'
@@ -49,4 +49,4 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-        working-directory: java/appencryption
+        working-directory: java/app-encryption
