@@ -97,3 +97,4 @@ jobs:
       contents: write
     name: Release
     uses: ./.github/workflows/java-appencryption-release.yml
+    secrets: inherit
