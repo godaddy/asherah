@@ -118,3 +118,4 @@ jobs:
       contents: write
     name: Release
     uses: ./.github/workflows/csharp-appencryption-release.yml
+    secrets: inherit

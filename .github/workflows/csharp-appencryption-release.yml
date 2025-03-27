@@ -36,7 +36,7 @@ jobs:
             ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
             ${{ github.workspace }}/csharp/AppEncryption/Crypto
 
-      - name: Initialize Envionment Variables
+      - name: Initialize Environment Variables
         run: |
           echo "BASE_VERSION=$(grep -o '<Version>.*<.*>' Directory.Build.props | sed 's/<Version>\(.*\)<.*>/\1/')" >> $GITHUB_ENV
           echo "VERSION_SUFFIX=$(echo ${BASE_VERSION} | cut -f2 -d'-')" >> $GITHUB_ENV
