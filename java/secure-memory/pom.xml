@@ -48,7 +48,7 @@
     <maven.javadoc.version>3.11.2</maven.javadoc.version>
     <maven.scm.version>2.1.0</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
-    <maven.surefire.version>3.5.2</maven.surefire.version>
+    <maven.surefire.version>3.5.3</maven.surefire.version>
     <mockito.core.version>5.16.1</mockito.core.version>
     <nexus.staging.maven.version>1.7.0</nexus.staging.maven.version>
     <slf4j.version>2.0.17</slf4j.version>
