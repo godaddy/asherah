@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/go-sql-driver/mysql v1.9.1
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/godaddy/asherah/go/appencryption v0.7.1
 	github.com/godaddy/asherah/go/securememory v0.1.6
 	github.com/golang/protobuf v1.5.4
