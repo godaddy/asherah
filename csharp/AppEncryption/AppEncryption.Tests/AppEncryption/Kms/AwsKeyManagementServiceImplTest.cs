@@ -38,6 +38,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             { UsWest1, ArnUsWest1 },
         };
 
+        private readonly AWSCredentials credentiaals = new BasicAWSCredentials("dummy", "secret");
+
         private readonly string preferredRegion = UsWest1;
 
         private readonly Mock<IAmazonKeyManagementService> amazonKeyManagementServiceClientMock;
@@ -53,13 +55,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             awsKmsClientFactoryMock = new Mock<AwsKmsClientFactory>();
             cryptoKeyMock = new Mock<CryptoKey>();
 
-            awsKmsClientFactoryMock.Setup(x => x.CreateAwsKmsClient(It.IsAny<string>()))
+            awsKmsClientFactoryMock.Setup(x => x.CreateAwsKmsClient(It.IsAny<string>(), It.IsAny<AWSCredentials>()))
                 .Returns(amazonKeyManagementServiceClientMock.Object);
             awsKeyManagementServiceImplSpy = new Mock<AwsKeyManagementServiceImpl>(
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
-                awsKmsClientFactoryMock.Object) { CallBase = true };
+                awsKmsClientFactoryMock.Object,
+                credentiaals) { CallBase = true };
         }
 
         [Fact]
@@ -69,7 +72,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
-                awsKmsClientFactoryMock.Object);
+                awsKmsClientFactoryMock.Object,
+                credentiaals);
             IDictionaryEnumerator dictionaryEnumerator =
                 awsKeyManagementService.RegionToArnAndClientDictionary.GetEnumerator();
             dictionaryEnumerator.MoveNext();
@@ -275,6 +279,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
                 NewBuilder(regionToArnDictionary, preferredRegion);
             AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.Build();
+            Assert.NotNull(awsKeyManagementServiceBuilder);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithCredentials()
+        {
+            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion);
+            AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder
+                .WithCredentials(credentiaals)
+                .Build();
             Assert.NotNull(awsKeyManagementServiceBuilder);
         }
 

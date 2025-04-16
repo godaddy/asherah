@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Amazon.Runtime;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
@@ -41,14 +41,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private readonly Table table;
         private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
         private readonly DateTimeOffset created = DateTimeOffset.Now.AddDays(-1);
-        private string hostName;
+        private string serviceUrl;
 
         public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
         {
-            hostName = dynamoDbContainerFixture.HostName;
+            serviceUrl = dynamoDbContainerFixture.GetServiceUrl();
             AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                ServiceURL = serviceUrl,
                 AuthenticationRegion = "us-west-2",
             };
             amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
@@ -56,7 +56,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
 
             dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(dynamoDbContainerFixture.ServiceUrl, Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .Build();
 
             table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
@@ -155,7 +155,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestLoadLatestWithSingleRecordAndSuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .WithKeySuffix()
                 .Build();
 
@@ -253,7 +253,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestStoreWithSuffixSuccess()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:" + DynamoDbPort, Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .WithKeySuffix()
                 .Build();
             bool actualValue = dbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
@@ -284,7 +284,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithEndPointConfiguration()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -310,7 +310,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .WithKeySuffix()
                 .Build();
 
@@ -322,11 +322,31 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithoutKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
             Assert.Equal(string.Empty, dbMetastoreImpl.GetKeySuffix());
+        }
+
+        [Fact]
+        private void TestBuilderPathWithCredentials()
+        {
+            var dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .WithCredentials(new BasicAWSCredentials("dummy", "secret"))
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        private void TestBuilderPathWithInvalidCredentials()
+        {
+            Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .WithCredentials(new BasicAWSCredentials("not-dummy", "secret"))
+                .Build());
         }
 
         [Fact]
@@ -337,7 +357,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             // Use AWS SDK to create client
             AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = $"http://{hostName}:{DynamoDbPort}",
+                ServiceURL = serviceUrl,
                 AuthenticationRegion = "us-west-2",
             };
             AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
@@ -356,7 +376,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             // Create a metastore object using the withTableName step
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", "us-west-2")
+                .WithEndPointConfiguration(serviceUrl, "us-west-2")
                 .WithTableName(tempTableName)
                 .Build();
             Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
