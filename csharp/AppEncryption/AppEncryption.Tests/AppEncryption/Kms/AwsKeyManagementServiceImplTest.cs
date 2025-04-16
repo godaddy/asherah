@@ -38,7 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             { UsWest1, ArnUsWest1 },
         };
 
-        private readonly AWSCredentials credentiaals = new BasicAWSCredentials("dummy", "secret");
+        private readonly AWSCredentials credentials = new BasicAWSCredentials("dummy", "secret");
 
         private readonly string preferredRegion = UsWest1;
 
@@ -62,7 +62,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentiaals) { CallBase = true };
+                credentials) { CallBase = true };
         }
 
         [Fact]
@@ -73,7 +73,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentiaals);
+                credentials);
             IDictionaryEnumerator dictionaryEnumerator =
                 awsKeyManagementService.RegionToArnAndClientDictionary.GetEnumerator();
             dictionaryEnumerator.MoveNext();
@@ -288,7 +288,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
                 NewBuilder(regionToArnDictionary, preferredRegion);
             AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder
-                .WithCredentials(credentiaals)
+                .WithCredentials(credentials)
                 .Build();
             Assert.NotNull(awsKeyManagementServiceBuilder);
         }
