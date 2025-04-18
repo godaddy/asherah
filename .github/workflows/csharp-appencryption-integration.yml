@@ -23,7 +23,7 @@ jobs:
     name: 'Run Integration Tests'
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:

@@ -198,7 +198,7 @@ jobs:
     name: Build C# Logging
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -268,7 +268,7 @@ jobs:
     needs: csharp-logging
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -342,7 +342,7 @@ jobs:
     needs: csharp-secure-memory
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -425,7 +425,7 @@ jobs:
     needs: csharp-app-encryption
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:6.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
     - name: Checkout the repository
@@ -718,7 +718,7 @@ jobs:
     - name: Set up C#
       uses: actions/setup-dotnet@0f534f5829b2e991ed7d67169d882659f921a60d
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '6.0.x'
     - name: Set up Go (stable)
       uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
       with:

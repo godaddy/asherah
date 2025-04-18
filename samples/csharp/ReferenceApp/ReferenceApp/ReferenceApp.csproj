@@ -5,7 +5,7 @@
         <Description>CSharp AppEncryption Reference App</Description>
         <AssemblyName>ReferenceApp</AssemblyName>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <!-- NOTE: Version controlled via Directory.Build.props  -->
         <!--<Version></Version>-->
         <RootNamespace>GoDaddy.Asherah.ReferenceApp</RootNamespace>
