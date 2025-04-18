@@ -23,7 +23,7 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.2.6" />
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.3.0" />
 </ItemGroup>
 ```
 
@@ -97,6 +97,7 @@ build the metastore by calling the `Build` method.
  - **WithTableName**: Specifies the name of the DynamoDb table.
  - **WithRegion**: Specifies the region for the AWS DynamoDb client.
  - **WithEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
+ - **WithCredentials**: Specifies custom credentials for the AWS DynamoDb client.
 
 Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
@@ -122,18 +123,27 @@ Detailed information about the Key Management Service can be found [here](../../
 
 #### AWS KMS
 
+Create a dictionary of region and ARN pairs that will all be used when creating a System Key
+
 ```c#
-// Create a dictionary of region and ARN pairs that will all be used when creating a System Key
 Dictionary<string, string> regionDictionary = new Dictionary<string, string>
 {
     { "us-east-1", "arn_of_us-east-1" },
     { "us-east-2", "arn_of_us-east-2" },
     ...
 };
-
-// Build the Key Management Service using the region dictionary and your preferred (usually current) region
-KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.newBuilder(regionDictionary, "us-east-1").Build();
 ```
+
+To obtain an instance of the builder, use the static factory method `NewBuilder`. Provide the region dictionary and your preferred (usually current) region.
+
+```c#
+KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.NewBuilder(regionDictionary, "us-east-1");
+```
+
+Once you have a builder, you can either use the `WithXXX` setter methods to configure any additional properties or simply
+build the Key Management Service by calling the `Build` method.
+
+ - **WithCredentials**: Specifies custom credentials for the AWS KMS client.
 
 #### Static KMS (FOR TESTING ONLY)
 

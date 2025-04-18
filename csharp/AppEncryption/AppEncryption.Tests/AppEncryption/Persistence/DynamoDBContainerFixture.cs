@@ -1,60 +1,38 @@
 using System;
 using System.Threading.Tasks;
-using TestContainers.Core.Builders;
-using TestContainers.Core.Containers;
+using Testcontainers.DynamoDb;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class DynamoDBContainerFixture : IAsyncLifetime
     {
-        private readonly bool disableTestContainers;
+        private readonly string localServiceUrl;
+        private readonly DynamoDbContainer dynamoDbContainer;
 
         public DynamoDBContainerFixture()
         {
-            disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
+            var disableTestContainers = Convert.ToBoolean(Environment.GetEnvironmentVariable("DISABLE_TESTCONTAINERS"));
 
             if (disableTestContainers)
             {
-                string hostname = Environment.GetEnvironmentVariable("DYNAMODB_HOSTNAME");
-                if (hostname == null)
-                {
-                    HostName = "localhost";
-                }
-                else
-                {
-                    HostName = hostname;
-                }
-
-                ServiceUrl = $"http://{HostName}:8000";
+                string hostname = Environment.GetEnvironmentVariable("DYNAMODB_HOSTNAME") ?? "localhost";
+                localServiceUrl = $"http://{hostname}:8000";
             }
             else
             {
-                DynamoDbContainer = new GenericContainerBuilder<Container>()
-                    .Begin()
-                    .WithImage("amazon/dynamodb-local:latest")
-                    .WithExposedPorts(8000)
-                    .WithPortBindings((8000, 8000))
-                    .Build();
+                Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummykey");
+                Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy_secret");
 
-                ServiceUrl = $"http://{DynamoDbContainer.GetDockerHostIpAddress()}:{DynamoDbContainer.ExposedPorts[0]}";
+                dynamoDbContainer = new DynamoDbBuilder()
+                    .Build();
             }
         }
 
-        public string ServiceUrl { get; }
+        public Task InitializeAsync() => dynamoDbContainer?.StartAsync() ?? Task.CompletedTask;
 
-        public string HostName { get; }
+        public Task DisposeAsync() => dynamoDbContainer?.StopAsync() ?? Task.CompletedTask;
 
-        private Container DynamoDbContainer { get; }
-
-        public Task InitializeAsync()
-        {
-            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Start();
-        }
-
-        public Task DisposeAsync()
-        {
-            return disableTestContainers ? Task.Delay(0) : DynamoDbContainer.Stop();
-        }
+        public string GetServiceUrl() => dynamoDbContainer?.GetConnectionString() ?? localServiceUrl;
     }
 }

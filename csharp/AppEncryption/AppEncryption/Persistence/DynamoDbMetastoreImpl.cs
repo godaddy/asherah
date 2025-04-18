@@ -6,6 +6,7 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Amazon.Runtime;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto.Exceptions;
@@ -72,15 +73,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             IBuildStep WithTableName(string tableName);
 
             /// <summary>
-            /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> with the parameters specified in the builder.
+            /// Used to define custom AWS credentials for the DynamoDB client.
             /// </summary>
             ///
-            /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
-            DynamoDbMetastoreImpl Build();
-        }
+            /// <param name="credentials">The custom AWS credentials to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            IBuildStep WithCredentials(AWSCredentials credentials);
 
-        private interface IEndPointStep
-        {
             /// <summary>
             /// Adds Endpoint config to the AWS DynamoDb client.
             /// </summary>
@@ -89,10 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <param name="signingRegion">the region to use for SigV4 signing of requests (e.g. us-west-1).</param>
             /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithEndPointConfiguration(string endPoint, string signingRegion);
-        }
 
-        private interface IRegionStep
-        {
             /// <summary>
             /// Specifies the region for the AWS DynamoDb client. If this is not specified, then the region from
             /// <see cref="DynamoDbMetastoreImpl.NewBuilder"/> is used.
@@ -101,6 +97,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <param name="region">The region for the DynamoDb client.</param>
             /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithRegion(string region);
+
+            /// <summary>
+            /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> with the parameters specified in the builder.
+            /// </summary>
+            ///
+            /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
+            DynamoDbMetastoreImpl Build();
         }
 
         internal string TableName { get; }
@@ -261,13 +264,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <summary>
         /// Builder class to create an instance of the <see cref="DynamoDbMetastoreImpl"/> class.
         /// </summary>
-        public class Builder : IBuildStep, IEndPointStep, IRegionStep
+        public class Builder : IBuildStep
         {
 #pragma warning disable SA1401
             internal readonly string PreferredRegion;
             internal IAmazonDynamoDB DbClient;
             internal bool HasKeySuffix;
             internal string TableName = DefaultTableName;
+            internal AWSCredentials Credentials;
 #pragma warning restore SA1401
 
             private const string DefaultTableName = "EncryptionKey";
@@ -323,6 +327,13 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 return this;
             }
 
+            /// <inheritdoc/>
+            public IBuildStep WithCredentials(AWSCredentials credentials)
+            {
+                Credentials = credentials;
+                return this;
+            }
+
             /// <summary>
             /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> object with the parameters specified in the
             /// <see cref="Builder"/>.
@@ -336,7 +347,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(PreferredRegion);
                 }
 
-                DbClient = new AmazonDynamoDBClient(dbConfig);
+                DbClient = new AmazonDynamoDBClient(Credentials ?? FallbackCredentialsFactory.GetCredentials(dbConfig), dbConfig);
                 return new DynamoDbMetastoreImpl(this);
             }
 
