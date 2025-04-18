@@ -334,7 +334,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             var dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
-                .WithCredentials(new BasicAWSCredentials("dummy", "secret"))
+                .WithCredentials(new BasicAWSCredentials("dummykey", "dummy_secret"))
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
@@ -345,7 +345,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         {
             Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
-                .WithCredentials(new BasicAWSCredentials("not-dummy", "secret"))
+                .WithCredentials(new BasicAWSCredentials("not-dummykey", "dummy_secret"))
                 .Build());
         }
 

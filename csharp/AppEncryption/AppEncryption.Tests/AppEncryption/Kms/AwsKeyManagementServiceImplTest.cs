@@ -38,7 +38,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             { UsWest1, ArnUsWest1 },
         };
 
-        private readonly AWSCredentials credentials = new BasicAWSCredentials("dummy", "secret");
+        private readonly AWSCredentials credentials = new BasicAWSCredentials("dummykey", "dummy_secret");
 
         private readonly string preferredRegion = UsWest1;
 

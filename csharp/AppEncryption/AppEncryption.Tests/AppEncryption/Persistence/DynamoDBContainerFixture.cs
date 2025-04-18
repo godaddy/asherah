@@ -21,8 +21,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
             else
             {
-                Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummy");
-                Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "secret");
+                Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummykey");
+                Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy_secret");
 
                 dynamoDbContainer = new DynamoDbBuilder()
                     .Build();
