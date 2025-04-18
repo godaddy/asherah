@@ -8,6 +8,13 @@ on:
       - 'csharp/AppEncryption/**'
       - '.github/workflows/csharp-appencryption-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'csharp/AppEncryption/**'
+      - '.github/workflows/csharp-appencryption-*'
+
 permissions:
   contents: read
 

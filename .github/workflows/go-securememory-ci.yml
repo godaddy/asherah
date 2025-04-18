@@ -12,6 +12,13 @@ on:
       - 'go/securememory/**'
       - '.github/workflows/go-securememory-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'go/securememory/**'
+      - '.github/workflows/go-securememory-*'
+
 permissions:
   contents: read
 
