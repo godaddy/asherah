@@ -54,9 +54,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 ["user id"] = "some_id_",
             };
             dbProviderFactory = MySqlClientFactory.Instance;
-            connectionString = fixture.ConnectionString + "Initial Catalog=testdb;";
+            connectionString = fixture.GetConnectionString() + ";Initial Catalog=testdb;";
             dbConnection = dbProviderFactory.CreateConnection();
-            dbConnection.ConnectionString = fixture.ConnectionString;
+            dbConnection.ConnectionString = fixture.GetConnectionString();
             dbConnection.Open();
 
             adoMetastoreImplSpy = new Mock<AdoMetastoreImpl>(

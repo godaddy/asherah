@@ -66,7 +66,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             Dictionary<string, string> regionToArnDictionary,
             string preferredRegion,
             AeadEnvelopeCrypto crypto,
-            AwsKmsClientFactory awsKmsClientFactory)
+            AwsKmsClientFactory awsKmsClientFactory,
+            AWSCredentials credentials)
         {
             regionPriorityComparator = (region1, region2) =>
             {
@@ -98,8 +99,26 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             {
                 RegionToArnAndClientDictionary.Add(
                     regionToArn.Key,
-                    new AwsKmsArnClient(regionToArn.Value, this.awsKmsClientFactory.CreateAwsKmsClient(regionToArn.Key)));
+                    new AwsKmsArnClient(regionToArn.Value, this.awsKmsClientFactory.CreateAwsKmsClient(regionToArn.Key, credentials)));
             });
+        }
+
+        public interface IBuildStep
+        {
+            /// <summary>
+            /// Used to define custom AWS credentials for the KMS client.
+            /// </summary>
+            ///
+            /// <param name="credentials">The custom AWS credentials to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            IBuildStep WithCredentials(AWSCredentials credentials);
+
+            /// <summary>
+            /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> with the parameters specified in the builder.
+            /// </summary>
+            ///
+            /// <returns>The fully instantiated <see cref="AwsKeyManagementServiceImpl"/> object.</returns>
+            AwsKeyManagementServiceImpl Build();
         }
 
         internal OrderedDictionary RegionToArnAndClientDictionary { get; }
@@ -343,10 +362,12 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             return kmsRegionKeyJson.ToJObject();
         }
 
-        public sealed class Builder
+        public sealed class Builder : IBuildStep
         {
             private readonly Dictionary<string, string> regionToArnDictionary;
             private readonly string preferredRegion;
+
+            private AWSCredentials credentials;
 
             /// <summary>
             /// Initializes the builder for <see cref="AwsKeyManagementServiceImpl"/> class with the specified options.
@@ -362,6 +383,18 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
 
             /// <summary>
+            /// Used to define custom AWS credentials for the KMS client.
+            /// </summary>
+            ///
+            /// <param name="credentials">The custom AWS credentials to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            public IBuildStep WithCredentials(AWSCredentials credentials)
+            {
+                this.credentials = credentials;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> object with the parameters specified in
             /// the <see cref="Builder"/>.
             /// </summary>
@@ -373,7 +406,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     regionToArnDictionary,
                     preferredRegion,
                     new BouncyAes256GcmCrypto(),
-                    new AwsKmsClientFactory());
+                    new AwsKmsClientFactory(),
+                    credentials);
             }
         }
 
