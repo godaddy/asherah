@@ -12,6 +12,13 @@ on:
       - 'go/appencryption/**'
       - '.github/workflows/go-appencryption-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'go/appencryption/**'
+      - '.github/workflows/go-appencryption-*'
+
 permissions:
   contents: read
 

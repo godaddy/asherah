@@ -8,6 +8,13 @@ on:
       - 'csharp/Logging/**'
       - '.github/workflows/csharp-logging-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'csharp/Logging/**'
+      - '.github/workflows/csharp-logging-*'
+
 permissions:
   contents: read
 

@@ -13,6 +13,13 @@ on:
       - 'java/app-encryption/**'
       - '.github/workflows/java-appencryption-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'java/app-encryption/**'
+      - '.github/workflows/java-appencryption-*'
+
 permissions:
   contents: read
 

@@ -13,6 +13,13 @@ on:
       - 'java/secure-memory/**'
       - '.github/workflows/java-securememory-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'java/secure-memory/**'
+      - '.github/workflows/java-securememory-*'
+
 permissions:
   contents: read
 

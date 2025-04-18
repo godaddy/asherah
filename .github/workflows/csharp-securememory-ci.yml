@@ -8,6 +8,13 @@ on:
       - 'csharp/SecureMemory/**'
       - '.github/workflows/csharp-securememory-*'
 
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'csharp/SecureMemory/**'
+      - '.github/workflows/csharp-securememory-*'
+
 permissions:
   contents: read
 
