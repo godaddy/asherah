@@ -1,5 +1,6 @@
 using Amazon;
 using Amazon.KeyManagementService;
+using Amazon.Runtime;
 
 namespace GoDaddy.Asherah.AppEncryption.Kms
 {
@@ -8,10 +9,10 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     /// </summary>
     public class AwsKmsClientFactory
     {
-        internal virtual IAmazonKeyManagementService CreateAwsKmsClient(string region)
+        internal virtual IAmazonKeyManagementService CreateAwsKmsClient(string region, AWSCredentials credentials)
         {
             // TODO Replace with call that takes region as string and avoid instance resolution if SDK ever adds it
-            return new AmazonKeyManagementServiceClient(RegionEndpoint.GetBySystemName(region));
+            return new AmazonKeyManagementServiceClient(credentials ?? FallbackCredentialsFactory.GetCredentials(), RegionEndpoint.GetBySystemName(region));
         }
     }
 }

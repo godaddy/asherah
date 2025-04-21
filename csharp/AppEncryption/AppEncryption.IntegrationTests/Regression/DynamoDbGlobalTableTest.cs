@@ -17,22 +17,21 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private const string SortKey = "Created";
         private const string DefaultTableName = "EncryptionKey";
         private const string DefaultRegion = "us-west-2";
-        private const string DynamoDbPort = "8000";
 
         private readonly ConfigFixture configFixture;
+        private readonly string serviceUrl;
 
         private IAmazonDynamoDB tempDynamoDbClient;
-        private string hostName;
 
         public DynamoDbGlobalTableTest(DynamoDBContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
         {
-            hostName = dynamoDbContainerFixture.HostName;
+            serviceUrl = dynamoDbContainerFixture.GetServiceUrl();
             this.configFixture = configFixture;
 
             // Use AWS SDK to create client and initialize table
             AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
             {
-                ServiceURL = dynamoDbContainerFixture.ServiceUrl,
+                ServiceURL = serviceUrl,
                 AuthenticationRegion = "us-west-2",
             };
             tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
@@ -71,7 +70,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private SessionFactory GetSessionFactory(bool withKeySuffix, string region)
         {
             DynamoDbMetastoreImpl.IBuildStep builder = DynamoDbMetastoreImpl.NewBuilder(region)
-                .WithEndPointConfiguration($"http://{hostName}:{DynamoDbPort}", DefaultRegion);
+                .WithEndPointConfiguration(serviceUrl, DefaultRegion);
 
             if (withKeySuffix)
             {
