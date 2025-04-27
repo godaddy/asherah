@@ -1,14 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
     <PackageId>GoDaddy.Asherah.PlatformNative</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>GoDaddy.Asherah.PlatformNative</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- CS8981 is a warning for using a type name that only contains lowercase letters. -->
+    <!-- This naming convention is used for native libraries, so we suppress the warning. -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
     <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/SecureMemory/PlatformNative</RepositoryUrl>
