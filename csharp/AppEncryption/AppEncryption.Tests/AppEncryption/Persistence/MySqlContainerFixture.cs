@@ -17,7 +17,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             if (disableTestContainers)
             {
                 string hostname = Environment.GetEnvironmentVariable("MYSQL_HOSTNAME") ?? "localhost";
-                localConnectionString = $"server={hostname};uid=root;pwd=Password123;sslmode=none";
+                localConnectionString = $"server={hostname};uid=root;pwd=Password123;";
             }
             else
             {
