@@ -8,5 +8,10 @@ namespace GoDaddy.Asherah.SecureMemory
             : base(message)
         {
         }
+
+        public SecureMemoryException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
     }
 }
