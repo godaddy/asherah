@@ -6,7 +6,7 @@
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <Description>Provides a secure area of memory to store sensitive data</Description>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     <RootNamespace>GoDaddy.Asherah.SecureMemory</RootNamespace>
     <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
