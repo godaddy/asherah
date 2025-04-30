@@ -7,9 +7,9 @@ require (
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.18.12
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.79
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.42.4
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.18.14
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.81
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.3
 	github.com/godaddy/asherah/go/securememory v0.1.6
 	github.com/google/uuid v1.6.0
