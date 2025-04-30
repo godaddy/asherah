@@ -7,7 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.401.83" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.0" />
     <PackageReference Include="JunitXml.TestLogger" Version="6.1.0" />
     <PackageReference Include="coverlet.msbuild" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
