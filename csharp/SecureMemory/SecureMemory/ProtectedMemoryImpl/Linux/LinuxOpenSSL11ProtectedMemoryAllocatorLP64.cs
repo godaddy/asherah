@@ -140,10 +140,10 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             {
                 SetNoDump(protectedMemory, length);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 openSSL11.CRYPTO_secure_free(protectedMemory);
-                throw;
+                throw new SecureMemoryAllocationFailedException("Failed to set no dump on protected memory", e);
             }
 
             return protectedMemory;

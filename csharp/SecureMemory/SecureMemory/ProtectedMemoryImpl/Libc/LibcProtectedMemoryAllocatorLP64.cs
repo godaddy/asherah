@@ -57,7 +57,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 {
                     Check.Zero(GetLibc().munlock(protectedMemory, length), "munlock", e);
                     Interlocked.Add(ref memoryLocked, 0 - (long)length);
-                    throw;
+                    throw new SecureMemoryAllocationFailedException("Failed to set no dump on protected memory", e);
                 }
             }
             catch (Exception e)

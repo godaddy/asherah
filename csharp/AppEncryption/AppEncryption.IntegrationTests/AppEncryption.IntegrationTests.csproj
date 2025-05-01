@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net9.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <RootNamespace>GoDaddy.Asherah.AppEncryption.IntegrationTests</RootNamespace>
         <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>

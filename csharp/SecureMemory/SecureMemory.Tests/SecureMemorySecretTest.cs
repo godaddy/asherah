@@ -18,9 +18,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
     [Collection("Logger Fixture collection")]
     public class SecureMemorySecretTest : IDisposable
     {
-        private readonly Mock<ISecureMemoryAllocator> secureMemoryAllocatorMock =
-            new Mock<ISecureMemoryAllocator>();
-
         private readonly IConfiguration configuration;
 
         public SecureMemorySecretTest()
@@ -60,6 +57,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestConstructorWithAllocatorReturnsNullShouldFail()
         {
             Debug.WriteLine("TestConstructorWithAllocatorReturnsNullShouldFail");
+            var secureMemoryAllocatorMock = new Mock<ISecureMemoryAllocator>();
             secureMemoryAllocatorMock.Setup(x => x.Alloc(It.IsAny<ulong>())).Returns(IntPtr.Zero);
             Assert.Throws<SecureMemoryAllocationFailedException>(() =>
             {
@@ -312,6 +310,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             byte[] secretBytes = { 0, 1 };
             ISecureMemoryAllocator allocator = null;
 
+            var setNoDumpException = new Exception("SetNoDump failed");
+
             // TODO : Need to determine if we can stub out the protectedMemoryAllocatorMock.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -319,7 +319,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
                     new Mock<MacOSProtectedMemoryAllocatorLP64> { CallBase = true };
 
                 secureMemoryAllocatorMacOSMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new Exception());
+                    .Throws(setNoDumpException);
 
                 allocator = secureMemoryAllocatorMacOSMock.Object;
             }
@@ -329,20 +329,21 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
                     new Mock<LinuxOpenSSL11ProtectedMemoryAllocatorLP64>(configuration) { CallBase = true };
 
                 protectedMemoryAllocatorLinuxMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
-                    .Throws(new Exception());
+                    .Throws(setNoDumpException);
 
-                allocator = secureMemoryAllocatorMock.Object;
+                allocator = protectedMemoryAllocatorLinuxMock.Object;
             }
             else
             {
                 return;
             }
 
-            Assert.Throws<SecureMemoryAllocationFailedException>(() =>
+            var exception = Assert.Throws<SecureMemoryAllocationFailedException>(() =>
             {
                 using SecureMemorySecret secret =
                     new SecureMemorySecret(secretBytes, allocator, configuration);
             });
+            Assert.Equal(setNoDumpException, exception.InnerException);
         }
 
         // Borderline integration test, but still runs fast and can help catch critical regression

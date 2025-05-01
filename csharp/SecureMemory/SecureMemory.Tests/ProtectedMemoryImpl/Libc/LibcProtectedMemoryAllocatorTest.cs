@@ -133,19 +133,21 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             {
                 macOsProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
-                Assert.Throws<LibcOperationFailedException>(() =>
+                var exception = Assert.Throws<SecureMemoryAllocationFailedException>(() =>
                 {
                     macOsProtectedMemoryAllocatorMock.Object.Alloc(1);
                 });
+                Assert.IsType<LibcOperationFailedException>(exception.InnerException);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 linuxProtectedMemoryAllocatorMock.Setup(x => x.SetNoDump(It.IsAny<IntPtr>(), It.IsAny<ulong>()))
                     .Throws(new LibcOperationFailedException("IGNORE_INTENTIONAL_ERROR", 1));
-                Assert.Throws<LibcOperationFailedException>(() =>
+                var exception = Assert.Throws<SecureMemoryAllocationFailedException>(() =>
                 {
                     linuxProtectedMemoryAllocatorMock.Object.Alloc(1);
                 });
+                Assert.IsType<LibcOperationFailedException>(exception.InnerException);
             }
         }
 
