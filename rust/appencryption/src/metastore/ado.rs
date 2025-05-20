@@ -110,13 +110,6 @@ impl Metastore for AdoMetastore {
         
         Err(Error::NotImplemented("ADO.NET metastore is a placeholder implementation - full implementation will be available in a future release".to_string()))
     }
-    
-    async fn load_keys_with_creation_date_before(&self, date: i64) -> Result<Vec<(String, i64)>> {
-        // In a real implementation, this would execute a SQL query like:
-        // SELECT id, created FROM encryption_key WHERE created < @P1
-        
-        Err(Error::NotImplemented("ADO.NET metastore is a placeholder implementation - full implementation will be available in a future release".to_string()))
-    }
 }
 
 // Factory function to create a boxed AdoMetastore
