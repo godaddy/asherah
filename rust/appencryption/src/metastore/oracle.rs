@@ -50,7 +50,9 @@ impl Metastore for OracleMetastore {
         created: i64,
         envelope: &EnvelopeKeyRecord,
     ) -> Result<bool> {
-        self.inner.store(key_id, created, envelope).await
+        // Ensure we return a bool, not an Option<bool>
+        let result = self.inner.store(key_id, created, envelope).await?;
+        Ok(result)
     }
 }
 
@@ -80,7 +82,7 @@ mod tests {
                 created: 1234567890,
             }),
             encrypted_key: vec![1, 2, 3, 4],
-            revoked: false,
+            revoked: Some(false),
         };
 
         // Store should work (using in-memory implementation)

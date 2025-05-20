@@ -1,12 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use crate::crypto::aes256gcm::Aes256Gcm;
+    use crate::crypto::Aes256GcmAead as Aes256Gcm;
     use crate::error::Result;
     use crate::plugins::aws_v2::kms::new_aws_kms;
-    use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient, GenerateDataKeyResponse};
+    use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
+    use crate::plugins::aws_v2::kms::client::GenerateDataKeyResponse;
     use crate::KeyManagementService;
     use async_trait::async_trait;
-    use aws_config::{BehaviorVersion, Region, SdkConfig};
+    use aws_sdk_kms::config::Region;
+    use aws_config::SdkConfig;
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
@@ -120,9 +122,10 @@ mod tests {
     #[tokio::test]
     async fn test_with_aws_config() {
         // Create a custom AWS SDK config
-        let config = aws_config::defaults(BehaviorVersion::latest())
+        let config = aws_config::from_env()
             .region(Region::new("us-west-2"))
-            .build();
+            .load()
+            .await;
 
         // Create ARN map with a single region
         let mut arn_map = HashMap::new();
@@ -183,7 +186,7 @@ mod tests {
             let timeout = config
                 .timeout_config()
                 .and_then(|tc| tc.operation_timeout())
-                .cloned();
+                .copied();
 
             // Store the timeout for verification
             *timeout_seen_clone.lock().unwrap() = timeout;

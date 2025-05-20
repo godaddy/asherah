@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::crypto::aes256gcm::Aes256Gcm;
+    use crate::crypto::Aes256GcmAead as Aes256Gcm;
+    use crate::error::Result;
     use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
+    use crate::plugins::aws_v2::kms::client::GenerateDataKeyResponse;
     use crate::KeyManagementService;
     use async_trait::async_trait;
     use std::collections::HashMap;
@@ -25,7 +26,7 @@ mod tests {
 
     #[async_trait]
     impl AwsKmsClient for MockKmsClient {
-        async fn encrypt(&self, _key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>> {
+        async fn encrypt(&self, _key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, crate::error::Error> {
             // Simple XOR with master key for testing
             let mut result = vec![0u8; plaintext.len()];
             for (i, byte) in plaintext.iter().enumerate() {
@@ -34,7 +35,7 @@ mod tests {
             Ok(result)
         }
 
-        async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>> {
+        async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, crate::error::Error> {
             // Same XOR operation decrypts
             let mut result = vec![0u8; ciphertext.len()];
             for (i, byte) in ciphertext.iter().enumerate() {
@@ -43,7 +44,7 @@ mod tests {
             Ok(result)
         }
 
-        async fn generate_data_key(&self, key_id: &str) -> Result<GenerateDataKeyResponse> {
+        async fn generate_data_key(&self, key_id: &str) -> Result<GenerateDataKeyResponse, crate::error::Error> {
             let plaintext = (0..32).map(|_| rand::random::<u8>()).collect::<Vec<u8>>();
             let ciphertext = self.encrypt(key_id, &plaintext).await?;
 

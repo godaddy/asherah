@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use crate::crypto::aes256gcm::Aes256Gcm;
+    use crate::crypto::Aes256GcmAead as Aes256Gcm;
     use crate::error::Result;
-    use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient, GenerateDataKeyResponse};
+    use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
+    use crate::plugins::aws_v2::kms::client::GenerateDataKeyResponse;
     use crate::KeyManagementService;
     use async_trait::async_trait;
-    use aws_config::{BehaviorVersion, Region, SdkConfig};
+    use aws_sdk_kms::config::Region;
+    use aws_config::SdkConfig;
     use aws_sdk_kms::Client as AwsSdkKmsClient;
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -290,9 +292,10 @@ mod tests {
     #[tokio::test]
     async fn test_builder_with_custom_config() {
         // Create custom SDK config
-        let sdk_config = aws_config::defaults(BehaviorVersion::latest())
+        let sdk_config = aws_config::from_env()
             .region(Region::new("us-west-2"))
-            .load();
+            .load()
+            .await;
 
         // Create mock client
         let master_key = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
