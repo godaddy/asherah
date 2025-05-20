@@ -106,11 +106,7 @@ impl SecretFactory for DefaultSecretFactory {
         }
 
         // Allocate memory for the secret
-        let mut bytes = Vec::with_capacity(b.len());
-        unsafe {
-            // Set the length without initializing the memory
-            bytes.set_len(b.len());
-        }
+        let mut bytes = vec![0u8; b.len()];
 
         // Perform constant-time copy from input to our memory
         if bytes.ct_eq(b).into() {
@@ -132,8 +128,7 @@ impl SecretFactory for DefaultSecretFactory {
         // Record timing metric
         #[cfg(feature = "metrics")]
         {
-            let histogram = metrics::histogram!("secret.protectedmemory.alloc_duration_seconds");
-            histogram.record(start.elapsed().as_secs_f64());
+            metrics::histogram!("secret.protectedmemory.alloc_duration_seconds").record(start.elapsed().as_secs_f64());
         }
 
         Ok(secret)
@@ -186,8 +181,7 @@ impl SecretFactory for DefaultSecretFactory {
         // Record timing metric
         #[cfg(feature = "metrics")]
         {
-            let histogram = metrics::histogram!("secret.protectedmemory.alloc_duration_seconds");
-            histogram.record(start.elapsed().as_secs_f64());
+            metrics::histogram!("secret.protectedmemory.alloc_duration_seconds").record(start.elapsed().as_secs_f64());
         }
 
         Ok(secret)

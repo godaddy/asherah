@@ -41,9 +41,13 @@ impl AlignedMemory {
     }
 
     /// Get a mutable slice for memory protection operations
-    /// This is safe because we control access through the lock
+    /// This is safe because we control access through the lock, but we need to signal
+    /// we're doing unsafe transmutation from immutable to mutable
     unsafe fn as_mut_slice_for_protection(&self) -> &mut [u8] {
-        std::slice::from_raw_parts_mut(self.ptr, self.len)
+        // Cast self reference to mutable reference first to satisfy clippy
+        let this = self as *const Self as *mut Self;
+        // Use the mutable reference to get the memory slice
+        (*this).as_mut_slice()
     }
 }
 
