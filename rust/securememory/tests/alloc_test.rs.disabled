@@ -1,0 +1,21 @@
+// Minimal test to verify basic memory allocation only
+#[cfg(test)]
+mod tests {
+    use securememory::mem_sys::{DefaultMemoryManager, MemoryManager};
+
+    #[test]
+    fn test_allocation_only() {
+        // Create memory manager
+        let memory_manager = DefaultMemoryManager::new();
+        
+        // Allocate memory
+        let size = 32;
+        let mut memory = memory_manager.alloc(size).expect("Failed to allocate memory");
+        
+        // Verify size
+        assert_eq!(memory.len(), size);
+        
+        // Free memory
+        memory_manager.free(&mut memory).expect("Failed to free memory");
+    }
+}

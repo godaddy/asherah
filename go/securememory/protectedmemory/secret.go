@@ -205,7 +205,7 @@ func (s *secretInternal) close() (err error) {
 	core.Wipe(s.bytes)
 
 	// Unlock pages locked into memory.
-	if err := s.mc.Unlock(s.bytes); err != nil {
+	if err := unlockMemory(s.bytes); err != nil {
 		return err
 	}
 
@@ -294,7 +294,7 @@ func (f *SecretFactory) createRandom(size int, readFunc func(b []byte) (n int, e
 	if err := f.memcall().Protect(s.bytes, memcall.NoAccess()); err != nil {
 		// Shouldn't happen, but free up the resources if it does. We intentionally
 		// ignore the errors from the cleanup and return the reason why we got here.
-		if err2 := f.memcall().Unlock(s.bytes); err2 != nil {
+		if err2 := unlockMemory(s.bytes); err2 != nil {
 			err = errors.Wrap(err, err2.Error())
 		}
 
@@ -324,7 +324,7 @@ func newSecret(size int, mc memcall.Interface) (*secret, error) {
 	}
 
 	// lock memory via mlock (don't page to disk)
-	if err := mc.Lock(bytes); err != nil {
+	if err := lockMemory(bytes); err != nil {
 		// if mlock fails, try to deallocate/munmap the memory. We intentionally ignore the errors from
 		// the cleanup and return the reason why we got here.
 		if err2 := mc.Free(bytes); err2 != nil {

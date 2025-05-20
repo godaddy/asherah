@@ -47,14 +47,62 @@ builder pattern, specifically a _step builder_. This ensures all required proper
 To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can
 use the `withXXX` setter methods to configure the session factory properties.
 
-Below is an example of a session factory that uses in-memory persistence and static key management.
+Below is an example of using `memguard-rs`, the Rust port:
 
-```java
-SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
-    .withInMemoryMetastore() // in-memory metastore
-    .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting") // hard-coded/static master key
-    .build());
+```rust,no_run
+use memguard::{Buffer, Enclave, Stream, catch_interrupt, purge, MemguardError};
+use std::io::{Read, Write};
+
+// Invert the bytes in a buffer, using an Enclave for protection.
+fn invert_buffer_securely(input_buffer: &mut Buffer) -> Result<Enclave, MemguardError> {
+    // Make the buffer mutable if it wasn't (e.g., if it came from Enclave::open)
+    input_buffer.melt()?;
+
+    input_buffer.with_data_mut(|data| {
+        for byte in data.iter_mut() {
+            *byte = !*byte;
+        }
+        Ok(())
+    })??; // Flatten nested Result
+
+    // Re-seal the modified buffer. This also destroys input_buffer.
+    Enclave::seal(input_buffer)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Setup signal handling for graceful shutdown
+    catch_interrupt().expect("Failed to set up interrupt handler");
+
+    // Create some initial sensitive data
+    let mut original_data = vec![0x0F, 0xF0, 0xAA, 0x55];
+    let mut initial_buffer = Buffer::new_from_bytes(&mut original_data)?;
+
+    println!("Original buffer created with size: {}", initial_buffer.size());
+
+    // Process it securely
+    let processed_enclave = match invert_buffer_securely(&mut initial_buffer) {
+        Ok(enclave) => enclave,
+        Err(e) => {
+            eprintln!("Error during secure inversion: {:?}", e);
+            memguard::purge(); // Ensure cleanup on error path
+            return Err(Box::new(e));
+        }
+    };
+
+    assert!(!initial_buffer.is_alive()); // Consumed by Enclave::seal
+
+    // Open the processed enclave to verify
+    let final_buffer = processed_enclave.open()?;
+    final_buffer.with_data(|data| {
+        println!("Processed data: {:?}", data);
+        assert_eq!(data, &[!0x0F, !0xF0, !0xAA, !0x55]);
+        Ok(())
+    })??;
+    final_buffer.destroy()?;
+
+    println!("Successfully processed data.");
+    Ok(())
+}
 ```
 
 ### Step 2: Create a session
@@ -143,6 +191,7 @@ languages and platforms.
 * [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
+* [Rust (`memguard-rs`)](rust/memguard)
 * [Service Layer (gRPC)](/server)
 
 ### Derived Projects
@@ -161,6 +210,44 @@ languages and platforms.
 * Session caching
 * Encrypt/Decrypt pattern
 * Store/Load pattern
+
+---
+
+### `memguard-rs` Feature Support
+
+The Rust port (`memguard-rs`) focuses on the core secure memory primitives provided by the Go `memguard` library. Its features include:
+
+*   **Secure Buffer (`Buffer`)**:
+    *   Memory allocation with guard pages (via `memcall-rs`).
+    *   Memory locking (`mlock`/`VirtualLock` via `memcall-rs`) to prevent swapping.
+    *   Automatic and explicit memory wiping (`Drop` trait, `destroy()` method).
+    *   Controlled mutability (`freeze()`/`melt()`).
+    *   Canary values to detect overflows.
+*   **Encrypted Container (`Enclave`)**:
+    *   AEAD encryption (ChaCha20-Poly1305) for data stored in Buffers.
+    *   Encryption keys managed by an internal `Coffer` system.
+*   **Secure Key Coffer (`Coffer`)**:
+    *   Internal mechanism for managing the master encryption key.
+    *   Periodic, automatic re-keying of the Coffer's internal representation.
+*   **Streaming Encryption (`Stream`)**:
+    *   `std::io::Read` and `std::io::Write` interface for handling large sensitive data in encrypted chunks.
+*   **Signal Handling**:
+    *   Functions (`catch_interrupt`, `catch_signal`) for graceful cleanup of sensitive data on program termination signals (Unix-like systems).
+*   **Emergency Purge**:
+    *   `purge()` function to wipe all tracked sensitive data and reset encryption keys.
+*   **Safe Termination**:
+    *   `safe_exit()` and `safe_panic()` to ensure data is wiped before program termination.
+*   **Core Dump Disabling**:
+    *   Attempts to disable core dumps on Unix-like systems to prevent sensitive data leakage. Windows behavior relies on OS settings.
+
+`memguard-rs` does *not* directly implement higher-level features of the broader Asherah SDK like:
+*   AWS KMS Support
+*   RDBMS Metastore
+*   DynamoDB Metastore
+*   Session Caching (application-level)
+*   Store/Load pattern (application-level persistence abstraction)
+
+These features can be built on top of `memguard-rs` by an application if needed.
 
 ## Contributing
 

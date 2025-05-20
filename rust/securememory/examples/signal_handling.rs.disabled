@@ -1,0 +1,44 @@
+use securememory::protected_memory::DefaultSecretFactory;
+use securememory::secret::{SecretFactory, SecretExtensions};
+use securememory::signal;
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    // Initialize signal handling
+    signal::catch_signal(|sig| {
+        println!("Signal received: {}", sig);
+        println!("Performing custom cleanup...");
+    }).expect("Failed to set up signal handlers");
+
+    println!("Signal handling example started");
+    println!("Press Ctrl+C to test signal handling");
+
+    // Create some secrets to demonstrate cleanup
+    let factory = DefaultSecretFactory::new();
+    
+    let mut sensitive_data = b"super-secret-password".to_vec();
+    let secret1 = factory.new(&mut sensitive_data).unwrap();
+    
+    let mut api_key = b"api-key-12345".to_vec();
+    let secret2 = factory.new(&mut api_key).unwrap();
+    
+    // Use the secrets to demonstrate they're valid
+    secret1.with_bytes(|bytes| {
+        println!("Secret 1: {} bytes", bytes.len());
+        Ok(())
+    }).unwrap();
+    
+    secret2.with_bytes(|bytes| {
+        println!("Secret 2: {} bytes", bytes.len());
+        Ok(())
+    }).unwrap();
+    
+    // Keep the program running until a signal is received
+    println!("Waiting for signal...");
+    
+    // Simple loop to keep the program running
+    loop {
+        thread::sleep(Duration::from_secs(1));
+    }
+}

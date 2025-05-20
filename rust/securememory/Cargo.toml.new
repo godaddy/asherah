@@ -1,0 +1,41 @@
+[package]
+name = "securememory"
+version = "0.1.0"
+edition = "2021"
+description = "Secure memory management for sensitive data"
+license = "Apache-2.0"
+repository = "https://github.com/godaddy/asherah"
+
+[dependencies]
+# Our own extracted libraries
+memcall = { path = "../memcall" }
+memguard = { path = "../memguard" }
+
+# Core dependencies
+getrandom = "0.2"
+log = "0.4"
+once_cell = "1.18"
+page_size = "0.5"
+signal-hook = "0.3"
+ctrlc = "3.4"
+subtle = "2.5"
+thiserror = "1.0"
+zeroize = { version = "1.6", features = ["zeroize_derive"] }
+
+# Optional dependencies
+backtrace = { version = "0.3.69", optional = true }
+metrics = { version = "0.20", optional = true }
+
+[dev-dependencies]
+criterion = "0.5"
+tempfile = "3.8"
+test-case = "3.3"
+
+[features]
+default = []
+debug_backtrace = ["backtrace"]
+metrics = []
+
+[[bench]]
+name = "secret_benchmark"
+harness = false

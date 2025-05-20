@@ -1,0 +1,39 @@
+use securememory::error::Result;
+use securememory::memguard::Buffer;
+use securememory::mem_sys::DefaultMemoryManager;
+use std::sync::Arc;
+
+fn main() -> Result<()> {
+    println!("Creating memory manager...");
+    let memory_manager = Arc::new(DefaultMemoryManager::new());
+    println!("Memory manager created");
+    
+    println!("Creating buffer...");
+    let buffer = Buffer::new(64, memory_manager)?;
+    println!("Buffer created");
+    
+    // Test basic buffer operations
+    buffer.with_data_mut(|data| {
+        println!("Writing data to buffer");
+        for i in 0..data.len() {
+            data[i] = i as u8;
+        }
+        Ok(())
+    })?;
+    
+    // Verify data
+    buffer.with_data(|data| {
+        println!("Reading data from buffer");
+        for i in 0..data.len() {
+            assert_eq!(data[i], i as u8);
+        }
+        Ok(())
+    })?;
+    
+    println!("Destroying buffer...");
+    drop(buffer);
+    println!("Buffer destroyed");
+    
+    println!("Success!");
+    Ok(())
+}

@@ -1,0 +1,38 @@
+[package]
+name = "memcall"
+version = "0.1.0"
+edition = "2021"
+description = "Cross-platform wrapper for memory-related system calls"
+license = "Apache-2.0"
+repository = "https://github.com/godaddy/asherah"
+
+[dependencies]
+libc = "0.2"
+winapi = { version = "0.3", features = ["basetsd", "memoryapi", "sysinfoapi", "winnt"], optional = true }
+log = "0.4"
+thiserror = "1.0"
+page_size = "0.6"
+once_cell = "1.18"
+
+[features]
+default = []
+windows = ["winapi"]
+freebsd = []
+netbsd = []
+openbsd = []
+solaris = []
+
+[target.'cfg(target_os = "freebsd")'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "netbsd")'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "openbsd")'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "solaris")'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+criterion = "0.5"

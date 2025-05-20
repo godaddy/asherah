@@ -1,0 +1,1 @@
+/Users/jgowdy/asherah/rust/memcall/target/debug/libmemcall.rlib: /Users/jgowdy/asherah/rust/memcall/src/error.rs /Users/jgowdy/asherah/rust/memcall/src/lib.rs /Users/jgowdy/asherah/rust/memcall/src/types.rs /Users/jgowdy/asherah/rust/memcall/src/unix.rs

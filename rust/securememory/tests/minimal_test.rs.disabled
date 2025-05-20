@@ -1,0 +1,23 @@
+use securememory::mem_sys::{DefaultMemoryManager, MemoryManager};
+use std::sync::Arc;
+
+#[test]
+fn test_memory_manager() {
+    let memory_manager = Arc::new(DefaultMemoryManager::new());
+    
+    // Allocate some memory
+    let mut memory = memory_manager.alloc(128).unwrap();
+    
+    // Write to memory
+    for i in 0..memory.len() {
+        memory[i] = (i % 256) as u8;
+    }
+    
+    // Read from memory
+    for i in 0..memory.len() {
+        assert_eq!(memory[i], (i % 256) as u8);
+    }
+    
+    // Free memory
+    memory_manager.free(&mut memory).unwrap();
+}

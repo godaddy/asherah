@@ -44,6 +44,11 @@ echo "----------------------Decrypting data using Go--------------------------"
 go test -v -test.run '^TestDecryptFeatures$' -godog.paths=../features/decrypt.feature
 cd ..
 
+cd rust
+echo "----------------------Decrypting data using Rust-----------------------"
+cargo test --test decrypt
+cd ..
+
 cd sidecar
 pip3 install -r requirements.txt
 echo "------------Decrypting data with Go sidecar and python client-----------"

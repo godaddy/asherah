@@ -1,0 +1,38 @@
+[package]
+name = "memguard"
+version = "0.1.0"
+edition = "2021"
+description = "Secure memory storage system for sensitive data"
+license = "Apache-2.0"
+repository = "https://github.com/godaddy/asherah"
+
+[dependencies]
+memcall = { path = "../memcall" }
+libc = "0.2"
+log = "0.4"
+thiserror = "1.0"
+zeroize = "1.6"
+rand = "0.8"
+subtle = "2.5"
+getrandom = "0.2"
+ring = "0.17"
+once_cell = "1.18"
+page_size = "0.6"
+signal-hook = "0.3"
+blake2 = "0.10"
+
+[dev-dependencies]
+ctor = "0.2"
+env_logger = "0.11"
+criterion = "0.5"
+hex-literal = "0.4"
+nix = { version = "0.27", features = ["process", "signal"] }
+base64 = "0.21"
+serial_test = "2.0"
+
+[features]
+default = []
+
+[[bench]]
+name = "stream_bench"
+harness = false

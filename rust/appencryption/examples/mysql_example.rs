@@ -1,0 +1,81 @@
+#[cfg(feature = "mysql")]
+use appencryption::metastore::MySqlMetastore;
+use appencryption::kms::StaticKeyManagementService;
+use appencryption::policy::CryptoPolicy;
+use appencryption::session::SessionFactory;
+use securememory::protected_memory::DefaultSecretFactory;
+#[cfg(feature = "mysql")]
+use sqlx::mysql::MySqlPoolOptions;
+use std::sync::Arc;
+#[cfg(feature = "mysql")]
+use std::env;
+
+#[cfg(feature = "mysql")]
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Get database URL from environment or use default
+    let database_url = env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "mysql://root:password@localhost:3306/asherah".to_string());
+        
+    // Setup connection pool with connection timeout and max connections
+    let pool = MySqlPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
+        
+    // Ensure the encryption_key table exists
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS encryption_key (
+            id VARCHAR(255) NOT NULL,
+            created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            key_record TEXT NOT NULL,
+            PRIMARY KEY (id, created),
+            INDEX (created)
+        )"
+    )
+    .execute(&pool)
+    .await?;
+    
+    // Create dependencies for session factory
+    let policy = CryptoPolicy::new();
+    let master_key = vec![0u8; 32]; // In production, use a real master key
+    let kms = Arc::new(StaticKeyManagementService::new(master_key));
+    
+    // Create MySQL metastore
+    let metastore = Arc::new(MySqlMetastore::new(Arc::new(pool)));
+    
+    // Create secret factory
+    let secret_factory = Arc::new(DefaultSecretFactory::new());
+    
+    // Create session factory
+    let factory = SessionFactory::builder()
+        .with_service("service")
+        .with_product("product")
+        .with_policy(policy)
+        .with_kms(kms)
+        .with_metastore(metastore)
+        .with_secret_factory(secret_factory)
+        .build()?;
+    
+    // Create session for a partition
+    let session = factory.session("user123").await?;
+    
+    // Encrypt data
+    let data = b"secret data".to_vec();
+    let encrypted = session.encrypt(&data).await?;
+    println!("Encrypted data: {:?}", encrypted);
+    
+    // Decrypt data
+    let decrypted = session.decrypt(&encrypted).await?;
+    println!("Decrypted data: {:?}", String::from_utf8_lossy(&decrypted));
+    
+    // Close session when done
+    session.close().await?;
+    
+    Ok(())
+}
+
+#[cfg(not(feature = "mysql"))]
+fn main() {
+    eprintln!("MySQL feature not enabled. Build with --features mysql");
+}

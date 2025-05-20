@@ -1,0 +1,54 @@
+[package]
+name = "securememory"
+version = "0.1.0"
+edition = "2021"
+description = "Secure memory management for sensitive data"
+license = "Apache-2.0"
+repository = "https://github.com/godaddy/asherah"
+
+[dependencies]
+memcall = { path = "../memcall" }
+memguard = { path = "../memguard" }
+log = "0.4"
+thiserror = "1.0"
+zeroize = "1.6"
+metrics = "0.20"
+backtrace = { version = "0.3.69", optional = true }
+ctrlc = "3.4"
+signal-hook = "0.3"
+once_cell = "1.18"
+page_size = "0.6"
+subtle = "2.6"
+getrandom = "0.2"
+parking_lot = "0.12"
+
+[dev-dependencies]
+criterion = "0.5"
+rayon = "1.7"
+num_cpus = "1.15"
+
+[features]
+default = []
+no-mlock = []  # Disable memory locking for benchmarking only - DO NOT USE IN PRODUCTION
+debug_backtrace = ["backtrace"]
+metrics = []
+
+[[bench]]
+name = "secret_benchmark"
+harness = false
+
+[[bench]]
+name = "rust_vs_go_parity"
+harness = false
+
+[[bench]]
+name = "final_benchmark"
+harness = false
+
+[[bench]]
+name = "simple_parity_bench"
+harness = false
+
+[[bench]]
+name = "detailed_parity_bench"
+harness = false

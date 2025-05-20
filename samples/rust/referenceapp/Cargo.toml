@@ -1,0 +1,24 @@
+[package]
+name = "asherah-reference-app"
+version = "0.1.0"
+edition = "2021"
+description = "Reference application demonstrating usage of Asherah library"
+repository = "https://github.com/godaddy/asherah"
+license = "MIT"
+keywords = ["encryption", "security", "cryptography"]
+
+[dependencies]
+appencryption = { path = "../../../rust/appencryption" }
+securememory = { path = "../../../rust/securememory" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.28", features = ["full"] }
+clap = { version = "4.3", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+base64 = "0.21"
+aws-config = "0.55"
+aws-sdk-dynamodb = "0.28"
+aws-sdk-kms = "0.28"
+sqlx = { version = "0.7", features = ["runtime-tokio", "mysql", "postgres"] }
+anyhow = "1.0"
