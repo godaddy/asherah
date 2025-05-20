@@ -26,7 +26,7 @@ mod tests {
 
     #[async_trait]
     impl AwsKmsClient for MockKmsClient {
-        async fn encrypt(&self, _key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, crate::error::Error> {
+        async fn encrypt(&self, _key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>> {
             // Simple XOR with master key for testing
             let mut result = vec![0u8; plaintext.len()];
             for (i, byte) in plaintext.iter().enumerate() {
@@ -35,7 +35,7 @@ mod tests {
             Ok(result)
         }
 
-        async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, crate::error::Error> {
+        async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>> {
             // Same XOR operation decrypts
             let mut result = vec![0u8; ciphertext.len()];
             for (i, byte) in ciphertext.iter().enumerate() {
@@ -44,7 +44,7 @@ mod tests {
             Ok(result)
         }
 
-        async fn generate_data_key(&self, key_id: &str) -> Result<GenerateDataKeyResponse, crate::error::Error> {
+        async fn generate_data_key(&self, key_id: &str) -> Result<GenerateDataKeyResponse> {
             let plaintext = (0..32).map(|_| rand::random::<u8>()).collect::<Vec<u8>>();
             let ciphertext = self.encrypt(key_id, &plaintext).await?;
 
