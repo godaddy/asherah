@@ -1,6 +1,7 @@
 # Rust build artifacts
 target/
 debug/
+release/
 **/*.rs.bk
 Cargo.lock
 **/*.o
@@ -9,3 +10,7 @@ Cargo.lock
 **/*.dll
 **/*.rlib
 **/*.rmeta
+**/.fingerprint/
+**/incremental/
+**/build/
+**/*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]/
