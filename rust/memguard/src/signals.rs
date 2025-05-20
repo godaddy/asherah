@@ -95,17 +95,24 @@ pub fn catch_signal(handler: Arc<dyn Fn(i32) + Send + Sync>, signals_to_catch: &
     let signals_to_catch_owned = signals_to_catch.to_vec(); // Clone for thread
 
     thread::spawn(move || {
-        for sig in signals.forever() {
-            info!(
-                "memguard: Caught signal {}. Running custom handler.",
-                sig
-            );
-            handler(sig); // Execute the custom handler
-            info!(
-                "memguard: Custom handler finished for signal {}. Exiting.",
-                sig
-            );
-            safe_exit(1); // Terminate after handler execution
+        // This function explicitly watches for signals
+        match signals.into_iter().next() {
+            Some(sig) => {
+                info!(
+                    "memguard: Caught signal {}. Running custom handler.",
+                    sig
+                );
+                handler(sig); // Execute the custom handler
+                info!(
+                    "memguard: Custom handler finished for signal {}. Exiting.",
+                    sig
+                );
+                safe_exit(1); // Terminate after handler execution
+            }
+            None => {
+                // This should not happen unless the iterator is closed
+                error!("memguard: Signal iterator closed unexpectedly");
+            }
         }
     });
     info!("memguard: Registered custom signal handler for signals: {:?}", signals_to_catch_owned);
