@@ -984,7 +984,7 @@ impl Drop for BufferState {
             // If memory_allocation was created with Vec::from_raw_parts from a memcall allocation,
             // we need to give it back to memcall::free_aligned.
             // To do this, we must prevent Vec's own Drop from running on this memory.
-            let mut temp_vec = std::mem::replace(&mut self.memory_allocation, Vec::new());
+            let mut temp_vec = std::mem::take(&mut self.memory_allocation);
             
             // Use stable API: get pointer and length manually
             let ptr = temp_vec.as_mut_ptr();
@@ -1360,11 +1360,10 @@ impl Buffer {
             mutable: false,
         };
         
-        let result = Self {
+        Self {
             inner: Arc::new(Mutex::new(state)),
             destroyed: Arc::new(AtomicBool::new(true)),
-        };
-        result
+        }
     }
     
     /// Executes a function with immutable access to the buffer's data.
@@ -1943,11 +1942,7 @@ impl Buffer {
             Ok(()) // For with_data_mut closure
         });
 
-        if let Err(mg_err) = memguard_op_res {
-            // This means with_data_mut (e.g. mprotect) failed.
-            // b's Drop will handle cleanup.
-            return Err(mg_err);
-        }
+        memguard_op_res?;
 
         let final_io_error_opt = io_error_opt
             .map(|e| MemguardError::OperationFailed(format!("I/O error during read: {}", e)));

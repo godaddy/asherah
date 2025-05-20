@@ -10,7 +10,7 @@ type Result<T> = std::result::Result<T, MemguardError>;
 
 // Get page size once at runtime, but cache the result
 /// System memory page size, determined at runtime. (Crate-public for use in `stream.rs`)
-pub(crate) static PAGE_SIZE: Lazy<usize> = Lazy::new(|| page_size::get());
+pub(crate) static PAGE_SIZE: Lazy<usize> = Lazy::new(page_size::get);
 
 /// Rounds a size up to the nearest multiple of the page size. (Crate-public for `buffer.rs`)
 ///
@@ -133,10 +133,8 @@ pub(crate) fn copy_slice(dst: &mut [u8], src: &[u8]) -> Result<()> {
 
     if len_to_copy > 0 {
         // Use constant time equals to copy in a secure manner
-        // Replacing subtle::ConstantTimeCopy::ct_copy with a manual implementation
-        for i in 0..len_to_copy {
-            dst[i] = src[i];
-        }
+        // Using slice's copy_from_slice method
+        dst[..len_to_copy].copy_from_slice(&src[..len_to_copy]);
     }
     // If one slice is empty, or len_to_copy is 0, nothing is copied.
     // This behavior aligns with copying the minimum length.
@@ -160,11 +158,11 @@ pub(crate) fn copy_slice(dst: &mut [u8], src: &[u8]) -> Result<()> {
 
 // Public utility functions exposed in the module's API
 
-/// Fills a byte slice with cryptographically secure random data using `getrandom::getrandom`.
+///   Fills a byte slice with cryptographically secure random data using `getrandom::getrandom`.
 ///
-/// This function is useful for securely generating keys, nonces, or other
-/// cryptographic values. It will panic via `safe_panic` if the underlying
-/// random number generation fails.
+///   This function is useful for securely generating keys, nonces, or other
+///   cryptographic values. It will panic via `safe_panic` if the underlying
+///   random number generation fails.
 ///
 /// # Arguments
 ///

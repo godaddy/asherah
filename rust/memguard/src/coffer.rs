@@ -253,9 +253,9 @@ impl Coffer {
                     }
                     wipe(&mut right_hash); // Wipe temporary hash
                     Ok(()) // For key_buffer.with_data_mut's closure
-                }).map_err(|e| e) // Fix identity function usage with map_err
-            }).map_err(|e| e) // Fix identity function usage with map_err
-        }).map_err(|e| e)?; // Flatten Result<Result<(), E>, E> from right.with_data and propagate error
+                })
+            })
+        })?; // Flatten Result<Result<(), E>, E> from right.with_data and propagate error
         
         Ok(key_buffer)
     }

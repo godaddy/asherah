@@ -45,7 +45,7 @@ impl Stream {
     /// # Arguments
     ///
     /// * `chunk_size` - The size of plaintext data to process per encryption/decryption chunk.
-    ///                  Must be greater than 0. If 0, it will default to `DEFAULT_STREAM_CHUNK_SIZE`.
+    ///   Must be greater than 0. If 0, it will default to `DEFAULT_STREAM_CHUNK_SIZE`.
     pub fn with_chunk_size(chunk_size: usize) -> Self {
         let _effective_chunk_size = if chunk_size == 0 { DEFAULT_STREAM_CHUNK_SIZE } else { chunk_size };
         Stream {
@@ -224,7 +224,7 @@ impl<'a, 'b> Read for ReadAdapter<'a, 'b> {
 
 // Add helper method for inner reading logic
 impl Stream {
-    fn inner_read(&self, buf: &mut [u8], guard: &mut std::sync::MutexGuard<StreamInner>) -> io::Result<usize> {
+    fn inner_read(&self, buf: &mut [u8], guard: &mut std::sync::MutexGuard<'_, StreamInner>) -> io::Result<usize> {
         #[cfg(test)]
         println!("STREAM inner_read: entry point, buf.len={}", buf.len());
         
