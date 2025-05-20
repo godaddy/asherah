@@ -5,14 +5,63 @@
 
 # Rust build artifacts
 **/target/
+**/target/**/*
 target/
+debug/
+**/debug/
+**/debug/**/*
+release/
+**/release/
+**/release/**/*
 Cargo.lock
 **/*.rs.bk
 *.pdb
+**/.fingerprint/
+**/.fingerprint/**/*
+**/incremental/
+**/incremental/**/*
+**/build/
+**/build/**/*
+**/*.o
+**/*.so
+**/*.dylib
+**/*.dll
+**/*.rlib
+**/*.rmeta
+**/*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]/
+
+# Temporary and backup files
+**/*.bak
+**/*.new
+**/*.tmp
+**/*.old
+**/*.orig
+**/*.backup
+**/*.swp
+**/*.swo
+**/*~
+**/*#
+**/*.rej
+**/*.patch
+
+# Exception for generated protobuf files
+!server/java/target/generated-sources/
+!server/java/target/generated-sources/protobuf/
+!server/java/target/generated-sources/protobuf/grpc-java/
+!server/java/target/generated-sources/protobuf/java/
+!server/java/target/generated-sources/protobuf/grpc-java/com/
+!server/java/target/generated-sources/protobuf/java/com/
+!server/java/target/generated-sources/protobuf/grpc-java/com/godaddy/
+!server/java/target/generated-sources/protobuf/java/com/godaddy/
+!server/java/target/generated-sources/protobuf/grpc-java/com/godaddy/asherah/
+!server/java/target/generated-sources/protobuf/java/com/godaddy/asherah/
+!server/java/target/generated-sources/protobuf/grpc-java/com/godaddy/asherah/grpc/
+!server/java/target/generated-sources/protobuf/java/com/godaddy/asherah/grpc/
+!server/java/target/generated-sources/protobuf/grpc-java/com/godaddy/asherah/grpc/AppEncryptionGrpc.java
+!server/java/target/generated-sources/protobuf/java/com/godaddy/asherah/grpc/AppEncryptionProtos.java
 
 # Added by cargo
 .cargo-ok
-
 
 # Thumbnails
 ._*
@@ -56,4 +105,3 @@ dmypy.json
 # Visual Studio Code
 .vs/
 .aider*
-
