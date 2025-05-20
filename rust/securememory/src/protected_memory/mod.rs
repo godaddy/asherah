@@ -1,12 +1,12 @@
 //! Protected memory implementation of Secret
 //!
-//! This module provides a concrete implementation of the Secret trait that uses 
-//! protected memory to store sensitive data securely. The implementation uses 
+//! This module provides a concrete implementation of the Secret trait that uses
+//! protected memory to store sensitive data securely. The implementation uses
 //! OS-specific memory protection facilities to control access to the sensitive data.
 //!
 //! ## Features
 //!
-//! - **Dynamic Memory Protection**: Memory containing sensitive data is protected 
+//! - **Dynamic Memory Protection**: Memory containing sensitive data is protected
 //!   from access (read/write) when not in use
 //! - **Memory Locking**: Prevents sensitive data from being swapped to disk
 //! - **Thread Safety**: All secrets can be safely shared across threads

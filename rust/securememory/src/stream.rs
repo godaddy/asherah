@@ -1,5 +1,5 @@
 use crate::error::{Result, SecureMemoryError};
-use crate::secret::{Secret, SecretFactory, SecretExtensions};
+use crate::secret::{Secret, SecretExtensions, SecretFactory};
 use once_cell::sync::Lazy;
 use std::collections::LinkedList;
 use std::io::{self, Read, Write};
@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use zeroize::Zeroize;
 
 /// The default chunk size for Stream operations, set to 4 pages.
-/// 
+///
 /// This determines the maximum size of each individual encrypted chunk
 /// in the stream. If you encounter memory allocation errors, you might
 /// need to increase your system's mlock limits. On Unix systems, use
@@ -109,7 +109,7 @@ impl<S: Secret + SecretExtensions> Queue<S> {
 /// ```
 /// A wrapper around a Box<dyn Secret> that also implements SecretExtensions
 pub struct BoxedSecret<T: Secret + SecretExtensions> {
-    inner: T
+    inner: T,
 }
 
 impl<T: Secret + SecretExtensions> BoxedSecret<T> {
@@ -122,15 +122,15 @@ impl<T: Secret + SecretExtensions> Secret for BoxedSecret<T> {
     fn is_closed(&self) -> bool {
         self.inner.is_closed()
     }
-    
+
     fn close(&self) -> Result<()> {
         self.inner.close()
     }
-    
+
     fn reader(&self) -> Result<Box<dyn Read + Send + Sync + '_>> {
         self.inner.reader()
     }
-    
+
     fn len(&self) -> usize {
         self.inner.len()
     }
@@ -143,7 +143,7 @@ impl<T: Secret + SecretExtensions> SecretExtensions for BoxedSecret<T> {
     {
         self.inner.with_bytes(action)
     }
-    
+
     fn with_bytes_func<F, R>(&self, action: F) -> Result<R>
     where
         F: FnOnce(&[u8]) -> Result<(R, Vec<u8>)>,
@@ -168,8 +168,8 @@ impl<F: SecretFactory + Clone> Clone for Stream<F> {
     }
 }
 
-impl<F> Stream<F> 
-where 
+impl<F> Stream<F>
+where
     F: SecretFactory + Clone + 'static,
     F::SecretType: Secret + SecretExtensions,
 {
@@ -275,9 +275,9 @@ where
             SecureMemoryError::OperationFailed("Failed to acquire lock".to_string())
         })?;
 
-        queue.pop().ok_or_else(|| {
-            SecureMemoryError::OperationFailed("Stream is empty".to_string())
-        })
+        queue
+            .pop()
+            .ok_or_else(|| SecureMemoryError::OperationFailed("Stream is empty".to_string()))
     }
 
     /// Reads all data from the Stream and returns it as a single Secret.
@@ -326,10 +326,10 @@ where
             let queue = self.queue.lock().map_err(|_| {
                 SecureMemoryError::OperationFailed("Failed to acquire lock".to_string())
             })?;
-            
+
             size = queue.size()?;
         }
-        
+
         if size == 0 {
             return Err(SecureMemoryError::OperationFailed(
                 "Stream is empty".to_string(),
@@ -338,7 +338,7 @@ where
 
         // Buffer to hold all the data
         let mut all_data = Vec::with_capacity(size);
-        
+
         // Now drain the queue in a loop
         loop {
             // Scope the lock to ensure it's dropped before we call with_bytes
@@ -347,15 +347,15 @@ where
                 let mut queue = self.queue.lock().map_err(|_| {
                     SecureMemoryError::OperationFailed("Failed to acquire lock".to_string())
                 })?;
-                
+
                 if queue.is_empty() {
                     break;
                 }
-                
+
                 // Get the next chunk
                 next_secret = queue.pop().unwrap();
             }
-            
+
             // Process the secret outside the lock
             next_secret.with_bytes(|bytes| {
                 all_data.extend_from_slice(bytes);
@@ -366,16 +366,16 @@ where
         // Create a new secret with all the data
         let mut result = all_data;
         let secret = self.factory.new(&mut result)?;
-        
+
         // Ensure we've wiped the buffer
         result.zeroize();
-        
+
         Ok(secret)
     }
 }
 
-impl<F> Read for Stream<F> 
-where 
+impl<F> Read for Stream<F>
+where
     F: SecretFactory + Clone + 'static,
     F::SecretType: Secret + SecretExtensions,
 {
@@ -406,15 +406,16 @@ where
         // Check if there's any data available
         let next_secret;
         {
-            let mut queue = self.queue.lock().map_err(|e| {
-                io::Error::new(io::ErrorKind::Other, format!("Lock error: {}", e))
-            })?;
+            let mut queue = self
+                .queue
+                .lock()
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Lock error: {}", e)))?;
 
             // Get the next chunk of data
             match queue.pop() {
                 Some(secret) => {
                     next_secret = secret;
-                },
+                }
                 None => {
                     // Return 0 to indicate EOF as per Read trait contract
                     return Ok(0);
@@ -430,7 +431,7 @@ where
             // If there's data left over, re-encrypt it and push to the front of the queue
             if bytes_to_read < secret_bytes.len() {
                 let mut remaining_data = secret_bytes[bytes_to_read..].to_vec();
-                
+
                 match self.factory.new(&mut remaining_data) {
                     Ok(new_secret) => {
                         let mut queue = self.queue.lock().map_err(|e| {
@@ -439,7 +440,7 @@ where
                         queue.push(BoxedSecret::new(new_secret));
                         remaining_data.zeroize();
                         Ok(bytes_to_read)
-                    },
+                    }
                     Err(e) => Err(e),
                 }
             } else {
@@ -456,13 +457,13 @@ where
 }
 
 impl<F> Write for Stream<F>
-where 
+where
     F: SecretFactory + Clone + 'static,
     F::SecretType: Secret + SecretExtensions,
 {
     /// Writes data to the Stream, breaking it into chunks if necessary.
     ///
-    /// This method breaks the data into chunks of size `STREAM_CHUNK_SIZE` and 
+    /// This method breaks the data into chunks of size `STREAM_CHUNK_SIZE` and
     /// adds each chunk to the stream as an encrypted Secret.
     ///
     /// # Arguments
@@ -479,15 +480,16 @@ where
         }
 
         let chunk_size = *STREAM_CHUNK_SIZE;
-        let mut queue = self.queue.lock().map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, format!("Lock error: {}", e))
-        })?;
+        let mut queue = self
+            .queue
+            .lock()
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Lock error: {}", e)))?;
 
         let mut bytes_written = 0;
         for chunk_start in (0..buf.len()).step_by(chunk_size) {
             let chunk_end = std::cmp::min(chunk_start + chunk_size, buf.len());
             let mut chunk_data = buf[chunk_start..chunk_end].to_vec();
-            
+
             match self.factory.new(&mut chunk_data) {
                 Ok(secret) => {
                     queue.join(BoxedSecret::new(secret));
@@ -501,7 +503,7 @@ where
                     return Err(io::Error::new(io::ErrorKind::Other, e.to_string()));
                 }
             }
-            
+
             // Zero the buffer that held our temporary chunk data
             chunk_data.zeroize();
         }
@@ -535,20 +537,20 @@ mod tests {
         data
     }
 
-    fn write_to_stream<F>(stream: &mut Stream<F>, data: &[u8]) 
-    where 
+    fn write_to_stream<F>(stream: &mut Stream<F>, data: &[u8])
+    where
         F: SecretFactory + Clone + 'static,
         F::SecretType: Secret + SecretExtensions,
     {
         let result = stream.write_all(data);
         assert!(result.is_ok(), "Failed to write to stream: {:?}", result);
-        
+
         // Ensure original data is still intact (not wiped)
         assert!(!data.iter().all(|&b| b == 0), "Original data was wiped");
     }
 
-    fn read_from_stream<F>(stream: &mut Stream<F>, expected: &[u8]) 
-    where 
+    fn read_from_stream<F>(stream: &mut Stream<F>, expected: &[u8])
+    where
         F: SecretFactory + Clone + 'static,
         F::SecretType: Secret + SecretExtensions,
     {
@@ -558,13 +560,15 @@ mod tests {
         assert_eq!(buffer, expected, "Read data doesn't match expected data");
     }
 
-    fn read_eof<F>(stream: &mut Stream<F>) 
-    where 
+    fn read_eof<F>(stream: &mut Stream<F>)
+    where
         F: SecretFactory + Clone + 'static,
         F::SecretType: Secret + SecretExtensions,
     {
         let mut buffer = [0u8; 1];
-        let bytes_read = stream.read(&mut buffer).expect("Read at EOF should succeed");
+        let bytes_read = stream
+            .read(&mut buffer)
+            .expect("Read at EOF should succeed");
         assert_eq!(bytes_read, 0, "Should return 0 bytes at EOF");
     }
 
@@ -667,19 +671,23 @@ mod tests {
 
         // Use next() to get the first chunk
         let secret = stream.next().unwrap();
-        secret.with_bytes(|bytes| {
-            assert_eq!(bytes.len(), *STREAM_CHUNK_SIZE);
-            assert_eq!(bytes, &data_clone[..*STREAM_CHUNK_SIZE]);
-            Ok(())
-        }).unwrap();
+        secret
+            .with_bytes(|bytes| {
+                assert_eq!(bytes.len(), *STREAM_CHUNK_SIZE);
+                assert_eq!(bytes, &data_clone[..*STREAM_CHUNK_SIZE]);
+                Ok(())
+            })
+            .unwrap();
 
         // Use flush() to get the remaining data
         let remaining = stream.flush().unwrap();
-        remaining.with_bytes(|bytes| {
-            assert_eq!(bytes.len(), size - *STREAM_CHUNK_SIZE);
-            assert_eq!(bytes, &data_clone[*STREAM_CHUNK_SIZE..]);
-            Ok(())
-        }).unwrap();
+        remaining
+            .with_bytes(|bytes| {
+                assert_eq!(bytes.len(), size - *STREAM_CHUNK_SIZE);
+                assert_eq!(bytes, &data_clone[*STREAM_CHUNK_SIZE..]);
+                Ok(())
+            })
+            .unwrap();
 
         // Stream should be empty now
         assert_eq!(stream.size().unwrap(), 0);
@@ -693,7 +701,7 @@ mod tests {
         // Write multiple small chunks
         let chunk1 = b"first chunk".to_vec();
         let chunk2 = b"second chunk".to_vec();
-        
+
         write_to_stream(&mut stream, &chunk1);
         write_to_stream(&mut stream, &chunk2);
 
@@ -717,7 +725,7 @@ mod tests {
 
         read_eof(&mut stream);
     }
-    
+
     #[test]
     fn test_stream_flush_combined() {
         let factory = DefaultSecretFactory::new();
@@ -729,34 +737,36 @@ mod tests {
 
         // Get all data as a single secret
         let combined = stream.flush().unwrap();
-        
+
         // Verify the combined data
-        combined.with_bytes(|bytes| {
-            assert_eq!(bytes, b"part one and part two");
-            Ok(())
-        }).unwrap();
-        
+        combined
+            .with_bytes(|bytes| {
+                assert_eq!(bytes, b"part one and part two");
+                Ok(())
+            })
+            .unwrap();
+
         // Stream should be empty
         assert_eq!(stream.size().unwrap(), 0);
     }
-    
+
     #[test]
     fn test_stream_empty_operations() {
         let factory = DefaultSecretFactory::new();
         let mut stream = Stream::new(factory);
-        
+
         // Size should be 0
         assert_eq!(stream.size().unwrap(), 0);
-        
+
         // Reading should return EOF
         read_eof(&mut stream);
-        
+
         // Next should fail
         assert!(stream.next().is_err());
-        
+
         // Flush should fail
         assert!(stream.flush().is_err());
-        
+
         // Write empty should succeed but do nothing
         assert_eq!(stream.write(&[]).unwrap(), 0);
         assert_eq!(stream.size().unwrap(), 0);

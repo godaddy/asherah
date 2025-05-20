@@ -1,8 +1,8 @@
+use std::io::{BufRead, BufReader};
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use std::io::{BufRead, BufReader};
 
-use crate::{Provider, KeyType, FileReader};
+use crate::{FileReader, KeyType, Provider};
 
 /// Provider for YouTube traces
 pub struct YouTubeProvider {
@@ -14,20 +14,20 @@ impl YouTubeProvider {
     pub fn new(reader: Arc<dyn FileReader>) -> Self {
         Self { reader }
     }
-    
+
     /// Parse a line from the YouTube trace file to extract the video ID
     fn parse_line(&self, line: &str) -> Option<String> {
         // Skip comment lines
         if line.starts_with('#') {
             return None;
         }
-        
+
         // Split by whitespace and find the video ID (usually the 2nd or 3rd field)
         let fields: Vec<&str> = line.split_whitespace().collect();
         if fields.len() < 3 {
             return None;
         }
-        
+
         // The video ID is typically a field containing a pattern like "v=VIDEOID"
         for field in &fields {
             if field.contains("v=") {
@@ -43,22 +43,25 @@ impl YouTubeProvider {
                 }
             }
         }
-        
+
         // If we can't find a proper video ID, use a hash of the full line
-        Some(format!("hash-{}", line.bytes().fold(0u64, |acc, b| acc.wrapping_add(b as u64))))
+        Some(format!(
+            "hash-{}",
+            line.bytes().fold(0u64, |acc, b| acc.wrapping_add(b as u64))
+        ))
     }
 }
 
 impl Provider for YouTubeProvider {
     fn provide(&self, keys_tx: mpsc::Sender<Box<dyn KeyType>>) {
         let mut reader = self.reader.clone();
-        
+
         tokio::spawn(async move {
             // Create a buffered reader that reads line by line
             let mut reader_wrapper = ReaderToRead::new(Arc::get_mut(&mut reader).unwrap());
             let mut buf_reader = BufReader::new(&mut reader_wrapper);
             let mut line = String::new();
-            
+
             loop {
                 line.clear();
                 match buf_reader.read_line(&mut line) {
@@ -67,16 +70,20 @@ impl Provider for YouTubeProvider {
                         // Parse the line to get the video ID
                         if let Some(video_id) = YouTubeProvider::parse_line(&line) {
                             if !video_id.is_empty() {
-                                if keys_tx.send(Box::new(video_id) as Box<dyn KeyType>).await.is_err() {
+                                if keys_tx
+                                    .send(Box::new(video_id) as Box<dyn KeyType>)
+                                    .await
+                                    .is_err()
+                                {
                                     break;
                                 }
                             }
                         }
-                    },
+                    }
                     Err(_) => break, // Error reading
                 }
             }
-            
+
             // Close the channel when done
             drop(keys_tx);
         });

@@ -1,7 +1,7 @@
 //! Utility functions for the application encryption library
 
 use crate::error::Result;
-use rand::{RngCore, rngs::OsRng};
+use rand::{rngs::OsRng, RngCore};
 use zeroize::Zeroize;
 
 /// Fills a buffer with cryptographically secure random bytes

@@ -3,12 +3,12 @@ use crate::Buffer;
 #[test]
 fn debug_test_buffer_creation() {
     println!("Starting buffer creation test");
-    
+
     // Just try to create a simple buffer
     println!("About to call Buffer::new(16)");
     let result = Buffer::new(16);
     println!("Buffer::new returned");
-    
+
     match result {
         Ok(buffer) => {
             println!("Buffer created successfully");
@@ -24,6 +24,6 @@ fn debug_test_buffer_creation() {
             println!("Error creating buffer: {:?}", e);
         }
     }
-    
+
     println!("Test completed");
 }

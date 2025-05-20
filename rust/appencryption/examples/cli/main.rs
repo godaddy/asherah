@@ -1,22 +1,22 @@
-use appencryption::session::{Session, SessionFactory};
 use appencryption::envelope::DataRowRecord;
-use appencryption::policy::CryptoPolicy;
+use appencryption::kms::StaticKeyManagementService;
+use appencryption::metastore::InMemoryMetastore;
 #[cfg(feature = "mysql")]
 use appencryption::metastore::MySqlMetastore;
 #[cfg(feature = "postgres")]
 use appencryption::metastore::PostgresMetastore;
-use appencryption::metastore::InMemoryMetastore;
-use appencryption::kms::StaticKeyManagementService;
+use appencryption::policy::CryptoPolicy;
+use appencryption::session::{Session, SessionFactory};
 use appencryption::Metastore;
+use clap::{Parser, Subcommand, ValueEnum};
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 use securememory::protected_memory::DefaultSecretFactory;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::Mutex;
-use rand::{Rng, thread_rng};
-use rand::distributions::Alphanumeric;
-use clap::{Parser, Subcommand, ValueEnum};
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -199,12 +199,12 @@ impl SimpleMetrics {
             println!("{}: {}", key, value);
         }
     }
-    
+
     async fn increment(&self, name: &str, amount: u64) {
         let mut metrics = self.metrics.lock().await;
         *metrics.entry(name.to_string()).or_insert(0.0) += amount as f64;
     }
-    
+
     async fn record_time(&self, name: &str, duration: std::time::Duration) {
         let mut metrics = self.metrics.lock().await;
         let duration_ms = duration.as_secs_f64() * 1000.0;
@@ -245,14 +245,20 @@ fn generate_contact() -> Contact {
 }
 
 /// Encrypt a contact using the session
-async fn encrypt_contact<S: Session>(session: &Arc<S>, contact: &Contact) -> Result<DataRowRecord, Box<dyn std::error::Error>> {
+async fn encrypt_contact<S: Session>(
+    session: &Arc<S>,
+    contact: &Contact,
+) -> Result<DataRowRecord, Box<dyn std::error::Error>> {
     let data = serde_json::to_vec(contact)?;
     let encrypted = session.encrypt(&data).await?;
     Ok(encrypted)
 }
 
 /// Decrypt data using the session
-async fn decrypt_data<S: Session>(session: &Arc<S>, data: &DataRowRecord) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+async fn decrypt_data<S: Session>(
+    session: &Arc<S>,
+    data: &DataRowRecord,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let decrypted = session.decrypt(data).await?;
     Ok(decrypted)
 }
@@ -286,11 +292,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Configure crypto policy
     use chrono::TimeDelta;
-    
-    let expire_after = cli.expire_after.map(|secs| TimeDelta::seconds(secs as i64)).unwrap_or(TimeDelta::hours(24));
+
+    let expire_after = cli
+        .expire_after
+        .map(|secs| TimeDelta::seconds(secs as i64))
+        .unwrap_or(TimeDelta::hours(24));
     let cache_max_age = TimeDelta::hours(24); // Default
     let create_date_precision = TimeDelta::minutes(1); // Default
-    
+
     let policy = CryptoPolicy::new()
         .with_expire_after(expire_after.to_std().unwrap())
         .with_session_cache()
@@ -308,21 +317,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         KmsType::Aws => {
             let region = cli.region.ok_or("AWS region is required for AWS KMS")?;
             let key_id = cli.key_id.ok_or("AWS KMS Key ID is required for AWS KMS")?;
-            
+
             println!("Using AWS KMS with region {} and key {}", region, key_id);
-            
+
             #[cfg(feature = "aws-v2-kms")]
             {
-                use appencryption::plugins::aws_v2::kms::AwsKmsBuilder;
                 use appencryption::crypto::Aes256GcmAead;
+                use appencryption::plugins::aws_v2::kms::AwsKmsBuilder;
                 let crypto = Arc::new(Aes256GcmAead::default());
-                
+
                 let mut arn_map = std::collections::HashMap::new();
                 arn_map.insert(region.clone(), key_id.clone());
-                
-                let builder = AwsKmsBuilder::new(crypto, arn_map)
-                    .with_preferred_region(&region);
-                
+
+                let builder = AwsKmsBuilder::new(crypto, arn_map).with_preferred_region(&region);
+
                 Arc::new(builder.build().await?)
             }
             #[cfg(not(feature = "aws-v2-kms"))]
@@ -343,16 +351,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MetastoreType::Mysql => {
             #[cfg(feature = "mysql")]
             {
-                let url = cli.mysql_url.ok_or("MySQL URL is required for MySQL metastore")?;
+                let url = cli
+                    .mysql_url
+                    .ok_or("MySQL URL is required for MySQL metastore")?;
                 println!("Using MySQL metastore with URL {}", url);
-                
+
                 use sqlx::mysql::MySqlPoolOptions;
-                
+
                 let pool = MySqlPoolOptions::new()
                     .max_connections(5)
                     .connect(&url)
                     .await?;
-                
+
                 // Create table if it doesn't exist
                 sqlx::query(
                     "CREATE TABLE IF NOT EXISTS encryption_key (
@@ -361,18 +371,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         key_record TEXT NOT NULL,
                         PRIMARY KEY (id, created),
                         INDEX (created)
-                    )"
+                    )",
                 )
                 .execute(&pool)
                 .await?;
-                
+
                 if cli.truncate {
                     println!("Truncating keys table...");
                     sqlx::query("DELETE FROM encryption_key WHERE 1=1")
                         .execute(&pool)
                         .await?;
                 }
-                
+
                 Arc::new(MySqlMetastore::new(Arc::new(pool)))
             }
             #[cfg(not(feature = "mysql"))]
@@ -384,16 +394,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         MetastoreType::Postgres => {
             #[cfg(feature = "postgres")]
             {
-                let url = cli.postgres_url.ok_or("PostgreSQL URL is required for PostgreSQL metastore")?;
+                let url = cli
+                    .postgres_url
+                    .ok_or("PostgreSQL URL is required for PostgreSQL metastore")?;
                 println!("Using PostgreSQL metastore with URL {}", url);
-                
+
                 use sqlx::postgres::PgPoolOptions;
-                
+
                 let pool = PgPoolOptions::new()
                     .max_connections(5)
                     .connect(&url)
                     .await?;
-                
+
                 // Create table if it doesn't exist
                 sqlx::query(
                     "CREATE TABLE IF NOT EXISTS encryption_key (
@@ -401,18 +413,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         key_record TEXT NOT NULL,
                         PRIMARY KEY (id, created)
-                    )"
+                    )",
                 )
                 .execute(&pool)
                 .await?;
-                
+
                 if cli.truncate {
                     println!("Truncating keys table...");
                     sqlx::query("DELETE FROM encryption_key WHERE TRUE")
                         .execute(&pool)
                         .await?;
                 }
-                
+
                 Arc::new(PostgresMetastore::new(Arc::new(pool)))
             }
             #[cfg(not(feature = "postgres"))]
@@ -422,29 +434,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         MetastoreType::Dynamodb => {
             println!("Using DynamoDB metastore with table {}", cli.dynamodb_table);
-            
+
             #[cfg(feature = "aws-v2-dynamodb")]
             {
-                use appencryption::plugins::aws_v2::metastore::{DynamoDbMetastore, DynamoDbClientBuilder};
-                
+                use appencryption::plugins::aws_v2::metastore::{
+                    DynamoDbClientBuilder, DynamoDbMetastore,
+                };
+
                 let config = aws_config::from_env().load().await;
-                let region = config.region().map(|r| r.to_string()).unwrap_or_else(|| "us-east-1".to_string());
-                
+                let region = config
+                    .region()
+                    .map(|r| r.to_string())
+                    .unwrap_or_else(|| "us-east-1".to_string());
+
                 let client = DynamoDbClientBuilder::new(&region)
                     .with_config(config)
                     .build()
                     .await?;
-                
+
                 let metastore = DynamoDbMetastore::new(
                     Arc::new(client),
                     Some(cli.dynamodb_table.clone()),
-                    false // use_region_suffix
+                    false, // use_region_suffix
                 );
-                
+
                 if cli.truncate {
                     println!("Warning: Truncate not implemented for DynamoDB metastore");
                 }
-                
+
                 Arc::new(metastore)
             }
             #[cfg(not(feature = "aws-v2-dynamodb"))]
@@ -472,20 +489,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let encrypt_times = Arc::new(Mutex::new(Vec::new()));
     let decrypt_times = Arc::new(Mutex::new(Vec::new()));
-    
+
     let default_partition_id = "user123".to_string();
     let partition_id = cli.partition.unwrap_or(default_partition_id);
 
-    println!("Running with {} sessions, {} operations per session, {} iterations", 
-        cli.sessions, cli.count, cli.iterations);
-    
+    println!(
+        "Running with {} sessions, {} operations per session, {} iterations",
+        cli.sessions, cli.count, cli.iterations
+    );
+
     for iteration in 0..cli.iterations {
         if cli.verbose {
             println!("Starting iteration {}", iteration + 1);
         }
-        
+
         let mut handles = Vec::new();
-        
+
         for session_idx in 0..cli.sessions {
             let factory = factory.clone();
             let encrypt_times = encrypt_times.clone();
@@ -495,56 +514,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let count = cli.count;
             let partition_id = format!("{}-{}", partition_id, session_idx);
             let duration = cli.duration;
-            
+
             let handle = tokio::spawn(async move {
                 if verbose {
                     println!("Starting session with partition ID: {}", partition_id);
                 }
-                
+
                 let session = factory.session(&partition_id).await.unwrap();
-                
+
                 let start_time = Instant::now();
                 let mut run_count = 0;
-                
+
                 loop {
                     let mut encrypted_records = Vec::with_capacity(count);
-                    
+
                     // Encrypt phase
                     for _ in 0..count {
                         let contact = generate_contact();
-                        
+
                         if results {
-                            println!("Before encryption: {}", serde_json::to_string(&contact).unwrap());
+                            println!(
+                                "Before encryption: {}",
+                                serde_json::to_string(&contact).unwrap()
+                            );
                         }
-                        
+
                         let encrypt_start = Instant::now();
                         let encrypted = encrypt_contact(&session, &contact).await.unwrap();
                         let encrypt_duration = encrypt_start.elapsed();
-                        
+
                         if results {
                             println!("After encryption: {:?}", encrypted);
                         }
-                        
+
                         encrypted_records.push(encrypted);
                         encrypt_times.lock().await.push(encrypt_duration);
                     }
-                    
+
                     // Decrypt phase
                     for record in &encrypted_records {
                         let decrypt_start = Instant::now();
                         let decrypted = decrypt_data(&session, record).await.unwrap();
                         let decrypt_duration = decrypt_start.elapsed();
-                        
+
                         if results {
                             let contact: Contact = serde_json::from_slice(&decrypted).unwrap();
-                            println!("After decryption: {}", serde_json::to_string(&contact).unwrap());
+                            println!(
+                                "After decryption: {}",
+                                serde_json::to_string(&contact).unwrap()
+                            );
                         }
-                        
+
                         decrypt_times.lock().await.push(decrypt_duration);
                     }
-                    
+
                     run_count += 1;
-                    
+
                     if let Some(duration) = duration {
                         if start_time.elapsed() >= std::time::Duration::from(duration) {
                             break;
@@ -553,17 +578,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         break;
                     }
                 }
-                
+
                 session.close().await.unwrap();
-                
+
                 if verbose {
                     println!("Session completed. Ran {} times", run_count);
                 }
             });
-            
+
             handles.push(handle);
         }
-        
+
         // Wait for all sessions to complete
         for handle in handles {
             handle.await?;
@@ -571,50 +596,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let total_duration = start.elapsed();
-    
+
     // Display timing statistics
     let encrypt_times = encrypt_times.lock().await;
     let decrypt_times = decrypt_times.lock().await;
-    
+
     let total_operations = encrypt_times.len() + decrypt_times.len();
-    
+
     println!("\n=== Performance Summary ===");
     println!("Total time: {:?}", total_duration);
     println!("Total operations: {}", total_operations);
-    println!("Operations per second: {:.2}", total_operations as f64 / total_duration.as_secs_f64());
-    
+    println!(
+        "Operations per second: {:.2}",
+        total_operations as f64 / total_duration.as_secs_f64()
+    );
+
     // Calculate encryption stats
     if !encrypt_times.is_empty() {
         let encrypt_total: std::time::Duration = encrypt_times.iter().copied().sum();
         let encrypt_avg = encrypt_total / encrypt_times.len() as u32;
         let encrypt_min = encrypt_times.iter().min().unwrap();
         let encrypt_max = encrypt_times.iter().max().unwrap();
-        
+
         println!("\n=== Encryption ===");
         println!("Count: {}", encrypt_times.len());
         println!("Average: {:?}", encrypt_avg);
         println!("Min: {:?}", encrypt_min);
         println!("Max: {:?}", encrypt_max);
     }
-    
+
     // Calculate decryption stats
     if !decrypt_times.is_empty() {
         let decrypt_total: std::time::Duration = decrypt_times.iter().copied().sum();
         let decrypt_avg = decrypt_total / decrypt_times.len() as u32;
         let decrypt_min = decrypt_times.iter().min().unwrap();
         let decrypt_max = decrypt_times.iter().max().unwrap();
-        
+
         println!("\n=== Decryption ===");
         println!("Count: {}", decrypt_times.len());
         println!("Average: {:?}", decrypt_avg);
         println!("Min: {:?}", decrypt_min);
         println!("Max: {:?}", decrypt_max);
     }
-    
+
     // Display metrics if enabled
     if cli.metrics {
         metrics.display_metrics().await;
     }
-    
+
     Ok(())
 }

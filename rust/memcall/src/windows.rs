@@ -15,7 +15,7 @@ fn as_ptr_void(memory: &mut [u8]) -> *mut std::ffi::c_void {
         // but for most operations on an existing slice, as_mut_ptr is fine.
         // For VirtualAlloc, we pass ptr::null_mut() directly.
         // For operations on existing slices, an empty slice check is done first.
-        ptr::null_mut() 
+        ptr::null_mut()
     } else {
         memory.as_mut_ptr() as *mut std::ffi::c_void
     }
@@ -61,7 +61,7 @@ pub fn free(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if let Err(err_protect) = protect(ptr, MemoryProtection::ReadWrite) {
         return Err(err_protect);
     }
-    
+
     for byte in ptr.iter_mut() {
         *byte = 0;
     }
@@ -90,14 +90,8 @@ pub fn protect(ptr: &mut [u8], protection: MemoryProtection) -> Result<(), Memca
     };
 
     let mut old_protect: u32 = 0;
-    let result = unsafe {
-        VirtualProtect(
-            as_ptr_void(ptr),
-            as_len_usize(ptr),
-            prot,
-            &mut old_protect,
-        )
-    };
+    let result =
+        unsafe { VirtualProtect(as_ptr_void(ptr), as_len_usize(ptr), prot, &mut old_protect) };
 
     if result == 0 {
         return Err(MemcallError::SystemError(format!(

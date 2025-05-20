@@ -8,13 +8,13 @@ use std::collections::HashMap;
 pub struct AwsKmsBuilder {
     /// Map of region -> ARN
     arn_map: HashMap<String, String>,
-    
+
     /// AEAD implementation for data encryption
     crypto: Arc<dyn Aead>,
-    
+
     /// Preferred region for KMS operations
     preferred_region: Option<String>,
-    
+
     /// KMS clients for each region
     clients: HashMap<String, Arc<dyn AwsKmsClient>>,
 }
@@ -25,7 +25,7 @@ impl AwsKmsBuilder {
         if arn_map.is_empty() {
             panic!("arnMap must contain at least one entry");
         }
-        
+
         Self {
             arn_map,
             crypto,
@@ -33,34 +33,34 @@ impl AwsKmsBuilder {
             clients: HashMap::new(),
         }
     }
-    
+
     /// Sets the preferred region for KMS operations
     pub fn with_preferred_region(mut self, region: impl Into<String>) -> Self {
         self.preferred_region = Some(region.into());
         self
     }
-    
+
     /// Adds a KMS client for a region
     pub fn with_kms_client(mut self, region: impl Into<String>, client: Arc<dyn AwsKmsClient>) -> Self {
         self.clients.insert(region.into(), client);
         self
     }
-    
+
     /// Builds the AWS KMS implementation
     pub fn build(self) -> Result<AwsKms> {
         // Check that we have a preferred region if we have multiple regions
         if self.arn_map.len() > 1 && self.preferred_region.is_none() {
             return Err(Error::Kms("Preferred region must be set when using multiple regions".into()));
         }
-        
+
         // Get the preferred region
         let preferred_region = self.preferred_region.unwrap_or_else(|| {
             self.arn_map.keys().next().unwrap().clone()
         });
-        
+
         // Create the regional clients
         let mut regional_clients = Vec::new();
-        
+
         // First, add the preferred region
         if let Some(arn) = self.arn_map.get(&preferred_region) {
             if let Some(client) = self.clients.get(&preferred_region) {
@@ -74,13 +74,13 @@ impl AwsKmsBuilder {
         } else {
             return Err(Error::Kms(format!("Preferred region not found in ARN map: {}", preferred_region)));
         }
-        
+
         // Then add the rest of the regions
         for (region, arn) in &self.arn_map {
             if region == &preferred_region {
                 continue;
             }
-            
+
             if let Some(client) = self.clients.get(region) {
                 regional_clients.push(RegionalClient::new(
                     client.clone(),
@@ -90,7 +90,7 @@ impl AwsKmsBuilder {
                 return Err(Error::Kms(format!("No KMS client provided for region: {}", region)));
             }
         }
-        
+
         Ok(AwsKms::new(regional_clients, self.crypto))
     }
 }

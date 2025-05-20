@@ -1,10 +1,8 @@
 // Module for common test utilities and fixtures used across integration tests
 
 use appencryption::{
+    crypto::Aes256GcmAead, envelope::EnvelopeKeyRecord, kms::StaticKeyManagementService,
     policy::CryptoPolicy,
-    kms::StaticKeyManagementService,
-    crypto::Aes256GcmAead,
-    envelope::EnvelopeKeyRecord,
 };
 use std::sync::Arc;
 
@@ -42,6 +40,6 @@ pub async fn create_static_kms() -> Arc<StaticKeyManagementService> {
     // Convert the hex string to bytes
     let key_bytes = hex::decode(STATIC_KEY).expect("Invalid hex key");
     let static_kms = StaticKeyManagementService::new(key_bytes);
-    
+
     Arc::new(static_kms)
 }

@@ -3,14 +3,14 @@
 //! This module provides a simple logging interface with a focus on debug logging.
 //! By default, logging is disabled and uses a no-op implementation.
 
-use std::sync::RwLock;
 use std::fmt;
+use std::sync::RwLock;
 
 /// Logger interface for the application encryption library
 pub trait Logger: Send + Sync {
     /// Log a debug message with formatting
     fn debug(&self, message: &str);
-    
+
     /// Log a debug message with formatting
     fn debugf(&self, fmt: fmt::Arguments);
 }
@@ -29,7 +29,7 @@ impl NoopLogger {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// Create a boxed instance
     pub fn boxed() -> Box<dyn Logger> {
         Box::new(Self::new())
@@ -89,7 +89,7 @@ impl StdoutLogger {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// Create a boxed instance
     pub fn boxed() -> Box<dyn Logger> {
         Box::new(Self::new())
@@ -100,7 +100,7 @@ impl Logger for StdoutLogger {
     fn debug(&self, message: &str) {
         println!("[DEBUG] {}", message);
     }
-    
+
     fn debugf(&self, fmt: fmt::Arguments) {
         println!("[DEBUG] {}", fmt);
     }
@@ -118,7 +118,7 @@ impl LoggingGuard {
             let mut global_logger = LOGGER.write().unwrap();
             std::mem::replace(&mut *global_logger, Some(logger))
         };
-        
+
         Self { previous_logger }
     }
 }

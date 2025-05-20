@@ -1,7 +1,7 @@
 //! # memcall
 //!
 //! Cross-platform wrapper for memory-related system calls.
-//! 
+//!
 //! This library provides a platform-independent interface for memory-related operations:
 //! - Memory allocation/deallocation
 //! - Memory protection management
@@ -100,7 +100,7 @@ pub fn set_limit(resource: RlimitResource, value: u64) -> Result<(), MemcallErro
 }
 
 /// Allocates aligned memory to the specified size and alignment, ensuring it's page-aligned.
-/// 
+///
 /// This is a Rust implementation that matches the functionality expected by memguard.
 ///
 /// # Arguments

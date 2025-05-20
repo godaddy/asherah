@@ -1,20 +1,20 @@
 // Expanded PostgreSQL integration tests
 
+use crate::integration::common::{
+    create_crypto, create_static_kms, create_test_config, ORIGINAL_DATA, PARTITION_ID, PRODUCT,
+    SERVICE,
+};
 use appencryption::{
-    Session, 
-    SessionFactory,
+    envelope::EnvelopeKeyRecord,
     // Using InMemoryMetastore as a placeholder for PostgresMetastore
     metastore::InMemoryMetastore,
-    envelope::EnvelopeKeyRecord,
     KeyMeta,
     Metastore,
+    Session,
+    SessionFactory,
 };
-use crate::integration::common::{
-    create_test_config, create_crypto, create_static_kms,
-    PARTITION_ID, ORIGINAL_DATA, PRODUCT, SERVICE,
-};
+use chrono::{Duration, Utc};
 use std::sync::Arc;
-use chrono::{Utc, Duration};
 
 // NOTE: The actual PostgreSQL integration tests are not implemented yet.
 // They would require setting up PostgreSQL containers and proper SQL metastore implementation.
@@ -25,7 +25,7 @@ async fn test_postgres_metastore_placeholder() {
     // This is a placeholder test
     // Real PostgreSQL integration tests would use testcontainers with PostgreSQL
     let metastore = Arc::new(InMemoryMetastore::new());
-    
+
     // Basic test that metastore works
     let key_id = "test_key";
     let created = Utc::now().timestamp();
@@ -36,9 +36,12 @@ async fn test_postgres_metastore_placeholder() {
         revoked: None,
         parent_key_meta: None,
     };
-    
+
     // Store and load
-    metastore.store(key_id, created, &envelope).await.expect("Store failed");
+    metastore
+        .store(key_id, created, &envelope)
+        .await
+        .expect("Store failed");
     let loaded = metastore.load(key_id, created).await.expect("Load failed");
     assert!(loaded.is_some());
 }

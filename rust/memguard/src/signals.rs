@@ -82,13 +82,19 @@ type Result<T> = std::result::Result<T, MemguardError>;
 /// }
 /// // important_buffer will be cleaned up by its Drop or by purge() via safe_exit().
 /// ```
-pub fn catch_signal(handler: Arc<dyn Fn(i32) + Send + Sync>, signals_to_catch: &[i32]) -> Result<()> {
+pub fn catch_signal(
+    handler: Arc<dyn Fn(i32) + Send + Sync>,
+    signals_to_catch: &[i32],
+) -> Result<()> {
     let mut signals = match Signals::new(signals_to_catch) {
         Ok(s) => s,
         Err(e) => {
             error!("Failed to create signal iterator: {}", e);
             // Convert std::io::Error to MemguardError::OsError or similar
-            return Err(MemguardError::OsError(format!("Failed to register signal handler: {}", e)));
+            return Err(MemguardError::OsError(format!(
+                "Failed to register signal handler: {}",
+                e
+            )));
         }
     };
 
@@ -98,10 +104,7 @@ pub fn catch_signal(handler: Arc<dyn Fn(i32) + Send + Sync>, signals_to_catch: &
         // This function explicitly watches for signals
         match signals.into_iter().next() {
             Some(sig) => {
-                info!(
-                    "memguard: Caught signal {}. Running custom handler.",
-                    sig
-                );
+                info!("memguard: Caught signal {}. Running custom handler.", sig);
                 handler(sig); // Execute the custom handler
                 info!(
                     "memguard: Custom handler finished for signal {}. Exiting.",
@@ -115,7 +118,10 @@ pub fn catch_signal(handler: Arc<dyn Fn(i32) + Send + Sync>, signals_to_catch: &
             }
         }
     });
-    info!("memguard: Registered custom signal handler for signals: {:?}", signals_to_catch_owned);
+    info!(
+        "memguard: Registered custom signal handler for signals: {:?}",
+        signals_to_catch_owned
+    );
     Ok(())
 }
 
@@ -161,9 +167,15 @@ pub fn catch_signal(handler: Arc<dyn Fn(i32) + Send + Sync>, signals_to_catch: &
 /// }
 /// ```
 pub fn catch_interrupt() -> Result<()> {
-    catch_signal(Arc::new(|signal_code| {
-        let message = format!("memguard: Interrupt signal ({}) caught. Cleaning up...", signal_code);
-        info!("{}", message);
-        eprintln!("{}", message); // Also print to stderr for testability
-    }), &[SIGINT])
+    catch_signal(
+        Arc::new(|signal_code| {
+            let message = format!(
+                "memguard: Interrupt signal ({}) caught. Cleaning up...",
+                signal_code
+            );
+            info!("{}", message);
+            eprintln!("{}", message); // Also print to stderr for testability
+        }),
+        &[SIGINT],
+    )
 }

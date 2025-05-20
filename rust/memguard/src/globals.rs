@@ -16,9 +16,9 @@
 
 use crate::coffer::Coffer;
 use crate::registry::BufferRegistry;
-use std::sync::{Mutex, OnceLock};
-use std::sync::atomic::{AtomicBool, Ordering};
 use log::warn;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Mutex, OnceLock};
 
 // Lock ordering is critical to avoid deadlocks:
 // When obtaining multiple locks, follow this strict order:
@@ -29,7 +29,7 @@ use log::warn;
 // Global registry of all secure buffers
 static BUFFERS: OnceLock<Mutex<BufferRegistry>> = OnceLock::new();
 
-// Global encryption key container  
+// Global encryption key container
 static COFFER: OnceLock<Mutex<Coffer>> = OnceLock::new();
 
 // Signal for shutdown in progress to prevent cleanup issues
@@ -65,9 +65,7 @@ fn ensure_shutdown_guard() {
 #[cfg(not(test))]
 pub(crate) fn get_buffer_registry() -> &'static Mutex<BufferRegistry> {
     ensure_shutdown_guard();
-    BUFFERS.get_or_init(|| {
-        Mutex::new(BufferRegistry::new())
-    })
+    BUFFERS.get_or_init(|| Mutex::new(BufferRegistry::new()))
 }
 
 /// Gets the global buffer registry (or creates a new one if it doesn't exist)
@@ -75,9 +73,7 @@ pub(crate) fn get_buffer_registry() -> &'static Mutex<BufferRegistry> {
 #[cfg(test)]
 pub fn get_buffer_registry() -> &'static Mutex<BufferRegistry> {
     ensure_shutdown_guard();
-    BUFFERS.get_or_init(|| {
-        Mutex::new(BufferRegistry::new())
-    })
+    BUFFERS.get_or_init(|| Mutex::new(BufferRegistry::new()))
 }
 
 /// Test helper to ensure globals are available
@@ -100,7 +96,7 @@ pub fn destroy_for_lifecycle_test() {
     }
 }
 
-/// For lifecycle tests that need to test actual initialization  
+/// For lifecycle tests that need to test actual initialization
 #[cfg(test)]
 pub fn reset_for_lifecycle_test() {
     // We can't directly reset global state, but we can mark the coffer as destroyed
@@ -121,31 +117,44 @@ pub(crate) fn get_coffer() -> &'static Mutex<Coffer> {
             };
             if unsafe { libc::setrlimit(libc::RLIMIT_CORE, &rlimit_core) } != 0 {
                 use log::warn;
-                warn!("Failed to disable core dumps: {}", std::io::Error::last_os_error());
+                warn!(
+                    "Failed to disable core dumps: {}",
+                    std::io::Error::last_os_error()
+                );
             }
         }
-        
+
         // Initialize with regular coffer
         let coffer = Coffer::new().unwrap_or_else(|e| {
-            panic!("Failed to initialize global Coffer during OnceLock init: {:?}", e);
+            panic!(
+                "Failed to initialize global Coffer during OnceLock init: {:?}",
+                e
+            );
         });
         Mutex::new(coffer)
     });
-    
+
     // After get_or_init, COFFER is guaranteed to be initialized.
-    let coffer_mutex = COFFER.get().expect("COFFER OnceLock should be initialized here");
-    
+    let coffer_mutex = COFFER
+        .get()
+        .expect("COFFER OnceLock should be initialized here");
+
     // Check if the Coffer instance *inside* the Mutex is destroyed.
     // If so, replace it with a new one. This handles the case after purge().
     {
         let mut coffer_guard = coffer_mutex.lock().unwrap_or_else(|poisoned| {
             // This is a severe state. If the mutex is poisoned, something went very wrong.
-            log::error!("Global Coffer mutex was poisoned. Panicking. Error: {}", poisoned);
+            log::error!(
+                "Global Coffer mutex was poisoned. Panicking. Error: {}",
+                poisoned
+            );
             panic!("Global Coffer mutex was poisoned. Panicking. {}", poisoned);
         });
 
         if coffer_guard.destroyed() {
-            log::debug!("Global Coffer instance was found destroyed. Re-initializing with a new Coffer.");
+            log::debug!(
+                "Global Coffer instance was found destroyed. Re-initializing with a new Coffer."
+            );
             *coffer_guard = Coffer::new().unwrap_or_else(|e| {
                 panic!("Failed to re-initialize destroyed global Coffer: {:?}", e);
             });

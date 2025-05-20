@@ -26,7 +26,7 @@ impl LatencyRecorder {
     pub fn with_output(path: impl AsRef<Path>) -> io::Result<Self> {
         let file = File::create(path)?;
         let writer = BufWriter::new(file);
-        
+
         Ok(Self {
             measurements: Vec::new(),
             writer: Some(writer),
@@ -72,9 +72,21 @@ impl LatencyRecorder {
         let p95_idx = (len as f64 * 0.95) as usize;
         let p99_idx = (len as f64 * 0.99) as usize;
 
-        stats.latency_p50 = self.measurements.get(p50_idx).copied().unwrap_or(Duration::ZERO);
-        stats.latency_p95 = self.measurements.get(p95_idx).copied().unwrap_or(Duration::ZERO);
-        stats.latency_p99 = self.measurements.get(p99_idx).copied().unwrap_or(Duration::ZERO);
+        stats.latency_p50 = self
+            .measurements
+            .get(p50_idx)
+            .copied()
+            .unwrap_or(Duration::ZERO);
+        stats.latency_p95 = self
+            .measurements
+            .get(p95_idx)
+            .copied()
+            .unwrap_or(Duration::ZERO);
+        stats.latency_p99 = self
+            .measurements
+            .get(p99_idx)
+            .copied()
+            .unwrap_or(Duration::ZERO);
 
         // Write to file if configured
         if let Some(writer) = &mut self.writer {
@@ -82,11 +94,12 @@ impl LatencyRecorder {
                 writeln!(
                     writer,
                     "Requests,MinLatency,MaxLatency,AvgLatency,P50Latency,P95Latency,P99Latency"
-                ).expect("Failed to write header");
-                
+                )
+                .expect("Failed to write header");
+
                 self.header_printed = true;
             }
-            
+
             writeln!(
                 writer,
                 "{},{},{},{},{},{},{}",
@@ -97,7 +110,8 @@ impl LatencyRecorder {
                 stats.latency_p50.as_millis(),
                 stats.latency_p95.as_millis(),
                 stats.latency_p99.as_millis()
-            ).expect("Failed to write latency stats");
+            )
+            .expect("Failed to write latency stats");
         }
     }
 

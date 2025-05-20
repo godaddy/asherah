@@ -18,10 +18,10 @@ mod tests {
 pub trait Partition: Send + Sync + fmt::Debug {
     /// Returns the system key ID for this partition
     fn system_key_id(&self) -> String;
-    
+
     /// Returns the intermediate key ID for this partition
     fn intermediate_key_id(&self) -> String;
-    
+
     /// Checks if the given ID is a valid intermediate key ID for this partition
     fn is_valid_intermediate_key_id(&self, id: &str) -> bool;
 }
@@ -36,7 +36,11 @@ pub struct DefaultPartition {
 
 impl DefaultPartition {
     /// Creates a new DefaultPartition
-    pub fn new(partition_id: impl Into<String>, service: impl Into<String>, product: impl Into<String>) -> Self {
+    pub fn new(
+        partition_id: impl Into<String>,
+        service: impl Into<String>,
+        product: impl Into<String>,
+    ) -> Self {
         Self {
             id: partition_id.into(),
             service: service.into(),
@@ -49,11 +53,11 @@ impl Partition for DefaultPartition {
     fn system_key_id(&self) -> String {
         format!("_SK_{}_{}", self.service, self.product)
     }
-    
+
     fn intermediate_key_id(&self) -> String {
         format!("_IK_{}_{}_{}", self.id, self.service, self.product)
     }
-    
+
     fn is_valid_intermediate_key_id(&self, id: &str) -> bool {
         id == self.intermediate_key_id()
     }
@@ -83,21 +87,21 @@ impl SuffixedPartition {
 
 impl Partition for SuffixedPartition {
     fn system_key_id(&self) -> String {
-        format!("_SK_{}_{}_{}", self.inner.service, self.inner.product, self.suffix)
-    }
-    
-    fn intermediate_key_id(&self) -> String {
         format!(
-            "_IK_{}_{}_{}_{}", 
-            self.inner.id, 
-            self.inner.service, 
-            self.inner.product,
-            self.suffix
+            "_SK_{}_{}_{}",
+            self.inner.service, self.inner.product, self.suffix
         )
     }
-    
+
+    fn intermediate_key_id(&self) -> String {
+        format!(
+            "_IK_{}_{}_{}_{}",
+            self.inner.id, self.inner.service, self.inner.product, self.suffix
+        )
+    }
+
     fn is_valid_intermediate_key_id(&self, id: &str) -> bool {
-        // Match the Go implementation behavior: check for exact match or if it starts 
+        // Match the Go implementation behavior: check for exact match or if it starts
         // with the default partition's intermediate key ID
         id == self.intermediate_key_id() || id.starts_with(&self.inner.intermediate_key_id())
     }

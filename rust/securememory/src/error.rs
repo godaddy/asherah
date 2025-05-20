@@ -15,16 +15,16 @@ use thiserror::Error;
 ///
 /// fn process_secret() -> Result<()> {
 ///     let factory = DefaultSecretFactory::new();
-///     
+///
 ///     // This will result in an OperationFailed error
 ///     let empty_vec = Vec::<u8>::new();
 ///     let result = factory.new(&mut empty_vec.clone());
-///     
+///
 ///     if let Err(e) = result {
 ///         println!("Error creating secret: {}", e);
 ///         // Handle the error appropriately
 ///     }
-///     
+///
 ///     Ok(())
 /// }
 /// ```
@@ -95,14 +95,14 @@ pub enum SecureMemoryError {
     /// creating a secret with invalid parameters or performing invalid operations.
     #[error("Secret operation failed: {0}")]
     OperationFailed(String),
-    
+
     /// Memory is read-only and cannot be modified.
     ///
     /// This error occurs when attempting to modify memory that has been marked
     /// as read-only, such as trying to write to a frozen buffer.
     #[error("Memory is read-only: {0}")]
     ReadOnlyMemory(String),
-    
+
     /// Failed to generate secure random data.
     ///
     /// This error occurs when the system fails to generate cryptographically
@@ -110,7 +110,7 @@ pub enum SecureMemoryError {
     /// values.
     #[error("Random generation failed: {0}")]
     RandomGenerationFailed(String),
-    
+
     /// Memory corruption or buffer overflow detected.
     ///
     /// This error occurs when memory corruption is detected, such as when
@@ -130,7 +130,9 @@ impl From<memguard::MemguardError> for SecureMemoryError {
             MemguardError::MemoryUnlockFailed(msg) => SecureMemoryError::MemoryUnlockFailed(msg),
             MemguardError::OperationFailed(msg) => SecureMemoryError::OperationFailed(msg),
             MemguardError::MemcallError(e) => SecureMemoryError::OsError(e.to_string()),
-            MemguardError::CryptoError(msg) => SecureMemoryError::OperationFailed(format!("Crypto error: {}", msg)),
+            MemguardError::CryptoError(msg) => {
+                SecureMemoryError::OperationFailed(format!("Crypto error: {}", msg))
+            }
             MemguardError::OsError(msg) => SecureMemoryError::OsError(msg),
             MemguardError::IoError(e) => SecureMemoryError::OsError(e.to_string()),
             MemguardError::MemoryCorruption(msg) => SecureMemoryError::MemoryCorruption(msg),
@@ -154,7 +156,7 @@ impl From<memguard::MemguardError> for SecureMemoryError {
 ///     let factory = DefaultSecretFactory::new();
 ///     let mut data = b"sensitive-data".to_vec();
 ///     let secret = factory.new(&mut data)?;
-///     
+///
 ///     secret.with_bytes_func(|bytes| {
 ///         let result = String::from_utf8_lossy(bytes).to_string();
 ///         Ok((result, Vec::new()))

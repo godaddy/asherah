@@ -4,10 +4,10 @@ use crate::util::{scramble, wipe, PAGE_SIZE};
 use log::{debug, error};
 use memcall::{self, MemoryProtection};
 use std::fmt;
-use std::io::{ErrorKind, Read};
-use std::sync::{Arc, Mutex};
 use std::fmt::Debug;
+use std::io::{ErrorKind, Read};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 type Result<T> = std::result::Result<T, MemguardError>;
 
@@ -63,7 +63,7 @@ impl Clone for Buffer {
             error!("Attempted to clone a destroyed buffer");
             return Self::null();
         }
-        
+
         // Create a deep copy of the buffer data
         // This creates an independent buffer that won't be affected when the original is destroyed
         match self.inner.lock() {
@@ -71,13 +71,15 @@ impl Clone for Buffer {
                 if state.memory_allocation.is_empty() {
                     return Self::null();
                 }
-                
+
                 let size = state.data_region_len;
                 // Get the original data
-                let orig_data = state.memory_allocation[state.data_region_offset..(state.data_region_offset + state.data_region_len)].to_vec();
+                let orig_data = state.memory_allocation
+                    [state.data_region_offset..(state.data_region_offset + state.data_region_len)]
+                    .to_vec();
                 // Drop the state lock before calling with_data_mut to avoid deadlock
                 drop(state);
-                
+
                 // Create a new buffer with the same size as the original's data region
                 match Buffer::new(size) {
                     Ok(new_buffer) => {
@@ -86,9 +88,7 @@ impl Clone for Buffer {
                             new_data.copy_from_slice(&orig_data);
                             Ok(())
                         }) {
-                            Ok(_) => {
-                                new_buffer
-                            }
+                            Ok(_) => new_buffer,
                             Err(e) => {
                                 error!("Failed to copy data to cloned buffer: {}", e);
                                 Self::null()
@@ -114,13 +114,19 @@ impl Buffer {
     // Test-only function to corrupt the canary for testing panic on destroy.
     // This is inherently unsafe and bypasses normal protections.
     pub(crate) fn test_corrupt_canary(&self) {
-        if !self.is_alive() { return; }
+        if !self.is_alive() {
+            return;
+        }
         let mut state = self.inner.lock().unwrap();
         if state.canary_region_len > 0 {
             // Make inner region writable to modify canary
             let start = state.inner_offset;
             let end = state.inner_offset + state.inner_len;
-            memcall::protect(&mut state.memory_allocation[start..end], MemoryProtection::ReadWrite).unwrap();
+            memcall::protect(
+                &mut state.memory_allocation[start..end],
+                MemoryProtection::ReadWrite,
+            )
+            .unwrap();
             state.mutable = true;
 
             let start = state.canary_region_offset;
@@ -132,7 +138,11 @@ impl Buffer {
             // Revert to ReadOnly as it's the typical state after mutation.
             let start = state.inner_offset;
             let end = state.inner_offset + state.inner_len;
-            memcall::protect(&mut state.memory_allocation[start..end], MemoryProtection::ReadOnly).unwrap();
+            memcall::protect(
+                &mut state.memory_allocation[start..end],
+                MemoryProtection::ReadOnly,
+            )
+            .unwrap();
             state.mutable = false;
         }
     }
@@ -169,7 +179,7 @@ struct BufferState {
     // In Go's model: inner = [canary_bytes... data_bytes...]
     // So, data_offset_in_inner = canary_len_actual
     // data_offset_abs = inner_offset + canary_len_actual
-    data_region_offset: usize, 
+    data_region_offset: usize,
     data_region_len: usize,
 
     canary_region_offset: usize, // Start of canary within inner_offset
@@ -185,21 +195,21 @@ impl Drop for BufferState {
         if crate::globals::is_shutdown_in_progress() {
             return;
         }
-        
+
         if !self.memory_allocation.is_empty() {
             // If memory_allocation was created with Vec::from_raw_parts from a memcall allocation,
             // we need to give it back to memcall::free_aligned.
             // To do this, we must prevent Vec's own Drop from running on this memory.
             let mut temp_vec = std::mem::take(&mut self.memory_allocation);
-            
+
             // Use stable API: get pointer and length manually
             let ptr = temp_vec.as_mut_ptr();
             let len = temp_vec.len();
             let _cap = temp_vec.capacity();
-            
+
             // Prevent the Vec from being dropped and freeing the memory
             std::mem::forget(temp_vec);
-            
+
             // Ensure it's not a zero-sized slice if ptr is dangling
             if len > 0 {
                 // Before freeing, it's good practice to ensure it's unlocked and writable if possible,
@@ -208,7 +218,7 @@ impl Drop for BufferState {
                 if self.inner_len > 0 && self.inner_offset + self.inner_len <= len {
                     #[cfg(all(not(test), not(feature = "no-mlock")))]
                     {
-                        let inner_slice_to_unlock = unsafe { 
+                        let inner_slice_to_unlock = unsafe {
                             let full_slice = std::slice::from_raw_parts_mut(ptr, len);
                             &mut full_slice[self.inner_offset..(self.inner_offset + self.inner_len)]
                         };
@@ -234,13 +244,15 @@ impl Buffer {
             // No canaries to verify
             return Ok(());
         }
-        
+
         // Since the guard pages are set to NoAccess, we need to temporarily make them readable
         // to verify the canaries. This is safe because we're only reading, not writing.
-        
+
         // Save current canary before changing protection
-        let current_canary = state.memory_allocation[state.canary_region_offset..(state.canary_region_offset + state.canary_region_len)].to_vec();
-        
+        let current_canary = state.memory_allocation
+            [state.canary_region_offset..(state.canary_region_offset + state.canary_region_len)]
+            .to_vec();
+
         // Temporarily make preguard readable
         let preguard_canary = {
             // Calculate indices before creating slices
@@ -248,28 +260,34 @@ impl Buffer {
             let preguard_end = state.preguard_offset + state.preguard_len;
             let canary_start = state.preguard_offset;
             let canary_end = state.preguard_offset + state.canary_region_len;
-            
+
             // Change protection before reading
             {
                 let preguard_slice = &mut state.memory_allocation[preguard_start..preguard_end];
                 if let Err(e) = memcall::protect(preguard_slice, MemoryProtection::ReadOnly) {
-                    return Err(MemguardError::ProtectionFailed(format!("Failed to make preguard readable: {}", e)));
+                    return Err(MemguardError::ProtectionFailed(format!(
+                        "Failed to make preguard readable: {}",
+                        e
+                    )));
                 }
             }
-            
+
             // Read preguard canary
             let canary = state.memory_allocation[canary_start..canary_end].to_vec();
-            
+
             // Restore preguard protection
             {
                 let preguard_slice = &mut state.memory_allocation[preguard_start..preguard_end];
                 if let Err(e) = memcall::protect(preguard_slice, MemoryProtection::NoAccess) {
-                    return Err(MemguardError::ProtectionFailed(format!("Failed to restore preguard protection: {}", e)));
+                    return Err(MemguardError::ProtectionFailed(format!(
+                        "Failed to restore preguard protection: {}",
+                        e
+                    )));
                 }
             }
             canary
         };
-        
+
         // Temporarily make postguard readable
         let postguard_canary = {
             // Calculate indices before creating slices
@@ -277,36 +295,45 @@ impl Buffer {
             let postguard_end = state.postguard_offset + state.postguard_len;
             let canary_start = state.postguard_offset;
             let canary_end = state.postguard_offset + state.canary_region_len;
-            
+
             // Change protection before reading
             {
                 let postguard_slice = &mut state.memory_allocation[postguard_start..postguard_end];
                 if let Err(e) = memcall::protect(postguard_slice, MemoryProtection::ReadOnly) {
-                    return Err(MemguardError::ProtectionFailed(format!("Failed to make postguard readable: {}", e)));
+                    return Err(MemguardError::ProtectionFailed(format!(
+                        "Failed to make postguard readable: {}",
+                        e
+                    )));
                 }
             }
-            
+
             // Read postguard canary
             let canary = state.memory_allocation[canary_start..canary_end].to_vec();
-            
+
             // Restore postguard protection
             {
                 let postguard_slice = &mut state.memory_allocation[postguard_start..postguard_end];
                 if let Err(e) = memcall::protect(postguard_slice, MemoryProtection::NoAccess) {
-                    return Err(MemguardError::ProtectionFailed(format!("Failed to restore postguard protection: {}", e)));
+                    return Err(MemguardError::ProtectionFailed(format!(
+                        "Failed to restore postguard protection: {}",
+                        e
+                    )));
                 }
             }
             canary
         };
-        
-        if !crate::util::constant_time_eq(&preguard_canary, &current_canary) ||
-           !crate::util::constant_time_eq(&postguard_canary, &current_canary) {
-            return Err(MemguardError::MemoryCorruption("Canary verification failed".to_string()));
+
+        if !crate::util::constant_time_eq(&preguard_canary, &current_canary)
+            || !crate::util::constant_time_eq(&postguard_canary, &current_canary)
+        {
+            return Err(MemguardError::MemoryCorruption(
+                "Canary verification failed".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Provides the size of the buffer's data region as a Result.
     ///
     /// This is a variant of size() that returns a Result instead of a bare usize.
@@ -336,11 +363,13 @@ impl Buffer {
             }
             Err(_) => {
                 // Mutex is poisoned
-                Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()))
+                Err(MemguardError::OperationFailed(
+                    "Buffer state mutex was poisoned".to_string(),
+                ))
             }
         }
     }
-    
+
     /// Creates a new secure buffer with the specified size.
     ///
     /// This function allocates memory, locks it to prevent swapping,
@@ -366,13 +395,12 @@ impl Buffer {
     /// let buffer = Buffer::new(32).expect("Failed to create buffer");
     /// ```
     pub fn new(size: usize) -> Result<Self> {
-        
         // Validate size
         if size == 0 {
             // Go's memguard.NewBuffer(0) returns a "null" buffer.
             return Ok(Self::null());
         }
-    
+
         // Create buffer instance
         let destroyed = Arc::new(AtomicBool::new(false));
 
@@ -381,7 +409,7 @@ impl Buffer {
 
         // The inner region contains user data + canary. Its total length is rounded to page size.
         let inner_region_total_len = crate::util::round_to_page_size(user_data_len);
-        
+
         // Note: actual_canary_len is now calculated after alignment adjustment
 
         let total_alloc_len = (2 * page_size) + inner_region_total_len;
@@ -390,9 +418,7 @@ impl Buffer {
         // memcall::allocate_aligned is assumed to return a *mut u8 pointer.
         // We need ReadWrite initially to set it up.
         let mem_ptr = match memcall::allocate_aligned(total_alloc_len, page_size) {
-            Ok(ptr) => {
-                ptr
-            },
+            Ok(ptr) => ptr,
             Err(e) => {
                 // Go panics here. For a direct port, we might panic or return a specific error.
                 return Err(MemguardError::MemcallError(e));
@@ -401,7 +427,8 @@ impl Buffer {
 
         // Unsafe block to work with the raw pointer from memcall.
         // The Vec takes ownership and will handle deallocation via BufferState::drop -> memcall::free_aligned.
-        let mut allocation = unsafe { Vec::from_raw_parts(mem_ptr, total_alloc_len, total_alloc_len) };
+        let mut allocation =
+            unsafe { Vec::from_raw_parts(mem_ptr, total_alloc_len, total_alloc_len) };
 
         // Define region offsets and lengths
         let preguard_offset = 0;
@@ -419,7 +446,7 @@ impl Buffer {
         // Calculate data offset at the end of inner region, but ensure it's aligned
         let data_region_end = inner_offset + inner_len;
         let data_region_offset = data_region_end - user_data_len;
-        
+
         // Ensure data_region_offset is aligned to 8 bytes for u64 and similar types
         let alignment_offset = data_region_offset % 8;
         let data_region_offset = if alignment_offset != 0 {
@@ -428,7 +455,7 @@ impl Buffer {
         } else {
             data_region_offset
         };
-        
+
         // Now adjust the canary region to fill the remaining space
         let actual_canary_len = data_region_offset - inner_offset;
         let canary_region_offset = inner_offset; // Canary is at the start of the inner region
@@ -436,14 +463,18 @@ impl Buffer {
         // Set inner region to ReadWrite before locking (Go memguard allocates memory which is already ReadWrite)
         let inner_slice_for_protect = &mut allocation[inner_offset..(inner_offset + inner_len)];
         match memcall::protect(inner_slice_for_protect, MemoryProtection::ReadWrite) {
-            Ok(()) => {
-            },
+            Ok(()) => {}
             Err(e) => {
-                unsafe { let _ = memcall::free_aligned(mem_ptr, total_alloc_len); }
-                return Err(MemguardError::ProtectionFailed(format!("Failed to set inner to ReadWrite before lock: {}", e)));
+                unsafe {
+                    let _ = memcall::free_aligned(mem_ptr, total_alloc_len);
+                }
+                return Err(MemguardError::ProtectionFailed(format!(
+                    "Failed to set inner to ReadWrite before lock: {}",
+                    e
+                )));
             }
         }
-        
+
         // Lock the inner region (data + canary).
         // memcall::lock operates on a mutable slice.
         // Skip locking in tests to avoid macOS/test environment issues
@@ -451,26 +482,32 @@ impl Buffer {
         {
             let inner_slice_to_lock = &mut allocation[inner_offset..(inner_offset + inner_len)];
             match memcall::lock(inner_slice_to_lock) {
-                Ok(()) => {
-                },
+                Ok(()) => {}
                 Err(e) => {
-                    unsafe { let _ = memcall::free_aligned(mem_ptr, total_alloc_len); } // Cleanup before error
-                    return Err(MemguardError::MemoryLockFailed(format!("Failed to lock inner region: {}", e)));
+                    unsafe {
+                        let _ = memcall::free_aligned(mem_ptr, total_alloc_len);
+                    } // Cleanup before error
+                    return Err(MemguardError::MemoryLockFailed(format!(
+                        "Failed to lock inner region: {}",
+                        e
+                    )));
                 }
             }
         }
         #[cfg(test)]
-        {
-        }
+        {}
 
         // Initialize canary if its length is > 0.
         if actual_canary_len > 0 {
-            let canary_s = &mut allocation[canary_region_offset..(canary_region_offset + actual_canary_len)];
-            match scramble(canary_s) { // Assuming scramble returns Result
-                Ok(()) => {
-                },
+            let canary_s =
+                &mut allocation[canary_region_offset..(canary_region_offset + actual_canary_len)];
+            match scramble(canary_s) {
+                // Assuming scramble returns Result
+                Ok(()) => {}
                 Err(e) => {
-                    unsafe { let _ = memcall::free_aligned(mem_ptr, total_alloc_len); }
+                    unsafe {
+                        let _ = memcall::free_aligned(mem_ptr, total_alloc_len);
+                    }
                     return Err(e);
                 }
             }
@@ -479,28 +516,38 @@ impl Buffer {
             // These copies are made BEFORE guard pages are made NoAccess.
             // Clone the canary to avoid borrowing issues
             let canary_clone = canary_s.to_vec();
-            allocation[preguard_offset..(preguard_offset + actual_canary_len)].copy_from_slice(&canary_clone);
-            allocation[postguard_offset..(postguard_offset + actual_canary_len)].copy_from_slice(&canary_clone);
+            allocation[preguard_offset..(preguard_offset + actual_canary_len)]
+                .copy_from_slice(&canary_clone);
+            allocation[postguard_offset..(postguard_offset + actual_canary_len)]
+                .copy_from_slice(&canary_clone);
         }
 
         // Make guard pages NoAccess.
         let preguard_s = &mut allocation[preguard_offset..(preguard_offset + preguard_len)];
         match memcall::protect(preguard_s, MemoryProtection::NoAccess) {
-            Ok(()) => {
-            },
+            Ok(()) => {}
             Err(e) => {
-                unsafe { let _ = memcall::free_aligned(mem_ptr, total_alloc_len); }
-                return Err(MemguardError::ProtectionFailed(format!("Failed to protect preguard: {}", e)));
+                unsafe {
+                    let _ = memcall::free_aligned(mem_ptr, total_alloc_len);
+                }
+                return Err(MemguardError::ProtectionFailed(format!(
+                    "Failed to protect preguard: {}",
+                    e
+                )));
             }
         }
 
         let postguard_s = &mut allocation[postguard_offset..(postguard_offset + postguard_len)];
         match memcall::protect(postguard_s, MemoryProtection::NoAccess) {
-            Ok(()) => {
-            },
+            Ok(()) => {}
             Err(e) => {
-                unsafe { let _ = memcall::free_aligned(mem_ptr, total_alloc_len); }
-                return Err(MemguardError::ProtectionFailed(format!("Failed to protect postguard: {}", e)));
+                unsafe {
+                    let _ = memcall::free_aligned(mem_ptr, total_alloc_len);
+                }
+                return Err(MemguardError::ProtectionFailed(format!(
+                    "Failed to protect postguard: {}",
+                    e
+                )));
             }
         }
 
@@ -511,34 +558,36 @@ impl Buffer {
 
         let state = BufferState {
             memory_allocation: allocation,
-            preguard_offset, preguard_len,
-            inner_offset, inner_len,
-            postguard_offset, postguard_len,
-            data_region_offset, data_region_len: user_data_len,
-            canary_region_offset, canary_region_len: actual_canary_len,
+            preguard_offset,
+            preguard_len,
+            inner_offset,
+            inner_len,
+            postguard_offset,
+            postguard_len,
+            data_region_offset,
+            data_region_len: user_data_len,
+            canary_region_offset,
+            canary_region_len: actual_canary_len,
             mutable: true, // Starts mutable (ReadWrite)
         };
 
         let inner = Arc::new(Mutex::new(state));
-        
-        let buffer = Self {
-            inner,
-            destroyed,
-        };
-        
+
+        let buffer = Self { inner, destroyed };
+
         // Register the buffer in the global registry
         // NOTE: We must be careful here - if we create a new Buffer temporarily and it gets dropped,
         // its Drop implementation will try to acquire the registry lock again causing deadlock.
-        
+
         // Register the buffer in the global registry
         // Create a manual "clone" that shares the internal state for registry purposes
         let registry_buffer = Self {
             inner: buffer.inner.clone(),
             destroyed: buffer.destroyed.clone(),
         };
-        
+
         let buffer_for_registry = Arc::new(Mutex::new(registry_buffer));
-        
+
         if let Ok(mut registry) = globals::get_buffer_registry().lock() {
             registry.add(buffer_for_registry);
         } else {
@@ -546,11 +595,11 @@ impl Buffer {
             // Purge/safe_exit might panic later if they also can't get the registry lock.
             error!("Failed to lock buffer registry during Buffer::new (poisoned). Buffer will not be registered globally.");
         }
-        
+
         // Return the newly created buffer
         Ok(buffer)
     }
-    
+
     /// Creates an empty buffer for operations that require a buffer object
     /// but don't need to store actual data.
     ///
@@ -559,20 +608,25 @@ impl Buffer {
     fn null() -> Self {
         let state = BufferState {
             memory_allocation: Vec::new(),
-            preguard_offset:0, preguard_len:0,
-            inner_offset:0, inner_len:0,
-            postguard_offset:0, postguard_len:0,
-            data_region_offset:0, data_region_len:0,
-            canary_region_offset:0, canary_region_len:0,
+            preguard_offset: 0,
+            preguard_len: 0,
+            inner_offset: 0,
+            inner_len: 0,
+            postguard_offset: 0,
+            postguard_len: 0,
+            data_region_offset: 0,
+            data_region_len: 0,
+            canary_region_offset: 0,
+            canary_region_len: 0,
             mutable: false,
         };
-        
+
         Self {
             inner: Arc::new(Mutex::new(state)),
             destroyed: Arc::new(AtomicBool::new(true)),
         }
     }
-    
+
     /// Executes a function with immutable access to the buffer's data.
     ///
     /// This method temporarily changes memory protection to allow reading,
@@ -619,13 +673,15 @@ impl Buffer {
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Ensure inner region is at least ReadOnly for the duration of the action.
         // We need to check current state first.
         let needs_protection_change;
         {
             let state = self.inner.lock().unwrap();
-            if state.memory_allocation.is_empty() { return Err(MemguardError::SecretClosed); }
+            if state.memory_allocation.is_empty() {
+                return Err(MemguardError::SecretClosed);
+            }
             needs_protection_change = !state.mutable; // if not mutable (ReadWrite), it might be ReadOnly or NoAccess (NoAccess for inner is unlikely here)
         } // Release lock
 
@@ -637,7 +693,8 @@ impl Buffer {
         {
             let state = self.inner.lock().unwrap();
             // Get a reference to the data region
-            let data_slice = &state.memory_allocation[state.data_region_offset..(state.data_region_offset + state.data_region_len)];
+            let data_slice = &state.memory_allocation
+                [state.data_region_offset..(state.data_region_offset + state.data_region_len)];
             // Execute the action
             result = action(data_slice);
         } // Release lock
@@ -646,7 +703,7 @@ impl Buffer {
         // The model is that Freeze/Melt are explicit. with_data just ensures readability.
         result
     }
-    
+
     /// Executes a function with mutable access to the buffer's data.
     ///
     /// This method temporarily changes memory protection to allow writing,
@@ -691,11 +748,17 @@ impl Buffer {
         // Check if buffer is frozen (ReadOnly)
         let is_frozen = match self.inner.lock() {
             Ok(state) => !state.mutable,
-            Err(_) => return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string())),
+            Err(_) => {
+                return Err(MemguardError::OperationFailed(
+                    "Buffer state mutex was poisoned".to_string(),
+                ))
+            }
         };
-        
+
         if is_frozen {
-            return Err(MemguardError::ProtectionFailed("Buffer is frozen (read-only)".to_string()));
+            return Err(MemguardError::ProtectionFailed(
+                "Buffer is frozen (read-only)".to_string(),
+            ));
         }
 
         // Ensure inner region is ReadWrite for the action.
@@ -704,7 +767,8 @@ impl Buffer {
         let result;
         {
             let mut state = self.inner.lock().unwrap();
-            if state.memory_allocation.is_empty() { // Should be caught by destroyed() but good check
+            if state.memory_allocation.is_empty() {
+                // Should be caught by destroyed() but good check
                 // Release lock before returning to avoid poisoning if protect fails next
                 drop(state);
                 self.protect(MemoryProtection::ReadOnly)?; // Try to revert
@@ -723,7 +787,7 @@ impl Buffer {
         // So we just return the result without changing protection
         result
     }
-    
+
     /// Fills the buffer with random data.
     ///
     /// This is useful for generating cryptographic keys or resetting
@@ -749,11 +813,9 @@ impl Buffer {
     /// buffer.scramble().expect("Failed to scramble buffer");
     /// ```
     pub fn scramble(&self) -> Result<()> {
-        self.with_data_mut(|data| {
-            scramble(data)
-        })
+        self.with_data_mut(|data| scramble(data))
     }
-    
+
     /// Applies the specified memory protection to the buffer's data region.
     ///
     /// # Arguments
@@ -772,14 +834,14 @@ impl Buffer {
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         let mut state = self.inner.lock().unwrap();
-        
+
         // Skip if buffer is empty
         if state.memory_allocation.is_empty() {
             return Ok(());
         }
-    
+
         let start = state.inner_offset;
         let end = state.inner_offset + state.inner_len;
         let inner_slice_to_protect = &mut state.memory_allocation[start..end];
@@ -793,25 +855,29 @@ impl Buffer {
             Err(e) => {
                 // Go panics on protect errors in Freeze/Melt.
                 Err(MemguardError::ProtectionFailed(format!(
-                    "Failed to set protection {:?}: {}", protection, e
+                    "Failed to set protection {:?}: {}",
+                    protection, e
                 )))
             }
         }
     }
-    
+
     /// Internal destroy method used by registry's destroy_all to avoid double-locking
     pub(crate) fn destroy_internal(&self) -> Result<()> {
-        eprintln!("DEBUG: Buffer::destroy_internal() called for buffer {:p}", self);
+        eprintln!(
+            "DEBUG: Buffer::destroy_internal() called for buffer {:p}",
+            self
+        );
         // Atomically mark as destroyed. If already marked, return.
         if self.destroyed.swap(true, Ordering::SeqCst) {
             eprintln!("DEBUG: Buffer already destroyed");
             return Ok(()); // Already destroyed or being destroyed by another thread
         }
-        
+
         // Call the main destroy implementation without registry removal
         self.destroy_impl()
     }
-    
+
     /// Destroys the buffer, securely wiping its contents.
     ///
     /// # Returns
@@ -842,7 +908,7 @@ impl Buffer {
             eprintln!("DEBUG: Buffer already destroyed");
             return Ok(()); // Already destroyed or being destroyed by another thread
         }
-        
+
         // Call the main destroy implementation
         let result_of_destroy = self.destroy_impl();
 
@@ -852,28 +918,34 @@ impl Buffer {
         // to avoid lock order inversion (see LOCK_ORDERING.md and globals.rs comment)
         if result_of_destroy.is_ok() {
             eprintln!("DEBUG: Buffer::destroy() removing from registry");
-            crate::globals::get_buffer_registry().lock().unwrap().remove(self);
+            crate::globals::get_buffer_registry()
+                .lock()
+                .unwrap()
+                .remove(self);
             eprintln!("DEBUG: Buffer::destroy() removed from registry");
         }
-        
+
         result_of_destroy
     }
-    
+
     /// Main destroy implementation shared by destroy() and destroy_internal()
     fn destroy_impl(&self) -> Result<()> {
         eprintln!("DEBUG: destroy_impl called");
-        
+
         // Try to acquire a lock without blocking indefinitely
         match self.inner.try_lock() {
             Ok(mut state) => {
-                if state.memory_allocation.is_empty() { // Already cleaned up
+                if state.memory_allocation.is_empty() {
+                    // Already cleaned up
                     eprintln!("DEBUG: destroy_impl - already cleaned up");
                     return Ok(());
                 }
-                
+
                 // Make the entire allocated memory region ReadWrite.
                 // This includes guard pages for canary verification.
-                if let Err(e) = memcall::protect(&mut state.memory_allocation, MemoryProtection::ReadWrite) {
+                if let Err(e) =
+                    memcall::protect(&mut state.memory_allocation, MemoryProtection::ReadWrite)
+                {
                     // Go's core.Buffer.destroy returns an error here.
                     // We should attempt to wipe what we can and then return an error.
                     error!("Failed to make memory ReadWrite for destruction: {}. Attempting to wipe data region.", e);
@@ -882,7 +954,10 @@ impl Buffer {
                     wipe(&mut state.memory_allocation[start..end]);
                     // Proceed with unlock/free, but the operation has failed.
                     // The Drop impl for BufferState will attempt to free.
-                    return Err(MemguardError::ProtectionFailed(format!("Failed to set ReadWrite for destroy: {}", e)));
+                    return Err(MemguardError::ProtectionFailed(format!(
+                        "Failed to set ReadWrite for destroy: {}",
+                        e
+                    )));
                 }
                 state.mutable = true;
 
@@ -902,24 +977,27 @@ impl Buffer {
 
                     if canary_slice != preguard_slice || canary_slice != postguard_slice {
                         error!("Canary verification failed. Buffer overflow detected!");
-                        
+
                         // Wipe the entire allocation, including overwritten regions.
                         wipe(&mut state.memory_allocation);
-                        
+
                         // Unlock the inner region if required - best effort.
                         if state.inner_len > 0 {
                             #[cfg(all(not(test), not(feature = "no-mlock")))]
                             {
                                 let start = state.inner_offset;
                                 let end = state.inner_offset + state.inner_len;
-                                let inner_slice_to_unlock = &mut state.memory_allocation[start..end];
+                                let inner_slice_to_unlock =
+                                    &mut state.memory_allocation[start..end];
                                 memcall::unlock(inner_slice_to_unlock).ok();
                             }
                         }
                         // The Drop impl of BufferState will call free_aligned.
                         // To ensure state is dropped now:
-                        drop(state); 
-                        return Err(MemguardError::OperationFailed("Canary verification failed; buffer overflow detected".to_string()));
+                        drop(state);
+                        return Err(MemguardError::OperationFailed(
+                            "Canary verification failed; buffer overflow detected".to_string(),
+                        ));
                     }
                 }
 
@@ -938,17 +1016,20 @@ impl Buffer {
                             error!("Failed to unlock inner region during destruction: {}", e);
                             // The Drop impl of BufferState will attempt to free.
                             drop(state);
-                            return Err(MemguardError::MemoryUnlockFailed(format!("Failed to unlock inner region: {}", e)));
+                            return Err(MemguardError::MemoryUnlockFailed(format!(
+                                "Failed to unlock inner region: {}",
+                                e
+                            )));
                         }
                     }
                 }
-                
+
                 // Memory will be freed by BufferState's Drop impl when `state` goes out of scope.
                 // To be explicit and match Go's order (wipe, unlock, free):
                 drop(state); // This triggers BufferState::drop which calls free_aligned.
                 eprintln!("DEBUG: destroy_impl - complete");
                 Ok(())
-            },
+            }
             Err(_) => {
                 // Couldn't get a lock, but we've marked it as destroyed.
                 // This implies another thread is likely handling or has handled destruction.
@@ -957,7 +1038,7 @@ impl Buffer {
             }
         }
     }
-    
+
     /// Returns the size of the buffer in bytes.
     ///
     /// # Returns
@@ -976,13 +1057,13 @@ impl Buffer {
         if self.destroyed() {
             return 0;
         }
-        
+
         match self.inner.try_lock() {
             Ok(state) => state.data_region_len,
             Err(_) => 0, // If locked, assume 0 or handle error. Go doesn't have this exact scenario for Size().
         }
     }
-    
+
     /// Checks if the buffer is alive (not destroyed).
     ///
     /// # Returns
@@ -1003,7 +1084,7 @@ impl Buffer {
     pub fn is_alive(&self) -> bool {
         !self.destroyed()
     }
-    
+
     /// Checks if the buffer has been destroyed.
     ///
     /// # Returns
@@ -1012,9 +1093,9 @@ impl Buffer {
     pub fn destroyed(&self) -> bool {
         self.destroyed.load(Ordering::Relaxed)
     }
-    
+
     /// Internal method for registry to get a unique identifier for this buffer
-    /// Used to avoid deadlocks when removing from registry  
+    /// Used to avoid deadlocks when removing from registry
     pub(crate) fn get_inner_ptr(&self) -> usize {
         Arc::as_ptr(&self.inner) as usize
     }
@@ -1022,7 +1103,8 @@ impl Buffer {
     /// Attempts a best-effort wipe of the data region if the primary destroy mechanism fails.
     /// This is intended for use by `BufferRegistry::destroy_all` during `purge`.
     pub(crate) fn attempt_fallback_wipe_on_destroy_failure(&self) -> Result<()> {
-        if self.destroyed.load(Ordering::Relaxed) { // Check destroyed status again, might have changed
+        if self.destroyed.load(Ordering::Relaxed) {
+            // Check destroyed status again, might have changed
             return Ok(());
         }
 
@@ -1032,7 +1114,9 @@ impl Buffer {
                     return Ok(());
                 }
                 // Best effort: make the whole allocation writable
-                if memcall::protect(&mut state.memory_allocation, MemoryProtection::ReadWrite).is_ok() {
+                if memcall::protect(&mut state.memory_allocation, MemoryProtection::ReadWrite)
+                    .is_ok()
+                {
                     state.mutable = true;
                     // Wipe just the data region as a fallback
                     let start = state.data_region_offset;
@@ -1041,7 +1125,9 @@ impl Buffer {
                     log::warn!("Buffer fallback wipe executed for data region due to earlier destroy failure.");
                 } else {
                     log::error!("Buffer fallback wipe failed: Could not make memory ReadWrite.");
-                    return Err(MemguardError::ProtectionFailed("Fallback wipe ReadWrite failed".to_string()));
+                    return Err(MemguardError::ProtectionFailed(
+                        "Fallback wipe ReadWrite failed".to_string(),
+                    ));
                 }
                 Ok(())
             }
@@ -1049,7 +1135,9 @@ impl Buffer {
                 log::warn!("Buffer fallback wipe skipped: Could not acquire lock. Buffer might be in use or already handled.");
                 // If we can't get the lock, it's hard to do much.
                 // This indicates a complex state, possibly another thread is still interacting.
-                Err(MemguardError::OperationFailed("Fallback wipe lock acquisition failed".to_string()))
+                Err(MemguardError::OperationFailed(
+                    "Fallback wipe lock acquisition failed".to_string(),
+                ))
             }
         }
     }
@@ -1246,8 +1334,12 @@ impl Buffer {
 
         loop {
             match reader.read(&mut byte_buf) {
-                Ok(0) => { // EOF
-                    io_error_opt = Some(std::io::Error::new(ErrorKind::UnexpectedEof, "EOF before delimiter"));
+                Ok(0) => {
+                    // EOF
+                    io_error_opt = Some(std::io::Error::new(
+                        ErrorKind::UnexpectedEof,
+                        "EOF before delimiter",
+                    ));
                     break;
                 }
                 Ok(1) => {
@@ -1262,7 +1354,10 @@ impl Buffer {
                 }
                 Ok(_) => {
                     // Should never happen with a 1-byte buffer, but handle it anyway
-                    io_error_opt = Some(std::io::Error::new(ErrorKind::Other, "Unexpected multi-byte read"));
+                    io_error_opt = Some(std::io::Error::new(
+                        ErrorKind::Other,
+                        "Unexpected multi-byte read",
+                    ));
                     break;
                 }
                 Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
@@ -1321,9 +1416,7 @@ impl Buffer {
     /// }).unwrap();
     /// buffer.destroy().unwrap();
     /// ```
-    pub fn new_from_entire_reader(
-        reader: &mut impl Read,
-    ) -> Result<(Self, Option<MemguardError>)> {
+    pub fn new_from_entire_reader(reader: &mut impl Read) -> Result<(Self, Option<MemguardError>)> {
         let mut bytes_read_vec = Vec::with_capacity(*PAGE_SIZE);
         let mut chunk = vec![0u8; *PAGE_SIZE]; // Read in page-sized chunks like Go
         let mut io_error_opt: Option<std::io::Error> = None;
@@ -1393,7 +1486,10 @@ impl Buffer {
         let b = Buffer::new(src.len())?;
         // with_data_mut returns Result<Result<T, MemguardError>, MemguardError>
         // We need to flatten it.
-        b.with_data_mut(|data_slice| { data_slice.copy_from_slice(src); Ok(()) } )?;
+        b.with_data_mut(|data_slice| {
+            data_slice.copy_from_slice(src);
+            Ok(())
+        })?;
         wipe(src);
         b.protect(MemoryProtection::ReadOnly)?;
         Ok(b)
@@ -1492,70 +1588,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[u16];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<u16>() || 
-               data_ptr.align_offset(std::mem::align_of::<u16>()) != 0 {
+            if data_len < std::mem::size_of::<u16>()
+                || data_ptr.align_offset(std::mem::align_of::<u16>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u16 values we can get from the buffer
                 let len_u16 = data_len / std::mem::size_of::<u16>();
-                
+
                 if len_u16 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many u16 values we can fit
                     let u16_slice = std::slice::from_raw_parts(
-                        data_ptr as *const u16, 
-                        len_u16 // This is already data_len / size_of::<u16>()
+                        data_ptr as *const u16,
+                        len_u16, // This is already data_len / size_of::<u16>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(u16_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1578,70 +1680,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[u32];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<u32>() || 
-               data_ptr.align_offset(std::mem::align_of::<u32>()) != 0 {
+            if data_len < std::mem::size_of::<u32>()
+                || data_ptr.align_offset(std::mem::align_of::<u32>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u32 values we can get from the buffer
                 let len_u32 = data_len / std::mem::size_of::<u32>();
-                
+
                 if len_u32 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many u32 values we can fit
                     let u32_slice = std::slice::from_raw_parts(
-                        data_ptr as *const u32, 
-                        len_u32 // This is already data_len / size_of::<u32>()
+                        data_ptr as *const u32,
+                        len_u32, // This is already data_len / size_of::<u32>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(u32_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1664,71 +1772,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[u64];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<u64>() || 
-               data_ptr.align_offset(std::mem::align_of::<u64>()) != 0 {
+            if data_len < std::mem::size_of::<u64>()
+                || data_ptr.align_offset(std::mem::align_of::<u64>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u64 values we can get from the buffer
                 let len_u64 = data_len / std::mem::size_of::<u64>();
-                
+
                 if len_u64 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many u64 values we can fit
                     let u64_slice = std::slice::from_raw_parts(
-                        data_ptr as *const u64, 
-                        len_u64 // This is already data_len / size_of::<u64>()
+                        data_ptr as *const u64,
+                        len_u64, // This is already data_len / size_of::<u64>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(u64_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1750,59 +1863,64 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[i8];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // For i8, we don't need to check alignment since it's the same as u8
             if data_len == 0 {
                 slice_ref = &[];
             } else {
                 // We need to copy the data while we have the lock so we can return it safely
                 let i8_slice = std::slice::from_raw_parts(
-                    data_ptr as *const i8, 
-                    data_len // Each u8 becomes an i8
+                    data_ptr as *const i8,
+                    data_len, // Each u8 becomes an i8
                 );
-                
+
                 // We need to copy the data to our temporary slice
                 temp_slice.extend_from_slice(i8_slice);
-                
+
                 // Set slice_ref to our copied data
                 slice_ref = &temp_slice;
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1825,70 +1943,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[i16];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<i16>() || 
-               data_ptr.align_offset(std::mem::align_of::<i16>()) != 0 {
+            if data_len < std::mem::size_of::<i16>()
+                || data_ptr.align_offset(std::mem::align_of::<i16>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i16 values we can get from the buffer
                 let len_i16 = data_len / std::mem::size_of::<i16>();
-                
+
                 if len_i16 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many i16 values we can fit
                     let i16_slice = std::slice::from_raw_parts(
-                        data_ptr as *const i16, 
-                        len_i16 // This is already data_len / size_of::<i16>()
+                        data_ptr as *const i16,
+                        len_i16, // This is already data_len / size_of::<i16>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(i16_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1911,70 +2035,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[i32];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<i32>() || 
-               data_ptr.align_offset(std::mem::align_of::<i32>()) != 0 {
+            if data_len < std::mem::size_of::<i32>()
+                || data_ptr.align_offset(std::mem::align_of::<i32>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i32 values we can get from the buffer
                 let len_i32 = data_len / std::mem::size_of::<i32>();
-                
+
                 if len_i32 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many i32 values we can fit
                     let i32_slice = std::slice::from_raw_parts(
-                        data_ptr as *const i32, 
-                        len_i32 // This is already data_len / size_of::<i32>()
+                        data_ptr as *const i32,
+                        len_i32, // This is already data_len / size_of::<i32>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(i32_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -1997,70 +2127,76 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
-        
+
         // Step 1: Acquire lock, create the slice reference, then release
         let slice_ref: &[i64];
         let mut temp_slice = Vec::new(); // Empty vec to hold the slice if we need to copy
-        
+
         {
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: Canary verification is only done during destroy() to match Go implementation
-            
+
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             // Check alignment and length
-            if data_len < std::mem::size_of::<i64>() || 
-               data_ptr.align_offset(std::mem::align_of::<i64>()) != 0 {
+            if data_len < std::mem::size_of::<i64>()
+                || data_ptr.align_offset(std::mem::align_of::<i64>()) != 0
+            {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i64 values we can get from the buffer
                 let len_i64 = data_len / std::mem::size_of::<i64>();
-                
+
                 if len_i64 == 0 {
                     slice_ref = &[];
                 } else {
                     // We need to copy the data while we have the lock so we can return it safely
-                    
+
                     // Find out how many i64 values we can fit
                     let i64_slice = std::slice::from_raw_parts(
-                        data_ptr as *const i64, 
-                        len_i64 // This is already data_len / size_of::<i64>()
+                        data_ptr as *const i64,
+                        len_i64, // This is already data_len / size_of::<i64>()
                     );
-                    
+
                     // We need to copy the data to our temporary slice
                     temp_slice.extend_from_slice(i64_slice);
-                    
+
                     // Set slice_ref to our copied data
                     slice_ref = &temp_slice;
                 }
             }
-            
+
             // The lock is released when state goes out of scope here
         }
-        
+
         // Step 2: Call the action with the slice_ref, outside the lock
         let result = action(slice_ref);
-        
+
         Ok(result)
     }
 
@@ -2093,9 +2229,7 @@ impl Buffer {
     where
         F: FnOnce(std::result::Result<&str, std::str::Utf8Error>) -> R,
     {
-        self.with_data(|byte_slice| {
-            Ok(action(std::str::from_utf8(byte_slice)))
-        })
+        self.with_data(|byte_slice| Ok(action(std::str::from_utf8(byte_slice))))
     }
 
     /// Provides a temporary `std::io::Cursor<&[u8]>` for reading the buffer's content.
@@ -2127,9 +2261,7 @@ impl Buffer {
     where
         F: FnOnce(std::io::Cursor<&[u8]>) -> R,
     {
-        self.with_data(|byte_slice| {
-            Ok(action(std::io::Cursor::new(byte_slice)))
-        })
+        self.with_data(|byte_slice| Ok(action(std::io::Cursor::new(byte_slice))))
     }
 
     /// Provides temporary access to a pointer to the buffer's content as `*const [u8; N]`.
@@ -2179,45 +2311,51 @@ impl Buffer {
         // IMPORTANT: This implementation avoids deadlocks by acquiring a single lock,
         // getting the data, then releasing the lock before calling the action.
         // This prevents recursive locking when the action tries to acquire the same lock.
-        
+
         // First check if the buffer is destroyed
         if self.destroyed() {
             eprintln!("DEBUG: Buffer is destroyed, returning SecretClosed");
             return Err(MemguardError::SecretClosed);
         }
-    
+
         // Acquire lock, create the pointer reference, call action, then release lock
-        { // Lock scope starts
+        {
+            // Lock scope starts
             eprintln!("DEBUG: About to acquire lock in byte_array_ptr");
             // Try to lock to avoid deadlocks
             let state = match self.inner.lock() {
                 Ok(guard) => {
                     eprintln!("DEBUG: Acquired lock successfully");
                     guard
-                },
+                }
                 Err(_) => {
                     eprintln!("DEBUG: Failed to acquire lock");
-                    return Err(MemguardError::OperationFailed("Buffer state mutex was poisoned".to_string()));
+                    return Err(MemguardError::OperationFailed(
+                        "Buffer state mutex was poisoned".to_string(),
+                    ));
                 }
             };
-            
+
             eprintln!("DEBUG: Checking if memory allocation is empty");
             // Check if the memory is valid
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
-            
+
             // Note: The Go implementation doesn't verify canaries during normal operations,
             // only during destroy. We follow the same pattern to avoid complexity with
             // memory protection and borrow checking.
-            
+
             eprintln!("DEBUG: Getting pointer to data region");
             // Get the pointer to the data region
-            let data_ptr = state.memory_allocation.as_ptr().add(state.data_region_offset);
+            let data_ptr = state
+                .memory_allocation
+                .as_ptr()
+                .add(state.data_region_offset);
             let data_len = state.data_region_len;
-            
+
             eprintln!("DEBUG: data_ptr: {:p}, data_len: {}", data_ptr, data_len);
-            
+
             // Check if we have enough space
             let ptr_opt = if data_len < N {
                 eprintln!("DEBUG: Not enough space, returning None");
@@ -2229,9 +2367,9 @@ impl Buffer {
                 eprintln!("DEBUG: Array pointer created: {:p}", ptr_array);
                 Some(ptr_array)
             };
-            
+
             // The lock is released when state goes out of scope here
-    
+
             eprintln!("DEBUG: About to call action with ptr_opt (lock held)");
             // Call the action WHILE THE LOCK IS HELD
             let result = action(ptr_opt);
@@ -2244,42 +2382,61 @@ impl Buffer {
     // These are convenience wrappers around byte_array_ptr.
 
     /// Provides temporary access to a pointer to the buffer's content as `*const [u8; 8]`.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// This function is unsafe for the same reasons as `byte_array_ptr`.
-    /// The caller must ensure that the provided action doesn't retain or use the 
+    /// The caller must ensure that the provided action doesn't retain or use the
     /// raw pointer outside of its callback scope. The pointer is only valid
     /// for the duration of the callback.
-    pub unsafe fn byte_array8_ptr<F, R>(&self, action: F) -> Result<R> where F: FnOnce(Option<*const [u8; 8]>) -> R { self.byte_array_ptr::<8, F, R>(action) }
+    pub unsafe fn byte_array8_ptr<F, R>(&self, action: F) -> Result<R>
+    where
+        F: FnOnce(Option<*const [u8; 8]>) -> R,
+    {
+        self.byte_array_ptr::<8, F, R>(action)
+    }
     /// Provides temporary access to a pointer to the buffer's content as `*const [u8; 16]`.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// This function is unsafe for the same reasons as `byte_array_ptr`.
-    /// The caller must ensure that the provided action doesn't retain or use the 
+    /// The caller must ensure that the provided action doesn't retain or use the
     /// raw pointer outside of its callback scope. The pointer is only valid
     /// for the duration of the callback.
-    pub unsafe fn byte_array16_ptr<F, R>(&self, action: F) -> Result<R> where F: FnOnce(Option<*const [u8; 16]>) -> R { self.byte_array_ptr::<16, F, R>(action) }
+    pub unsafe fn byte_array16_ptr<F, R>(&self, action: F) -> Result<R>
+    where
+        F: FnOnce(Option<*const [u8; 16]>) -> R,
+    {
+        self.byte_array_ptr::<16, F, R>(action)
+    }
     /// Provides temporary access to a pointer to the buffer's content as `*const [u8; 32]`.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// This function is unsafe for the same reasons as `byte_array_ptr`.
-    /// The caller must ensure that the provided action doesn't retain or use the 
+    /// The caller must ensure that the provided action doesn't retain or use the
     /// raw pointer outside of its callback scope. The pointer is only valid
     /// for the duration of the callback.
-    pub unsafe fn byte_array32_ptr<F, R>(&self, action: F) -> Result<R> where F: FnOnce(Option<*const [u8; 32]>) -> R { self.byte_array_ptr::<32, F, R>(action) }
+    pub unsafe fn byte_array32_ptr<F, R>(&self, action: F) -> Result<R>
+    where
+        F: FnOnce(Option<*const [u8; 32]>) -> R,
+    {
+        self.byte_array_ptr::<32, F, R>(action)
+    }
     /// Provides temporary access to a pointer to the buffer's content as `*const [u8; 64]`.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// This function is unsafe for the same reasons as `byte_array_ptr`.
-    /// The caller must ensure that the provided action doesn't retain or use the 
+    /// The caller must ensure that the provided action doesn't retain or use the
     /// raw pointer outside of its callback scope. The pointer is only valid
     /// for the duration of the callback.
-    pub unsafe fn byte_array64_ptr<F, R>(&self, action: F) -> Result<R> where F: FnOnce(Option<*const [u8; 64]>) -> R { self.byte_array_ptr::<64, F, R>(action) }
-
+    pub unsafe fn byte_array64_ptr<F, R>(&self, action: F) -> Result<R>
+    where
+        F: FnOnce(Option<*const [u8; 64]>) -> R,
+    {
+        self.byte_array_ptr::<64, F, R>(action)
+    }
 
     /// Makes the `Buffer`'s memory immutable (Read-Only).
     ///
@@ -2309,7 +2466,9 @@ impl Buffer {
 
     #[cfg(test)]
     fn is_state_mutable(&self) -> bool {
-        if self.destroyed.load(Ordering::Relaxed) { return false; }
+        if self.destroyed.load(Ordering::Relaxed) {
+            return false;
+        }
         match self.inner.try_lock() {
             Ok(state) => state.mutable,
             Err(_) => false, // If locked, can't determine, assume not for safety in test
@@ -2334,8 +2493,8 @@ impl Drop for Buffer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::{round_to_page_size, PAGE_SIZE};
     use crate::globals;
+    use crate::util::{round_to_page_size, PAGE_SIZE};
     use std::io::{Read, Seek, SeekFrom}; // Added Read, Seek, SeekFrom for reader tests
 
     #[test]
@@ -2344,45 +2503,94 @@ mod tests {
         let b = Buffer::new(32).expect("Buffer::new(32) failed");
         assert!(b.is_alive(), "Buffer should be alive after creation");
         assert_eq!(b.size(), 32, "Buffer size mismatch");
-        assert!(b.is_state_mutable(), "Buffer should be mutable after creation");
+        assert!(
+            b.is_state_mutable(),
+            "Buffer should be mutable after creation"
+        );
 
         {
             let state = b.inner.lock().unwrap();
-            assert_eq!(state.memory_allocation.len(), round_to_page_size(32) + (2 * *PAGE_SIZE), "Allocated memory length incorrect");
-            let data_region = &state.memory_allocation[state.data_region_offset..(state.data_region_offset + state.data_region_len)];
-            assert!(data_region.iter().all(|&x| x == 0), "Buffer data region not zero-filled");
+            assert_eq!(
+                state.memory_allocation.len(),
+                round_to_page_size(32) + (2 * *PAGE_SIZE),
+                "Allocated memory length incorrect"
+            );
+            let data_region = &state.memory_allocation
+                [state.data_region_offset..(state.data_region_offset + state.data_region_len)];
+            assert!(
+                data_region.iter().all(|&x| x == 0),
+                "Buffer data region not zero-filled"
+            );
         }
 
         // Check if the buffer was added to the buffers list in production mode
         // In test mode, we don't check global registry consistency
         #[cfg(not(test))]
-        assert!(globals::get_buffer_registry().lock().unwrap().exists(&b), "Buffer not found in global registry");
+        assert!(
+            globals::get_buffer_registry().lock().unwrap().exists(&b),
+            "Buffer not found in global registry"
+        );
 
         b.destroy().expect("Buffer destroy failed");
 
         // Test zero size (returns a null buffer)
         let b_zero = Buffer::new(0).expect("Buffer::new(0) should return Ok(Buffer::null())");
-        assert!(!b_zero.is_alive(), "Buffer::new(0) should return a non-alive buffer");
+        assert!(
+            !b_zero.is_alive(),
+            "Buffer::new(0) should return a non-alive buffer"
+        );
         assert_eq!(b_zero.size(), 0, "Null buffer size should be 0");
-        assert!(!b_zero.is_state_mutable(), "Null buffer should not be mutable");
+        assert!(
+            !b_zero.is_state_mutable(),
+            "Null buffer should not be mutable"
+        );
     }
 
     #[test]
     fn test_core_lots_of_allocs() {
-        for i in 1..=1025 { // Reduced from 16385 for faster test execution, cover page boundary
+        for i in 1..=1025 {
+            // Reduced from 16385 for faster test execution, cover page boundary
             let b = Buffer::new(i).unwrap_or_else(|e| panic!("Buffer::new({}) failed: {:?}", i, e));
             assert!(b.is_alive(), "Buffer(size={}) not alive", i);
             assert!(b.is_state_mutable(), "Buffer(size={}) not mutable", i);
-            assert_eq!(b.size(), i, "Buffer(size={}) has incorrect data_region_len", i);
+            assert_eq!(
+                b.size(),
+                i,
+                "Buffer(size={}) has incorrect data_region_len",
+                i
+            );
 
             {
                 let state = b.inner.lock().unwrap();
-                assert_eq!(state.memory_allocation.len(), round_to_page_size(i) + 2 * *PAGE_SIZE, "Buffer(size={}) memory_allocation length invalid", i);
-                assert_eq!(state.preguard_len, *PAGE_SIZE, "Buffer(size={}) preguard_len invalid", i);
-                assert_eq!(state.postguard_len, *PAGE_SIZE, "Buffer(size={}) postguard_len invalid", i);
+                assert_eq!(
+                    state.memory_allocation.len(),
+                    round_to_page_size(i) + 2 * *PAGE_SIZE,
+                    "Buffer(size={}) memory_allocation length invalid",
+                    i
+                );
+                assert_eq!(
+                    state.preguard_len, *PAGE_SIZE,
+                    "Buffer(size={}) preguard_len invalid",
+                    i
+                );
+                assert_eq!(
+                    state.postguard_len, *PAGE_SIZE,
+                    "Buffer(size={}) postguard_len invalid",
+                    i
+                );
                 // Due to 8-byte alignment of data region, canary region length may be larger than inner_len - i
-                assert_eq!(state.canary_region_len, state.data_region_offset - state.canary_region_offset, "Buffer(size={}) canary_region_len invalid", i);
-                assert_eq!(state.inner_len % *PAGE_SIZE, 0, "Buffer(size={}) inner_len not page multiple", i);
+                assert_eq!(
+                    state.canary_region_len,
+                    state.data_region_offset - state.canary_region_offset,
+                    "Buffer(size={}) canary_region_len invalid",
+                    i
+                );
+                assert_eq!(
+                    state.inner_len % *PAGE_SIZE,
+                    0,
+                    "Buffer(size={}) inner_len not page multiple",
+                    i
+                );
             }
 
             // Basic R/W test
@@ -2392,21 +2600,29 @@ mod tests {
                     *val = write_val;
                 }
                 Ok(())
-            }).unwrap_or_else(|e| panic!("with_data_mut for Buffer(size={}) failed: {:?}", i, e));
+            })
+            .unwrap_or_else(|e| panic!("with_data_mut for Buffer(size={}) failed: {:?}", i, e));
 
             b.with_data(|data| {
                 for &val in data.iter() {
-                    assert_eq!(val, write_val, "Buffer(size={}) R/W test failed, data mismatch", i);
+                    assert_eq!(
+                        val, write_val,
+                        "Buffer(size={}) R/W test failed, data mismatch",
+                        i
+                    );
                 }
                 Ok(())
-            }).unwrap_or_else(|e| panic!("with_data for Buffer(size={}) failed: {:?}", i, e));
+            })
+            .unwrap_or_else(|e| panic!("with_data for Buffer(size={}) failed: {:?}", i, e));
 
-            b.destroy().unwrap_or_else(|e| panic!("destroy for Buffer(size={}) failed: {:?}", i, e));
+            b.destroy()
+                .unwrap_or_else(|e| panic!("destroy for Buffer(size={}) failed: {:?}", i, e));
         }
     }
 
     #[test]
-    fn test_core_buffer_data_access() { // Combines TestData from Go
+    fn test_core_buffer_data_access() {
+        // Combines TestData from Go
         let b = Buffer::new(32).expect("Buffer::new(32) failed");
 
         // Check modification reflection and pointer stability (within a single with_data call)
@@ -2414,36 +2630,39 @@ mod tests {
             data_mut[0] = 1;
             data_mut[31] = 1;
             // let ptr1 = data_mut.as_ptr();
-            
+
             // Access again within the same lock (conceptually)
             // In Rust, we'd typically do all ops within one closure.
             // To simulate Go's b.data vs b.Data(), we check if a subsequent immutable view sees changes.
             // This is implicitly tested by with_data_mut followed by with_data.
-            
+
             // For pointer check, if we had a raw b.data field:
             // let state = b.inner.lock().unwrap();
             // let raw_data_ptr = state.memory_allocation[state.data_region_offset..].as_ptr();
             // assert_eq!(ptr1, raw_data_ptr);
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
 
         b.with_data(|data_immut| {
             assert_eq!(data_immut[0], 1);
             assert_eq!(data_immut[31], 1);
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
 
         b.destroy().expect("Buffer destroy failed");
 
         // Accessing data of a destroyed buffer should fail
         match b.with_data(|_| Ok(())) {
-            Err(MemguardError::SecretClosed) => { /* Expected */ },
+            Err(MemguardError::SecretClosed) => { /* Expected */ }
             _ => panic!("Accessing data of destroyed buffer should yield SecretClosed error"),
         }
     }
 
     #[test]
-    fn test_core_buffer_state_freeze_melt() { // TestBufferState from Go
+    fn test_core_buffer_state_freeze_melt() {
+        // TestBufferState from Go
         let b = Buffer::new(32).expect("Buffer::new(32) failed");
 
         assert!(b.is_state_mutable(), "Initial state: mutability mismatch");
@@ -2463,23 +2682,37 @@ mod tests {
     }
 
     #[test]
-    fn test_core_buffer_destroy_idempotency() { // TestDestroy from Go
+    fn test_core_buffer_destroy_idempotency() {
+        // TestDestroy from Go
         let b = Buffer::new(32).expect("Buffer::new(32) failed");
-        
+
         // Let's also check the original buffer for existence before destruction
-        assert!(globals::get_buffer_registry().lock().unwrap().exists(&b), "Buffer should exist in registry before destroy");
+        assert!(
+            globals::get_buffer_registry().lock().unwrap().exists(&b),
+            "Buffer should exist in registry before destroy"
+        );
 
         b.destroy().expect("First destroy failed");
 
         assert!(!b.is_alive(), "Buffer should be destroyed");
-        assert!(!b.is_state_mutable(), "Destroyed buffer should not be mutable");
-        assert!(!globals::get_buffer_registry().lock().unwrap().exists(&b), "Buffer should be removed from registry");
+        assert!(
+            !b.is_state_mutable(),
+            "Destroyed buffer should not be mutable"
+        );
+        assert!(
+            !globals::get_buffer_registry().lock().unwrap().exists(&b),
+            "Buffer should be removed from registry"
+        );
 
         // Call destroy again to check idempotency.
-        b.destroy().expect("Second destroy (idempotency check) failed");
+        b.destroy()
+            .expect("Second destroy (idempotency check) failed");
 
         assert!(!b.is_alive(), "Buffer should remain destroyed");
-        assert!(!b.is_state_mutable(), "Destroyed buffer should remain not mutable");
+        assert!(
+            !b.is_state_mutable(),
+            "Destroyed buffer should remain not mutable"
+        );
     }
 
     // Corresponds to Go's buffer_test.go TestBytes
@@ -2489,25 +2722,34 @@ mod tests {
         b.with_data(|data| {
             assert_eq!(data, b"yellow submarine");
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
 
         // Test modification reflection
         b.melt().unwrap(); // Make mutable for test
         b.with_data_mut(|data| {
             data[0] = b'Y';
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
         b.with_data(|data| {
             assert_eq!(data[0], b'Y');
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
         b.freeze().unwrap(); // Back to ReadOnly
 
         b.destroy().unwrap();
-        assert!(matches!(b.with_data(|_| Ok(())), Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            b.with_data(|_| Ok(())),
+            Err(MemguardError::SecretClosed)
+        ));
 
         let b_null = Buffer::null();
-        assert!(matches!(b_null.with_data(|_| Ok(())), Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            b_null.with_data(|_| Ok(())),
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     // Corresponds to Go's buffer_test.go TestReader
@@ -2516,56 +2758,70 @@ mod tests {
         let b = Buffer::new_random(32).unwrap();
         let original_content = b.with_data(|d| Ok(d.to_vec())).unwrap();
 
-        let _ = b.reader(|mut cursor| {
-            let mut read_content = Vec::new();
-            cursor.read_to_end(&mut read_content).unwrap();
-            assert_eq!(read_content, original_content);
-            assert_eq!(cursor.position(), 32);
-            Ok::<_, MemguardError>(())
-        }).unwrap();
-        
+        let _ = b
+            .reader(|mut cursor| {
+                let mut read_content = Vec::new();
+                cursor.read_to_end(&mut read_content).unwrap();
+                assert_eq!(read_content, original_content);
+                assert_eq!(cursor.position(), 32);
+                Ok::<_, MemguardError>(())
+            })
+            .unwrap();
+
         b.destroy().unwrap();
-        assert!(matches!(b.reader(|_| Ok::<_, MemguardError>(())), Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            b.reader(|_| Ok::<_, MemguardError>(())),
+            Err(MemguardError::SecretClosed)
+        ));
 
         let b_null = Buffer::null();
         // with_data (which reader uses) on a null buffer returns SecretClosed.
-        assert!(matches!(b_null.reader(|_| Ok::<_, MemguardError>(())), Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            b_null.reader(|_| Ok::<_, MemguardError>(())),
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Test seek operations
         let b_seek = Buffer::new(32).unwrap();
-        b_seek.with_data_mut(|d| {
-            for i in 0..d.len() { d[i] = i as u8; }
-            Ok(())
-        }).unwrap();
+        b_seek
+            .with_data_mut(|d| {
+                for i in 0..d.len() {
+                    d[i] = i as u8;
+                }
+                Ok(())
+            })
+            .unwrap();
 
-        let _ = b_seek.reader(|mut cursor| {
-            let mut byte_buf = [0u8; 1];
+        let _ = b_seek
+            .reader(|mut cursor| {
+                let mut byte_buf = [0u8; 1];
 
-            // Seek to end, check position
-            assert_eq!(cursor.seek(SeekFrom::End(0)).unwrap(), 32);
-            assert_eq!(cursor.position(), 32);
+                // Seek to end, check position
+                assert_eq!(cursor.seek(SeekFrom::End(0)).unwrap(), 32);
+                assert_eq!(cursor.position(), 32);
 
-            // Seek to start, read first byte
-            assert_eq!(cursor.seek(SeekFrom::Start(0)).unwrap(), 0);
-            cursor.read_exact(&mut byte_buf).unwrap();
-            assert_eq!(byte_buf[0], 0);
+                // Seek to start, read first byte
+                assert_eq!(cursor.seek(SeekFrom::Start(0)).unwrap(), 0);
+                cursor.read_exact(&mut byte_buf).unwrap();
+                assert_eq!(byte_buf[0], 0);
 
-            // Seek relative, read byte
-            assert_eq!(cursor.seek(SeekFrom::Start(10)).unwrap(), 10);
-            cursor.read_exact(&mut byte_buf).unwrap();
-            assert_eq!(byte_buf[0], 10);
-            // After reading at position 10, cursor is now at position 11
+                // Seek relative, read byte
+                assert_eq!(cursor.seek(SeekFrom::Start(10)).unwrap(), 10);
+                cursor.read_exact(&mut byte_buf).unwrap();
+                assert_eq!(byte_buf[0], 10);
+                // After reading at position 10, cursor is now at position 11
 
-            assert_eq!(cursor.seek(SeekFrom::Current(5)).unwrap(), 16);
-            cursor.read_exact(&mut byte_buf).unwrap();
-            assert_eq!(byte_buf[0], 16);
-            
-            // Seek past end
-            assert_eq!(cursor.seek(SeekFrom::Start(100)).unwrap(), 100);
-            assert_eq!(cursor.read(&mut byte_buf).unwrap(), 0); // EOF
+                assert_eq!(cursor.seek(SeekFrom::Current(5)).unwrap(), 16);
+                cursor.read_exact(&mut byte_buf).unwrap();
+                assert_eq!(byte_buf[0], 16);
 
-            Ok::<_, MemguardError>(())
-        }).unwrap();
+                // Seek past end
+                assert_eq!(cursor.seek(SeekFrom::Start(100)).unwrap(), 100);
+                assert_eq!(cursor.read(&mut byte_buf).unwrap(), 0); // EOF
+
+                Ok::<_, MemguardError>(())
+            })
+            .unwrap();
         b_seek.destroy().unwrap();
     }
 
@@ -2573,36 +2829,52 @@ mod tests {
     #[test]
     fn test_api_typed_string_access() {
         let b = Buffer::new_from_bytes(&mut b"valid utf8 string".to_vec()).unwrap();
-        let _ = b.string_slice(|res_str| {
-            assert_eq!(res_str.unwrap(), "valid utf8 string");
-            Ok::<_, MemguardError>(())
-        }).unwrap();
+        let _ = b
+            .string_slice(|res_str| {
+                assert_eq!(res_str.unwrap(), "valid utf8 string");
+                Ok::<_, MemguardError>(())
+            })
+            .unwrap();
 
         // Test modification reflection
         b.melt().unwrap();
-        b.with_data_mut(|data| { data[0] = b'V'; Ok(()) }).unwrap();
-        let _ = b.string_slice(|res_str| {
-            assert_eq!(res_str.unwrap(), "Valid utf8 string");
-            Ok::<_, MemguardError>(())
-        }).unwrap();
+        b.with_data_mut(|data| {
+            data[0] = b'V';
+            Ok(())
+        })
+        .unwrap();
+        let _ = b
+            .string_slice(|res_str| {
+                assert_eq!(res_str.unwrap(), "Valid utf8 string");
+                Ok::<_, MemguardError>(())
+            })
+            .unwrap();
         b.freeze().unwrap();
 
         // Test invalid UTF-8
         let b_invalid = Buffer::new_from_bytes(&mut [0xff, 0xfe, 0xfd]).unwrap();
-        let _ = b_invalid.string_slice(|res_str| {
-            assert!(res_str.is_err());
-            Ok::<_, MemguardError>(())
-        }).unwrap();
+        let _ = b_invalid
+            .string_slice(|res_str| {
+                assert!(res_str.is_err());
+                Ok::<_, MemguardError>(())
+            })
+            .unwrap();
         b_invalid.destroy().unwrap();
 
         b.destroy().unwrap();
-        assert!(matches!(b.string_slice(|_| Ok::<_, MemguardError>(())), Err(MemguardError::SecretClosed)));
-        
+        assert!(matches!(
+            b.string_slice(|_| Ok::<_, MemguardError>(())),
+            Err(MemguardError::SecretClosed)
+        ));
+
         let b_null = Buffer::null();
-        assert!(matches!(b_null.string_slice(|_res_str| {
-             // This closure won't be reached if with_data fails for null buffer
-            Ok::<_, MemguardError>(())
-        }), Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            b_null.string_slice(|_res_str| {
+                // This closure won't be reached if with_data fails for null buffer
+                Ok::<_, MemguardError>(())
+            }),
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     // Removed helper typed_slice_test_template and macros test_typed_slice_accessor, test_byte_array_ptr_accessor
@@ -2614,35 +2886,49 @@ mod tests {
 
         // Case 1: Exact multiple size, aligned
         let b_exact = Buffer::new(type_size * 4).unwrap(); // 8 bytes for 4 u16s
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: u16 = (i + 1) as u16;
-                let bytes = val.to_le_bytes();
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&bytes);
-            }
-            Ok(())
-        }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: u16 = (i + 1) as u16;
+                    let bytes = val.to_le_bytes();
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&bytes);
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.uint16_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as u16); }
-                // Cannot call with_data from within uint16_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .uint16_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as u16);
+                    }
+                    // Cannot call with_data from within uint16_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap(); // e.g., 5 bytes for u16
         unsafe {
-            b_partial.uint16_slice(|s| {
-                assert_eq!(s.len(), 2, "Expected 2 u16s from {} bytes", type_size * 2 + type_size / 2);
-            }).unwrap();
+            b_partial
+                .uint16_slice(|s| {
+                    assert_eq!(
+                        s.len(),
+                        2,
+                        "Expected 2 u16s from {} bytes",
+                        type_size * 2 + type_size / 2
+                    );
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
-        if type_size > 1 { // True for u16
+        if type_size > 1 {
+            // True for u16
             let b_small = Buffer::new(type_size - 1).unwrap();
             unsafe { b_small.uint16_slice(|s| assert!(s.is_empty())) }.unwrap();
             b_small.destroy().unwrap();
@@ -2651,11 +2937,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.uint16_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.uint16_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.uint16_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.uint16_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2664,35 +2956,49 @@ mod tests {
 
         // Case 1: Exact multiple size, aligned
         let b_exact = Buffer::new(type_size * 4).unwrap(); // 16 bytes for 4 u32s
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: u32 = (i + 1) as u32;
-                let bytes = val.to_le_bytes();
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&bytes);
-            }
-            Ok(())
-        }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: u32 = (i + 1) as u32;
+                    let bytes = val.to_le_bytes();
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&bytes);
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.uint32_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as u32); }
-                // Cannot call with_data from within uint32_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .uint32_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as u32);
+                    }
+                    // Cannot call with_data from within uint32_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap(); // e.g., 10 bytes for u32
         unsafe {
-            b_partial.uint32_slice(|s| {
-                assert_eq!(s.len(), 2, "Expected 2 u32s from {} bytes", type_size * 2 + type_size / 2);
-            }).unwrap();
+            b_partial
+                .uint32_slice(|s| {
+                    assert_eq!(
+                        s.len(),
+                        2,
+                        "Expected 2 u32s from {} bytes",
+                        type_size * 2 + type_size / 2
+                    );
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
-        if type_size > 1 { // True for u32
+        if type_size > 1 {
+            // True for u32
             let b_small = Buffer::new(type_size - 1).unwrap();
             unsafe { b_small.uint32_slice(|s| assert!(s.is_empty())) }.unwrap();
             b_small.destroy().unwrap();
@@ -2701,11 +3007,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.uint32_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.uint32_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.uint32_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.uint32_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2714,35 +3026,49 @@ mod tests {
 
         // Case 1: Exact multiple size, aligned
         let b_exact = Buffer::new(type_size * 4).unwrap(); // 32 bytes for 4 u64s
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: u64 = (i + 1) as u64;
-                let bytes = val.to_le_bytes();
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&bytes);
-            }
-            Ok(())
-        }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: u64 = (i + 1) as u64;
+                    let bytes = val.to_le_bytes();
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&bytes);
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.uint64_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as u64); }
-                // Cannot call with_data from within uint64_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .uint64_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as u64);
+                    }
+                    // Cannot call with_data from within uint64_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap(); // e.g., 20 bytes for u64
         unsafe {
-            b_partial.uint64_slice(|s| {
-                assert_eq!(s.len(), 2, "Expected 2 u64s from {} bytes", type_size * 2 + type_size / 2);
-            }).unwrap();
+            b_partial
+                .uint64_slice(|s| {
+                    assert_eq!(
+                        s.len(),
+                        2,
+                        "Expected 2 u64s from {} bytes",
+                        type_size * 2 + type_size / 2
+                    );
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
-        if type_size > 1 { // True for u64
+        if type_size > 1 {
+            // True for u64
             let b_small = Buffer::new(type_size - 1).unwrap();
             unsafe { b_small.uint64_slice(|s| assert!(s.is_empty())) }.unwrap();
             b_small.destroy().unwrap();
@@ -2751,11 +3077,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.uint64_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.uint64_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.uint64_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.uint64_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2764,21 +3096,27 @@ mod tests {
 
         // Case 1: Exact multiple size, aligned
         let b_exact = Buffer::new(type_size * 4).unwrap(); // 4 bytes for 4 i8s
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: i8 = (i + 1) as i8;
-                // For i8, to_le_bytes() gives [u8;1]
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&val.to_le_bytes());
-            }
-            Ok(())
-        }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: i8 = (i + 1) as i8;
+                    // For i8, to_le_bytes() gives [u8;1]
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&val.to_le_bytes());
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.int8_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as i8); }
-                // Cannot call with_data from within int8_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .int8_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as i8);
+                    }
+                    // Cannot call with_data from within int8_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
@@ -2787,11 +3125,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.int8_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.int8_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.int8_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.int8_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2799,33 +3143,41 @@ mod tests {
         let type_size = std::mem::size_of::<i16>();
 
         // Case 1: Exact multiple size, aligned
-        let b_exact = Buffer::new(type_size * 4).unwrap(); 
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: i16 = (i + 1) as i16;
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&val.to_le_bytes());
-            }
-            Ok(())
-        }).unwrap();
+        let b_exact = Buffer::new(type_size * 4).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: i16 = (i + 1) as i16;
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&val.to_le_bytes());
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.int16_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as i16); }
-                // Cannot call with_data from within int16_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .int16_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as i16);
+                    }
+                    // Cannot call with_data from within int16_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap();
         unsafe {
-            b_partial.int16_slice(|s| {
-                assert_eq!(s.len(), 2);
-            }).unwrap();
+            b_partial
+                .int16_slice(|s| {
+                    assert_eq!(s.len(), 2);
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
         if type_size > 1 {
             let b_small = Buffer::new(type_size - 1).unwrap();
@@ -2836,11 +3188,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.int16_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.int16_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.int16_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.int16_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2848,33 +3206,41 @@ mod tests {
         let type_size = std::mem::size_of::<i32>();
 
         // Case 1: Exact multiple size, aligned
-        let b_exact = Buffer::new(type_size * 4).unwrap(); 
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: i32 = (i + 1) as i32;
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&val.to_le_bytes());
-            }
-            Ok(())
-        }).unwrap();
+        let b_exact = Buffer::new(type_size * 4).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: i32 = (i + 1) as i32;
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&val.to_le_bytes());
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.int32_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as i32); }
-                // Cannot call with_data from within int32_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .int32_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as i32);
+                    }
+                    // Cannot call with_data from within int32_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap();
         unsafe {
-            b_partial.int32_slice(|s| {
-                assert_eq!(s.len(), 2);
-            }).unwrap();
+            b_partial
+                .int32_slice(|s| {
+                    assert_eq!(s.len(), 2);
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
         if type_size > 1 {
             let b_small = Buffer::new(type_size - 1).unwrap();
@@ -2885,11 +3251,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.int32_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.int32_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.int32_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.int32_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2897,33 +3269,41 @@ mod tests {
         let type_size = std::mem::size_of::<i64>();
 
         // Case 1: Exact multiple size, aligned
-        let b_exact = Buffer::new(type_size * 4).unwrap(); 
-        b_exact.with_data_mut(|d| {
-            for i in 0..4 {
-                let val: i64 = (i + 1) as i64;
-                d[i*type_size..(i+1)*type_size].copy_from_slice(&val.to_le_bytes());
-            }
-            Ok(())
-        }).unwrap();
+        let b_exact = Buffer::new(type_size * 4).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                for i in 0..4 {
+                    let val: i64 = (i + 1) as i64;
+                    d[i * type_size..(i + 1) * type_size].copy_from_slice(&val.to_le_bytes());
+                }
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.int64_slice(|s| {
-                assert_eq!(s.len(), 4);
-                for i in 0..4 { assert_eq!(s[i], (i+1) as i64); }
-                // Cannot call with_data from within int64_slice - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .int64_slice(|s| {
+                    assert_eq!(s.len(), 4);
+                    for i in 0..4 {
+                        assert_eq!(s[i], (i + 1) as i64);
+                    }
+                    // Cannot call with_data from within int64_slice - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Not an exact multiple
         let b_partial = Buffer::new(type_size * 2 + type_size / 2).unwrap();
         unsafe {
-            b_partial.int64_slice(|s| {
-                assert_eq!(s.len(), 2);
-            }).unwrap();
+            b_partial
+                .int64_slice(|s| {
+                    assert_eq!(s.len(), 2);
+                })
+                .unwrap();
         }
         b_partial.destroy().unwrap();
-        
+
         // Case 3: Size less than one element
         if type_size > 1 {
             let b_small = Buffer::new(type_size - 1).unwrap();
@@ -2934,11 +3314,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(type_size).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.int64_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.int64_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.int64_slice(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.int64_slice(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2946,26 +3332,40 @@ mod tests {
         const N: usize = 8;
         // Case 1: Exact size
         let b_exact = Buffer::new(N).unwrap();
-        b_exact.with_data_mut(|d| { d.fill(0xAA); Ok(()) }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                d.fill(0xAA);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.byte_array8_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
-                assert_eq!(arr_ref[0], 0xAA);
-                // Cannot call with_data from within byte_array8_ptr - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .byte_array8_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
+                    assert_eq!(arr_ref[0], 0xAA);
+                    // Cannot call with_data from within byte_array8_ptr - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Larger buffer
         let b_larger = Buffer::new(N + 5).unwrap();
-        b_larger.with_data_mut(|d| { d.fill(0xBB); Ok(()) }).unwrap();
+        b_larger
+            .with_data_mut(|d| {
+                d.fill(0xBB);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_larger.byte_array8_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
-            }).unwrap();
+            b_larger
+                .byte_array8_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
+                })
+                .unwrap();
         }
         b_larger.destroy().unwrap();
 
@@ -2979,11 +3379,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(N).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.byte_array8_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.byte_array8_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.byte_array8_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.byte_array8_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -2993,27 +3399,41 @@ mod tests {
         eprintln!("TEST DEBUG: Creating buffer of size {}", N);
         let b_exact = Buffer::new(N).unwrap();
         eprintln!("TEST DEBUG: About to call with_data_mut");
-        b_exact.with_data_mut(|d| { d.fill(0xAA); Ok(()) }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                d.fill(0xAA);
+                Ok(())
+            })
+            .unwrap();
         eprintln!("TEST DEBUG: with_data_mut completed, about to call byte_array16_ptr");
         unsafe {
-            b_exact.byte_array16_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
-                assert_eq!(arr_ref[0], 0xAA);
-                // Cannot call with_data from within byte_array16_ptr - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .byte_array16_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
+                    assert_eq!(arr_ref[0], 0xAA);
+                    // Cannot call with_data from within byte_array16_ptr - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Larger buffer
         let b_larger = Buffer::new(N + 5).unwrap();
-        b_larger.with_data_mut(|d| { d.fill(0xBB); Ok(()) }).unwrap();
+        b_larger
+            .with_data_mut(|d| {
+                d.fill(0xBB);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_larger.byte_array16_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
-            }).unwrap();
+            b_larger
+                .byte_array16_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
+                })
+                .unwrap();
         }
         b_larger.destroy().unwrap();
 
@@ -3027,11 +3447,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(N).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.byte_array16_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.byte_array16_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.byte_array16_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.byte_array16_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -3039,26 +3465,40 @@ mod tests {
         const N: usize = 32;
         // Case 1: Exact size
         let b_exact = Buffer::new(N).unwrap();
-        b_exact.with_data_mut(|d| { d.fill(0xAA); Ok(()) }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                d.fill(0xAA);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.byte_array32_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
-                assert_eq!(arr_ref[0], 0xAA);
-                // Cannot call with_data from within byte_array32_ptr - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .byte_array32_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
+                    assert_eq!(arr_ref[0], 0xAA);
+                    // Cannot call with_data from within byte_array32_ptr - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Larger buffer
         let b_larger = Buffer::new(N + 5).unwrap();
-        b_larger.with_data_mut(|d| { d.fill(0xBB); Ok(()) }).unwrap();
+        b_larger
+            .with_data_mut(|d| {
+                d.fill(0xBB);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_larger.byte_array32_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
-            }).unwrap();
+            b_larger
+                .byte_array32_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
+                })
+                .unwrap();
         }
         b_larger.destroy().unwrap();
 
@@ -3072,11 +3512,17 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(N).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.byte_array32_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.byte_array32_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.byte_array32_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.byte_array32_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 
     #[test]
@@ -3084,26 +3530,40 @@ mod tests {
         const N: usize = 64;
         // Case 1: Exact size
         let b_exact = Buffer::new(N).unwrap();
-        b_exact.with_data_mut(|d| { d.fill(0xAA); Ok(()) }).unwrap();
+        b_exact
+            .with_data_mut(|d| {
+                d.fill(0xAA);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_exact.byte_array64_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
-                assert_eq!(arr_ref[0], 0xAA);
-                // Cannot call with_data from within byte_array64_ptr - would cause deadlock
-                // Pointer comparison is done implicitly - the ptr comes from the data region
-            }).unwrap();
+            b_exact
+                .byte_array64_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    let arr_ref = ptr_opt.unwrap().as_ref().unwrap();
+                    assert_eq!(arr_ref[0], 0xAA);
+                    // Cannot call with_data from within byte_array64_ptr - would cause deadlock
+                    // Pointer comparison is done implicitly - the ptr comes from the data region
+                })
+                .unwrap();
         }
         b_exact.destroy().unwrap();
 
         // Case 2: Larger buffer
         let b_larger = Buffer::new(N + 5).unwrap();
-        b_larger.with_data_mut(|d| { d.fill(0xBB); Ok(()) }).unwrap();
+        b_larger
+            .with_data_mut(|d| {
+                d.fill(0xBB);
+                Ok(())
+            })
+            .unwrap();
         unsafe {
-            b_larger.byte_array64_ptr(|ptr_opt| {
-                assert!(ptr_opt.is_some());
-                assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
-            }).unwrap();
+            b_larger
+                .byte_array64_ptr(|ptr_opt| {
+                    assert!(ptr_opt.is_some());
+                    assert_eq!(ptr_opt.unwrap().as_ref().unwrap()[0], 0xBB);
+                })
+                .unwrap();
         }
         b_larger.destroy().unwrap();
 
@@ -3117,10 +3577,16 @@ mod tests {
         // Case 4: Destroyed buffer
         let b_destroyed = Buffer::new(N).unwrap();
         b_destroyed.destroy().unwrap();
-        assert!(matches!(unsafe { b_destroyed.byte_array64_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_destroyed.byte_array64_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
 
         // Case 5: Null buffer
         let b_null = Buffer::null();
-        assert!(matches!(unsafe { b_null.byte_array64_ptr(|_| ()) }, Err(MemguardError::SecretClosed)));
+        assert!(matches!(
+            unsafe { b_null.byte_array64_ptr(|_| ()) },
+            Err(MemguardError::SecretClosed)
+        ));
     }
 }

@@ -3,11 +3,11 @@
 //! This module provides helpers for creating isolated tests that avoid
 //! interfering with each other when run in parallel or as part of a test suite.
 
-use std::sync::Mutex;
 use once_cell::sync::Lazy;
+use std::sync::Mutex;
 
 /// Global mutex to prevent multiple tests from accessing protected memory simultaneously
-/// 
+///
 /// This helps prevent test flakiness by ensuring that one test fully completes
 /// its memory operations before another test begins.
 static TEST_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));

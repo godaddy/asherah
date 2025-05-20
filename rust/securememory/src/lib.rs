@@ -111,10 +111,10 @@
 //!     if bytes_read == 0 {
 //!         break; // End of stream
 //!     }
-//!     
+//!
 //!     // Process the chunk securely
 //!     println!("Processing {} bytes", bytes_read);
-//!     
+//!
 //!     // The data in buffer is automatically wiped when it goes out of scope
 //! }
 //! ```
@@ -148,7 +148,7 @@
 //!
 //! ## Error Handling
 //!
-//! All operations that can fail return a `Result<T, SecureMemoryError>` where `SecureMemoryError` 
+//! All operations that can fail return a `Result<T, SecureMemoryError>` where `SecureMemoryError`
 //! provides detailed information about what went wrong.
 //!
 //! ```rust,no_run
@@ -158,15 +158,15 @@
 //!
 //! fn handle_secret() -> Result<()> {
 //!     let factory = DefaultSecretFactory::new();
-//!     
+//!
 //!     // This will fail with SecureMemoryError::OperationFailed
 //!     let result = factory.create_random(0);
-//!     
+//!
 //!     match result {
 //!         Ok(_) => println!("Secret created successfully"),
 //!         Err(e) => println!("Failed to create secret: {}", e),
 //!     }
-//!     
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -194,5 +194,5 @@ pub mod test_utils;
 
 // Re-export key types
 pub use crate::error::{Result, SecureMemoryError};
-pub use crate::secret::{Secret, SecretFactory};
 pub use crate::protected_memory::DefaultSecretFactory;
+pub use crate::secret::{Secret, SecretFactory};

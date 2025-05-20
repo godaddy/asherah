@@ -1,6 +1,6 @@
 use crate::error::Result;
-use std::io::Read;
 use std::any::Any;
+use std::io::Read;
 
 // Type-erased helper trait that enables safe downcasting
 pub trait AnySecret: Any + Send + Sync {
@@ -12,7 +12,7 @@ impl<T: Any + Send + Sync> AnySecret for T {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    
+
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
@@ -22,16 +22,16 @@ impl<T: Any + Send + Sync> AnySecret for T {
 pub trait Secret: AnySecret {
     /// Check if the secret has been closed
     fn is_closed(&self) -> bool;
-    
+
     /// Close the secret, wiping its memory
     fn close(&self) -> Result<()>;
-    
+
     /// Get a reader for the secret
     fn reader(&self) -> Result<Box<dyn Read + Send + Sync + '_>>;
-    
+
     /// Get the length of the secret in bytes
     fn len(&self) -> usize;
-    
+
     /// Check if the secret is empty
     fn is_empty(&self) -> bool {
         self.len() == 0
@@ -41,7 +41,7 @@ pub trait Secret: AnySecret {
 /// SecretExtensions provides methods for working with secrets
 pub trait SecretExtensions {
     /// Provides temporary, safe, read-only access to the secret byte data.
-    /// 
+    ///
     /// The memory is made accessible only for the duration of the provided closure's
     /// execution. If the closure returns an error, it will be propagated.
     fn with_bytes<F, R>(&self, action: F) -> Result<R>
@@ -51,7 +51,7 @@ pub trait SecretExtensions {
     /// Provides temporary, safe, read-only access to the secret byte data, allowing
     /// the closure to return a new byte slice.
     ///
-    /// This function is similar to `with_bytes`, but allows the action closure to 
+    /// This function is similar to `with_bytes`, but allows the action closure to
     /// return both a result and a new byte vector. This is useful for transformations
     /// that need to modify the secret data.
     fn with_bytes_func<F, R>(&self, action: F) -> Result<R>
@@ -72,16 +72,16 @@ pub trait SecretExtensions {
 /// #
 /// // Create a new factory
 /// let factory = DefaultSecretFactory::new();
-/// 
+///
 /// // Create a new secret from a mutable byte slice
 /// let mut password = b"secure-password-123".to_vec();
 /// let secret = factory.new(&mut password).unwrap();
-/// 
+///
 /// // Password data is now wiped from the original slice
 /// assert_ne!(password, b"secure-password-123");
-/// 
+///
 /// // Use the secret...
-/// 
+///
 /// // Explicitly close the secret when done (also happens in Drop)
 /// secret.close().unwrap();
 /// assert!(secret.is_closed());
@@ -89,7 +89,7 @@ pub trait SecretExtensions {
 pub trait SecretFactory: Send + Sync {
     /// The type of secret this factory creates
     type SecretType: Secret + SecretExtensions;
-    
+
     /// Creates a new secret from the given byte slice.
     ///
     /// This method securely copies the data from the slice into protected memory
@@ -191,13 +191,13 @@ impl<'a, S: Secret + SecretExtensions + ?Sized> Read for SecretReader<'a, S> {
             if self.position >= bytes.len() {
                 return Ok(0);
             }
-            
+
             let remaining = bytes.len() - self.position;
             let to_read = std::cmp::min(remaining, buf.len());
-            
+
             buf[..to_read].copy_from_slice(&bytes[self.position..self.position + to_read]);
             self.position += to_read;
-            
+
             Ok(to_read)
         });
 

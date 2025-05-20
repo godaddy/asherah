@@ -57,7 +57,7 @@ impl Default for DefaultSecretFactory {
 
 impl SecretFactory for DefaultSecretFactory {
     type SecretType = ProtectedMemorySecret;
-    
+
     /// Creates a new Secret from the provided byte array.
     ///
     /// This method securely copies the data from the input array to a new

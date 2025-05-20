@@ -3,9 +3,9 @@
 //! This module provides a metrics interface for collecting and reporting performance metrics.
 //! By default, metrics are disabled and use a no-op implementation.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::RwLock;
 use std::time::{Duration, Instant};
-use std::sync::atomic::{AtomicBool, Ordering};
 
 // Global flag to check if metrics are enabled
 static METRICS_ENABLED: AtomicBool = AtomicBool::new(false);
@@ -14,19 +14,19 @@ static METRICS_ENABLED: AtomicBool = AtomicBool::new(false);
 pub trait MetricsProvider: Send + Sync {
     /// Records a counter increment
     fn increment_counter(&self, name: &str, value: u64);
-    
+
     /// Records a gauge value
     fn record_gauge(&self, name: &str, value: f64);
-    
+
     /// Records a timer duration
     fn record_timer(&self, name: &str, duration: Duration);
-    
+
     /// Registers a counter
     fn register_counter(&self, name: &str);
-    
+
     /// Registers a gauge
     fn register_gauge(&self, name: &str);
-    
+
     /// Registers a timer
     fn register_timer(&self, name: &str);
 }
@@ -45,7 +45,7 @@ impl NoopMetricsProvider {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// Create a boxed instance ready for use with set_metrics_provider
     pub fn boxed() -> Box<dyn MetricsProvider> {
         Box::new(Self::new())
@@ -141,7 +141,7 @@ pub fn record_timer(name: &str, duration: Duration) {
 pub struct Timer {
     /// Name of the timer metric
     name: String,
-    
+
     /// Start time of the operation
     start: Instant,
 }
@@ -151,13 +151,13 @@ impl Timer {
     pub fn new(name: impl Into<String>) -> Self {
         let name = name.into();
         register_timer(&name);
-        
+
         Self {
             name,
             start: Instant::now(),
         }
     }
-    
+
     /// Record the elapsed time
     pub fn observe_duration(&self) {
         record_timer(&self.name, self.start.elapsed());
@@ -200,12 +200,10 @@ macro_rules! timer {
 /// Macro for incrementing a counter
 #[macro_export]
 macro_rules! counter {
-    ($name:expr) => {
-        {
-            $crate::metrics::register_counter($name);
-            CounterHelper::new($name)
-        }
-    };
+    ($name:expr) => {{
+        $crate::metrics::register_counter($name);
+        CounterHelper::new($name)
+    }};
 }
 
 /// Helper struct for counter operations
@@ -219,10 +217,10 @@ impl CounterHelper {
     pub fn new(name: impl Into<String>) -> Self {
         let name = name.into();
         register_counter(&name);
-        
+
         Self { name }
     }
-    
+
     /// Increment the counter by the given value
     pub fn increment(&self, value: u64) {
         increment_counter(&self.name, value);
@@ -234,19 +232,19 @@ pub mod prometheus {
     use super::*;
     use std::collections::HashMap;
     use std::sync::Mutex;
-    
+
     /// A simple prometheus metrics provider
     pub struct PrometheusMetricsProvider {
         /// Registered counters
         counters: Mutex<HashMap<String, ()>>,
-        
+
         /// Registered gauges
         gauges: Mutex<HashMap<String, ()>>,
-        
+
         /// Registered timers
         timers: Mutex<HashMap<String, ()>>,
     }
-    
+
     impl Default for PrometheusMetricsProvider {
         fn default() -> Self {
             Self {
@@ -256,48 +254,48 @@ pub mod prometheus {
             }
         }
     }
-    
+
     impl PrometheusMetricsProvider {
         /// Create a new prometheus metrics provider
         pub fn new() -> Self {
             Self::default()
         }
-        
+
         /// Create a boxed instance ready for use with set_metrics_provider
         pub fn boxed() -> Box<dyn MetricsProvider> {
             Box::new(Self::new())
         }
     }
-    
+
     impl MetricsProvider for PrometheusMetricsProvider {
         fn increment_counter(&self, name: &str, value: u64) {
             // In a real implementation, this would use prometheus client library
             // For now, we just log the metric
             log::debug!("METRIC counter: {} = {}", name, value);
         }
-        
+
         fn record_gauge(&self, name: &str, value: f64) {
             // In a real implementation, this would use prometheus client library
             // For now, we just log the metric
             log::debug!("METRIC gauge: {} = {}", name, value);
         }
-        
+
         fn record_timer(&self, name: &str, duration: Duration) {
             // In a real implementation, this would use prometheus client library
             // For now, we just log the metric
             log::debug!("METRIC timer: {} = {:?}", name, duration);
         }
-        
+
         fn register_counter(&self, name: &str) {
             let mut counters = self.counters.lock().unwrap();
             counters.insert(name.to_string(), ());
         }
-        
+
         fn register_gauge(&self, name: &str) {
             let mut gauges = self.gauges.lock().unwrap();
             gauges.insert(name.to_string(), ());
         }
-        
+
         fn register_timer(&self, name: &str) {
             let mut timers = self.timers.lock().unwrap();
             timers.insert(name.to_string(), ());

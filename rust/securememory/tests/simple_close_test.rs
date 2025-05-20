@@ -10,17 +10,17 @@ fn test_simple_single_reader_close() {
     // Ensure this test runs in isolation
     let _guard = TestGuard::new();
     println!("=== Test single reader close ===");
-    
+
     let secret = Arc::new(ProtectedMemorySecretSimple::new(b"test data").unwrap());
     let barrier = Arc::new(Barrier::new(2));
-    
+
     let secret_reader = Arc::clone(&secret);
     let barrier_reader = Arc::clone(&barrier);
-    
+
     let reader = thread::spawn(move || {
         barrier_reader.wait();
         println!("Reader starting");
-        
+
         let mut count = 0;
         loop {
             match secret_reader.with_bytes(|_| Ok(())) {
@@ -40,16 +40,16 @@ fn test_simple_single_reader_close() {
         }
         println!("Reader exiting");
     });
-    
+
     barrier.wait();
-    
+
     // Give reader a chance to start
     thread::sleep(Duration::from_millis(10));
-    
+
     println!("Main thread attempting to close...");
     secret.close().unwrap();
     println!("Main thread closed secret");
-    
+
     // Wait for reader to finish
     reader.join().unwrap();
     println!("Test complete");
@@ -60,19 +60,21 @@ fn test_direct_close() {
     // Ensure this test runs in isolation
     let _guard = TestGuard::new();
     println!("=== Test direct close ===");
-    
+
     let secret = ProtectedMemorySecretSimple::new(b"test data").unwrap();
-    
+
     // Access it once
-    secret.with_bytes(|bytes| {
-        println!("Accessed bytes: {:?}", bytes);
-        Ok(())
-    }).unwrap();
-    
+    secret
+        .with_bytes(|bytes| {
+            println!("Accessed bytes: {:?}", bytes);
+            Ok(())
+        })
+        .unwrap();
+
     println!("Closing secret...");
     secret.close().unwrap();
     println!("Secret closed");
-    
+
     // Try to access after close
     match secret.with_bytes(|_| Ok(())) {
         Ok(_) => panic!("Should not be able to access closed secret"),

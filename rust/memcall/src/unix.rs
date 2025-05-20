@@ -1,12 +1,10 @@
 use crate::error::MemcallError;
 use crate::types::{MemoryProtection, RlimitResource};
 use libc;
-use std::ptr;
 use once_cell::sync::Lazy;
+use std::ptr;
 
-static PAGE_SIZE: Lazy<usize> = Lazy::new(|| {
-    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
-});
+static PAGE_SIZE: Lazy<usize> = Lazy::new(|| unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize });
 
 #[inline]
 fn as_mut_ptr(memory: &mut [u8]) -> *mut libc::c_void {
@@ -32,22 +30,22 @@ pub fn alloc(size: usize) -> Result<&'static mut [u8], MemcallError> {
             0,
         )
     };
-    
+
     if ptr == libc::MAP_FAILED {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not allocate [Err: {}]",
             std::io::Error::last_os_error()
         )));
     }
-    
+
     // Create a slice from the allocated memory
     let memory = unsafe { std::slice::from_raw_parts_mut(ptr as *mut u8, size) };
-    
+
     // Wipe it just in case there is some remnant data - exactly as Go does
     for byte in memory.iter_mut() {
         *byte = 0;
     }
-    
+
     Ok(memory)
 }
 
@@ -57,22 +55,20 @@ pub fn free(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     // Make the memory region readable and writable - exactly as Go does
     if let Err(e) = protect(ptr, MemoryProtection::ReadWrite) {
         return Err(e);
     }
-    
+
     // Wipe the memory for security - exactly as Go does
     for byte in ptr.iter_mut() {
         *byte = 0;
     }
-    
+
     // Free the memory with munmap
-    let result = unsafe {
-        libc::munmap(as_mut_ptr(ptr), as_len(ptr))
-    };
-    
+    let result = unsafe { libc::munmap(as_mut_ptr(ptr), as_len(ptr)) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not deallocate {:p} [Err: {}]",
@@ -80,7 +76,7 @@ pub fn free(ptr: &mut [u8]) -> Result<(), MemcallError> {
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }
 
@@ -93,19 +89,17 @@ pub fn protect(ptr: &mut [u8], protection: MemoryProtection) -> Result<(), Memca
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     // Mimic Go's protection flag handling exactly, including checks for invalid flags
     let prot = match protection as u32 {
-        1 => libc::PROT_NONE,          // NoAccess
-        2 => libc::PROT_READ,          // ReadOnly
+        1 => libc::PROT_NONE,                    // NoAccess
+        2 => libc::PROT_READ,                    // ReadOnly
         6 => libc::PROT_READ | libc::PROT_WRITE, // ReadWrite
         _ => return Err(MemcallError::InvalidArgument(ERR_INVALID_FLAG.to_string())),
     };
-    
-    let result = unsafe {
-        libc::mprotect(as_mut_ptr(ptr), as_len(ptr), prot)
-    };
-    
+
+    let result = unsafe { libc::mprotect(as_mut_ptr(ptr), as_len(ptr), prot) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not set {} on {:p} [Err: {}]",
@@ -114,7 +108,7 @@ pub fn protect(ptr: &mut [u8], protection: MemoryProtection) -> Result<(), Memca
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }
 
@@ -124,19 +118,17 @@ pub fn lock(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     // The Go implementation only calls MADV_DONTDUMP on Linux, so we should do the same
     #[cfg(target_os = "linux")]
     unsafe {
         // Advise the kernel not to dump this memory (this call is identical to Go's)
         libc::madvise(as_mut_ptr(ptr), as_len(ptr), libc::MADV_DONTDUMP);
     }
-    
+
     // Call mlock, exactly as in Go
-    let result = unsafe {
-        libc::mlock(as_mut_ptr(ptr), as_len(ptr))
-    };
-    
+    let result = unsafe { libc::mlock(as_mut_ptr(ptr), as_len(ptr)) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not acquire lock on {:p}, limit reached? [Err: {}]",
@@ -144,7 +136,7 @@ pub fn lock(ptr: &mut [u8]) -> Result<(), MemcallError> {
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }
 
@@ -154,12 +146,10 @@ pub fn unlock(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     // Call munlock, exactly as in Go
-    let result = unsafe {
-        libc::munlock(as_mut_ptr(ptr), as_len(ptr))
-    };
-    
+    let result = unsafe { libc::munlock(as_mut_ptr(ptr), as_len(ptr)) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not free lock on {:p} [Err: {}]",
@@ -167,7 +157,7 @@ pub fn unlock(ptr: &mut [u8]) -> Result<(), MemcallError> {
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }
 
@@ -184,19 +174,17 @@ pub fn disable_core_dumps() -> Result<(), MemcallError> {
         rlim_cur: 0,
         rlim_max: 0,
     };
-    
+
     // Set the core dump resource limit to zero
-    let result = unsafe {
-        libc::setrlimit(libc::RLIMIT_CORE, &rlimit)
-    };
-    
+    let result = unsafe { libc::setrlimit(libc::RLIMIT_CORE, &rlimit) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not set rlimit [Err: {}]",
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }
 
@@ -209,22 +197,20 @@ pub fn set_limit(resource: RlimitResource, value: u64) -> Result<(), MemcallErro
         RlimitResource::NoFile => libc::RLIMIT_NOFILE,
         RlimitResource::Stack => libc::RLIMIT_STACK,
     };
-    
+
     let rlimit = libc::rlimit {
         rlim_cur: value,
         rlim_max: value,
     };
-    
-    let result = unsafe {
-        libc::setrlimit(resource_id, &rlimit)
-    };
-    
+
+    let result = unsafe { libc::setrlimit(resource_id, &rlimit) };
+
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not set rlimit [Err: {}]",
             std::io::Error::last_os_error()
         )));
     }
-    
+
     Ok(())
 }

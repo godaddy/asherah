@@ -9,7 +9,7 @@ fn main() {
     }
     let elapsed = start.elapsed();
     println!("Sum: {} in {:?}", sum, elapsed);
-    
+
     // Test current directory
     println!("Current dir: {:?}", std::env::current_dir());
 }

@@ -29,12 +29,14 @@ fn benchmark_stream_read_batched(c: &mut Criterion) {
     // Benchmark reading one chunk at a time
     group.bench_function("read_one_chunk", |b| {
         b.iter_batched(
-            || { // Setup for each iteration
+            || {
+                // Setup for each iteration
                 let mut s = Stream::new();
                 s.write_all(&data_chunk).unwrap(); // Pre-fill the stream with one chunk
                 s
             },
-            |mut s| { // Routine to benchmark
+            |mut s| {
+                // Routine to benchmark
                 s.read_exact(black_box(&mut read_buffer)).unwrap();
             },
             criterion::BatchSize::SmallInput, // Each iteration gets a fresh stream with one chunk
@@ -43,5 +45,9 @@ fn benchmark_stream_read_batched(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, benchmark_stream_write, benchmark_stream_read_batched);
+criterion_group!(
+    benches,
+    benchmark_stream_write,
+    benchmark_stream_read_batched
+);
 criterion_main!(benches);

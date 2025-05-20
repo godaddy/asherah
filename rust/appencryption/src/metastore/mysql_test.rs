@@ -65,10 +65,10 @@ mod tests {
         // Load key
         let load_result = metastore.load(id, created).await;
         assert!(load_result.is_ok());
-        
+
         let loaded_envelope = load_result.unwrap();
         assert!(loaded_envelope.is_some());
-        
+
         let loaded_envelope = loaded_envelope.unwrap();
         assert_eq!(loaded_envelope.created, envelope.created);
         assert_eq!(loaded_envelope.key, envelope.key);
@@ -83,7 +83,7 @@ mod tests {
 
         // Create test data
         let id = "test_key_id_latest";
-        
+
         // Create multiple keys with different timestamps
         let created1 = Utc::now().timestamp() - 100;
         let envelope1 = EnvelopeKeyRecord {
@@ -92,7 +92,7 @@ mod tests {
             parent_key_meta: None,
             revoked: false,
         };
-        
+
         let created2 = Utc::now().timestamp();
         let envelope2 = EnvelopeKeyRecord {
             created: created2,
@@ -108,10 +108,10 @@ mod tests {
         // Load latest key
         let load_result = metastore.load_latest(id).await;
         assert!(load_result.is_ok());
-        
+
         let loaded_envelope = load_result.unwrap();
         assert!(loaded_envelope.is_some());
-        
+
         let loaded_envelope = loaded_envelope.unwrap();
         // The latest key should be the one with the higher timestamp
         assert_eq!(loaded_envelope.created, created2);

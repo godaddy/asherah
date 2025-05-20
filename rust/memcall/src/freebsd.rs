@@ -1,12 +1,10 @@
 use crate::error::MemcallError;
 use crate::types::{MemoryProtection, RlimitResource};
 use libc;
-use std::ptr;
 use once_cell::sync::Lazy;
+use std::ptr;
 
-static PAGE_SIZE: Lazy<usize> = Lazy::new(|| {
-    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
-});
+static PAGE_SIZE: Lazy<usize> = Lazy::new(|| unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize });
 
 #[inline]
 fn as_mut_ptr(memory: &mut [u8]) -> *mut libc::c_void {
@@ -32,14 +30,14 @@ pub fn alloc(size: usize) -> Result<&'static mut [u8], MemcallError> {
             0,
         )
     };
-    
+
     if ptr == libc::MAP_FAILED {
         return Err(MemcallError::SystemError(format!(
             "<memcall> could not allocate [Err: {}]",
             std::io::Error::last_os_error()
         )));
     }
-    
+
     let memory = unsafe { std::slice::from_raw_parts_mut(ptr as *mut u8, size) };
     for byte in memory.iter_mut() {
         *byte = 0;
@@ -51,15 +49,15 @@ pub fn free(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     if let Err(err_protect) = protect(ptr, MemoryProtection::ReadWrite) {
         return Err(err_protect);
     }
-    
+
     for byte in ptr.iter_mut() {
         *byte = 0;
     }
-    
+
     let result = unsafe { libc::munmap(as_mut_ptr(ptr), as_len(ptr)) };
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
@@ -75,14 +73,14 @@ pub fn protect(ptr: &mut [u8], protection: MemoryProtection) -> Result<(), Memca
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     let prot = match protection as u32 {
         1 => libc::PROT_NONE,
         2 => libc::PROT_READ,
         6 => libc::PROT_READ | libc::PROT_WRITE,
         _ => return Err(MemcallError::InvalidArgument(ERR_INVALID_FLAG.to_string())),
     };
-    
+
     let result = unsafe { libc::mprotect(as_mut_ptr(ptr), as_len(ptr), prot) };
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
@@ -99,12 +97,12 @@ pub fn lock(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     unsafe {
         // Advise the kernel not to dump this memory (MADV_NOCORE for FreeBSD)
         libc::madvise(as_mut_ptr(ptr), as_len(ptr), libc::MADV_NOCORE);
     }
-    
+
     let result = unsafe { libc::mlock(as_mut_ptr(ptr), as_len(ptr)) };
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
@@ -120,7 +118,7 @@ pub fn unlock(ptr: &mut [u8]) -> Result<(), MemcallError> {
     if ptr.is_empty() {
         return Ok(());
     }
-    
+
     let result = unsafe { libc::munlock(as_mut_ptr(ptr), as_len(ptr)) };
     if result != 0 {
         return Err(MemcallError::SystemError(format!(
@@ -159,12 +157,12 @@ pub fn set_limit(resource: RlimitResource, value: u64) -> Result<(), MemcallErro
         RlimitResource::NoFile => libc::RLIMIT_NOFILE,
         RlimitResource::Stack => libc::RLIMIT_STACK,
     };
-    
+
     let rlimit = libc::rlimit {
         rlim_cur: value as libc::rlim_t,
         rlim_max: value as libc::rlim_t,
     };
-    
+
     let result = unsafe { libc::setrlimit(resource_id, &rlimit) };
     if result != 0 {
         return Err(MemcallError::SystemError(format!(

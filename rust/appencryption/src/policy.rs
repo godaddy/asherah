@@ -14,46 +14,46 @@ pub const DEFAULT_SESSION_CACHE_DURATION: time::Duration = time::Duration::from_
 pub struct CryptoPolicy {
     /// Time after which a key is considered expired
     pub expire_key_after: time::Duration,
-    
+
     /// Interval to check for revoked keys in the cache
     pub revoke_check_interval: time::Duration,
-    
+
     /// Precision to use when creating new key timestamps
     pub create_date_precision: time::Duration,
-    
+
     /// Whether to cache intermediate keys
     pub cache_intermediate_keys: bool,
-    
+
     /// Maximum size of intermediate key cache
     pub intermediate_key_cache_max_size: usize,
-    
+
     /// Eviction policy for intermediate key cache
     pub intermediate_key_cache_eviction_policy: String,
-    
+
     /// Whether to share the intermediate key cache across sessions
     pub shared_intermediate_key_cache: bool,
-    
+
     /// Whether to cache system keys
     pub cache_system_keys: bool,
-    
+
     /// Maximum size of system key cache
     pub system_key_cache_max_size: usize,
-    
+
     /// Eviction policy for system key cache
     pub system_key_cache_eviction_policy: String,
-    
+
     /// Whether to cache sessions
     pub cache_sessions: bool,
-    
+
     /// Maximum size of session cache
     pub session_cache_max_size: usize,
-    
+
     /// Time before which keys should be considered revoked
     pub revoked_before: i64,
-    
+
     /// How long to keep sessions in the cache
     pub session_cache_duration: time::Duration,
-    
+
     /// Eviction policy for session cache
     pub session_cache_eviction_policy: String,
 }
@@ -85,19 +85,19 @@ impl CryptoPolicy {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Sets the system key cache eviction policy
     pub fn with_system_key_cache_policy(mut self, policy_name: impl Into<String>) -> Self {
         self.system_key_cache_eviction_policy = policy_name.into();
         self
     }
-    
+
     /// Sets the intermediate key cache eviction policy
     pub fn with_intermediate_key_cache_policy(mut self, policy_name: impl Into<String>) -> Self {
         self.intermediate_key_cache_eviction_policy = policy_name.into();
         self
     }
-    
+
     /// Sets the session cache eviction policy
     pub fn with_session_cache_policy(mut self, policy_name: impl Into<String>) -> Self {
         self.session_cache_eviction_policy = policy_name.into();
@@ -175,13 +175,13 @@ pub fn is_key_expired(created: i64, expire_after: time::Duration) -> bool {
     if expire_after.as_secs() == 0 {
         return false;
     }
-    
+
     let created_datetime = match Utc.timestamp_opt(created, 0) {
         chrono::LocalResult::Single(dt) => dt,
-        _ => Utc::now()
+        _ => Utc::now(),
     };
     let expires_at = created_datetime + Duration::from_std(expire_after).unwrap_or_default();
-    
+
     Utc::now() > expires_at
 }
 
@@ -190,17 +190,21 @@ pub fn is_key_expired(created: i64, expire_after: time::Duration) -> bool {
 pub struct Config {
     /// Service identifier
     pub service: String,
-    
+
     /// Product identifier
     pub product: String,
-    
+
     /// Crypto policy
     pub policy: CryptoPolicy,
 }
 
 impl Config {
     /// Creates a new Config
-    pub fn new(service: impl Into<String>, product: impl Into<String>, policy: CryptoPolicy) -> Self {
+    pub fn new(
+        service: impl Into<String>,
+        product: impl Into<String>,
+        policy: CryptoPolicy,
+    ) -> Self {
         Self {
             service: service.into(),
             product: product.into(),

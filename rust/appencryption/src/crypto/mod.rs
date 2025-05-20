@@ -3,5 +3,5 @@
 mod aead;
 mod aes256gcm;
 
-pub use aead::{AeadImpl, fill_random};
+pub use aead::{fill_random, AeadImpl};
 pub use aes256gcm::Aes256GcmAead;

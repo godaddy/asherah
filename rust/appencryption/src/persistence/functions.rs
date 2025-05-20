@@ -6,10 +6,10 @@ use async_trait::async_trait;
 use std::marker::PhantomData;
 
 /// A function adapter for implementing the Loader trait
-pub struct LoaderFn<K, F> 
+pub struct LoaderFn<K, F>
 where
     F: for<'a> Fn(&'a K) -> Result<Option<DataRowRecord>> + Send + Sync,
-    K: Send + Sync
+    K: Send + Sync,
 {
     /// The load function
     f: F,
@@ -20,7 +20,7 @@ where
 impl<K, F> LoaderFn<K, F>
 where
     F: for<'a> Fn(&'a K) -> Result<Option<DataRowRecord>> + Send + Sync,
-    K: Send + Sync
+    K: Send + Sync,
 {
     /// Creates a new LoaderFn with the given function
     pub fn new(f: F) -> Self {
@@ -45,10 +45,10 @@ where
 }
 
 /// A function adapter for implementing the Storer trait
-pub struct StorerFn<K, F> 
+pub struct StorerFn<K, F>
 where
     F: Fn(&DataRowRecord) -> Result<K> + Send + Sync,
-    K: Send + Sync
+    K: Send + Sync,
 {
     /// The store function
     f: F,
@@ -59,7 +59,7 @@ where
 impl<K, F> StorerFn<K, F>
 where
     F: Fn(&DataRowRecord) -> Result<K> + Send + Sync,
-    K: Send + Sync
+    K: Send + Sync,
 {
     /// Creates a new StorerFn with the given function
     pub fn new(f: F) -> Self {

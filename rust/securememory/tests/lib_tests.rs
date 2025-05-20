@@ -35,7 +35,7 @@ fn run_tests_in_isolation() {
         "stream::tests::test_stream_read_write",
         "stream::tests::test_stream_size",
     ];
-    
+
     // We'll use the std::process::Command to run each test in isolation
     for test in tests {
         let output = std::process::Command::new("cargo")
@@ -43,13 +43,13 @@ fn run_tests_in_isolation() {
             .current_dir(env!("CARGO_MANIFEST_DIR"))
             .output()
             .expect("Failed to execute test");
-        
+
         if !output.status.success() {
             // Print the test output for debugging
             println!("Test '{}' failed", test);
             println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
             println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-            
+
             // Skip this test instead of failing the entire suite
             // This allows us to still run our comprehensive test and just report failures
             println!("Skipping test '{}'", test);
@@ -57,14 +57,14 @@ fn run_tests_in_isolation() {
             println!("Test '{}' passed", test);
         }
     }
-    
+
     // Run our comprehensive test
     let output = std::process::Command::new("cargo")
         .args(["test", "--test", "all_api_test", "--", "--nocapture"])
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
         .expect("Failed to execute test");
-    
+
     assert!(output.status.success(), "Comprehensive API test failed");
     println!("Comprehensive API test passed");
 }

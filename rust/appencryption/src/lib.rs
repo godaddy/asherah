@@ -2,16 +2,16 @@
 //!
 //! A library for application-level envelope encryption.
 //!
-//! `appencryption` provides application-level envelope encryption. It manages a hierarchy of keys 
+//! `appencryption` provides application-level envelope encryption. It manages a hierarchy of keys
 //! (System Keys, Intermediate Keys, Data Row Keys), implements key rotation and expiration policies
-//! defined in `CryptoPolicy`, supports key caching with various strategies, and uses a `Metastore` 
+//! defined in `CryptoPolicy`, supports key caching with various strategies, and uses a `Metastore`
 //! for persistent storage of encrypted keys.
 //!
-//! The library implements an "inline" key rotation strategy. This means new cryptographic keys 
-//! are generated on-demand when existing keys expire (as per `CryptoPolicy`) or are not found 
-//! during an encryption operation. Explicit 'queued' or background key rotation, as found in 
-//! some other implementations, is not part of the current design. Key expiration and rotation 
-//! are primarily driven by the `CryptoPolicy` settings and the lifecycle management within the 
+//! The library implements an "inline" key rotation strategy. This means new cryptographic keys
+//! are generated on-demand when existing keys expire (as per `CryptoPolicy`) or are not found
+//! during an encryption operation. Explicit 'queued' or background key rotation, as found in
+//! some other implementations, is not part of the current design. Key expiration and rotation
+//! are primarily driven by the `CryptoPolicy` settings and the lifecycle management within the
 //! key caching and loading mechanisms.
 //!
 //! ## Basic Usage
@@ -23,7 +23,7 @@
 //! use appencryption::session::{SessionFactory, Session};
 //! use securememory::protected_memory::DefaultSecretFactory;
 //! use std::sync::Arc;
-//! 
+//!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create dependencies
 //! let policy = CryptoPolicy::new();
@@ -31,7 +31,7 @@
 //! let kms = Arc::new(StaticKeyManagementService::new(master_key));
 //! let metastore = Arc::new(InMemoryMetastore::new());
 //! let secret_factory = Arc::new(DefaultSecretFactory::new());
-//! 
+//!
 //! // Create session factory
 //! let factory = SessionFactory::new(
 //!     "service",
@@ -42,18 +42,18 @@
 //!     secret_factory,
 //!     vec![], // plugins
 //! );
-//! 
+//!
 //! // Create session for a partition
 //! let session = factory.session("user123").await?;
-//! 
+//!
 //! // Encrypt data
 //! let data = b"secret data".to_vec();
 //! let encrypted = session.encrypt(&data).await?;
-//! 
+//!
 //! // Decrypt data
 //! let decrypted = session.decrypt(&encrypted).await?;
 //! assert_eq!(data, decrypted);
-//! 
+//!
 //! // Close session when done
 //! session.close().await?;
 //! # Ok(())
@@ -74,7 +74,7 @@
 //! use securememory::protected_memory::DefaultSecretFactory;
 //! use std::sync::{Arc, Mutex};
 //! use std::collections::HashMap;
-//! 
+//!
 //! # async fn persistence_example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create dependencies
 //! let policy = CryptoPolicy::new();
@@ -82,7 +82,7 @@
 //! let kms = Arc::new(StaticKeyManagementService::new(master_key));
 //! let metastore = Arc::new(MemoryMetastore::new());
 //! let secret_factory = Arc::new(DefaultSecretFactory::new());
-//! 
+//!
 //! // Create session factory
 //! let factory = SessionFactory::new(
 //!     "service",
@@ -93,48 +93,48 @@
 //!     secret_factory,
 //!     vec![], // plugins
 //! );
-//! 
+//!
 //! // Create session for a partition
 //! let session = factory.session("user123").await?;
-//! 
+//!
 //! // Create a simple in-memory data store using a HashMap
 //! let data_store = Arc::new(Mutex::new(HashMap::<String, DataRowRecord>::new()));
-//! 
+//!
 //! // Create a unique key for this record
 //! let record_key = "record_123".to_string();
-//! 
+//!
 //! // Create a StorerFn adapter using a closure
 //! let store_fn = {
 //!     let data_store = data_store.clone();
 //!     let record_key = record_key.clone();
-//!     
+//!
 //!     StorerFn::new(move |drr: &DataRowRecord| {
 //!         let mut store = data_store.lock().unwrap();
 //!         store.insert(record_key.clone(), drr.clone());
 //!         Ok(record_key.clone())
 //!     })
 //! };
-//! 
+//!
 //! // Create a LoaderFn adapter using a closure
 //! let load_fn = {
 //!     let data_store = data_store.clone();
-//!     
+//!
 //!     LoaderFn::new(move |key: &String| {
 //!         let store = data_store.lock().unwrap();
 //!         Ok(store.get(key).cloned())
 //!     })
 //! };
-//! 
+//!
 //! // Data to encrypt
 //! let data = b"secret data".to_vec();
-//! 
+//!
 //! // Store the data with encryption
 //! let stored_key = session.store(&data, store_fn).await?;
-//! 
+//!
 //! // Load and decrypt the data
 //! let loaded_data = session.load(&stored_key, load_fn).await?;
 //! assert_eq!(data, loaded_data);
-//! 
+//!
 //! // Close session when done
 //! session.close().await?;
 //! # Ok(())
@@ -150,7 +150,7 @@
 //! use appencryption::session::SessionFactory;
 //! use securememory::protected_memory::DefaultSecretFactory;
 //! use std::sync::Arc;
-//! 
+//!
 //! # async fn sql_example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create an AWS KMS client
 //! let kms = AwsKmsBuilder::new()
@@ -158,17 +158,17 @@
 //!     .with_key_id("alias/my-key")
 //!     .build()
 //!     .await?;
-//! 
+//!
 //! // In a real application, you would implement SqlClient for your SQL database
 //! // This is just a placeholder for the example
 //! let sql_client = Arc::new(YourSqlClientImplementation::new(/* connection params */));
-//! 
+//!
 //! // Create an SQL metastore
 //! let metastore = Arc::new(SqlMetastore::new(
 //!     sql_client,
 //!     appencryption::persistence::SqlMetastoreDbType::MySql
 //! ));
-//! 
+//!
 //! // Create session factory
 //! let factory = SessionFactory::new(
 //!     "service",
@@ -179,7 +179,7 @@
 //!     Arc::new(DefaultSecretFactory::new()),
 //!     vec![], // plugins
 //! );
-//! 
+//!
 //! // Use the factory to create sessions as needed
 //! # struct YourSqlClientImplementation {}
 //! # impl YourSqlClientImplementation {
@@ -197,35 +197,35 @@
 //! # }
 //! ```
 
-pub mod error;
-pub mod policy;
-pub mod kms;
-pub mod metastore;
-pub mod envelope;
-pub mod key;
-pub mod partition;
-pub mod crypto;
-pub mod util;
-pub mod session;
-pub mod persistence;
-pub mod log;
 pub mod cache;
-pub mod session_cache;
+pub mod crypto;
+pub mod envelope;
+pub mod error;
+pub mod key;
+pub mod kms;
+pub mod log;
+pub mod metastore;
 pub mod metrics;
+pub mod partition;
+pub mod persistence;
+pub mod policy;
+pub mod session;
+pub mod session_cache;
+pub mod util;
 
 // Plugin architecture for AWS service integrations
 pub mod plugins;
 
 // Re-export key types
-pub use crate::policy::CryptoPolicy;
-pub use crate::envelope::{EnvelopeKeyRecord, KeyMeta, DataRowRecord};
+pub use crate::cache::{Cache, CacheBuilder, CachePolicy};
+pub use crate::envelope::{DataRowRecord, EnvelopeKeyRecord, KeyMeta};
 pub use crate::error::{Error, Result};
-pub use crate::partition::{Partition, DefaultPartition, SuffixedPartition};
+pub use crate::log::{debug_enabled, set_logger, Logger, StdoutLogger};
+pub use crate::metrics::{disable_metrics, metrics_enabled, set_metrics_provider, MetricsProvider};
+pub use crate::partition::{DefaultPartition, Partition, SuffixedPartition};
+pub use crate::policy::CryptoPolicy;
 pub use crate::session::{Session, SessionFactory};
-pub use crate::cache::{Cache, CachePolicy, CacheBuilder};
-pub use crate::log::{Logger, set_logger, debug_enabled, StdoutLogger};
 pub use crate::session_cache::{SessionCache, SharedEncryption};
-pub use crate::metrics::{MetricsProvider, set_metrics_provider, metrics_enabled, disable_metrics};
 
 /// Size of AES-256 key in bytes
 pub const AES256_KEY_SIZE: usize = 32;
@@ -243,7 +243,7 @@ pub trait Encryption: Send + Sync {
 
     /// Closes the encryption session and releases resources
     async fn close(&self) -> Result<()>;
-    
+
     /// Convert to Any for downcasting
     fn as_any(&self) -> &dyn std::any::Any;
 }
@@ -268,7 +268,7 @@ pub trait Metastore: Send + Sync {
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>>;
 
     /// Stores a key in the metastore
-    /// 
+    ///
     /// Returns true if the key was stored, false if a key already exists
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool>;
 }
@@ -300,4 +300,5 @@ pub trait Storer: Send + Sync {
 
     /// Stores a data row record in the store and returns a key for future lookup
     async fn store(&self, drr: &DataRowRecord) -> Result<Self::Key>;
-}mod cache_test;
+}
+mod cache_test;

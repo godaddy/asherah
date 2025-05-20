@@ -5,14 +5,14 @@ use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 
 pub mod cache2k;
+pub mod files;
+pub mod latency;
+pub mod memory;
+pub mod report;
+pub mod storage;
 pub mod wikipedia;
 pub mod youtube;
-pub mod storage;
 pub mod zipf;
-pub mod report;
-pub mod files;
-pub mod memory;
-pub mod latency;
 
 /// Provider trait for trace data sources
 pub trait Provider: Send + Sync {
@@ -83,12 +83,12 @@ pub struct Options {
 pub trait Reporter {
     /// Report stats from a benchmark run
     fn report(&mut self, stats: &Stats, options: &Options);
-    
+
     /// Report latency metrics
     fn report_latency(&mut self, stats: &Stats, options: &Options) {
         // Default implementation does nothing
     }
-    
+
     /// Report memory usage metrics
     fn report_memory(&mut self, stats: &Stats, options: &Options) {
         // Default implementation does nothing
@@ -99,10 +99,10 @@ pub trait Reporter {
 pub trait FileReader: Send + Sync {
     /// Read from the file
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize>;
-    
+
     /// Reset the file to the beginning
     fn reset(&mut self) -> io::Result<()>;
-    
+
     /// Close the file
     fn close(&mut self) -> io::Result<()>;
 }

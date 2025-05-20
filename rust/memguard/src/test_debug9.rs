@@ -6,7 +6,7 @@ fn test_buffer_create_simple() {
     match Buffer::new(16) {
         Ok(buffer) => {
             println!("Buffer created successfully");
-            
+
             // Try to destroy it
             match buffer.destroy() {
                 Ok(()) => println!("Buffer destroyed successfully"),

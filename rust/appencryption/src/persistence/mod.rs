@@ -7,10 +7,10 @@
 //! - In-memory metastore for testing
 //! - Function adapters for custom persistence backends
 
+mod functions;
 mod memory;
 mod sql;
-mod functions;
 
-pub use memory::MemoryMetastore;
-pub use sql::{SqlMetastore, SqlMetastoreDbType, SqlClient};
 pub use functions::{LoaderFn, StorerFn};
+pub use memory::MemoryMetastore;
+pub use sql::{SqlClient, SqlMetastore, SqlMetastoreDbType};

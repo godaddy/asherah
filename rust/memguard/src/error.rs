@@ -67,7 +67,7 @@ pub enum MemguardError {
     /// This wraps a `std::io::Error`.
     #[error("I/O error: {0}")]
     IoError(#[from] std::io::Error),
-    
+
     /// Indicates that memory (usually a buffer's canary) has been corrupted,
     /// possibly as a result of a buffer overflow or external tampering.
     #[error("Memory corruption detected: {0}")]

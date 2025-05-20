@@ -35,46 +35,46 @@ impl Default for InMemoryMetastore {
 impl Metastore for InMemoryMetastore {
     async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
         let store = self.store.read().unwrap();
-        
+
         if let Some(id_map) = store.get(id) {
             if let Some(record) = id_map.get(&created) {
                 return Ok(Some(record.clone()));
             }
         }
-        
+
         Ok(None)
     }
-    
+
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
         let store = self.store.read().unwrap();
-        
+
         if let Some(id_map) = store.get(id) {
             // Find the record with the highest created timestamp
-            let latest = id_map.iter()
+            let latest = id_map
+                .iter()
                 .max_by_key(|(k, _)| *k)
                 .map(|(_, v)| v.clone());
-                
+
             return Ok(latest);
         }
-        
+
         Ok(None)
     }
-    
+
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
         let mut store = self.store.write().unwrap();
-        
+
         // Get or create the map for this ID
-        let id_map = store.entry(id.to_string())
-            .or_default();
-            
+        let id_map = store.entry(id.to_string()).or_default();
+
         // Check if a record already exists
         if id_map.contains_key(&created) {
             return Ok(false);
         }
-        
+
         // Store the record
         id_map.insert(created, envelope.clone());
-        
+
         Ok(true)
     }
 }

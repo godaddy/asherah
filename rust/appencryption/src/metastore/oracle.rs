@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 /// Oracle metastore implementation
-/// 
+///
 /// NOTE: This is a placeholder implementation for feature parity with Go.
 /// A full implementation would require an Oracle database driver for Rust.
 /// Currently implemented as a wrapper around InMemoryMetastore for compatibility.
@@ -18,10 +18,10 @@ pub struct OracleMetastore {
 
 impl OracleMetastore {
     /// Create a new Oracle metastore
-    /// 
+    ///
     /// # Arguments
     /// * `_connection_string` - Oracle connection string (currently unused)
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let metastore = OracleMetastore::new("user/password@localhost:1521/XEPDB1");
@@ -70,7 +70,7 @@ mod tests {
     #[tokio::test]
     async fn test_oracle_metastore_placeholder_functionality() {
         let metastore = OracleMetastore::new("test_connection_string");
-        
+
         // Create a test envelope
         let envelope = EnvelopeKeyRecord {
             id: "test_key".to_string(),
@@ -82,17 +82,17 @@ mod tests {
             encrypted_key: vec![1, 2, 3, 4],
             revoked: false,
         };
-        
+
         // Store should work (using in-memory implementation)
         let stored = metastore.store("test_key", 1234567890, &envelope).await;
         assert!(stored.is_ok());
         assert!(stored.unwrap());
-        
+
         // Load should retrieve the stored envelope
         let loaded = metastore.load("test_key", 1234567890).await;
         assert!(loaded.is_ok());
         assert!(loaded.as_ref().unwrap().is_some());
-        
+
         // Load latest should also work
         let latest = metastore.load_latest("test_key").await;
         assert!(latest.is_ok());

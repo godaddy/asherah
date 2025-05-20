@@ -14,13 +14,13 @@ use crate::timer;
 pub trait AwsKmsClient: Send + Sync {
     /// Encrypts data using a KMS key
     async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>>;
-    
+
     /// Decrypts data that was encrypted with a KMS key
     async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>>;
-    
+
     /// Generates a data key using a KMS key
     async fn generate_data_key(&self, key_id: &str) -> Result<GenerateDataKeyResponse>;
-    
+
     /// Returns the region for this client
     fn region(&self) -> &str;
 }
@@ -29,10 +29,10 @@ pub trait AwsKmsClient: Send + Sync {
 pub struct GenerateDataKeyResponse {
     /// The Amazon Resource Name (ARN) of the CMK that encrypted the data key
     pub key_id: String,
-    
+
     /// The encrypted data key
     pub ciphertext_blob: Vec<u8>,
-    
+
     /// The plaintext data key
     pub plaintext: Vec<u8>,
 }
@@ -41,10 +41,10 @@ pub struct GenerateDataKeyResponse {
 struct RegionalClient {
     /// The KMS client for a specific region
     client: Arc<dyn AwsKmsClient>,
-    
+
     /// The region for this client
     region: String,
-    
+
     /// The ARN of the master key
     master_key_arn: String,
 }
@@ -59,25 +59,25 @@ impl RegionalClient {
             master_key_arn,
         }
     }
-    
+
     /// Generates a data key using the master key
     async fn generate_data_key(&self) -> Result<GenerateDataKeyResponse> {
         let _timer = timer!("ael.kms.aws.generatedatakey", "region" => self.region.clone());
-        
+
         self.client.generate_data_key(&self.master_key_arn).await
     }
-    
+
     /// Encrypts a key using the master key
     async fn encrypt_key(&self, key_bytes: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.encryptkey");
-        
+
         self.client.encrypt(&self.master_key_arn, key_bytes).await
     }
-    
+
     /// Decrypts a key using the master key
     async fn decrypt_key(&self, encrypted_key: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.decryptkey");
-        
+
         self.client.decrypt(&self.master_key_arn, encrypted_key).await
     }
 }
@@ -87,10 +87,10 @@ impl RegionalClient {
 struct RegionalKek {
     /// The region for this KEK
     region: String,
-    
+
     /// The ARN of the master key
     arn: String,
-    
+
     /// The encrypted key encryption key
     #[serde(rename = "encryptedKek")]
     encrypted_kek: Vec<u8>,
@@ -102,7 +102,7 @@ struct Envelope {
     /// The encrypted key
     #[serde(rename = "encryptedKey")]
     encrypted_key: Vec<u8>,
-    
+
     /// The key encryption keys for each region
     #[serde(rename = "kmsKeks")]
     keks: Vec<RegionalKek>,
@@ -112,7 +112,7 @@ struct Envelope {
 pub struct AwsKms {
     /// Regional clients for KMS operations
     clients: Vec<RegionalClient>,
-    
+
     /// AEAD implementation for data encryption
     crypto: Arc<dyn Aead>,
 }
@@ -125,12 +125,12 @@ impl AwsKms {
     ) -> Self {
         Self { clients, crypto }
     }
-    
+
     /// Returns the preferred region for this KMS
     pub fn preferred_region(&self) -> &str {
         &self.clients[0].region
     }
-    
+
     /// Generates a data key for encrypting a system key
     async fn generate_data_key(&self) -> Result<GenerateDataKeyResponse> {
         for client in &self.clients {
@@ -145,14 +145,14 @@ impl AwsKms {
                 }
             }
         }
-        
+
         Err(Error::Kms("All regions returned errors when generating data key".into()))
     }
-    
+
     /// Encrypts a data key in all regions
     async fn encrypt_regional_keks(&self, data_key: &GenerateDataKeyResponse) -> Vec<RegionalKek> {
         let (tx, mut rx) = tokio::sync::mpsc::channel(self.clients.len());
-        
+
         // Encrypt in all regions concurrently
         for client in &self.clients {
             // If the key is already encrypted with the master key, add it directly
@@ -162,19 +162,19 @@ impl AwsKms {
                     arn: client.master_key_arn.clone(),
                     encrypted_kek: data_key.ciphertext_blob.clone(),
                 };
-                
+
                 let tx_clone = tx.clone();
                 tokio::spawn(async move {
                     let _ = tx_clone.send(kek).await;
                 });
-                
+
                 continue;
             }
-            
+
             let client_clone = client.clone();
             let plaintext = data_key.plaintext.clone();
             let tx_clone = tx.clone();
-            
+
             tokio::spawn(async move {
                 match client_clone.encrypt_key(&plaintext).await {
                     Ok(encrypted_key) => {
@@ -183,7 +183,7 @@ impl AwsKms {
                             arn: client_clone.master_key_arn,
                             encrypted_kek: encrypted_key,
                         };
-                        
+
                         let _ = tx_clone.send(kek).await;
                     }
                     Err(e) => {
@@ -195,16 +195,16 @@ impl AwsKms {
                 }
             });
         }
-        
+
         // Drop the sender so the channel will close when all tasks complete
         drop(tx);
-        
+
         // Collect results
         let mut result = Vec::new();
         while let Some(kek) = rx.recv().await {
             result.push(kek);
         }
-        
+
         result
     }
 }
@@ -213,48 +213,48 @@ impl AwsKms {
 impl KeyManagementService for AwsKms {
     async fn encrypt_key(&self, key: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.encryptkey");
-        
+
         // Generate a data key to encrypt the key
         let data_key = self.generate_data_key().await?;
-        
+
         // Create a closure to ensure we securely wipe the plaintext data key
         {
             let mut plaintext = data_key.plaintext.clone();
-            
+
             // Encrypt the key with the data key
             let enc_key_bytes = self.crypto.encrypt(key, &plaintext)
                 .map_err(|e| Error::Kms(format!("Error encrypting key: {}", e)))?;
-                
+
             // Securely wipe the plaintext data key
             plaintext.iter_mut().for_each(|b| *b = 0);
-            
+
             // Encrypt the data key in all regions
             let keks = self.encrypt_regional_keks(&data_key).await;
-            
+
             // Create the envelope
             let envelope = Envelope {
                 encrypted_key: enc_key_bytes,
                 keks,
             };
-            
+
             // Serialize the envelope to JSON
             serde_json::to_vec(&envelope)
                 .map_err(|e| Error::Kms(format!("Error marshalling envelope: {}", e)))
         }
     }
-    
+
     async fn decrypt_key(&self, encrypted_key: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.decryptkey");
-        
+
         // Deserialize the envelope
         let envelope: Envelope = serde_json::from_slice(encrypted_key)
             .map_err(|e| Error::Kms(format!("Unable to unmarshal envelope: {}", e)))?;
-            
+
         // Create a map of region -> KEK for easy lookup
         let keks: HashMap<String, RegionalKek> = envelope.keks.into_iter()
             .map(|kek| (kek.region.clone(), kek))
             .collect();
-            
+
         // Try each region in order of preference
         for client in &self.clients {
             // Check if we have a KEK for this region
@@ -282,7 +282,7 @@ impl KeyManagementService for AwsKms {
                 log::debug!("No KEK found for region: {}", client.region);
             }
         }
-        
+
         Err(Error::Kms("Decrypt failed in all regions".into()))
     }
 }

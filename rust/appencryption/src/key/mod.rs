@@ -4,7 +4,7 @@ pub mod cache;
 
 use crate::error::{Error, Result};
 use crate::policy::is_key_expired;
-use securememory::{SecretFactory, Secret};
+use securememory::{Secret, SecretFactory};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use zeroize::Zeroize;
@@ -13,13 +13,13 @@ use zeroize::Zeroize;
 pub struct CryptoKey {
     /// Timestamp when the key was created
     created: i64,
-    
+
     /// Secret containing the actual key bytes
     secret: Box<dyn Secret + Send + Sync>,
-    
+
     /// Flag indicating if the key has been revoked
     revoked: AtomicBool,
-    
+
     /// Unique ID for this key
     id: String,
 }
@@ -44,9 +44,10 @@ impl CryptoKey {
         secret_factory: &impl SecretFactory,
     ) -> Result<Self> {
         let mut bytes = bytes;
-        let secret = secret_factory.new(&mut bytes)
+        let secret = secret_factory
+            .new(&mut bytes)
             .map_err(Error::SecureMemory)?;
-            
+
         Ok(Self {
             id,
             created,
@@ -54,7 +55,7 @@ impl CryptoKey {
             revoked: AtomicBool::new(false),
         })
     }
-    
+
     /// Generates a new random key of the specified size
     pub fn generate(
         secret_factory: &impl SecretFactory,
@@ -62,9 +63,10 @@ impl CryptoKey {
         created: i64,
         size: usize,
     ) -> Result<Self> {
-        let secret = secret_factory.create_random(size)
+        let secret = secret_factory
+            .create_random(size)
             .map_err(Error::SecureMemory)?;
-            
+
         Ok(Self {
             id,
             created,
@@ -72,37 +74,37 @@ impl CryptoKey {
             revoked: AtomicBool::new(false),
         })
     }
-    
+
     /// Returns the timestamp when the key was created
     pub fn created(&self) -> i64 {
         self.created
     }
-    
+
     /// Returns the key ID
     pub fn id(&self) -> &str {
         &self.id
     }
-    
+
     /// Checks if the key has been revoked
     pub fn is_revoked(&self) -> bool {
         self.revoked.load(Ordering::Relaxed)
     }
-    
+
     /// Marks the key as revoked
     pub fn set_revoked(&self, revoked: bool) {
         self.revoked.store(revoked, Ordering::Relaxed);
     }
-    
+
     /// Checks if the key is closed
     pub fn is_closed(&self) -> bool {
         self.secret.is_closed()
     }
-    
+
     /// Securely closes the key
     pub fn close(&mut self) -> Result<()> {
         self.secret.close().map_err(Error::SecureMemory)
     }
-    
+
     /// Provides temporary access to the key bytes
     pub fn with_bytes<F, R>(&self, action: F) -> Result<R>
     where
@@ -119,7 +121,7 @@ impl CryptoKey {
         buf.zeroize();
         Ok(result)
     }
-    
+
     /// Provides temporary access to the key bytes, allowing the function to return bytes
     pub fn with_bytes_func<F, R>(&self, action: F) -> Result<R>
     where
@@ -131,7 +133,7 @@ impl CryptoKey {
         let mut std_reader = std::io::BufReader::new(reader);
         use std::io::Read;
         std_reader.read_exact(&mut buf).map_err(Error::Io)?;
-        
+
         match action(&buf) {
             Ok((r, mut b)) => {
                 b.zeroize();

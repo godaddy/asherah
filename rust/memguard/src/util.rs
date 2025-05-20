@@ -1,10 +1,10 @@
-use crate::error::{MemguardError};
+use crate::error::MemguardError;
+use blake2::{Blake2b, Digest}; // Use Blake2b with fixed output size
 use log::error;
 use once_cell::sync::Lazy;
-use blake2::{Blake2b, Digest}; // Use Blake2b with fixed output size
 use std::process;
-use zeroize::Zeroize;
-use subtle::ConstantTimeEq; // For constant time comparison
+use subtle::ConstantTimeEq;
+use zeroize::Zeroize; // For constant time comparison
 
 type Result<T> = std::result::Result<T, MemguardError>;
 
@@ -99,7 +99,7 @@ pub(crate) fn scramble(buffer: &mut [u8]) -> Result<()> {
 pub(crate) fn hash(data: &[u8]) -> [u8; 32] {
     use blake2::digest::consts::U32;
     type Blake2b256 = Blake2b<U32>;
-    
+
     let mut hasher = Blake2b256::new();
     hasher.update(data);
     let hash_result = hasher.finalize();
@@ -228,7 +228,7 @@ pub fn purge() {
     eprintln!("DEBUG: purge() called");
     // LOCK ORDERING: Following our established lock ordering strategy:
     // 1. COFFER must always be acquired before BUFFERS
-    
+
     // In test mode, don't destroy the coffer - just reset it
     // This ensures tests can run concurrently without interfering
     #[cfg(test)]
@@ -243,12 +243,15 @@ pub fn purge() {
                 }
             }
             Err(poison_err) => {
-                error!("purge: failed to lock coffer (poisoned) in test mode: {}", poison_err);
+                error!(
+                    "purge: failed to lock coffer (poisoned) in test mode: {}",
+                    poison_err
+                );
                 // Don't panic in test mode - let tests continue
             }
         }
     }
-    
+
     // In production mode, destroy and recreate the coffer
     #[cfg(not(test))]
     {
@@ -268,7 +271,7 @@ pub fn purge() {
             }
         }
     }
-    
+
     // After coffer is handled, now get the buffer registry and destroy all buffers
     eprintln!("DEBUG: purge() attempting to lock registry");
     let registry_lock_result = crate::globals::get_buffer_registry().lock();
@@ -279,7 +282,10 @@ pub fn purge() {
             if let Err(e) = registry.destroy_all() {
                 // A failure in destroy_all, especially if it involves un-wiped buffers or canary issues, is critical.
                 // Go's Purge panics here.
-                error!("purge: critical error destroying buffers: {:?}. Panicking.", e);
+                error!(
+                    "purge: critical error destroying buffers: {:?}. Panicking.",
+                    e
+                );
                 // Panic directly to avoid safe_panic loop.
                 // Ensure minimal cleanup if possible before panic, though destroy_all should have tried.
                 panic!("purge: critical error destroying buffers: {:?}", e);
@@ -297,7 +303,7 @@ pub fn purge() {
                 }
                 return;
             }
-            
+
             #[cfg(not(test))]
             {
                 error!("purge: failed to lock buffer registry (poisoned). Buffers may not be destroyed. Panicking.");
@@ -305,7 +311,7 @@ pub fn purge() {
             }
         }
     }
-    
+
     // Reinitialize global state by ensuring new instances are created if needed.
     // Accessing them via get_coffer() and get_buffer_registry() will reinitialize
     // the OnceLock if the previous Mutex<T> was dropped (which it isn't here,
@@ -365,10 +371,10 @@ pub fn safe_panic(message: &str) -> ! {
             log::error!("purge failed during safe_panic: {:?}", e);
         }
     }
-    
+
     #[cfg(not(test))]
     purge();
-    
+
     // Then panic
     panic!("{}", message);
 }
@@ -402,7 +408,7 @@ pub fn safe_panic(message: &str) -> ! {
 pub fn safe_exit(code: i32) -> ! {
     // LOCK ORDERING: Following our established lock ordering strategy:
     // 1. COFFER must always be acquired before BUFFERS
-    
+
     // Destroy the current coffer (key)
     #[cfg(not(test))]
     {
@@ -415,7 +421,10 @@ pub fn safe_exit(code: i32) -> ! {
                 }
             }
             Err(poison_err) => {
-                error!("Failed to lock global coffer during safe_exit (poisoned): {}", poison_err);
+                error!(
+                    "Failed to lock global coffer during safe_exit (poisoned): {}",
+                    poison_err
+                );
             }
         }
     }
@@ -429,10 +438,13 @@ pub fn safe_exit(code: i32) -> ! {
             let _ = registry.destroy_all();
         }
         Err(poison_err) => {
-            error!("Failed to lock global buffer registry during safe_exit (poisoned): {}", poison_err);
+            error!(
+                "Failed to lock global buffer registry during safe_exit (poisoned): {}",
+                poison_err
+            );
         }
     }
-    
+
     // Exit the process
     process::exit(code);
 }
@@ -440,61 +452,61 @@ pub fn safe_exit(code: i32) -> ! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex_literal::hex;
     use crate::buffer::Buffer;
     use crate::util::hash; // Added purge for canary test
+    use hex_literal::hex;
     use serial_test::serial;
-    
+
     #[test]
     fn test_round_to_page_size() {
         let page = *PAGE_SIZE;
-        
+
         assert_eq!(round_to_page_size(1), page);
         assert_eq!(round_to_page_size(page - 1), page);
         assert_eq!(round_to_page_size(page), page);
         assert_eq!(round_to_page_size(page + 1), 2 * page);
         assert_eq!(round_to_page_size(2 * page), 2 * page);
     }
-    
+
     #[test]
     fn test_wipe() {
         let mut data = vec![0xff; 32];
-        
+
         wipe(&mut data);
-        
+
         assert!(data.iter().all(|&b| b == 0));
     }
-    
+
     #[test]
     fn test_scramble() {
         let mut data = vec![0; 32];
         let original = data.clone();
-        
+
         scramble(&mut data).unwrap();
-        
+
         // It's theoretically possible but extremely unlikely that the random data would be all zeros
         assert_ne!(data, original);
     }
-    
+
     #[test]
     fn test_hash() {
         let data = b"test data";
         let hash1 = hash(data);
-        
+
         // Same input should produce same hash
         let hash2 = hash(data);
         assert_eq!(hash1, hash2);
-        
+
         // Different input should produce different hash
         let hash3 = hash(b"different data");
         assert_ne!(hash1, hash3);
     }
-    
+
     #[test]
     fn test_copy_slice() {
         let src = [1, 2, 3, 4, 5];
         let mut dst = [0; 10];
-        
+
         // Test dst > src
         copy_slice(&mut dst, &src).expect("copy_slice failed (dst > src)");
         assert_eq!(dst[..5], src);
@@ -526,7 +538,7 @@ mod tests {
         let src_both_empty: [u8; 0] = [];
         copy_slice(&mut dst_both_empty, &src_both_empty).expect("copy_slice failed (both empty)");
     }
-    
+
     // Test for a conceptual `move_slice` if it were implemented.
     // For now, `core.Move` is not directly ported as a public utility in Rust `util`.
     // It's used internally by `Buffer::new_from_bytes` which copies then wipes.
@@ -550,13 +562,13 @@ mod tests {
         let b = [1, 2, 3, 4, 5];
         let c = [1, 2, 3, 4, 6];
         let d = [1, 2, 3, 4];
-        
+
         assert!(constant_time_eq(&a, &b));
         assert!(!constant_time_eq(&a, &c));
         assert!(!constant_time_eq(&a, &d));
         // Test with empty slices
-        let empty1: [u8;0] = [];
-        let empty2: [u8;0] = [];
+        let empty1: [u8; 0] = [];
+        let empty2: [u8; 0] = [];
         assert!(constant_time_eq(&empty1, &empty2));
     }
 
@@ -567,7 +579,7 @@ mod tests {
         // Buffer::new automatically adds the buffer to the global registry.
         let buffer = Buffer::new(32).unwrap();
         buffer.test_corrupt_canary();
-        
+
         // Directly try to destroy the buffer which should fail on canary check
         if let Err(e) = buffer.destroy() {
             panic!("{}", e);
@@ -589,10 +601,17 @@ mod tests {
         // Values from Go's core/crypto_test.go TestHash (Blake2b-256)
         // Note: Go test uses base64.StdEncoding.EncodeToString. Rust test will compare raw bytes.
         // These are the actual Blake2b-256 hash values converted from the Go test's base64 expectations
-        assert_eq!(hash(b""), hex!("0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"));
-        assert_eq!(hash(b"hash"), hex!("97edaa69596438136dcd128553e904bc03f526426f727d270b69841fb6cf50d3"));
-        assert_eq!(hash(b"test"), hex!("928b20366943e2afd11ebc0eae2e53a93bf177a4fcf35bcc64d503704e65e202"));
+        assert_eq!(
+            hash(b""),
+            hex!("0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8")
+        );
+        assert_eq!(
+            hash(b"hash"),
+            hex!("97edaa69596438136dcd128553e904bc03f526426f727d270b69841fb6cf50d3")
+        );
+        assert_eq!(
+            hash(b"test"),
+            hex!("928b20366943e2afd11ebc0eae2e53a93bf177a4fcf35bcc64d503704e65e202")
+        );
     }
-
-
 }

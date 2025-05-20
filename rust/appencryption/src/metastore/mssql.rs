@@ -34,8 +34,10 @@ impl Metastore for MssqlMetastore {
         // 1. Execute a SQL query like: SELECT key_record FROM encryption_key WHERE id = @P1 AND created = @P2
         // 2. Deserialize the result into an EnvelopeKeyRecord
         // 3. Return the result
-        
-        Err(Error::Metastore("SQL Server metastore not implemented".into()))
+
+        Err(Error::Metastore(
+            "SQL Server metastore not implemented".into(),
+        ))
     }
 
     async fn load_latest(&self, _id: &str) -> Result<Option<EnvelopeKeyRecord>> {
@@ -43,8 +45,10 @@ impl Metastore for MssqlMetastore {
         // 1. Execute a SQL query like: SELECT TOP 1 key_record FROM encryption_key WHERE id = @P1 ORDER BY created DESC
         // 2. Deserialize the result into an EnvelopeKeyRecord
         // 3. Return the result
-        
-        Err(Error::Metastore("SQL Server metastore not implemented".into()))
+
+        Err(Error::Metastore(
+            "SQL Server metastore not implemented".into(),
+        ))
     }
 
     async fn store(&self, _id: &str, _created: i64, _envelope: &EnvelopeKeyRecord) -> Result<bool> {
@@ -52,15 +56,17 @@ impl Metastore for MssqlMetastore {
         // 1. Serialize the envelope to JSON
         // 2. Execute a SQL query like: INSERT INTO encryption_key (id, created, key_record) VALUES (@P1, @P2, @P3)
         // 3. Return whether the insert was successful
-        
-        Err(Error::Metastore("SQL Server metastore not implemented".into()))
+
+        Err(Error::Metastore(
+            "SQL Server metastore not implemented".into(),
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_mssql_metastore_creation() {
         let _metastore = MssqlMetastore::new();

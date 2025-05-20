@@ -9,9 +9,9 @@ fn test_debug_sigbus() {
     let factory = DefaultSecretFactory::new();
     let secret = factory.new(&mut b"test data".to_vec()).unwrap();
     let secret = Arc::new(secret);
-    
+
     println!("Main: Created secret");
-    
+
     // Create a reader thread
     let secret_reader = Arc::clone(&secret);
     let reader = thread::spawn(move || {
@@ -32,15 +32,15 @@ fn test_debug_sigbus() {
         }
         println!("Reader: Exiting");
     });
-    
+
     // Give reader time to start
     thread::sleep(Duration::from_millis(50));
-    
+
     // Close the secret
     println!("Main: Closing secret");
     secret.close().unwrap();
     println!("Main: Secret closed");
-    
+
     // Wait for reader
     reader.join().unwrap();
     println!("Main: Test complete");
@@ -50,10 +50,10 @@ fn test_debug_sigbus() {
 fn test_minimal_case() {
     let factory = DefaultSecretFactory::new();
     let secret = factory.new(&mut b"test".to_vec()).unwrap();
-    
+
     // Simply close it
     secret.close().unwrap();
-    
+
     // Try to access after close
     match secret.with_bytes(|_| Ok(())) {
         Ok(_) => panic!("Should have failed"),

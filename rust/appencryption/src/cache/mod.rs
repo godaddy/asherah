@@ -6,22 +6,22 @@
 //! - TLFU (Tiny Least Frequently Used)
 //! - SLRU (Segmented Least Recently Used)
 
-mod lru;
 mod lfu;
-mod tlfu;
-mod slru;
+mod lru;
 pub mod simple;
+mod slru;
+mod tlfu;
 
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub use lru::LruCache;
 pub use lfu::LfuCache;
-pub use tlfu::TlfuCache;
-pub use slru::SlruCache;
+pub use lru::LruCache;
 pub use simple::SimpleCache;
+pub use slru::SlruCache;
+pub use tlfu::TlfuCache;
 
 /// Cache policy types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,27 +57,27 @@ pub type EvictCallback<K, V> = Arc<dyn Fn(&K, &V) + Send + Sync>;
 pub trait Cache<K, V>: Send + Sync {
     /// Get a value from the cache
     fn get(&self, key: &K) -> Option<Arc<V>>;
-    
+
     /// Insert a value into the cache
     fn insert(&self, key: K, value: V) -> bool;
-    
+
     /// Remove a value from the cache
     fn remove(&self, key: &K) -> bool;
-    
+
     /// Return the number of items in the cache
     fn len(&self) -> usize;
-    
+
     /// Return true if the cache is empty
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    
+
     /// Return the capacity of the cache
     fn capacity(&self) -> usize;
-    
+
     /// Clear all items from the cache
     fn clear(&self);
-    
+
     /// Close the cache and clean up resources
     fn close(&self);
 }
@@ -104,13 +104,13 @@ where
             ttl: None,
         }
     }
-    
+
     /// Set the cache policy
     pub fn with_policy(mut self, policy: CachePolicy) -> Self {
         self.policy = policy;
         self
     }
-    
+
     /// Set the eviction callback
     pub fn with_evict_callback<F>(mut self, callback: F) -> Self
     where
@@ -119,56 +119,36 @@ where
         self.evict_callback = Some(Arc::new(callback));
         self
     }
-    
+
     /// Set the time-to-live for cache entries
     pub fn with_ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
     }
-    
+
     /// Build the cache with the configured options
     pub fn build(self) -> Arc<dyn Cache<K, V>> {
         match self.policy {
             CachePolicy::LRU => {
-                let cache = LruCache::new(
-                    self.capacity,
-                    self.evict_callback,
-                    self.ttl,
-                );
+                let cache = LruCache::new(self.capacity, self.evict_callback, self.ttl);
                 Arc::new(cache)
-            },
+            }
             CachePolicy::LFU => {
-                let cache = LfuCache::new(
-                    self.capacity,
-                    self.evict_callback,
-                    self.ttl,
-                );
+                let cache = LfuCache::new(self.capacity, self.evict_callback, self.ttl);
                 Arc::new(cache)
-            },
+            }
             CachePolicy::TLFU => {
-                let cache = TlfuCache::new(
-                    self.capacity,
-                    self.evict_callback,
-                    self.ttl,
-                );
+                let cache = TlfuCache::new(self.capacity, self.evict_callback, self.ttl);
                 Arc::new(cache)
-            },
+            }
             CachePolicy::SLRU => {
-                let cache = SlruCache::new(
-                    self.capacity,
-                    self.evict_callback,
-                    self.ttl,
-                );
+                let cache = SlruCache::new(self.capacity, self.evict_callback, self.ttl);
                 Arc::new(cache)
-            },
+            }
             CachePolicy::Simple => {
-                let cache = SimpleCache::new(
-                    self.capacity,
-                    self.evict_callback,
-                    self.ttl,
-                );
+                let cache = SimpleCache::new(self.capacity, self.evict_callback, self.ttl);
                 Arc::new(cache)
-            },
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 //! Signal handling module for securely cleaning up memory on program termination
 //!
-//! This module provides functionality to handle system signals (like SIGINT, SIGTERM) 
+//! This module provides functionality to handle system signals (like SIGINT, SIGTERM)
 //! and ensure that sensitive data is securely wiped before the program terminates.
 //!
 //! ## Features
@@ -36,12 +36,12 @@
 //! This ensures that no sensitive data remains in memory when the program exits,
 //! even if terminated unexpectedly.
 
+use std::process;
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    OnceLock, Once, RwLock,
+    Once, OnceLock, RwLock,
 };
-use std::sync::mpsc::{Receiver, Sender, self};
-use std::process;
 use std::thread; // Added for thread::spawn
 
 use crate::error::{Result, SecureMemoryError};
@@ -60,10 +60,10 @@ static SIGNAL_TX: OnceLock<Sender<SignalEvent>> = OnceLock::new();
 pub enum Signal {
     /// SIGINT - Terminal interrupt signal (Ctrl+C)
     Interrupt = 2,
-    
+
     /// SIGTERM - Termination signal
     Terminate = 15,
-    
+
     /// Other signal
     Other(i32),
 }
@@ -103,7 +103,7 @@ impl std::fmt::Display for Signal {
 enum SignalEvent {
     /// Register a new signal handler
     RegisterHandler(Box<dyn Fn(Signal) + Send + 'static>),
-    
+
     /// Signal received
     Signal(Signal),
 }
@@ -124,16 +124,16 @@ fn initialize() -> Result<()> {
     INIT.call_once(|| {
         // Create a channel for the signal handler
         let (tx, rx) = mpsc::channel();
-        
+
         // Store the sender for later use
         let _ = SIGNAL_TX.set(tx);
-        
+
         // Start a thread to handle signals
         thread::spawn(move || signal_handler_thread(rx));
-        
+
         // Register the actual signal handlers with the OS
         setup_os_signal_handlers().expect("Failed to set up signal handlers");
-        
+
         INITIALIZED.store(true, Ordering::SeqCst);
     });
 
@@ -148,7 +148,7 @@ fn initialize() -> Result<()> {
 fn signal_handler_thread(rx: Receiver<SignalEvent>) {
     // The current handler function
     let handler_lock = RwLock::new(None::<Box<dyn Fn(Signal) + Send + 'static>>);
-    
+
     // Process events from the channel
     while let Ok(event) = rx.recv() {
         match event {
@@ -165,10 +165,10 @@ fn signal_handler_thread(rx: Receiver<SignalEvent>) {
                         handler(signal);
                     }
                 }
-                
+
                 // Perform cleanup
                 purge();
-                
+
                 // Exit the process
                 process::exit(1);
             }
@@ -183,29 +183,34 @@ fn signal_handler_thread(rx: Receiver<SignalEvent>) {
 #[allow(dead_code)]
 fn setup_os_signal_handlers() -> Result<()> {
     // Sender to pass to signal handlers
-    let tx = SIGNAL_TX.get()
-        .ok_or_else(|| SecureMemoryError::OperationFailed(
-            "Signal handler channel not initialized".to_string(),
-        ))?
+    let tx = SIGNAL_TX
+        .get()
+        .ok_or_else(|| {
+            SecureMemoryError::OperationFailed("Signal handler channel not initialized".to_string())
+        })?
         .clone();
-    
+
     // Register handler for SIGINT (Ctrl+C)
     let tx_clone = tx.clone();
     ctrlc::set_handler(move || {
         let _ = tx_clone.send(SignalEvent::Signal(Signal::Interrupt));
-    }).map_err(|e| SecureMemoryError::OperationFailed(format!("Failed to set SIGINT handler: {}", e)))?;
-    
+    })
+    .map_err(|e| {
+        SecureMemoryError::OperationFailed(format!("Failed to set SIGINT handler: {}", e))
+    })?;
+
     use signal_hook::consts::signal::*;
-    
+
     // Only register handler for SIGTERM - don't catch memory-related signals
     unsafe {
         signal_hook::low_level::register(SIGTERM, move || {
             let _ = tx.send(SignalEvent::Signal(Signal::Terminate));
-        }).map_err(|e| SecureMemoryError::OperationFailed(
-            format!("Failed to set handler for SIGTERM: {}", e)
-        ))?;
+        })
+        .map_err(|e| {
+            SecureMemoryError::OperationFailed(format!("Failed to set handler for SIGTERM: {}", e))
+        })?;
     }
-    
+
     Ok(())
 }
 
@@ -222,7 +227,10 @@ fn purge() {
 
     if let Some(registry_mutex) = SECRET_REGISTRY.get() {
         if let Ok(mut registry_guard) = registry_mutex.lock() {
-            log::debug!("Accessed secret registry. Found {} weak references.", registry_guard.len());
+            log::debug!(
+                "Accessed secret registry. Found {} weak references.",
+                registry_guard.len()
+            );
             // Iterate and attempt to close live secrets.
             // We use retain to remove weak pointers that no longer point to live data.
             registry_guard.retain(|weak_secret_internal| {
@@ -232,7 +240,7 @@ fn purge() {
                     let temp_secret = ProtectedMemorySecret {
                         inner: strong_secret_internal,
                     };
-                    
+
                     // Call close() which maps to close_impl().
                     // close_impl is idempotent.
                     if let Err(e) = temp_secret.close() {
@@ -244,7 +252,7 @@ fn purge() {
                     // it holds might still be pointed to by an application elsewhere,
                     // or this might be the last reference if only the registry held it.
                     drop(temp_secret);
-                    
+
                     // Keep the weak reference in the registry if it's still somehow alive
                     // (e.g. close failed, or another Arc exists).
                     // If close was successful and this was the last strong ref via upgrade,
@@ -256,9 +264,14 @@ fn purge() {
                 log::trace!("Pruned a dead weak reference from secret registry during purge.");
                 false
             });
-            log::debug!("Secret registry pruned. {} weak references remaining.", registry_guard.len());
+            log::debug!(
+                "Secret registry pruned. {} weak references remaining.",
+                registry_guard.len()
+            );
         } else {
-            log::error!("Failed to lock SECRET_REGISTRY during purge. Secrets may not be cleaned up.");
+            log::error!(
+                "Failed to lock SECRET_REGISTRY during purge. Secrets may not be cleaned up."
+            );
         }
     } else {
         log::info!("SECRET_REGISTRY not initialized. No secrets to purge.");
@@ -295,17 +308,20 @@ where
 {
     // Initialize if not already initialized
     initialize()?;
-    
+
     // Get the sender
-    let tx_opt = SIGNAL_TX.get(); 
-    
+    let tx_opt = SIGNAL_TX.get();
+
     if let Some(tx) = tx_opt {
         // Send the handler to the signal handling thread
         tx.send(SignalEvent::RegisterHandler(Box::new(handler)))
-            .map_err(|e| SecureMemoryError::OperationFailed(
-                format!("Failed to register signal handler: {}", e)
-            ))?;
-        
+            .map_err(|e| {
+                SecureMemoryError::OperationFailed(format!(
+                    "Failed to register signal handler: {}",
+                    e
+                ))
+            })?;
+
         Ok(())
     } else {
         Err(SecureMemoryError::OperationFailed(
@@ -367,7 +383,7 @@ where
     // Currently, our simple architecture catches all signals and just routes them
     // to the registered handler, but this could be extended to have different
     // handlers for different signals
-    
+
     catch_signal(handler)
 }
 
@@ -383,7 +399,7 @@ where
 pub fn exit(exit_code: i32) -> ! {
     // Purge all secure memory
     purge();
-    
+
     // Exit the process
     process::exit(exit_code)
 }
@@ -399,7 +415,7 @@ pub fn exit(exit_code: i32) -> ! {
 pub fn panic(msg: String) -> ! {
     // Purge all secure memory
     purge();
-    
+
     // Panic with the provided message
     std::panic::panic_any(msg)
 }

@@ -4,23 +4,23 @@
 //! with thread-safe session sharing and automatic cleanup.
 
 use crate::cache::{Cache, CacheBuilder, CachePolicy};
-use crate::Encryption;
 use crate::error::Result;
 use crate::session::EnvelopeSession;
+use crate::Encryption;
 
-use std::sync::{Arc, Mutex, Condvar, RwLock};
-use std::time::{Duration, Instant};
-use std::fmt;
 use async_trait::async_trait;
+use std::fmt;
+use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::time::{Duration, Instant};
 
 /// Interface for session caching
 pub trait SessionCache: Send + Sync {
     /// Get a session for the given partition ID
     fn get(&self, id: &str) -> Result<Arc<EnvelopeSession>>;
-    
+
     /// Returns the number of sessions in the cache
     fn count(&self) -> usize;
-    
+
     /// Close the session cache and all sessions
     fn close(&self);
 }
@@ -29,13 +29,13 @@ pub trait SessionCache: Send + Sync {
 pub struct SharedEncryption {
     /// Inner encryption implementation
     inner: Arc<dyn Encryption>,
-    
+
     /// Creation time
     created: Instant,
-    
+
     /// Access counter for reference tracking
     access_counter: Mutex<usize>,
-    
+
     /// Condition variable for waiting until session is unused
     cond: Condvar,
 }
@@ -50,22 +50,22 @@ impl SharedEncryption {
             cond: Condvar::new(),
         }
     }
-    
+
     /// Increment the usage counter
     pub fn increment_usage(&self) {
         let mut counter = self.access_counter.lock().unwrap();
         *counter += 1;
     }
-    
+
     /// Remove the session, waiting until all users are done
     pub fn remove(&self) {
         let mut counter = self.access_counter.lock().unwrap();
-        
+
         // Wait until no more users
         while *counter > 0 {
             counter = self.cond.wait(counter).unwrap();
         }
-        
+
         // Close the underlying encryption
         let _ = futures::executor::block_on(self.inner.close());
     }
@@ -76,21 +76,24 @@ impl Encryption for SharedEncryption {
     async fn encrypt_payload(&self, data: &[u8]) -> Result<crate::envelope::DataRowRecord> {
         self.inner.encrypt_payload(data).await
     }
-    
-    async fn decrypt_data_row_record(&self, drr: &crate::envelope::DataRowRecord) -> Result<Vec<u8>> {
+
+    async fn decrypt_data_row_record(
+        &self,
+        drr: &crate::envelope::DataRowRecord,
+    ) -> Result<Vec<u8>> {
         self.inner.decrypt_data_row_record(drr).await
     }
-    
+
     async fn close(&self) -> Result<()> {
         let mut counter = self.access_counter.lock().unwrap();
         *counter -= 1;
-        
+
         // Notify waiters
         self.cond.notify_all();
-        
+
         Ok(())
     }
-    
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -113,12 +116,10 @@ type SessionLoaderFn = Arc<dyn Fn(&str) -> Result<Arc<EnvelopeSession>> + Send +
 pub struct CacheWrapper {
     /// Session loader function
     loader: SessionLoaderFn,
-    
-    
+
     /// Underlying cache
     cache: Arc<dyn Cache<String, Arc<EnvelopeSession>>>,
-    
-    
+
     /// Lock for cache operations
     lock: RwLock<()>,
 }
@@ -137,55 +138,64 @@ impl CacheWrapper {
             .with_evict_callback(|_, session| {
                 // When evicted, we need to remove the session
                 // No need for thread as these operations should be quick
-                if let Some(shared_enc) = session.encryption.as_any().downcast_ref::<SharedEncryption>() {
+                if let Some(shared_enc) = session
+                    .encryption
+                    .as_any()
+                    .downcast_ref::<SharedEncryption>()
+                {
                     shared_enc.remove();
                 }
             })
             .build();
-            
+
         // TODO: TTL is not implemented on the cache trait yet
         // if let Some(ttl) = expiry {
         //     cache.set_ttl(ttl);
         // }
-        
+
         Self {
             loader,
             cache,
             lock: RwLock::new(()),
         }
     }
-    
+
     /// Get or add a session to the cache
     fn get_or_add(&self, id: &str) -> Result<Arc<EnvelopeSession>> {
         // Try to get from cache first
         if let Some(session) = self.cache.get(&id.to_string()) {
             return Ok((*session).clone());
         }
-        
+
         // Not in cache, create new session
         let session = (self.loader)(id)?;
-        
+
         // Wrap in SharedEncryption if needed
         let session = self.ensure_shared(session);
-        
+
         // Add to cache
         self.cache.insert(id.to_string(), session.clone());
-        
+
         Ok(session)
     }
-    
+
     /// Ensure the session uses SharedEncryption
     fn ensure_shared(&self, session: Arc<EnvelopeSession>) -> Arc<EnvelopeSession> {
         // Check if already using SharedEncryption
-        if session.encryption.as_any().downcast_ref::<SharedEncryption>().is_none() {
+        if session
+            .encryption
+            .as_any()
+            .downcast_ref::<SharedEncryption>()
+            .is_none()
+        {
             // Wrap in SharedEncryption
             let shared = Arc::new(SharedEncryption::new(session.encryption.clone()));
-            
+
             // Create new session with shared encryption
             let new_session = Arc::new(EnvelopeSession::new(shared));
             return new_session;
         }
-        
+
         // Already using SharedEncryption
         session
     }
@@ -194,21 +204,25 @@ impl CacheWrapper {
 impl SessionCache for CacheWrapper {
     fn get(&self, id: &str) -> Result<Arc<EnvelopeSession>> {
         let _guard = self.lock.write().unwrap();
-        
+
         let session = self.get_or_add(id)?;
-        
+
         // Increment usage counter
-        if let Some(shared) = session.encryption.as_any().downcast_ref::<SharedEncryption>() {
+        if let Some(shared) = session
+            .encryption
+            .as_any()
+            .downcast_ref::<SharedEncryption>()
+        {
             shared.increment_usage();
         }
-        
+
         Ok(session)
     }
-    
+
     fn count(&self) -> usize {
         self.cache.len()
     }
-    
+
     fn close(&self) {
         self.cache.clear();
     }
@@ -223,11 +237,6 @@ pub fn new_session_cache(
 ) -> Arc<dyn SessionCache> {
     let policy = eviction_policy.unwrap_or(CachePolicy::LRU);
     let loader_fn = Arc::new(loader);
-    
-    Arc::new(CacheWrapper::new(
-        loader_fn,
-        max_size,
-        expiry,
-        policy,
-    ))
+
+    Arc::new(CacheWrapper::new(loader_fn, max_size, expiry, policy))
 }

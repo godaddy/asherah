@@ -104,25 +104,25 @@
 //! }
 //! ```
 
-mod error;
 mod buffer;
-mod enclave;
 mod coffer;
+mod enclave;
+mod error;
 mod globals;
 
 // Export for integration tests
 pub use globals::reset_for_tests;
 mod registry;
-mod util;
 mod signals;
 mod stream;
+mod util;
 
-pub use error::MemguardError;
 pub use buffer::Buffer;
 pub use enclave::Enclave;
+pub use error::MemguardError;
+pub use signals::{catch_interrupt, catch_signal};
 pub use stream::{Stream, DEFAULT_STREAM_CHUNK_SIZE};
-pub use signals::{catch_signal, catch_interrupt};
-pub use util::{scramble_bytes, wipe_bytes, purge, safe_panic, safe_exit};
+pub use util::{purge, safe_exit, safe_panic, scramble_bytes, wipe_bytes};
 
 // No need to re-export globals since it's already pub mod in test mode
 
@@ -133,18 +133,18 @@ use ctor::ctor;
 #[cfg(test)]
 #[ctor]
 fn test_init() {
-    use crate::globals::{get_coffer, get_buffer_registry, SHUTDOWN_IN_PROGRESS};
+    use crate::globals::{get_buffer_registry, get_coffer, SHUTDOWN_IN_PROGRESS};
     use std::sync::atomic::Ordering;
-    
+
     // Initialize logging for tests
     let _ = env_logger::builder()
         .filter_level(log::LevelFilter::Debug)
         .try_init();
-    
+
     // Initialize all globals once at test startup
     let _ = get_coffer();
     let _ = get_buffer_registry();
-    
+
     // Prevent shutdown during tests
     SHUTDOWN_IN_PROGRESS.store(false, Ordering::SeqCst);
 }
@@ -152,20 +152,25 @@ fn test_init() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_buffer_simple() {
         // Create a buffer
         let buffer = Buffer::new(64).expect("Buffer creation failed in lib.rs test");
-        
+
         // The buffer should be alive at this point
         assert!(buffer.is_alive(), "Buffer should be alive after creation");
-        
+
         // Destroy it
-        buffer.destroy().expect("Buffer destruction failed in lib.rs test");
-        
+        buffer
+            .destroy()
+            .expect("Buffer destruction failed in lib.rs test");
+
         // Verify it's destroyed
-        assert!(!buffer.is_alive(), "Buffer should be destroyed after explicit destroy call");
+        assert!(
+            !buffer.is_alive(),
+            "Buffer should be destroyed after explicit destroy call"
+        );
     }
 }
 
@@ -235,9 +240,9 @@ mod test_abort_intercept;
 #[cfg(test)]
 mod test_abort_debug {
     use std::sync::Once;
-    
+
     static INIT: Once = Once::new();
-    
+
     #[test]
     fn debug_abort_location() {
         INIT.call_once(|| {
@@ -246,22 +251,24 @@ mod test_abort_debug {
                 eprintln!("\n=== SIGABRT CAUGHT ===");
                 eprintln!("Signal: {}", sig);
                 eprintln!("Thread: {:?}", std::thread::current().name());
-                
+
                 // Print backtrace
                 let backtrace = std::backtrace::Backtrace::capture();
                 eprintln!("Backtrace:\n{}", backtrace);
                 eprintln!("====================\n");
-                
+
                 // Reset to default handler and re-raise
-                unsafe { signal(SIGABRT, SIG_DFL); }
+                unsafe {
+                    signal(SIGABRT, SIG_DFL);
+                }
                 std::process::abort();
             }
-            
+
             unsafe {
                 signal(SIGABRT, abort_handler as *const () as libc::sighandler_t);
             }
         });
-        
+
         // Run a simple test that might trigger the abort
         let b = crate::Buffer::new(32).unwrap();
         b.destroy().unwrap();

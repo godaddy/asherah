@@ -25,7 +25,7 @@ pub enum Error {
     /// Errors related to JSON serialization/deserialization
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
-    
+
     /// Errors related to I/O operations
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
@@ -41,15 +41,15 @@ pub enum Error {
     /// General internal errors
     #[error("Internal error: {0}")]
     Internal(String),
-    
+
     /// Key not found error
     #[error("Key not found: {0}")]
     KeyNotFound(String),
-    
+
     /// Invalid argument error
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
-    
+
     /// Feature not implemented error
     #[error("Not implemented: {0}")]
     NotImplemented(String),

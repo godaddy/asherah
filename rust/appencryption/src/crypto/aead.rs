@@ -1,11 +1,11 @@
 use crate::error::Result;
-use rand::{RngCore, rngs::OsRng};
+use rand::{rngs::OsRng, RngCore};
 
 /// Trait for AEAD (Authenticated Encryption with Associated Data) operations
 pub trait AeadImpl: Send + Sync {
     /// Encrypts data using the provided key
     fn encrypt(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>>;
-    
+
     /// Decrypts data using the provided key
     fn decrypt(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>>;
 }

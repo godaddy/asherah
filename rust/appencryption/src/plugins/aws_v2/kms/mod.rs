@@ -35,15 +35,15 @@
 //! }
 //! ```
 
-mod client;
 mod builder;
+mod client;
 
 #[cfg(test)]
 mod tests {
+    mod aws_kms_builder_unit_test;
     mod builder_test;
     mod kms_test;
-    mod aws_kms_builder_unit_test;
 }
 
+pub use builder::{new_aws_kms, AwsKmsBuilder, KmsFactory};
 pub use client::{AwsKms, AwsKmsClient, GenerateDataKeyResponse, StandardAwsKmsClient};
-pub use builder::{AwsKmsBuilder, KmsFactory, new_aws_kms};
