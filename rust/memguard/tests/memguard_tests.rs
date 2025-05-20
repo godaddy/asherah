@@ -1,7 +1,5 @@
-use memguard::{Buffer, Enclave, MemguardError, scramble_bytes, wipe_bytes, DEFAULT_STREAM_CHUNK_SIZE, Stream, purge}; // Added Stream, DEFAULT_STREAM_CHUNK_SIZE, purge
+use memguard::{Buffer, Enclave, MemguardError, scramble_bytes, wipe_bytes, purge};
 use std::io::{Cursor, Read, Write}; // For reader tests
-use std::fs::File; // For file operations in tests
-use std::panic::{catch_unwind, AssertUnwindSafe}; // For testing panics from unsafe code
 use serial_test::serial;
 
 #[cfg(test)]
@@ -618,9 +616,9 @@ fn test_api_buffer_move_operations() { // Corresponds to Go's TestMove and TestM
     b2.destroy().unwrap();
 
     // Test on destroyed buffer
-    let mut b_destroyed = Buffer::new(8).unwrap();
+    let b_destroyed = Buffer::new(8).unwrap();
     b_destroyed.destroy().unwrap();
-    let mut src_data3 = b"test".to_vec();
+    let src_data3 = b"test".to_vec();
     assert!(matches!(b_destroyed.with_data_mut(|_| Ok(())), Err(MemguardError::SecretClosed)));
     // Source src_data3 should not be wiped if operation on buffer fails before wipe
     assert_eq!(src_data3, b"test".to_vec());

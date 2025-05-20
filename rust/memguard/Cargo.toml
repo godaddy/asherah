@@ -32,6 +32,7 @@ serial_test = "2.0"
 
 [features]
 default = []
+no-mlock = []  # Feature to disable memory locking for platforms or testing scenarios where it's not supported
 
 [[bench]]
 name = "stream_bench"

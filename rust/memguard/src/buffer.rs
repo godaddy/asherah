@@ -294,7 +294,7 @@ mod tests {
         let b = Buffer::new_random(32).unwrap();
         let original_content = b.with_data(|d| Ok(d.to_vec())).unwrap();
 
-        b.reader(|mut cursor| {
+        let _ = b.reader(|mut cursor| {
             let mut read_content = Vec::new();
             cursor.read_to_end(&mut read_content).unwrap();
             assert_eq!(read_content, original_content);
@@ -316,7 +316,7 @@ mod tests {
             Ok(())
         }).unwrap();
 
-        b_seek.reader(|mut cursor| {
+        let _ = b_seek.reader(|mut cursor| {
             let mut byte_buf = [0u8; 1];
 
             // Seek to end, check position
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn test_api_typed_string_access() {
         let b = Buffer::new_from_bytes(&mut b"valid utf8 string".to_vec()).unwrap();
-        b.string_slice(|res_str| {
+        let _ = b.string_slice(|res_str| {
             assert_eq!(res_str.unwrap(), "valid utf8 string");
             Ok::<_, MemguardError>(())
         }).unwrap();
@@ -359,7 +359,7 @@ mod tests {
         // Test modification reflection
         b.melt().unwrap();
         b.with_data_mut(|data| { data[0] = b'V'; Ok(()) }).unwrap();
-        b.string_slice(|res_str| {
+        let _ = b.string_slice(|res_str| {
             assert_eq!(res_str.unwrap(), "Valid utf8 string");
             Ok::<_, MemguardError>(())
         }).unwrap();
@@ -367,7 +367,7 @@ mod tests {
 
         // Test invalid UTF-8
         let b_invalid = Buffer::new_from_bytes(&mut vec![0xff, 0xfe, 0xfd]).unwrap();
-        b_invalid.string_slice(|res_str| {
+        let _ = b_invalid.string_slice(|res_str| {
             assert!(res_str.is_err());
             Ok::<_, MemguardError>(())
         }).unwrap();
@@ -377,7 +377,7 @@ mod tests {
         assert!(matches!(b.string_slice(|_| Ok::<_, MemguardError>(())), Err(MemguardError::SecretClosed)));
         
         let b_null = Buffer::null();
-        assert!(matches!(b_null.string_slice(|res_str| {
+        assert!(matches!(b_null.string_slice(|_res_str| {
              // This closure won't be reached if with_data fails for null buffer
             Ok::<_, MemguardError>(())
         }), Err(MemguardError::SecretClosed)));
