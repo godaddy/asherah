@@ -813,7 +813,7 @@ impl Buffer {
     /// buffer.scramble().expect("Failed to scramble buffer");
     /// ```
     pub fn scramble(&self) -> Result<()> {
-        self.with_data_mut(|data| scramble(data))
+        self.with_data_mut(scramble)
     }
 
     /// Applies the specified memory protection to the buffer's data region.
