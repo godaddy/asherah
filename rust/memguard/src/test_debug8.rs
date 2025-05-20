@@ -9,7 +9,7 @@ fn test_exact_scenario() {
     let page_size = *util::PAGE_SIZE;
     let user_data_len = size;
     let inner_region_total_len = util::round_to_page_size(user_data_len);
-    let actual_canary_len = inner_region_total_len - user_data_len;
+    let _actual_canary_len = inner_region_total_len - user_data_len;
     let total_alloc_len = (2 * page_size) + inner_region_total_len;
     
     println!("Page size: {}", page_size);

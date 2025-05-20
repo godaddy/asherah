@@ -6,7 +6,7 @@ mod signals_tests {
     fn test_catch_signal_integration() {
         // Build the example program
         let build_output = Command::new("cargo")
-            .args(&["build", "--example", "signal_test"])
+            .args(["build", "--example", "signal_test"])
             .output()
             .expect("Failed to build signal_test example");
             
@@ -17,7 +17,7 @@ mod signals_tests {
         
         // Run the test with signal mode
         let mut cmd = Command::new("cargo");
-        cmd.args(&["run", "--example", "signal_test", "--", "signal"]);
+        cmd.args(["run", "--example", "signal_test", "--", "signal"]);
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
 
@@ -47,7 +47,7 @@ mod signals_tests {
     fn test_catch_interrupt_integration() {
         // Build the example program
         let build_output = Command::new("cargo")
-            .args(&["build", "--example", "signal_test"])
+            .args(["build", "--example", "signal_test"])
             .output()
             .expect("Failed to build signal_test example");
             
@@ -58,7 +58,7 @@ mod signals_tests {
         
         // Run the test with interrupt mode
         let mut cmd = Command::new("cargo");
-        cmd.args(&["run", "--example", "signal_test", "--", "interrupt"]);
+        cmd.args(["run", "--example", "signal_test", "--", "interrupt"]);
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
 

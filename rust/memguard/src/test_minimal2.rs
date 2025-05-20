@@ -23,7 +23,7 @@ mod test_minimal2 {
                 Ok(buffer) => {
                     buffer.destroy().unwrap();
                 },
-                Err(e) => {
+                Err(_e) => {
                     failed_clone.store(true, Ordering::SeqCst);
                 }
             }

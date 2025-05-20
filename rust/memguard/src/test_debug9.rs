@@ -1,4 +1,4 @@
-use crate::{Buffer, MemguardError};
+use crate::Buffer;
 
 #[test]
 fn test_buffer_create_simple() {

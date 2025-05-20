@@ -104,10 +104,7 @@ impl Enclave {
             Err(_) => return Err(MemguardError::OperationFailed("Failed to lock coffer".into())),
         };
         
-        let key_buffer = match coffer_guard.view() {
-            Ok(buffer) => buffer,
-            Err(e) => return Err(e),
-        };
+        let key_buffer = coffer_guard.view()?;
         
         // Encrypt the data
         let final_ciphertext_result = key_buffer.with_data(|key_bytes| {
@@ -332,10 +329,7 @@ impl Enclave {
         let plaintext_size = self.ciphertext.len() - OVERHEAD;
         
         // Create a new buffer to hold the decrypted data
-        let buffer = match Buffer::new(plaintext_size) {
-            Ok(b) => b,
-            Err(e) => return Err(e),
-        };
+        let buffer = Buffer::new(plaintext_size)?;
         
         // Get the encryption key from the coffer
         let coffer = globals::get_coffer();
@@ -403,8 +397,8 @@ impl Enclave {
                 wipe(&mut ciphertext_to_decrypt);
                 
                 Ok(()) // Inner Ok for buffer.with_data_mut
-            }).map_err(|e| e) // Fix identity function usage with map_err
-        }).map_err(|e| e); // Fix identity function usage with map_err
+            }) // Fix identity function usage with map_err
+        }); // Fix identity function usage with map_err
     
         // Destroy key_buffer regardless of decryption outcome.
         if let Err(e) = key_buffer.destroy() {

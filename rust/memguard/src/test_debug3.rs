@@ -1,7 +1,4 @@
-use crate::{Buffer, MemguardError};
-use std::sync::{Arc, Mutex};
 use crate::globals;
-use crate::registry::BufferRegistry;
 
 #[test]
 fn debug_test_issue_minimal() {
@@ -15,7 +12,7 @@ fn debug_test_issue_minimal() {
     let registry_guard = registry.lock();
     println!("About to unwrap lock");
     match registry_guard {
-        Ok(mut reg) => {
+        Ok(_reg) => {
             println!("Registry locked successfully");
             
             // Try to add a simple value

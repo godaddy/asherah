@@ -1,6 +1,4 @@
-use std::sync::Mutex;
-use std::sync::Arc;
-use crate::{Buffer, MemguardError};
+use crate::Buffer;
 
 #[test]
 fn debug_test_api_typed_byte_array16_ptr() {

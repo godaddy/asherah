@@ -1,4 +1,4 @@
-use crate::{Buffer, MemguardError};
+use crate::Buffer;
 
 #[test]
 fn debug_test_real_issues() {

@@ -215,7 +215,7 @@ impl Stream {
 // ReadAdapter implements Read for a Stream with a locked guard
 struct ReadAdapter<'a, 'b>(&'a Stream, &'b mut std::sync::MutexGuard<'a, StreamInner>);
 
-impl<'a, 'b> Read for ReadAdapter<'a, 'b> {
+impl Read for ReadAdapter<'_, '_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         // Delegate to the Stream's inner_read implementation
         self.0.inner_read(buf, self.1)
@@ -453,8 +453,8 @@ impl Default for Stream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Buffer, MemguardError, purge, scramble_bytes, util::PAGE_SIZE as CORE_PAGE_SIZE};
-    use crate::coffer::Coffer;
+    use crate::{Buffer, MemguardError, scramble_bytes, util::PAGE_SIZE as CORE_PAGE_SIZE};
+    
     use std::io::{Read, Write, ErrorKind};
     use serial_test::serial;
     

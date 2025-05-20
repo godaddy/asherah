@@ -193,8 +193,8 @@ impl Coffer {
                 }
                 wipe(&mut right_hash); // Wipe temporary hash
                 Ok(()) // For left.with_data_mut's closure
-            }).map_err(|e| e) // Fix identity function usage with map_err
-        }).map_err(|e| e)?; // Flatten Result<Result<(), E>, E> from right.with_data and propagate error
+            }) // Fix identity function usage with map_err
+        })?; // Flatten Result<Result<(), E>, E> from right.with_data and propagate error
         
         Ok(())
     }
