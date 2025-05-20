@@ -1,0 +1,11 @@
+# Rust build artifacts
+target/
+debug/
+**/*.rs.bk
+Cargo.lock
+**/*.o
+**/*.so
+**/*.dylib
+**/*.dll
+**/*.rlib
+**/*.rmeta
