@@ -47,60 +47,27 @@ builder pattern, specifically a _step builder_. This ensures all required proper
 To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can
 use the `withXXX` setter methods to configure the session factory properties.
 
-Below is an example of using `memguard-rs`, the Rust port:
+Below is an example of a session factory that uses in-memory persistence and static key management in Rust:
 
-```rust,no_run
-use memguard::{Buffer, Enclave, Stream, catch_interrupt, purge, MemguardError};
-use std::io::{Read, Write};
-
-// Invert the bytes in a buffer, using an Enclave for protection.
-fn invert_buffer_securely(input_buffer: &mut Buffer) -> Result<Enclave, MemguardError> {
-    // Make the buffer mutable if it wasn't (e.g., if it came from Enclave::open)
-    input_buffer.melt()?;
-
-    input_buffer.with_data_mut(|data| {
-        for byte in data.iter_mut() {
-            *byte = !*byte;
-        }
-        Ok(())
-    })??; // Flatten nested Result
-
-    // Re-seal the modified buffer. This also destroys input_buffer.
-    Enclave::seal(input_buffer)
-}
+```rust
+use asherah::{
+    appencryption::{
+        SessionFactory, 
+        kms::StaticKeyManagementServiceImpl,
+        metastore::MemoryMetastoreImpl,
+        policy::NeverExpiredCryptoPolicy,
+    },
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Setup signal handling for graceful shutdown
-    catch_interrupt().expect("Failed to set up interrupt handler");
+    // Create a session factory with in-memory metastore and static KMS
+    let session_factory = SessionFactory::builder("some_product", "some_service")
+        .with_metastore(MemoryMetastoreImpl::new())
+        .with_crypto_policy(NeverExpiredCryptoPolicy::new())
+        .with_kms(StaticKeyManagementServiceImpl::new("thisIsAStaticMasterKeyForTesting"))
+        .build()?;
 
-    // Create some initial sensitive data
-    let mut original_data = vec![0x0F, 0xF0, 0xAA, 0x55];
-    let mut initial_buffer = Buffer::new_from_bytes(&mut original_data)?;
-
-    println!("Original buffer created with size: {}", initial_buffer.size());
-
-    // Process it securely
-    let processed_enclave = match invert_buffer_securely(&mut initial_buffer) {
-        Ok(enclave) => enclave,
-        Err(e) => {
-            eprintln!("Error during secure inversion: {:?}", e);
-            memguard::purge(); // Ensure cleanup on error path
-            return Err(Box::new(e));
-        }
-    };
-
-    assert!(!initial_buffer.is_alive()); // Consumed by Enclave::seal
-
-    // Open the processed enclave to verify
-    let final_buffer = processed_enclave.open()?;
-    final_buffer.with_data(|data| {
-        println!("Processed data: {:?}", data);
-        assert_eq!(data, &[!0x0F, !0xF0, !0xAA, !0x55]);
-        Ok(())
-    })??;
-    final_buffer.destroy()?;
-
-    println!("Successfully processed data.");
+    // Now you can use the session factory to create sessions for encryption/decryption
     Ok(())
 }
 ```
@@ -109,8 +76,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Use the factory to create a session.
 
+For Java:
 ```java
 Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper123");
+```
+
+For Rust:
+```rust
+let session = session_factory.get_session_bytes("shopper123")?;
 ```
 
 The scope of a session is limited to a partition id, i.e. every partition id should have its own session. Also note
@@ -125,6 +98,7 @@ The SDK supports 2 usage patterns:
 This usage style is similar to common encryption utilities where payloads are simply encrypted and
 decrypted, and it is completely up to the calling application for storage responsibility.
 
+For Java:
 ```java
 String originalPayloadString = "mysupersecretpayload";
 
@@ -135,12 +109,24 @@ byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(
 String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
 ```
 
+For Rust:
+```rust
+let original_payload = b"mysupersecretpayload";
+
+// encrypt the payload
+let encrypted_data = session.encrypt(original_payload)?;
+
+// decrypt the payload 
+let decrypted_data = session.decrypt(&encrypted_data)?;
+assert_eq!(original_payload, &decrypted_data[..]);
+```
+
 #### Store / Load
 
 This pattern uses a key-value/document storage model. A `Session` can accept a `Persistence`
 implementation and hooks into its load and store calls.
 
-Example `HashMap`-backed `Persistence` implementation:
+Example `HashMap`-backed `Persistence` implementation in Java:
 
 ```java
 Persistence dataPersistence = new Persistence<JSONObject>() {
@@ -159,14 +145,46 @@ Persistence dataPersistence = new Persistence<JSONObject>() {
 };
 ```
 
+Example `HashMap`-backed `Persistence` implementation in Rust:
+
+```rust
+struct HashMapPersistence {
+    storage: std::collections::HashMap<String, Vec<u8>>
+}
+
+impl Persistence for HashMapPersistence {
+    fn load(&self, key: &str) -> Result<Option<Vec<u8>>, PersistenceError> {
+        Ok(self.storage.get(key).cloned())
+    }
+
+    fn store(&mut self, key: &str, value: &[u8]) -> Result<(), PersistenceError> {
+        self.storage.insert(key.to_string(), value.to_vec());
+        Ok(())
+    }
+}
+```
+
 Putting it all together, an example end-to-end use of the store and load calls:
 
+For Java:
 ```java
 // Encrypts the payload, stores it in the dataPersistence and returns a look up key
 String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
 // Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
 Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
+```
+
+For Rust:
+```rust
+// Create a persistence implementation
+let mut persistence = HashMapPersistence::new();
+
+// Encrypts the payload, stores it in the persistence and returns a lookup key
+let persistence_key = session.store(b"some secret data", &mut persistence)?;
+
+// Uses the persistence_key to look up the payload in the persistence, decrypts it and returns it
+let payload = session.load(&persistence_key, &persistence)?;
 ```
 
 ## Sample Applications
@@ -191,7 +209,7 @@ languages and platforms.
 * [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
-* [Rust (`memguard-rs`)](rust/memguard)
+* [Rust](rust/appencryption)
 * [Service Layer (gRPC)](/server)
 
 ### Derived Projects
@@ -211,43 +229,6 @@ languages and platforms.
 * Encrypt/Decrypt pattern
 * Store/Load pattern
 
----
-
-### `memguard-rs` Feature Support
-
-The Rust port (`memguard-rs`) focuses on the core secure memory primitives provided by the Go `memguard` library. Its features include:
-
-*   **Secure Buffer (`Buffer`)**:
-    *   Memory allocation with guard pages (via `memcall-rs`).
-    *   Memory locking (`mlock`/`VirtualLock` via `memcall-rs`) to prevent swapping.
-    *   Automatic and explicit memory wiping (`Drop` trait, `destroy()` method).
-    *   Controlled mutability (`freeze()`/`melt()`).
-    *   Canary values to detect overflows.
-*   **Encrypted Container (`Enclave`)**:
-    *   AEAD encryption (ChaCha20-Poly1305) for data stored in Buffers.
-    *   Encryption keys managed by an internal `Coffer` system.
-*   **Secure Key Coffer (`Coffer`)**:
-    *   Internal mechanism for managing the master encryption key.
-    *   Periodic, automatic re-keying of the Coffer's internal representation.
-*   **Streaming Encryption (`Stream`)**:
-    *   `std::io::Read` and `std::io::Write` interface for handling large sensitive data in encrypted chunks.
-*   **Signal Handling**:
-    *   Functions (`catch_interrupt`, `catch_signal`) for graceful cleanup of sensitive data on program termination signals (Unix-like systems).
-*   **Emergency Purge**:
-    *   `purge()` function to wipe all tracked sensitive data and reset encryption keys.
-*   **Safe Termination**:
-    *   `safe_exit()` and `safe_panic()` to ensure data is wiped before program termination.
-*   **Core Dump Disabling**:
-    *   Attempts to disable core dumps on Unix-like systems to prevent sensitive data leakage. Windows behavior relies on OS settings.
-
-`memguard-rs` does *not* directly implement higher-level features of the broader Asherah SDK like:
-*   AWS KMS Support
-*   RDBMS Metastore
-*   DynamoDB Metastore
-*   Session Caching (application-level)
-*   Store/Load pattern (application-level persistence abstraction)
-
-These features can be built on top of `memguard-rs` by an application if needed.
 
 ## Contributing
 
