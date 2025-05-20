@@ -1,0 +1,70 @@
+name: '[Rust] PR'
+
+on:
+  pull_request:
+    paths:
+      - 'rust/**'
+      - '.github/workflows/rust-*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-format:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Check formatting
+        run: |
+          cd rust
+          find . -type f -name "Cargo.toml" -exec dirname {} \; | xargs -I{} sh -c "cd {} && cargo fmt -- --check"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run clippy
+        run: |
+          cd rust
+          find . -type f -name "Cargo.toml" -not -path "*/target/*" -exec dirname {} \; | xargs -I{} sh -c "cd {} && cargo clippy --all-targets --all-features -- -D warnings"
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: |
+          cd rust
+          find . -type f -name "Cargo.toml" -not -path "*/target/*" -exec dirname {} \; | xargs -I{} sh -c "cd {} && cargo test --all-features"

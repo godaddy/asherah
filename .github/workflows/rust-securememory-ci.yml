@@ -1,0 +1,143 @@
+name: '[Rust] SecureMemory CI'
+
+on:
+  workflow_dispatch:
+    inputs:
+      rust-version:
+        description: 'Rust toolchain version'
+        required: false
+        default: 'stable'
+
+  push:
+    paths:
+      - 'rust/securememory/**'
+      - 'rust/memguard/**'
+      - 'rust/memcall/**'
+      - '.github/workflows/rust-securememory-*'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'rust/securememory/**'
+      - 'rust/memguard/**'
+      - 'rust/memcall/**'
+      - '.github/workflows/rust-securememory-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-rust-sm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  init-defaults:
+    name: Init Defaults
+    runs-on: ubuntu-latest
+    outputs:
+      rust-version: ${{ steps.init.outputs.rust-version }}
+    steps:
+      - id: init
+        name: Init Rust version
+        run: |
+          rust_version="${{ inputs.rust-version }}"
+          if [ -z "${rust_version}" ]; then
+            rust_version='stable'
+          fi
+
+          echo "Rust version: ${rust_version}"
+          echo "rust-version=${rust_version}" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: init-defaults
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ needs.init-defaults.outputs.rust-version }}
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: |
+          cd rust/securememory
+          ./scripts/build.sh
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: init-defaults
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ needs.init-defaults.outputs.rust-version }}
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: |
+          cd rust/securememory
+          cargo fmt -- --check
+
+      - name: Run clippy
+        run: |
+          cd rust/securememory
+          ./scripts/lint.sh
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: [build, init-defaults]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ needs.init-defaults.outputs.rust-version }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-tarpaulin
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-tarpaulin
+          version: latest
+          use-tool-cache: true
+
+      - name: Run unit tests with coverage
+        run: |
+          cd rust/securememory
+          sudo prlimit --pid $$ --core=-1
+          sudo prlimit --pid $$ --memlock=-1:-1
+          ./scripts/test.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./rust/securememory/cobertura.xml
+          fail_ci_if_error: false
+
+  release:
+    if: startsWith(github.ref, 'refs/heads/release-')
+    needs: test
+    permissions:
+      contents: write
+    name: Release
+    uses: ./.github/workflows/rust-securememory-release.yml

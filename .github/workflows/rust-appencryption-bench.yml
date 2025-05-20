@@ -1,0 +1,42 @@
+name: '[Rust] AppEncryption Benchmarks'
+
+on:
+  workflow_dispatch:
+    inputs:
+      rust-version:
+        description: 'Rust toolchain version'
+        required: false
+        default: 'stable'
+
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.rust-version || 'stable' }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run benchmarks
+        run: |
+          cd rust/appencryption
+          ./scripts/benchmark_test.sh
+
+      - name: Store benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-appencryption-bench-results
+          path: rust/appencryption/target/criterion
