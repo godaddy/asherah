@@ -131,7 +131,10 @@ impl SecretFactory for DefaultSecretFactory {
 
         // Record timing metric
         #[cfg(feature = "metrics")]
-        metrics::histogram!("secret.protectedmemory.alloc_duration_seconds").record(start.elapsed().as_secs_f64());
+        {
+            let histogram = metrics::histogram!("secret.protectedmemory.alloc_duration_seconds");
+            histogram.record(start.elapsed().as_secs_f64());
+        }
 
         Ok(secret)
     }
@@ -182,7 +185,10 @@ impl SecretFactory for DefaultSecretFactory {
 
         // Record timing metric
         #[cfg(feature = "metrics")]
-        metrics::histogram!("secret.protectedmemory.alloc_duration_seconds").record(start.elapsed().as_secs_f64());
+        {
+            let histogram = metrics::histogram!("secret.protectedmemory.alloc_duration_seconds");
+            histogram.record(start.elapsed().as_secs_f64());
+        }
 
         Ok(secret)
     }
