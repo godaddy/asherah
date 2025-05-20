@@ -1,4 +1,4 @@
-use appencryption::kms::StaticKeyManagementService;
+use appencryption::{kms::StaticKeyManagementService, Session};
 #[cfg(feature = "mysql")]
 use appencryption::metastore::MySqlMetastore;
 use appencryption::policy::CryptoPolicy;

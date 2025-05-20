@@ -136,7 +136,7 @@ mod tests {
         }
 
         fn factory_fn(&self) -> impl Fn(SdkConfig) -> Arc<dyn AwsKmsClient> + '_ {
-            |config| {
+            move |config| {
                 let region = config
                     .region()
                     .map(|r| r.to_string())
@@ -341,7 +341,7 @@ mod tests {
         let master_key = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
         // Create a factory that tracks config options
-        let factory = |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
+        let factory = move |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
             let client = MockKmsClient::new("us-west-2", master_key.clone()).with_config(&config);
 
             // Extract the timeout from config
@@ -384,7 +384,7 @@ mod tests {
         let master_key = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
         // Create a factory that tracks config options
-        let factory = |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
+        let factory = move |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
             let client = MockKmsClient::new("us-west-2", master_key.clone()).with_config(&config);
 
             // Extract the retry config from config
