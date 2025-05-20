@@ -1,13 +1,13 @@
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use appencryption::{
-    session::{Session, SessionFactory},
-    policy::CryptoPolicy,
     kms::StaticKeyManagementService,
     metastore::InMemoryMetastore,
+    policy::CryptoPolicy,
+    session::{Session, SessionFactory},
 };
 use securememory::protected_memory::DefaultSecretFactory;
-use std::sync::Arc;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 /// This example demonstrates how to integrate Asherah with the Actix web framework.
 ///
@@ -49,13 +49,10 @@ struct AppState {
 }
 
 // API handlers
-async fn encrypt(
-    data: web::Json<EncryptRequest>,
-    state: web::Data<AppState>,
-) -> impl Responder {
+async fn encrypt(data: web::Json<EncryptRequest>, state: web::Data<AppState>) -> impl Responder {
     let user_id = &data.user_id;
     let plaintext = data.data.as_bytes();
-    
+
     // Create a session for this user
     match state.session_factory.session(user_id).await {
         Ok(session) => {
@@ -68,24 +65,19 @@ async fn encrypt(
                         encrypted_data: encrypted_b64,
                         key_id: encrypted.key.id.clone(),
                     })
-                },
+                }
                 Err(e) => {
                     HttpResponse::InternalServerError().body(format!("Encryption error: {}", e))
                 }
             }
-        },
-        Err(e) => {
-            HttpResponse::InternalServerError().body(format!("Session error: {}", e))
         }
+        Err(e) => HttpResponse::InternalServerError().body(format!("Session error: {}", e)),
     }
 }
 
-async fn decrypt(
-    data: web::Json<DecryptRequest>,
-    state: web::Data<AppState>,
-) -> impl Responder {
+async fn decrypt(data: web::Json<DecryptRequest>, state: web::Data<AppState>) -> impl Responder {
     let user_id = &data.user_id;
-    
+
     // Decode base64 encrypted data
     let encrypted_data = match base64::decode(&data.encrypted_data) {
         Ok(data) => data,
@@ -93,21 +85,21 @@ async fn decrypt(
             return HttpResponse::BadRequest().body(format!("Invalid base64 data: {}", e));
         }
     };
-    
+
     // Create a DataRowRecord for decryption
     use appencryption::envelope::{DataRowRecord, EnvelopeKeyRecord};
     let key_record = EnvelopeKeyRecord {
         revoked: None,
         id: data.key_id.clone(),
-        created: 0,  // We don't have the actual created time from the request
-        encrypted_key: vec![],  // We don't need to provide the encrypted key for decryption
+        created: 0,            // We don't have the actual created time from the request
+        encrypted_key: vec![], // We don't need to provide the encrypted key for decryption
         parent_key_meta: None,
     };
     let record = DataRowRecord {
         data: encrypted_data,
         key: key_record,
     };
-    
+
     // Create a session for this user
     match state.session_factory.session(user_id).await {
         Ok(session) => {
@@ -117,17 +109,17 @@ async fn decrypt(
                     // Convert to UTF-8 string
                     match String::from_utf8(decrypted) {
                         Ok(text) => HttpResponse::Ok().json(DecryptResponse { data: text }),
-                        Err(e) => HttpResponse::BadRequest().body(format!("Invalid UTF-8 data: {}", e)),
+                        Err(e) => {
+                            HttpResponse::BadRequest().body(format!("Invalid UTF-8 data: {}", e))
+                        }
                     }
-                },
+                }
                 Err(e) => {
                     HttpResponse::InternalServerError().body(format!("Decryption error: {}", e))
                 }
             }
-        },
-        Err(e) => {
-            HttpResponse::InternalServerError().body(format!("Session error: {}", e))
         }
+        Err(e) => HttpResponse::InternalServerError().body(format!("Session error: {}", e)),
     }
 }
 
@@ -139,27 +131,27 @@ async fn health() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     println!("Actix Web Integration Example");
     println!("============================");
-    
+
     // Initialize Asherah dependencies
     println!("Initializing Asherah...");
-    
+
     // Create crypto policy
     use chrono::TimeDelta;
     let expire_after = TimeDelta::hours(24);
     let cache_max_age = TimeDelta::hours(2);
     let create_date_precision = TimeDelta::minutes(1);
-    
+
     let policy = CryptoPolicy::new()
         .with_expire_after(expire_after.to_std().unwrap())
         .with_session_cache()
         .with_session_cache_duration(cache_max_age.to_std().unwrap())
         .with_create_date_precision(create_date_precision.to_std().unwrap());
-    
+
     let master_key = vec![0u8; 32]; // In a real app, use a secure key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(InMemoryMetastore::new());
     let secret_factory = Arc::new(DefaultSecretFactory::new());
-    
+
     // Create session factory
     let factory = Arc::new(SessionFactory::new(
         "service",
@@ -170,18 +162,18 @@ async fn main() -> std::io::Result<()> {
         secret_factory,
         vec![],
     ));
-    
+
     // Create app state
     let app_state = web::Data::new(AppState {
         session_factory: factory,
     });
-    
+
     println!("Starting Actix Web server on http://127.0.0.1:8080");
     println!("Available endpoints:");
     println!("  GET  /health");
     println!("  POST /encrypt");
     println!("  POST /decrypt");
-    
+
     // Start Actix HTTP server
     HttpServer::new(move || {
         App::new()
