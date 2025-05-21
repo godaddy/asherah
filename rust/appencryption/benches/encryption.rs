@@ -1,3 +1,5 @@
+#![allow(clippy::unseparated_literal_suffix)]
+
 use appencryption::{
     crypto::aes256gcm::Aes256GcmAead,
     kms::StaticKeyManagementService,
@@ -10,8 +12,8 @@ use securememory::protected_memory::DefaultSecretFactory;
 use std::sync::Arc;
 use std::time::Duration;
 
-async fn encrypt_decrypt(
-    session: &Session,
+async fn encrypt_decrypt<T: Session>(
+    session: &T,
     data_size: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Generate random data of the specified size

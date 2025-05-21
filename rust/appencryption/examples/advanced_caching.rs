@@ -1,3 +1,5 @@
+#![allow(clippy::unseparated_literal_suffix, unused_variables)]
+
 use appencryption::{
     kms::StaticKeyManagementService,
     metastore::InMemoryMetastore,

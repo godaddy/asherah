@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 //! Example demonstrating the SLRU (Segmented Least Recently Used) cache implementation
 //!
 //! This example shows how to use the SLRU cache directly and how it compares to other

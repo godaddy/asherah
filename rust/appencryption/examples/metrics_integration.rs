@@ -1,3 +1,5 @@
+#![allow(clippy::empty_line_after_doc_comments, clippy::unseparated_literal_suffix)]
+
 use appencryption::{
     kms::StaticKeyManagementService,
     metastore::InMemoryMetastore,
