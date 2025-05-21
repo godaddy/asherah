@@ -1,3 +1,7 @@
+#![allow(clippy::unwrap_used)]
+#![feature(rustc_attrs)]
+#![rustc_edition = "2021"]
+
 use appencryption::{
     envelope::{DataRowRecord, EnvelopeKeyRecord},
     kms::StaticKeyManagementService,
@@ -11,7 +15,7 @@ use axum::{
     Json, Router,
 };
 use color_eyre::eyre::Result;
-use log::{info, debug, error};
+use log::{debug, error, info};
 use securememory::protected_memory::DefaultSecretFactory;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc, time::Duration};
@@ -79,23 +83,25 @@ async fn encrypt(
     let plaintext = payload.data.as_bytes();
 
     // Create a session for this user
-    let session = state.session_factory.session(user_id).await
-        .map_err(|e| {
-            error!("Failed to create session: {}", e);
-            Json(ErrorResponse { error: format!("Session error: {}", e) })
-        })?;
+    let session = state.session_factory.session(user_id).await.map_err(|e| {
+        error!("Failed to create session: {}", e);
+        Json(ErrorResponse {
+            error: format!("Session error: {}", e),
+        })
+    })?;
 
     // Encrypt the data
-    let encrypted = session.encrypt(plaintext).await
-        .map_err(|e| {
-            error!("Encryption failed: {}", e);
-            Json(ErrorResponse { error: format!("Encryption error: {}", e) })
-        })?;
+    let encrypted = session.encrypt(plaintext).await.map_err(|e| {
+        error!("Encryption failed: {}", e);
+        Json(ErrorResponse {
+            error: format!("Encryption error: {}", e),
+        })
+    })?;
 
     // Encode as base64 for JSON transport
     let encrypted_b64 = base64::encode(&encrypted.data);
     debug!("Successfully encrypted data for user {}", user_id);
-    
+
     Ok(Json(EncryptResponse {
         encrypted_data: encrypted_b64,
         key_id: encrypted.key.id.clone(),
@@ -110,11 +116,12 @@ async fn decrypt(
     let user_id = &payload.user_id;
 
     // Decode base64 encrypted data
-    let encrypted_data = base64::decode(&payload.encrypted_data)
-        .map_err(|e| {
-            error!("Invalid base64 data: {}", e);
-            Json(ErrorResponse { error: format!("Invalid base64 data: {}", e) })
-        })?;
+    let encrypted_data = base64::decode(&payload.encrypted_data).map_err(|e| {
+        error!("Invalid base64 data: {}", e);
+        Json(ErrorResponse {
+            error: format!("Invalid base64 data: {}", e),
+        })
+    })?;
 
     // Create a DataRowRecord for decryption
     let key_record = EnvelopeKeyRecord {
@@ -124,32 +131,35 @@ async fn decrypt(
         encrypted_key: vec![], // We don't need to provide the encrypted key for decryption
         parent_key_meta: None,
     };
-    
+
     let record = DataRowRecord {
         data: encrypted_data,
         key: key_record,
     };
 
     // Create a session for this user
-    let session = state.session_factory.session(user_id).await
-        .map_err(|e| {
-            error!("Failed to create session: {}", e);
-            Json(ErrorResponse { error: format!("Session error: {}", e) })
-        })?;
+    let session = state.session_factory.session(user_id).await.map_err(|e| {
+        error!("Failed to create session: {}", e);
+        Json(ErrorResponse {
+            error: format!("Session error: {}", e),
+        })
+    })?;
 
     // Decrypt the data
-    let decrypted = session.decrypt(&record).await
-        .map_err(|e| {
-            error!("Decryption failed: {}", e);
-            Json(ErrorResponse { error: format!("Decryption error: {}", e) })
-        })?;
+    let decrypted = session.decrypt(&record).await.map_err(|e| {
+        error!("Decryption failed: {}", e);
+        Json(ErrorResponse {
+            error: format!("Decryption error: {}", e),
+        })
+    })?;
 
     // Convert to UTF-8 string
-    let text = String::from_utf8(decrypted)
-        .map_err(|e| {
-            error!("Invalid UTF-8 data: {}", e);
-            Json(ErrorResponse { error: format!("Invalid UTF-8 data: {}", e) })
-        })?;
+    let text = String::from_utf8(decrypted).map_err(|e| {
+        error!("Invalid UTF-8 data: {}", e);
+        Json(ErrorResponse {
+            error: format!("Invalid UTF-8 data: {}", e),
+        })
+    })?;
 
     debug!("Successfully decrypted data for user {}", user_id);
     Ok(Json(DecryptResponse { data: text }))
@@ -159,10 +169,10 @@ async fn decrypt(
 async fn main() -> Result<()> {
     // Initialize better error handling
     color_eyre::install()?;
-    
+
     // Initialize env_logger with default configuration
     env_logger::init();
-    
+
     info!("Axum Integration Example");
     info!("=======================");
 
@@ -171,10 +181,10 @@ async fn main() -> Result<()> {
 
     // Create crypto policy with clear duration comments
     let policy = CryptoPolicy::new()
-        .with_expire_after(Duration::from_secs(60 * 60 * 24))      // 24 hours
+        .with_expire_after(Duration::from_secs(60 * 60 * 24)) // 24 hours
         .with_session_cache()
-        .with_session_cache_duration(Duration::from_secs(60 * 60 * 2))  // 2 hours
-        .with_create_date_precision(Duration::from_secs(60));      // 1 minute
+        .with_session_cache_duration(Duration::from_secs(60 * 60 * 2)) // 2 hours
+        .with_create_date_precision(Duration::from_secs(60)); // 1 minute
 
     let master_key = vec![0_u8; 32]; // In a real app, use a secure key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
@@ -193,7 +203,9 @@ async fn main() -> Result<()> {
     ));
 
     // Create app state
-    let app_state = AppState { session_factory: factory };
+    let app_state = AppState {
+        session_factory: factory,
+    };
 
     // Build application
     let app = Router::new()
@@ -201,9 +213,11 @@ async fn main() -> Result<()> {
         .route("/encrypt", post(encrypt))
         .route("/decrypt", post(decrypt))
         .with_state(app_state)
-        .layer(ServiceBuilder::new()
-            .layer(TraceLayer::new_for_http())
-            .into_inner());
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .into_inner(),
+        );
 
     // Get the address to bind to
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
