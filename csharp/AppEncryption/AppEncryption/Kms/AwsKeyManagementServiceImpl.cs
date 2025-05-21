@@ -145,8 +145,9 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
 
                 // We generate a KMS datakey (plaintext and encrypted) and encrypt its plaintext key against remaining regions.
                 // This allows us to be able to decrypt from any of the regions locally later.
-                GenerateDataKeyResult dataKey = GenerateDataKey(RegionToArnAndClientDictionary, out string dateKeyKeyId);
-                byte[] dataKeyPlainText = dataKey.KeyPlaintext;
+                GenerateDataKeyResponse dataKey = GenerateDataKey(RegionToArnAndClientDictionary, out string dateKeyKeyId);
+                byte[] dataKeyPlainText = dataKey.Plaintext.GetBuffer();
+
                 try
                 {
                     byte[] encryptedKey = crypto.EncryptKey(key, crypto.GenerateKeyFromBytes(dataKeyPlainText));
@@ -170,10 +171,10 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                         else
                         {
                             // This is the datakey, so build kmsKey json for it
-                            kmsRegionKeyJsonBag.Add((JObject)Option<JObject>.Some(BuildKmsRegionKeyJson(
+                            kmsRegionKeyJsonBag.Add(Option<JObject>.Some(BuildKmsRegionKeyJson(
                                 region,
                                 dateKeyKeyId,
-                                dataKey.KeyCiphertext)));
+                                dataKey.CiphertextBlob.GetBuffer())).IfNone(() => null));
                         }
                     });
 
@@ -250,17 +251,32 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.encrypt." + region };
                 using (MetricsUtil.MetricsInstance.Measure.Timer.Time(encryptTimerOptions))
                 {
-                    // Note we can't wipe plaintext key till end of calling method since underlying buffer shared by all requests
-                    EncryptRequest encryptRequest = new EncryptRequest
+                    // Note: plaintext key wiping is handled by the caller since this buffer is shared
+                    // Create a new MemoryStream from the plaintext
+                    using (MemoryStream plaintextStream = new MemoryStream(dataKeyPlainText))
                     {
-                        KeyId = arn,
-                        Plaintext = new MemoryStream(dataKeyPlainText),
-                    };
-                    Task<EncryptResponse> encryptAsync = kmsClient.EncryptAsync(encryptRequest);
+                        EncryptRequest encryptRequest = new EncryptRequest
+                        {
+                            KeyId = arn,
+                            Plaintext = plaintextStream,
+                        };
 
-                    byte[] encryptedKeyEncryptionKey = encryptAsync.Result.CiphertextBlob.ToArray();
+                        // Execute the request
+                        EncryptResponse encryptResponse;
+                        encryptResponse = kmsClient.EncryptAsync(encryptRequest).Result;
 
-                    return Option<JObject>.Some(BuildKmsRegionKeyJson(region, arn, encryptedKeyEncryptionKey));
+                        // Process the response - ciphertext doesn't need wiping
+                        using (MemoryStream ciphertextStream = encryptResponse.CiphertextBlob)
+                        {
+                            // Get the ciphertext bytes
+                            byte[] ciphertextBytes = new byte[ciphertextStream.Length];
+                            ciphertextStream.Position = 0;
+                            ciphertextStream.Read(ciphertextBytes, 0, ciphertextBytes.Length);
+
+                            // Create the region key JSON
+                            return Option<JObject>.Some(BuildKmsRegionKeyJson(region, arn, ciphertextBytes));
+                        }
+                    }
                 }
             }
             catch (AggregateException e)
@@ -280,35 +296,42 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         /// <param name="sortedRegionToArnAndClientDictionary">A sorted dictionary mapping regions and their arns and
         /// kms clients.</param>
         /// <param name="dateKeyKeyId">The KMS arn used to generate the data key</param>
-        /// <returns>A GenerateDataKeyResult object that contains the plain text key and the ciphertext for that key.
+        /// <returns>A GenerateDataKeyResponse object that contains the plain text key and the ciphertext for that key.
         /// </returns>
         /// <exception cref="KmsException">Throw an exception if we're unable to generate a datakey in any AWS region.
         /// </exception>
-        internal virtual GenerateDataKeyResult GenerateDataKey(OrderedDictionary sortedRegionToArnAndClientDictionary, out string dateKeyKeyId)
+        internal virtual GenerateDataKeyResponse GenerateDataKey(OrderedDictionary sortedRegionToArnAndClientDictionary, out string dateKeyKeyId)
         {
+            // Initialize output parameter
+            dateKeyKeyId = null;
+
             foreach (DictionaryEntry regionToArnAndClient in sortedRegionToArnAndClientDictionary)
             {
+                string region = (string)regionToArnAndClient.Key;
                 try
                 {
                     TimerOptions generateDataKeyTimerOptions = new TimerOptions
                     {
-                        Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.generatedatakey." + regionToArnAndClient.Key,
+                        Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.generatedatakey." + region,
                     };
                     using (MetricsUtil.MetricsInstance.Measure.Timer.Time(generateDataKeyTimerOptions))
                     {
                         IAmazonKeyManagementService client = ((AwsKmsArnClient)regionToArnAndClient.Value).AwsKmsClient;
                         string keyIdForDataKeyGeneration = ((AwsKmsArnClient)regionToArnAndClient.Value).Arn;
-                        GenerateDataKeyResult generateDataKeyResult = client.GenerateDataKey(
-                            keyIdForDataKeyGeneration,
-                            null,
-                            DataKeySpec.AES_256);
+                        GenerateDataKeyRequest request = new GenerateDataKeyRequest
+                        {
+                            KeyId = keyIdForDataKeyGeneration,
+                            KeySpec = DataKeySpec.AES_256,
+                        };
+
+                        GenerateDataKeyResponse generateDataKeyResult = client.GenerateDataKeyAsync(request).GetAwaiter().GetResult();
                         dateKeyKeyId = keyIdForDataKeyGeneration;
                         return generateDataKeyResult;
                     }
                 }
                 catch (AmazonServiceException e)
                 {
-                    Logger.LogWarning(e, "Failed to generate data key via region {region}, trying next region", regionToArnAndClient.Key);
+                    Logger.LogWarning(e, "Failed to generate data key via region {region} KMS, trying next region", region);
 
                     // TODO Consider adding notification/CW alert
                 }
@@ -339,15 +362,34 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             byte[] kmsKeyEncryptionKey,
             bool revoked)
         {
-            byte[] plaintextBackingBytes = awsKmsClient.Decrypt(kmsKeyEncryptionKey, null);
+            DecryptResponse response;
+            byte[] plaintextBackingBytes;
 
-            try
+            // Create a MemoryStream that we will dispose properly
+            using (MemoryStream ciphertextBlobStream = new MemoryStream(kmsKeyEncryptionKey))
             {
-                return crypto.DecryptKey(cipherText, keyCreated, crypto.GenerateKeyFromBytes(plaintextBackingBytes), revoked);
+                DecryptRequest request = new DecryptRequest
+                {
+                    CiphertextBlob = ciphertextBlobStream,
+                };
+
+                response = awsKmsClient.DecryptAsync(request).Result;
             }
-            finally
+
+            // Use proper disposal of the response plaintext stream and securely handle the sensitive bytes
+            using (MemoryStream plaintextStream = response.Plaintext)
             {
-                ManagedBufferUtils.WipeByteArray(plaintextBackingBytes);
+                // Extract the plaintext bytes so we can wipe them in case of an exception
+                plaintextBackingBytes = plaintextStream.GetBuffer();
+
+                try
+                {
+                    return crypto.DecryptKey(cipherText, keyCreated, crypto.GenerateKeyFromBytes(plaintextBackingBytes), revoked);
+                }
+                finally
+                {
+                    ManagedBufferUtils.WipeByteArray(plaintextBackingBytes);
+                }
             }
         }
 
