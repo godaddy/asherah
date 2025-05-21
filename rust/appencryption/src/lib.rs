@@ -1,3 +1,5 @@
+#![allow(clippy::future_not_send)]
+
 //! # Application Encryption Library
 //!
 //! A library for application-level envelope encryption.
@@ -231,10 +233,11 @@ pub use crate::session_cache::{SessionCache, SharedEncryption};
 pub const AES256_KEY_SIZE: usize = 32;
 
 use async_trait::async_trait;
+use std::fmt;
 
 /// Encryption interface for encrypting and decrypting data
 #[async_trait]
-pub trait Encryption: Send + Sync {
+pub trait Encryption: Send + Sync + fmt::Debug {
     /// Encrypts a payload and returns a data row record
     async fn encrypt_payload(&self, data: &[u8]) -> Result<DataRowRecord>;
 
@@ -250,7 +253,7 @@ pub trait Encryption: Send + Sync {
 
 /// Key Management Service interface for encrypting and decrypting system keys
 #[async_trait]
-pub trait KeyManagementService: Send + Sync {
+pub trait KeyManagementService: Send + Sync + fmt::Debug {
     /// Encrypts a key using the master key
     async fn encrypt_key(&self, key: &[u8]) -> Result<Vec<u8>>;
 
@@ -260,21 +263,24 @@ pub trait KeyManagementService: Send + Sync {
 
 /// Metastore interface for storing and retrieving encrypted keys
 #[async_trait]
-pub trait Metastore: Send + Sync {
+pub trait Metastore: Send + Sync + fmt::Debug {
     /// Loads a specific key by ID and creation timestamp
+    #[allow(clippy::future_not_send)]
     async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>>;
 
     /// Loads the latest key for a given ID
+    #[allow(clippy::future_not_send)]
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>>;
 
     /// Stores a key in the metastore
     ///
     /// Returns true if the key was stored, false if a key already exists
+    #[allow(clippy::future_not_send)]
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool>;
 }
 
 /// AEAD (Authenticated Encryption with Associated Data) interface
-pub trait Aead: Send + Sync {
+pub trait Aead: Send + Sync + fmt::Debug {
     /// Encrypts data using the provided key
     fn encrypt(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>>;
 

@@ -229,11 +229,11 @@ fn test_access_during_close() {
 
     for _ in 0..10 {
         let mut data = b"test_data".to_vec();
-        let mut secret = factory.new(&mut data).unwrap();
+        let secret = factory.new(&mut data).unwrap();
 
         // Clone the secret for use in the separate thread
         // This should share the same underlying Arc<RwLock<SecretInner>>
-        let mut secret_clone = secret.clone();
+        let secret_clone = secret.clone();
 
         // Spawn a thread that will try to close the secret after a tiny delay
         let handle = {

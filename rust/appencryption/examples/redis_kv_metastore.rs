@@ -1,6 +1,6 @@
 use appencryption::{
     kms::StaticKeyManagementService,
-    metastore::{KeyValueStore, TtlKeyValueStore, StringKeyValueMetastore},
+    metastore::{KeyValueStore, StringKeyValueMetastore, TtlKeyValueStore},
     policy::CryptoPolicy,
     session::{Session, SessionFactory},
     Result,
@@ -9,9 +9,9 @@ use appencryption::{
 use async_trait::async_trait;
 use color_eyre::eyre::{self, WrapErr};
 use env_logger;
-use log::{debug, info, warn, error};
+use log::{debug, error, info, warn};
 use securememory::protected_memory::DefaultSecretFactory;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -30,11 +30,11 @@ use thiserror::Error;
 enum RedisError {
     #[error("Failed to acquire lock")]
     LockError(#[source] Box<dyn std::error::Error + Send + Sync>),
-    
+
     #[error("System time error")]
     #[from]
     TimeError(#[source] std::time::SystemTimeError),
-    
+
     #[error("Serialization error")]
     #[from]
     SerializationError(#[source] serde_json::Error),
@@ -68,19 +68,15 @@ impl RedisStore {
     /// Check if a key is expired
     fn is_expired(&self, expire_at: Option<i64>) -> Result<bool, RedisError> {
         if let Some(expire_time) = expire_at {
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)?
-                .as_secs() as i64;
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
             return Ok(now >= expire_time);
         }
         Ok(false)
     }
-    
+
     /// Get current time in seconds
     fn now() -> Result<i64, RedisError> {
-        Ok(SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_secs() as i64)
+        Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64)
     }
 }
 
@@ -93,9 +89,11 @@ impl KeyValueStore for RedisStore {
     async fn get(&self, key: &Self::Key) -> Result<Option<Self::Value>, Self::Error> {
         // Scope the lock to ensure it's dropped before any await points
         let result = {
-            let store = self.store.read()
+            let store = self
+                .store
+                .read()
                 .map_err(|e| RedisError::LockError(Box::new(e)))?;
-                
+
             match store.get(key) {
                 Some(entry) => {
                     // If the entry is present but expired, we return None
@@ -110,7 +108,7 @@ impl KeyValueStore for RedisStore {
                 None => return Ok(None),
             }
         }; // Lock is dropped here
-        
+
         // Now check expiration (if we have a value with expiration)
         if let Some((value, expire_at)) = result {
             if self.is_expired(expire_at)? {
@@ -126,12 +124,19 @@ impl KeyValueStore for RedisStore {
         }
     }
 
-    async fn put(&self, key: &Self::Key, value: &Self::Value, only_if_absent: bool) -> Result<bool, Self::Error> {
+    async fn put(
+        &self,
+        key: &Self::Key,
+        value: &Self::Value,
+        only_if_absent: bool,
+    ) -> Result<bool, Self::Error> {
         // Scope the lock to ensure it's dropped before any await points
         {
-            let mut store = self.store.write()
+            let mut store = self
+                .store
+                .write()
                 .map_err(|e| RedisError::LockError(Box::new(e)))?;
-                
+
             // Check if key exists and is not expired
             let exists = match store.get(key) {
                 Some(entry) => {
@@ -146,26 +151,28 @@ impl KeyValueStore for RedisStore {
                 }
                 None => false,
             };
-            
+
             if only_if_absent && exists {
                 return Ok(false);
             }
-            
+
             // Store the value with no expiration by default
             let entry = RedisEntry {
                 value: value.clone(),
                 expire_at: None,
             };
-            
+
             store.insert(key.clone(), entry);
             return Ok(true);
         } // Lock is dropped here
     }
 
     async fn delete(&self, key: &Self::Key) -> Result<bool, Self::Error> {
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisError::LockError(Box::new(e)))?;
-            
+
         Ok(store.remove(key).is_some())
     }
 }
@@ -176,18 +183,20 @@ impl TtlKeyValueStore for RedisStore {
         // Calculate expiration time outside the lock
         let now = Self::now()?;
         let expire_at = now + ttl_seconds;
-        
+
         // Scope the lock
         {
-            let mut store = self.store.write()
+            let mut store = self
+                .store
+                .write()
                 .map_err(|e| RedisError::LockError(Box::new(e)))?;
-                
+
             if let Some(entry) = store.get_mut(key) {
                 // Update the TTL
                 entry.expire_at = Some(expire_at);
                 return Ok(true);
             }
-            
+
             Ok(false)
         } // Lock is dropped here
     }
@@ -195,15 +204,17 @@ impl TtlKeyValueStore for RedisStore {
     async fn is_expired(&self, key: &Self::Key) -> Result<bool, Self::Error> {
         // Get expire_at value from the store
         let expire_at = {
-            let store = self.store.read()
+            let store = self
+                .store
+                .read()
                 .map_err(|e| RedisError::LockError(Box::new(e)))?;
-                
+
             match store.get(key) {
                 Some(entry) => entry.expire_at,
                 None => return Ok(false), // Non-existent keys are not expired
             }
         }; // Lock dropped here
-        
+
         // Check expiration outside the lock
         self.is_expired(expire_at)
     }
@@ -213,18 +224,20 @@ impl TtlKeyValueStore for RedisStore {
 async fn main() -> color_eyre::Result<()> {
     // Set up better error handling with color-eyre
     color_eyre::install()?;
-    
+
     // Initialize env_logger with default configuration
     env_logger::init();
-    
+
     info!("Redis Key-Value Metastore Example");
     info!("=================================");
 
     // Create our custom Redis-like key-value store
     let redis_store = Arc::new(RedisStore::new());
-    
+
     // Create a metastore using our key-value store and the adapter
-    let metastore = Arc::new(StringKeyValueMetastore::new_string_store(redis_store.clone()));
+    let metastore = Arc::new(StringKeyValueMetastore::new_string_store(
+        redis_store.clone(),
+    ));
 
     // Create other dependencies
     use chrono::TimeDelta;
@@ -291,28 +304,30 @@ async fn main() -> color_eyre::Result<()> {
     // First, let's set a TTL on a custom key
     let ttl_key = "demo_ttl_key";
     let ttl_value = "This value will expire";
-    
+
     info!("Demonstrating TTL feature");
     debug!("Storing value with key '{}'", ttl_key);
-    
+
     // Store a value
-    redis_store.put(&ttl_key.to_string(), &ttl_value.to_string(), false).await?;
+    redis_store
+        .put(&ttl_key.to_string(), &ttl_value.to_string(), false)
+        .await?;
     info!("Stored a value with key: {}", ttl_key);
-    
+
     // Set a short TTL
     debug!("Setting TTL on key");
     redis_store.expire(&ttl_key.to_string(), 2).await?;
     info!("Set TTL of 2 seconds on the key");
-    
+
     // Read it back before it expires
     debug!("Reading value before expiration");
     let value = redis_store.get(&ttl_key.to_string()).await?;
     info!("Value before expiration: {:?}", value);
-    
+
     // Wait for it to expire
     info!("Waiting for key to expire...");
     tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-    
+
     // Try to read it after expiration
     debug!("Reading value after expiration");
     let value = redis_store.get(&ttl_key.to_string()).await?;

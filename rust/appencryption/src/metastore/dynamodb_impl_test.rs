@@ -1,13 +1,15 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::metastore::dynamodb::{DynamoDbClient, DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbKeyMeta};
     use crate::metastore::dynamodb::MultiRegionClient;
+    use crate::metastore::dynamodb::{
+        DynamoDbClient, DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbKeyMeta,
+    };
     use crate::Metastore;
     use async_trait::async_trait;
+    use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
-    use std::collections::HashMap;
     use tokio_test::block_on;
 
     // A mock DynamoDB client for testing
@@ -35,7 +37,11 @@ mod tests {
 
     #[async_trait]
     impl DynamoDbClient for MockDynamoDbClient {
-        async fn get_item(&self, _table_name: &str, key: DynamoDbKey) -> Result<Option<DynamoDbItem>> {
+        async fn get_item(
+            &self,
+            _table_name: &str,
+            key: DynamoDbKey,
+        ) -> Result<Option<DynamoDbItem>> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -46,7 +52,11 @@ mod tests {
             Ok(items.get(&item_key).cloned())
         }
 
-        async fn put_item_if_not_exists(&self, _table_name: &str, item: DynamoDbItem) -> Result<bool> {
+        async fn put_item_if_not_exists(
+            &self,
+            _table_name: &str,
+            item: DynamoDbItem,
+        ) -> Result<bool> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -62,7 +72,11 @@ mod tests {
             Ok(true)
         }
 
-        async fn query_latest(&self, _table_name: &str, partition_key: &str) -> Result<Vec<DynamoDbItem>> {
+        async fn query_latest(
+            &self,
+            _table_name: &str,
+            partition_key: &str,
+        ) -> Result<Vec<DynamoDbItem>> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -109,12 +123,7 @@ mod tests {
         let replicas = vec![replica1.clone(), replica2.clone()];
 
         // Create multi-region client
-        let client = MultiRegionClient::new(
-            primary.clone(),
-            replicas,
-            Duration::from_secs(30),
-            3,
-        );
+        let client = MultiRegionClient::new(primary.clone(), replicas, Duration::from_secs(30), 3);
 
         // Get healthy clients
         let healthy_clients = client.healthy_clients();
@@ -131,7 +140,7 @@ mod tests {
         block_on(async {
             // Create clients
             let primary = Arc::new(MockDynamoDbClient::new("us-west-2", false)); // Primary is unhealthy
-            let replica = Arc::new(MockDynamoDbClient::new("us-east-1", true));  // Replica is healthy
+            let replica = Arc::new(MockDynamoDbClient::new("us-east-1", true)); // Replica is healthy
             let replicas = vec![replica.clone()];
 
             // Add test data to the replica
@@ -148,20 +157,22 @@ mod tests {
             replica.add_item(test_item.clone());
 
             // Create multi-region client
-            let client = MultiRegionClient::new(
-                primary.clone(),
-                replicas,
-                Duration::from_secs(30),
-                3,
-            );
+            let client =
+                MultiRegionClient::new(primary.clone(), replicas, Duration::from_secs(30), 3);
 
             // Execute operation async - should use the replica since primary is unhealthy
-            let result = client.execute_async(|c| async move {
-                c.get_item("test-table", DynamoDbKey {
-                    id: "test-key".to_string(),
-                    created: 123456789,
-                }).await
-            }).await;
+            let result = client
+                .execute_async(|c| async move {
+                    c.get_item(
+                        "test-table",
+                        DynamoDbKey {
+                            id: "test-key".to_string(),
+                            created: 123456789,
+                        },
+                    )
+                    .await
+                })
+                .await;
 
             // Check result
             assert!(result.is_ok());
@@ -185,8 +196,8 @@ mod tests {
                 client.clone(),
                 Vec::new(),
                 Some("test-table".to_string()),
-                true,   // use region suffix
-                false,  // don't prefer region
+                true,  // use region suffix
+                false, // don't prefer region
             );
 
             // Check region suffix
@@ -212,8 +223,8 @@ mod tests {
                 client.clone(),
                 Vec::new(),
                 Some("test-table".to_string()),
-                true,   // use region suffix
-                true,   // prefer region
+                true, // use region suffix
+                true, // prefer region
             );
 
             // Check region suffix
@@ -238,7 +249,7 @@ mod tests {
             let metastore = crate::metastore::dynamodb::DynamoDbMetastore::new(
                 client.clone(),
                 Some("test-table".to_string()),
-                false,  // don't use region suffix
+                false, // don't use region suffix
             );
 
             // Create test envelope
@@ -267,7 +278,10 @@ mod tests {
             assert_eq!(loaded_envelope.created, envelope.created);
             assert_eq!(loaded_envelope.encrypted_key, envelope.encrypted_key);
             assert_eq!(loaded_envelope.revoked, envelope.revoked);
-            assert_eq!(loaded_envelope.parent_key_meta.is_none(), envelope.parent_key_meta.is_none());
+            assert_eq!(
+                loaded_envelope.parent_key_meta.is_none(),
+                envelope.parent_key_meta.is_none()
+            );
 
             // Test load_latest
             let load_latest_result = metastore.load_latest("test-key").await;
@@ -281,7 +295,10 @@ mod tests {
             assert_eq!(loaded_latest.created, envelope.created);
             assert_eq!(loaded_latest.encrypted_key, envelope.encrypted_key);
             assert_eq!(loaded_latest.revoked, envelope.revoked);
-            assert_eq!(loaded_latest.parent_key_meta.is_none(), envelope.parent_key_meta.is_none());
+            assert_eq!(
+                loaded_latest.parent_key_meta.is_none(),
+                envelope.parent_key_meta.is_none()
+            );
         });
     }
 }

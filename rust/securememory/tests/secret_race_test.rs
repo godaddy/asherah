@@ -212,7 +212,7 @@ fn test_many_secrets_lifecycle() {
 
         // Close half the secrets explicitly
         for i in 0..(NUM_SECRETS / 2) {
-            let mut secret = secrets.remove(0);
+            let secret = secrets.remove(0);
             secret.close().unwrap();
         }
 

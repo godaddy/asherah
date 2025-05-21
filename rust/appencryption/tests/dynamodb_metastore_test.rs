@@ -2,10 +2,10 @@
 mod tests {
     use appencryption::envelope::{EnvelopeKeyRecord, KeyMeta};
     use appencryption::error::{Error, Result};
-    use appencryption::Metastore;
     use appencryption::plugins::aws_v2::metastore::{
-        DynamoDbClient, DynamoDbItem, DynamoDbKey, DynamoDbMetastore
+        DynamoDbClient, DynamoDbItem, DynamoDbKey, DynamoDbMetastore,
     };
+    use appencryption::Metastore;
     use async_trait::async_trait;
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
@@ -37,7 +37,11 @@ mod tests {
 
     #[async_trait]
     impl DynamoDbClient for MockDynamoDbClient {
-        async fn get_item(&self, _table_name: &str, key: DynamoDbKey) -> Result<Option<DynamoDbItem>> {
+        async fn get_item(
+            &self,
+            _table_name: &str,
+            key: DynamoDbKey,
+        ) -> Result<Option<DynamoDbItem>> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -48,7 +52,11 @@ mod tests {
             Ok(items.get(&item_key).cloned())
         }
 
-        async fn put_item_if_not_exists(&self, _table_name: &str, item: DynamoDbItem) -> Result<bool> {
+        async fn put_item_if_not_exists(
+            &self,
+            _table_name: &str,
+            item: DynamoDbItem,
+        ) -> Result<bool> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -64,7 +72,11 @@ mod tests {
             Ok(true)
         }
 
-        async fn query_latest(&self, _table_name: &str, partition_key: &str) -> Result<Vec<DynamoDbItem>> {
+        async fn query_latest(
+            &self,
+            _table_name: &str,
+            partition_key: &str,
+        ) -> Result<Vec<DynamoDbItem>> {
             if !self.healthy {
                 return Err(Error::Metastore("Mock client is unhealthy".into()));
             }
@@ -109,11 +121,7 @@ mod tests {
             let client = Arc::new(MockDynamoDbClient::new("us-west-2", true));
 
             // Create DynamoDB metastore
-            let metastore = DynamoDbMetastore::new(
-                client,
-                Some("TestTable".to_string()),
-                false,
-            );
+            let metastore = DynamoDbMetastore::new(client, Some("TestTable".to_string()), false);
 
             // Create a test key record
             let key_record = EnvelopeKeyRecord {
@@ -128,11 +136,17 @@ mod tests {
             };
 
             // Store the key
-            let stored = metastore.store("test-key", 1234567890, &key_record).await.expect("Failed to store key");
+            let stored = metastore
+                .store("test-key", 1234567890, &key_record)
+                .await
+                .expect("Failed to store key");
             assert!(stored, "Key should have been stored");
 
             // Load the key by exact ID and timestamp
-            let loaded = metastore.load("test-key", 1234567890).await.expect("Failed to load key");
+            let loaded = metastore
+                .load("test-key", 1234567890)
+                .await
+                .expect("Failed to load key");
             assert!(loaded.is_some(), "Key should have been loaded");
 
             let loaded_key = loaded.unwrap();
@@ -141,7 +155,10 @@ mod tests {
             assert_eq!(key_record.encrypted_key, loaded_key.encrypted_key);
 
             // Load the latest key
-            let latest = metastore.load_latest("test-key").await.expect("Failed to load latest key");
+            let latest = metastore
+                .load_latest("test-key")
+                .await
+                .expect("Failed to load latest key");
             assert!(latest.is_some(), "Latest key should have been loaded");
 
             let latest_key = latest.unwrap();
@@ -179,11 +196,17 @@ mod tests {
             };
 
             // Store the key
-            let stored = metastore.store("test-key", 1234567890, &key_record).await.expect("Failed to store key");
+            let stored = metastore
+                .store("test-key", 1234567890, &key_record)
+                .await
+                .expect("Failed to store key");
             assert!(stored, "Key should have been stored");
 
             // Load the key by exact ID and timestamp
-            let loaded = metastore.load("test-key", 1234567890).await.expect("Failed to load key");
+            let loaded = metastore
+                .load("test-key", 1234567890)
+                .await
+                .expect("Failed to load key");
             assert!(loaded.is_some(), "Key should have been loaded");
 
             // Check region suffix

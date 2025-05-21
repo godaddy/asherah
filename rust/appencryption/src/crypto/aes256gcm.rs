@@ -9,7 +9,7 @@ use aes_gcm::{
 use super::aead::{GCM_MAX_DATA_SIZE, GCM_NONCE_SIZE, GCM_TAG_SIZE};
 
 /// AES-256-GCM implementation of AEAD
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Aes256GcmAead;
 
 impl Aes256GcmAead {

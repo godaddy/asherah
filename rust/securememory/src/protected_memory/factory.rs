@@ -27,7 +27,7 @@ use zeroize::Zeroize;
 /// // Password data is now wiped from the original slice
 /// assert_ne!(password, b"secure-password-123");
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DefaultSecretFactory;
 
 impl DefaultSecretFactory {
@@ -44,6 +44,7 @@ impl DefaultSecretFactory {
     /// #
     /// let factory = DefaultSecretFactory::new();
     /// ```
+    #[allow(clippy::same_name_method)]
     pub fn new() -> Self {
         Self
     }
@@ -106,7 +107,7 @@ impl SecretFactory for DefaultSecretFactory {
         }
 
         // Allocate memory for the secret
-        let mut bytes = vec![0u8; b.len()];
+        let mut bytes = vec![0_u8; b.len()];
 
         // Perform constant-time copy from input to our memory
         if bytes.ct_eq(b).into() {
@@ -128,7 +129,10 @@ impl SecretFactory for DefaultSecretFactory {
         // Record timing metric
         #[cfg(feature = "metrics")]
         {
-            metrics::histogram!("secret.protectedmemory.alloc_duration_seconds", start.elapsed().as_secs_f64());
+            metrics::histogram!(
+                "secret.protectedmemory.alloc_duration_seconds",
+                start.elapsed().as_secs_f64()
+            );
         }
 
         Ok(secret)
@@ -181,7 +185,10 @@ impl SecretFactory for DefaultSecretFactory {
         // Record timing metric
         #[cfg(feature = "metrics")]
         {
-            metrics::histogram!("secret.protectedmemory.alloc_duration_seconds", start.elapsed().as_secs_f64());
+            metrics::histogram!(
+                "secret.protectedmemory.alloc_duration_seconds",
+                start.elapsed().as_secs_f64()
+            );
         }
 
         Ok(secret)

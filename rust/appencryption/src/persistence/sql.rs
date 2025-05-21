@@ -40,7 +40,8 @@ impl SqlMetastoreDbType {
             SqlMetastoreDbType::MySql => sql.to_string(),
             SqlMetastoreDbType::Postgres => {
                 // Convert ? to $1, $2, etc.
-                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
+                let re =
+                    Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
@@ -50,7 +51,8 @@ impl SqlMetastoreDbType {
             }
             SqlMetastoreDbType::Oracle => {
                 // Convert ? to :1, :2, etc.
-                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
+                let re =
+                    Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
@@ -60,7 +62,8 @@ impl SqlMetastoreDbType {
             }
             SqlMetastoreDbType::SqlServer => {
                 // Convert ? to @p1, @p2, etc.
-                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
+                let re =
+                    Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;

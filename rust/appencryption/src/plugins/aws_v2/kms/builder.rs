@@ -430,7 +430,9 @@ impl AwsKmsBuilder {
 
         // Load SDK configuration
         let sdk_config = if self.using_custom_config {
-            self.sdk_config.take().expect("SDK config must be set when using_custom_config is true")
+            self.sdk_config
+                .take()
+                .expect("SDK config must be set when using_custom_config is true")
         } else {
             let mut config_loader = aws_config::from_env();
 
@@ -453,10 +455,13 @@ impl AwsKmsBuilder {
         };
 
         // Get the preferred region
-        let preferred_region = self
-            .preferred_region
-            .clone()
-            .unwrap_or_else(|| self.arn_map.keys().next().expect("ARN map must contain at least one key").clone());
+        let preferred_region = self.preferred_region.clone().unwrap_or_else(|| {
+            self.arn_map
+                .keys()
+                .next()
+                .expect("ARN map must contain at least one key")
+                .clone()
+        });
 
         // Create the regional clients
         let mut regional_clients = Vec::new();

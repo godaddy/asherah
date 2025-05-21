@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr)]
+
 use crate::buffer::Buffer;
 use crate::error::MemguardError;
 // use log::{debug, error};
@@ -190,6 +192,7 @@ impl BufferRegistry {
     ///
     /// A vector of strong references to all active buffers
     #[cfg(not(test))]
+    #[allow(dead_code)]
     pub(crate) fn list(&self) -> Vec<Arc<Mutex<Buffer>>> {
         self.buffers.clone()
     }
@@ -205,6 +208,7 @@ impl BufferRegistry {
     ///
     /// The count of active buffers
     #[cfg(not(test))]
+    #[allow(dead_code)]
     pub(crate) fn count(&mut self) -> usize {
         self.cleanup();
         self.buffers.len()
@@ -218,6 +222,7 @@ impl BufferRegistry {
 
     /// Cleans up expired references.
     /// With Arc references, this basically just checks for any cleanup needed
+    #[allow(dead_code)]
     fn cleanup(&mut self) {
         // With strong references, we don't need to clean up expired weak refs
         // This method is kept for interface compatibility
@@ -264,6 +269,7 @@ impl BufferRegistry {
     }
 
     #[cfg(not(test))]
+    #[allow(dead_code)]
     pub(crate) fn exists(&self, buffer_to_find: &Buffer) -> bool {
         // Use the new pattern to avoid locking buffers
         let buffer_inner_ptr = buffer_to_find.get_inner_ptr();

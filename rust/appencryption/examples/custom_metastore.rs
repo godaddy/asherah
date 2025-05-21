@@ -1,7 +1,7 @@
 use appencryption::{
     envelope::EnvelopeKeyRecord,
     kms::StaticKeyManagementService,
-    metastore::{KeyValueStore, TtlKeyValueStore, CompositeKey},
+    metastore::{CompositeKey, KeyValueStore, TtlKeyValueStore},
     policy::CryptoPolicy,
     session::{Session, SessionFactory},
     Error, Metastore, Result,
@@ -28,7 +28,7 @@ use thiserror::Error;
 enum RedisMetastoreError {
     #[error("Failed to acquire lock: {0}")]
     LockError(String),
-    
+
     #[error("System time error: {0}")]
     TimeError(#[from] std::time::SystemTimeError),
 }
@@ -65,16 +65,21 @@ impl RedisMetastore {
     }
 
     /// Set a TTL (time-to-live) for a key in seconds
-    async fn expire(&self, id: &str, created: i64, ttl_seconds: i64) -> Result<bool, RedisMetastoreError> {
+    async fn expire(
+        &self,
+        id: &str,
+        created: i64,
+        ttl_seconds: i64,
+    ) -> Result<bool, RedisMetastoreError> {
         let key = Self::generate_key(id, created);
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
 
         if let Some(entry) = store.get_mut(&key) {
             // Calculate expiration time
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)?
-                .as_secs() as i64;
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
             let expire_at = now + ttl_seconds;
 
             // Update the TTL
@@ -88,7 +93,9 @@ impl RedisMetastore {
     /// Delete a key
     async fn delete(&self, id: &str, created: i64) -> Result<bool, RedisMetastoreError> {
         let key = Self::generate_key(id, created);
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
         Ok(store.remove(&key).is_some())
     }
@@ -96,9 +103,7 @@ impl RedisMetastore {
     /// Check if a key is expired
     fn is_expired(&self, expire_at: Option<i64>) -> Result<bool, RedisMetastoreError> {
         if let Some(expire_time) = expire_at {
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)?
-                .as_secs() as i64;
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
             return Ok(now >= expire_time);
         }
         Ok(false)
@@ -113,7 +118,9 @@ impl KeyValueStore for RedisMetastore {
     type Error = RedisMetastoreError;
 
     async fn get(&self, key: &Self::Key) -> Result<Option<Self::Value>, Self::Error> {
-        let store = self.store.read()
+        let store = self
+            .store
+            .read()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
 
         if let Some((record, _, expire_at)) = store.get(key) {
@@ -128,8 +135,15 @@ impl KeyValueStore for RedisMetastore {
         Ok(None)
     }
 
-    async fn put(&self, key: &Self::Key, value: &Self::Value, only_if_absent: bool) -> Result<bool, Self::Error> {
-        let mut store = self.store.write()
+    async fn put(
+        &self,
+        key: &Self::Key,
+        value: &Self::Value,
+        only_if_absent: bool,
+    ) -> Result<bool, Self::Error> {
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
 
         // Check if key exists - we're using 0 as a placeholder for created since we don't
@@ -140,14 +154,16 @@ impl KeyValueStore for RedisMetastore {
 
         // Extract created timestamp (if we can parse it from the key)
         let created = 0; // Placeholder - in real implementation we'd extract this
-        
+
         // Insert or update
         store.insert(key.clone(), (value.clone(), created, None));
         Ok(true)
     }
 
     async fn delete(&self, key: &Self::Key) -> Result<bool, Self::Error> {
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
         Ok(store.remove(key).is_some())
     }
@@ -157,14 +173,14 @@ impl KeyValueStore for RedisMetastore {
 #[async_trait]
 impl TtlKeyValueStore for RedisMetastore {
     async fn expire(&self, key: &Self::Key, ttl_seconds: i64) -> Result<bool, Self::Error> {
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
 
         if let Some(entry) = store.get_mut(key) {
             // Calculate expiration time
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)?
-                .as_secs() as i64;
+            let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
             let expire_at = now + ttl_seconds;
 
             // Update the TTL
@@ -176,7 +192,9 @@ impl TtlKeyValueStore for RedisMetastore {
     }
 
     async fn is_expired(&self, key: &Self::Key) -> Result<bool, Self::Error> {
-        let store = self.store.read()
+        let store = self
+            .store
+            .read()
             .map_err(|e| RedisMetastoreError::LockError(e.to_string()))?;
 
         match store.get(key) {
@@ -188,20 +206,19 @@ impl TtlKeyValueStore for RedisMetastore {
 
 #[async_trait]
 impl Metastore for RedisMetastore {
-    async fn load(
-        &self,
-        id: &str,
-        created: i64,
-    ) -> Result<Option<EnvelopeKeyRecord>> {
+    async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
         let key = Self::generate_key(id, created);
-        
+
         // We can now leverage our KeyValueStore implementation
-        self.get(&key).await
+        self.get(&key)
+            .await
             .map_err(|e| Error::Metastore(format!("Failed to load key: {}", e)))
     }
 
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
-        let store = self.store.read()
+        let store = self
+            .store
+            .read()
             .map_err(|e| Error::Metastore(format!("Failed to acquire read lock: {}", e)))?;
 
         // Find all keys for this id
@@ -211,8 +228,10 @@ impl Metastore for RedisMetastore {
         for (key, (record, created, expire_at)) in store.iter() {
             if key.starts_with(&format!("{}_", id)) && *created > latest_created {
                 // Skip expired keys
-                if self.is_expired(*expire_at)
-                    .map_err(|e| Error::Metastore(format!("Error checking expiration: {}", e)))? {
+                if self
+                    .is_expired(*expire_at)
+                    .map_err(|e| Error::Metastore(format!("Error checking expiration: {}", e)))?
+                {
                     continue;
                 }
 
@@ -224,17 +243,14 @@ impl Metastore for RedisMetastore {
         Ok(latest_record)
     }
 
-    async fn store(
-        &self,
-        id: &str,
-        created: i64,
-        envelope: &EnvelopeKeyRecord,
-    ) -> Result<bool> {
+    async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
         let key = Self::generate_key(id, created);
-        
+
         // We could just use our KeyValueStore implementation, but we need to handle
         // the created timestamp that isn't part of the KeyValueStore interface
-        let mut store = self.store.write()
+        let mut store = self
+            .store
+            .write()
             .map_err(|e| Error::Metastore(format!("Failed to acquire write lock: {}", e)))?;
 
         // Only store if key doesn't exist
@@ -317,7 +333,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let system_key_id = format!("_SK_service_product");
 
     // Find a created timestamp from our store
-    let store = metastore.store.read()
+    let store = metastore
+        .store
+        .read()
         .map_err(|e| format!("Failed to acquire read lock: {}", e))?;
     let mut some_key_created = None;
 
@@ -333,7 +351,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set a TTL on one of the keys
     if let Some(created) = some_key_created {
         println!("Setting a TTL of 60 seconds on a system key...");
-        metastore.expire(&system_key_id, created, 60).await
+        metastore
+            .expire(&system_key_id, created, 60)
+            .await
             .map_err(|e| format!("Failed to set TTL: {}", e))?;
 
         // We could also delete keys:

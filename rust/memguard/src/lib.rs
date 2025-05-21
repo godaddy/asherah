@@ -27,6 +27,7 @@
 //! ```rust,no_run
 //! use memguard::{Buffer, Enclave, Stream, catch_interrupt, purge, MemguardError};
 //! use std::io::{Read, Write};
+//! use std::error::Error;
 //!
 //! // Invert the bytes in a buffer, using an Enclave for protection.
 //! fn invert_buffer_securely(input_buffer: &mut Buffer) -> Result<Enclave, MemguardError> {
@@ -44,7 +45,7 @@
 //!     Enclave::seal(input_buffer)
 //! }
 //!
-//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! fn main() -> Result<(), Box<dyn Error>> {
 //!     // Setup signal handling for graceful shutdown
 //!     catch_interrupt().expect("Failed to set up interrupt handler");
 //!
@@ -90,7 +91,7 @@
 //!     let stream_data = b"Large sensitive data for streaming...";
 //!     stream.write_all(stream_data)?; // Use write_all from std::io::Write
 //!     println!("Stream size: {}", stream.size());
-//!     let (mut flushed_buffer, io_err_opt) = stream.flush()?;
+//!     let (mut flushed_buffer, io_err_opt) = stream.flush_stream()?;
 //!     assert!(io_err_opt.is_none());
 //!     flushed_buffer.with_data(|data| {
 //!         assert_eq!(data, stream_data);

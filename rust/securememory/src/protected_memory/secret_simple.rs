@@ -58,6 +58,8 @@ impl ProtectedMemorySecretSimple {
 
         // Allocate page-aligned memory
         let page_size = memcall::page_size();
+        // We need to manually calculate the ceiling of len/page_size
+        #[allow(clippy::manual_div_ceil)]
         let aligned_size = ((len + page_size - 1) / page_size) * page_size;
 
         let memory_ptr = memcall::allocate_aligned(aligned_size, page_size)
@@ -361,11 +363,11 @@ impl SecretExtensions for ProtectedMemorySecretSimple {
 }
 
 /// RAII guard for access counting
-struct AccessGuard<'a> {
-    inner: &'a SecretInternal,
+struct AccessGuard<'guard> {
+    inner: &'guard SecretInternal,
 }
 
-impl<'a> Drop for AccessGuard<'a> {
+impl Drop for AccessGuard<'_> {
     fn drop(&mut self) {
         // Decrement access counter
         let old_count = self.inner.access_count.fetch_sub(1, Ordering::AcqRel);
@@ -478,12 +480,12 @@ impl Drop for SecretInternal {
 }
 
 /// A reader implementation for protected memory secrets
-struct SecretReader<'a> {
-    secret: &'a ProtectedMemorySecretSimple,
+struct SecretReader<'secret> {
+    secret: &'secret ProtectedMemorySecretSimple,
     position: usize,
 }
 
-impl<'a> Read for SecretReader<'a> {
+impl Read for SecretReader<'_> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.secret
             .with_bytes(|bytes| {

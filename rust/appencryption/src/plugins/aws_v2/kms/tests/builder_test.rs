@@ -1,16 +1,16 @@
 // No super imports needed
 use crate::crypto::Aes256GcmAead as Aes256Gcm;
 use crate::error::Result;
-use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
 use crate::plugins::aws_v2::kms::client::GenerateDataKeyResponse;
+use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
 use crate::KeyManagementService;
 use async_trait::async_trait;
-use aws_sdk_kms::config::Region;
 use aws_config::SdkConfig;
+use aws_sdk_kms::config::Region;
 // Unused imports removed
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 // Mock KMS client for testing
@@ -134,7 +134,9 @@ impl TestFactory {
     }
 
     // Create a factory function that has 'static lifetime
-    fn factory_fn(self: Arc<Self>) -> impl Fn(SdkConfig) -> Arc<dyn AwsKmsClient> + Send + Sync + 'static {
+    fn factory_fn(
+        self: Arc<Self>,
+    ) -> impl Fn(SdkConfig) -> Arc<dyn AwsKmsClient> + Send + Sync + 'static {
         move |config| {
             let region = config
                 .region()
@@ -423,8 +425,8 @@ async fn test_builder_with_retry_config() {
 async fn test_builder_with_custom_endpoint() {
     // Create mock client
     let master_key = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-    let mock_client = MockKmsClient::new("us-west-2", master_key.clone())
-        .with_endpoint("http://localhost:4566");
+    let mock_client =
+        MockKmsClient::new("us-west-2", master_key.clone()).with_endpoint("http://localhost:4566");
 
     let mock_client_arc = Arc::new(mock_client);
 
@@ -498,9 +500,7 @@ async fn test_new_aws_kms_convenience_function() {
     let crypto = Arc::new(Aes256Gcm::new());
 
     // Use the convenience function
-    new_aws_kms(crypto, "us-west-2", arn_map)
-        .await
-        .is_err();
+    new_aws_kms(crypto, "us-west-2", arn_map).await.is_err();
 
     // In a real test, we would verify the KMS works
 }

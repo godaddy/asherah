@@ -49,7 +49,7 @@ fn test_secret_is_closed() {
     let factory = DefaultSecretFactory::new();
     let mut orig = b"testing".to_vec();
 
-    let mut secret = factory.new(&mut orig).unwrap();
+    let secret = factory.new(&mut orig).unwrap();
 
     assert!(!secret.is_closed());
     secret.close().unwrap();
@@ -61,7 +61,7 @@ fn test_closed_secret_returns_error() {
     let factory = DefaultSecretFactory::new();
     let mut orig = b"testing".to_vec();
 
-    let mut secret = factory.new(&mut orig).unwrap();
+    let secret = factory.new(&mut orig).unwrap();
 
     // Close the secret
     secret.close().unwrap();
@@ -81,7 +81,7 @@ fn test_redundant_close_is_idempotent() {
     let factory = DefaultSecretFactory::new();
     let mut orig = b"testing".to_vec();
 
-    let mut secret = factory.new(&mut orig).unwrap();
+    let secret = factory.new(&mut orig).unwrap();
 
     assert!(!secret.is_closed());
     secret.close().unwrap();
@@ -335,7 +335,7 @@ fn test_secret_concurrent_access_with_reader() {
 #[test]
 fn test_secret_concurrent_close() {
     let factory = DefaultSecretFactory::new();
-    let mut orig = b"thisismy32bytesecretthatiwilluse".to_vec();
+    let orig = b"thisismy32bytesecretthatiwilluse".to_vec();
     let copy_bytes = orig.clone();
 
     // We'll use multiple iterations of this test to increase the chance of finding race conditions

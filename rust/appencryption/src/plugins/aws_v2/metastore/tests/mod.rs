@@ -8,8 +8,8 @@ pub mod dynamodb_test;
 // Import dependencies from parent modules
 use super::*;
 use crate::envelope::{EnvelopeKeyRecord, KeyMeta};
-use crate::Metastore;
 use crate::error::Result;
+use crate::Metastore;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

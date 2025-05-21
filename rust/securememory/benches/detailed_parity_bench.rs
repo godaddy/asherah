@@ -1,8 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use securememory::protected_memory::DefaultSecretFactory;
 use securememory::secret::{SecretExtensions, SecretFactory};
-use std::sync::Arc;
-use std::thread;
 
 fn bench_sequential_access(c: &mut Criterion) {
     let mut group = c.benchmark_group("sequential_access");

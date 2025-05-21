@@ -30,7 +30,7 @@ fn test_simple_sigbus() {
             }) {
                 Ok(()) => {
                     // Add a small delay to create more race opportunities
-                    std::thread::yield_now();
+                    thread::yield_now();
                 }
                 Err(e) => {
                     println!("Reader: Got expected error: {:?}", e);

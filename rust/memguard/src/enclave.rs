@@ -1,3 +1,5 @@
+#![allow(clippy::match_same_arms)]
+
 use crate::buffer::Buffer;
 use crate::error::MemguardError;
 use crate::globals;
@@ -131,7 +133,7 @@ impl Enclave {
             let less_safe_key = LessSafeKey::new(unbound_key);
 
             // Generate a random nonce
-            let mut nonce_bytes = [0u8; NONCE_SIZE];
+            let mut nonce_bytes = [0_u8; NONCE_SIZE];
             match getrandom::getrandom(&mut nonce_bytes) {
                 Ok(_) => {}
                 Err(e) => {
@@ -549,7 +551,9 @@ mod tests {
         // Create a new buffer for testing
         let mut b = Buffer::new(32).expect("Buffer::new failed for seal test");
         b.scramble().expect("Buffer scramble failed");
-        let original_buffer_data = b.with_data(|d| Ok(d.to_vec())).unwrap();
+        let original_buffer_data = b
+            .with_data(|d| Ok(d.to_vec()))
+            .expect("Failed to read buffer data");
 
         // Seal it into an Enclave
         let enclave = Enclave::seal(&mut b).expect("Enclave::seal failed");

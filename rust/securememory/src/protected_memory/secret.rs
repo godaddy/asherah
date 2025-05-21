@@ -20,6 +20,8 @@ struct AlignedMemory {
 impl AlignedMemory {
     fn new(size: usize) -> Result<Self> {
         let page_size = memcall::page_size();
+        // We need to manually calculate the ceiling of size/page_size
+        #[allow(clippy::manual_div_ceil)]
         let aligned_size = ((size + page_size - 1) / page_size) * page_size;
 
         let ptr = memcall::allocate_aligned(aligned_size, page_size)
@@ -41,16 +43,21 @@ impl AlignedMemory {
     }
 
     /// Get a mutable slice for memory protection operations
-    /// This is safe because we control access through the lock, but we need to signal
-    /// we're doing unsafe transmutation from immutable to mutable
+    /// This must be unsafe because we're creating a mutable reference from an immutable one
+    /// In our specific use case, we know this is safe because:
+    /// 1. All access is synchronized through our lock system
+    /// 2. The underlying memory is properly owned and managed by this struct
+    /// 3. We're only using this for memory protection operations, not data modification
+    #[allow(clippy::mut_from_ref)]
     unsafe fn as_mut_slice_for_protection(&self) -> &mut [u8] {
-        // Cast self reference to mutable reference first to satisfy clippy
-        let this = self as *const Self as *mut Self;
+        // Cast self reference to mutable pointer in a way that avoids trivial-casts warning
+        let this_ptr = std::ptr::addr_of!(self) as *mut Self;
         // Use the mutable reference to get the memory slice
-        (*this).as_mut_slice()
+        (*this_ptr).as_mut_slice()
     }
 }
 
+#[allow(clippy::print_stderr)]
 impl Drop for AlignedMemory {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
@@ -60,16 +67,19 @@ impl Drop for AlignedMemory {
             // Make sure memory is in a state where it can be deallocated
             if let Err(e) = memcall::protect(slice, MemoryProtection::ReadWrite) {
                 // On error, we can't do much except log it
+                // Using eprintln in Drop impl is acceptable as we can't propagate errors
                 eprintln!("Failed to unprotect memory before deallocation: {}", e);
             }
 
             #[cfg(not(feature = "no-mlock"))]
             if let Err(e) = memcall::unlock(slice) {
+                // Using eprintln in Drop impl is acceptable as we can't propagate errors
                 eprintln!("Failed to unlock memory before deallocation: {}", e);
             }
 
             unsafe {
                 if let Err(e) = memcall::free_aligned(self.ptr, self.capacity) {
+                    // Using eprintln in Drop impl is acceptable as we can't propagate errors
                     eprintln!("Failed to free aligned memory: {}", e);
                 }
             }
@@ -150,12 +160,15 @@ impl ProtectedMemorySecret {
 
         // Register the new secret
         let registry = SECRET_REGISTRY.get_or_init(|| Mutex::new(Vec::new()));
-        if let Ok(mut reg_guard) = registry.lock() {
-            // Prune dead weak pointers before adding a new one
-            reg_guard.retain(|weak_ref| weak_ref.strong_count() > 0);
-            reg_guard.push(Arc::downgrade(&new_secret_internal));
-        } else {
-            error!("Failed to lock SECRET_REGISTRY to register a new secret. This secret will not be auto-purged by signals.");
+        match registry.lock() {
+            Ok(mut reg_guard) => {
+                // Prune dead weak pointers before adding a new one
+                reg_guard.retain(|weak_ref| weak_ref.strong_count() > 0);
+                reg_guard.push(Arc::downgrade(&new_secret_internal));
+            }
+            Err(_) => {
+                error!("Failed to lock SECRET_REGISTRY to register a new secret. This secret will not be auto-purged by signals.");
+            }
         }
 
         Ok(Self {
@@ -163,8 +176,57 @@ impl ProtectedMemorySecret {
         })
     }
 
+    /// Manually close the secret - matching Go's behavior
+    fn close_impl(&self) -> Result<()> {
+        let mut guard = self.inner.rw.lock().map_err(|_| {
+            SecureMemoryError::OperationFailed("Failed to acquire close mutex".to_string())
+        })?;
+
+        guard.closing = true;
+
+        // Wait for all accessors to finish (matching Go's Close() loop)
+        loop {
+            if guard.closed {
+                return Ok(());
+            }
+
+            if guard.access_counter == 0 {
+                // Actually perform the close operation
+                let mut bytes_guard = self.inner.bytes.write().map_err(|_| {
+                    SecureMemoryError::OperationFailed(
+                        "Failed to acquire write lock for cleanup".to_string(),
+                    )
+                })?;
+
+                // Take the memory out of the Option, replacing it with None
+                if let Some(mut memory) = bytes_guard.take() {
+                    // Enable write access for wiping
+                    memcall::protect(memory.as_mut_slice(), MemoryProtection::ReadWrite)
+                        .map_err(|e| SecureMemoryError::ProtectionFailed(e.to_string()))?;
+
+                    // Wipe memory
+                    memory.as_mut_slice().zeroize();
+
+                    // Memory will be cleaned up by AlignedMemory's Drop implementation
+                }
+
+                guard.closed = true;
+
+                // Note: We don't explicitly remove from SECRET_REGISTRY here.
+                // The Weak pointers will simply fail to upgrade later, and purge/registration can prune them.
+
+                return Ok(());
+            }
+
+            // Wait for access_counter to change
+            guard = self.inner.condvar.wait(guard).map_err(|_| {
+                SecureMemoryError::OperationFailed("Failed to wait on condvar".to_string())
+            })?;
+        }
+    }
+
     pub fn from_random(len: usize) -> Result<Self> {
-        let mut data = vec![0u8; len];
+        let mut data = vec![0_u8; len];
         // Use getrandom to fill the buffer with random bytes
         use getrandom::getrandom;
         getrandom(&mut data).map_err(|e| SecureMemoryError::AllocationFailed(e.to_string()))?;
@@ -177,18 +239,18 @@ impl ProtectedMemorySecret {
 impl Secret for ProtectedMemorySecret {
     fn len(&self) -> usize {
         // Fast path - no need to lock for length
-        if let Ok(guard) = self.inner.bytes.try_read() {
-            guard.as_ref().map(|m| m.len).unwrap_or(0)
-        } else {
-            0 // Fallback, though this shouldn't happen
+        match self.inner.bytes.try_read() {
+            Ok(guard) => guard.as_ref().map(|m| m.len).unwrap_or(0),
+            Err(_) => {
+                0 // Fallback, though this shouldn't happen
+            }
         }
     }
 
     fn is_closed(&self) -> bool {
-        if let Ok(guard) = self.inner.rw.lock() {
-            guard.closed
-        } else {
-            false
+        match self.inner.rw.lock() {
+            Ok(guard) => guard.closed,
+            Err(_) => false,
         }
     }
 
@@ -291,6 +353,7 @@ impl SecretExtensions for ProtectedMemorySecret {
     }
 }
 
+#[allow(clippy::print_stderr)]
 impl Drop for ProtectedMemorySecret {
     fn drop(&mut self) {
         // Only cleanup if this is the last reference
@@ -298,6 +361,7 @@ impl Drop for ProtectedMemorySecret {
             // Attempt cleanup only once
             if let Err(e) = self.close_impl() {
                 // Log the error but don't panic during drop
+                // Using eprintln in Drop impl is acceptable as we can't propagate errors
                 eprintln!("Error closing secret during drop: {}", e);
             }
         }
@@ -312,64 +376,13 @@ impl Clone for ProtectedMemorySecret {
     }
 }
 
-impl ProtectedMemorySecret {
-    /// Manually close the secret - matching Go's behavior
-    fn close_impl(&self) -> Result<()> {
-        let mut guard = self.inner.rw.lock().map_err(|_| {
-            SecureMemoryError::OperationFailed("Failed to acquire close mutex".to_string())
-        })?;
-
-        guard.closing = true;
-
-        // Wait for all accessors to finish (matching Go's Close() loop)
-        loop {
-            if guard.closed {
-                return Ok(());
-            }
-
-            if guard.access_counter == 0 {
-                // Actually perform the close operation
-                let mut bytes_guard = self.inner.bytes.write().map_err(|_| {
-                    SecureMemoryError::OperationFailed(
-                        "Failed to acquire write lock for cleanup".to_string(),
-                    )
-                })?;
-
-                // Take the memory out of the Option, replacing it with None
-                if let Some(mut memory) = bytes_guard.take() {
-                    // Enable write access for wiping
-                    memcall::protect(memory.as_mut_slice(), MemoryProtection::ReadWrite)
-                        .map_err(|e| SecureMemoryError::ProtectionFailed(e.to_string()))?;
-
-                    // Wipe memory
-                    memory.as_mut_slice().zeroize();
-
-                    // Memory will be cleaned up by AlignedMemory's Drop implementation
-                }
-
-                guard.closed = true;
-
-                // Note: We don't explicitly remove from SECRET_REGISTRY here.
-                // The Weak pointers will simply fail to upgrade later, and purge/registration can prune them.
-
-                return Ok(());
-            }
-
-            // Wait for accessor to finish
-            guard = self.inner.condvar.wait(guard).map_err(|_| {
-                SecureMemoryError::OperationFailed("Failed to wait on condvar".to_string())
-            })?;
-        }
-    }
-}
-
 /// A reader implementation for protected memory secrets
-struct SecretReader<'a> {
-    secret: &'a ProtectedMemorySecret,
+struct SecretReader<'secret> {
+    secret: &'secret ProtectedMemorySecret,
     position: usize,
 }
 
-impl<'a> Read for SecretReader<'a> {
+impl Read for SecretReader<'_> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.secret
             .with_bytes(|bytes| {

@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr)]
+
 use crate::error::MemguardError;
 use crate::util::safe_exit;
 use log::{error, info};

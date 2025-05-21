@@ -137,7 +137,7 @@ fn test_concurrent_stream_basic() {
     assert_eq!(stream.size(), data.len());
 
     // Flush data to a buffer
-    let (buffer, io_err) = stream.flush().expect("Flushing stream failed");
+    let (buffer, io_err) = stream.flush_stream().expect("Flushing stream failed");
     assert!(io_err.is_none());
 
     // Verify buffer contains the data

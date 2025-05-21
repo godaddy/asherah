@@ -12,7 +12,7 @@ pub mod simple;
 mod slru;
 mod tlfu;
 
-use std::fmt::{Debug, Display};
+use std::fmt::{self, Display};
 use std::hash::Hash;
 use std::sync::Arc;
 use std::time::Duration;
@@ -39,7 +39,7 @@ pub enum CachePolicy {
 }
 
 impl Display for CachePolicy {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CachePolicy::LRU => write!(f, "lru"),
             CachePolicy::LFU => write!(f, "lfu"),
@@ -50,11 +50,14 @@ impl Display for CachePolicy {
     }
 }
 
+/// A wrapper for debug printing of function types
+pub struct DebugFn;
+
 /// A callback function called when an item is evicted from the cache
 pub type EvictCallback<K, V> = Arc<dyn Fn(&K, &V) + Send + Sync>;
 
 /// Cache interface for different implementations
-pub trait Cache<K, V>: Send + Sync {
+pub trait Cache<K, V>: Send + Sync + fmt::Debug {
     /// Get a value from the cache
     fn get(&self, key: &K) -> Option<Arc<V>>;
 
@@ -92,8 +95,8 @@ pub struct CacheBuilder<K, V> {
 
 impl<K, V> CacheBuilder<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     /// Create a new cache builder with the given capacity
     pub fn new(capacity: usize) -> Self {

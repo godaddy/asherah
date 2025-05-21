@@ -65,8 +65,8 @@ mod tests {
     #[tokio::test]
     async fn test_oracle_metastore_creation() {
         let metastore = OracleMetastore::new("test_connection_string");
-        // Just check that we can create the metastore
-        let _ = metastore;
+        // Just check that we can create the metastore and do a basic operation
+        assert!(metastore.inner.load("test", 0).await.is_ok());
     }
 
     #[tokio::test]

@@ -120,6 +120,8 @@ pub fn allocate_aligned(size: usize, _alignment: usize) -> Result<*mut u8, Memca
     // We ignore the alignment parameter since alloc already ensures page alignment
     let buf = alloc(size)?;
     // Return the pointer to the allocated memory
+    // This returns the raw pointer from the slice
+    // which is guaranteed to be properly aligned
     Ok(buf.as_mut_ptr())
 }
 

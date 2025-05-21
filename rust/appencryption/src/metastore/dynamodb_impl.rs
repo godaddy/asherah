@@ -14,6 +14,7 @@ use base64::{engine::general_purpose, Engine as _};
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// Standard DynamoDB client implementation
+#[derive(Debug)]
 pub struct StandardDynamoDbClient {
     /// AWS DynamoDB client
     client: Client,
@@ -204,12 +205,12 @@ impl DynamoDbClient for StandardDynamoDbClient {
         .map_err(|e| Error::Metastore(format!("DynamoDB get_item failed: {}", e)))?;
 
         // If no item was found, return None
-        if response.item.is_none() || response.item.as_ref().unwrap().is_empty() {
+        if response.item.is_none() || response.item.as_ref().expect("Item should not be None here").is_empty() {
             return Ok(None);
         }
 
         // Convert the response to our item type
-        let item = from_dynamodb_item(response.item.unwrap())?;
+        let item = from_dynamodb_item(response.item.expect("Item should not be None at this point"))?;
 
         Ok(Some(item))
     }
@@ -272,13 +273,13 @@ impl DynamoDbClient for StandardDynamoDbClient {
         .map_err(|e| Error::Metastore(format!("DynamoDB query failed: {}", e)))?;
 
         // If no items were found, return an empty vector
-        if response.items.is_none() || response.items.as_ref().unwrap().is_empty() {
+        if response.items.is_none() || response.items.as_ref().expect("Items should not be None here").is_empty() {
             return Ok(Vec::new());
         }
 
         // Convert the response items to our item type
         let mut items = Vec::new();
-        for item in response.items.unwrap() {
+        for item in response.items.expect("Items should not be None at this point") {
             items.push(from_dynamodb_item(item)?);
         }
 
@@ -290,7 +291,7 @@ impl DynamoDbClient for StandardDynamoDbClient {
     }
 
     fn is_healthy(&self) -> bool {
-        *self.healthy.lock().unwrap()
+        *self.healthy.lock().expect("Failed to acquire lock on healthy status")
     }
 
     async fn health_check(&self) -> Result<bool> {
@@ -300,19 +301,19 @@ impl DynamoDbClient for StandardDynamoDbClient {
         match tokio::time::timeout(self.timeout, request.send()).await {
             Ok(Ok(_)) => {
                 // Update health status
-                let mut healthy = self.healthy.lock().unwrap();
+                let mut healthy = self.healthy.lock().expect("Failed to acquire lock on healthy status");
                 *healthy = true;
                 Ok(true)
             },
             Ok(Err(e)) => {
                 // Update health status
-                let mut healthy = self.healthy.lock().unwrap();
+                let mut healthy = self.healthy.lock().expect("Failed to acquire lock on healthy status");
                 *healthy = false;
                 Err(Error::Metastore(format!("DynamoDB health check failed: {}", e)))
             },
             Err(e) => {
                 // Update health status
-                let mut healthy = self.healthy.lock().unwrap();
+                let mut healthy = self.healthy.lock().expect("Failed to acquire lock on healthy status");
                 *healthy = false;
                 Err(Error::Metastore(format!("DynamoDB health check timed out: {}", e)))
             }
@@ -321,6 +322,7 @@ impl DynamoDbClient for StandardDynamoDbClient {
 }
 
 /// Builder for creating DynamoDB clients with multiple regions
+#[derive(Debug)]
 pub struct DynamoDbClientBuilder {
     /// Primary region for the client
     primary_region: String,

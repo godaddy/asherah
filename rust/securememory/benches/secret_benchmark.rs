@@ -99,7 +99,7 @@ fn bench_lifecycle(c: &mut Criterion) {
     c.bench_function("lifecycle", |b| {
         b.iter(|| {
             let mut orig = b"thisismy32bytesecretthatiwilluse".to_vec();
-            let mut secret = factory.new(&mut orig).unwrap();
+            let secret = factory.new(&mut orig).unwrap();
 
             secret.with_bytes(|_| Ok(())).unwrap();
             secret.close().unwrap();

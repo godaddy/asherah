@@ -2,12 +2,12 @@ use crate::envelope::{EnvelopeKeyRecord, KeyMeta};
 use crate::error::{Error, Result};
 use crate::Metastore;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
-use std::collections::HashMap;
 use metrics::timer;
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant};
 
 // Default table name for the DynamoDB metastore
 const DEFAULT_TABLE_NAME: &str = "EncryptionKey";
@@ -28,7 +28,11 @@ pub trait DynamoDbClient: Send + Sync {
     async fn put_item_if_not_exists(&self, table_name: &str, item: DynamoDbItem) -> Result<bool>;
 
     /// Queries DynamoDB for the latest item with the given partition key
-    async fn query_latest(&self, table_name: &str, partition_key: &str) -> Result<Vec<DynamoDbItem>>;
+    async fn query_latest(
+        &self,
+        table_name: &str,
+        partition_key: &str,
+    ) -> Result<Vec<DynamoDbItem>>;
 
     /// Returns the region for this client
     fn region(&self) -> &str;
@@ -109,6 +113,7 @@ enum ClientStatus {
 }
 
 /// Client health information
+#[derive(Debug)]
 struct ClientHealth {
     /// Last known status
     status: ClientStatus,
@@ -150,12 +155,12 @@ impl ClientHealth {
 
     /// Check if health needs to be rechecked
     fn needs_recheck(&self, recheck_interval: Duration) -> bool {
-        self.status == ClientStatus::Unknown ||
-        self.last_check.elapsed() > recheck_interval
+        self.status == ClientStatus::Unknown || self.last_check.elapsed() > recheck_interval
     }
 }
 
 /// Multi-region DynamoDB client
+#[derive(Debug)]
 pub struct MultiRegionClient {
     /// Primary region client
     pub primary: Arc<dyn DynamoDbClient>,
@@ -209,22 +214,26 @@ impl MultiRegionClient {
 
     /// Get a list of healthy clients, preferring the primary
     pub fn healthy_clients(&self) -> Vec<Arc<dyn DynamoDbClient>> {
-        let health = self.health.read().unwrap();
+        let health = self.health.read().expect("Failed to read health RwLock");
 
         let mut clients = Vec::new();
 
         // First try primary if healthy
-        if health.get(self.primary.region())
-                .map(|h| h.is_healthy())
-                .unwrap_or(true) {
+        if health
+            .get(self.primary.region())
+            .map(|h| h.is_healthy())
+            .unwrap_or(true)
+        {
             clients.push(self.primary.clone());
         }
 
         // Then add healthy replicas
         for replica in &self.replicas {
-            if health.get(replica.region())
-                    .map(|h| h.is_healthy())
-                    .unwrap_or(true) {
+            if health
+                .get(replica.region())
+                .map(|h| h.is_healthy())
+                .unwrap_or(true)
+            {
                 clients.push(replica.clone());
             }
         }
@@ -234,7 +243,10 @@ impl MultiRegionClient {
 
     /// Update client health status
     async fn update_health(&self, client: &Arc<dyn DynamoDbClient>, healthy: bool) {
-        let mut health = self.health.write().unwrap();
+        let mut health = self
+            .health
+            .write()
+            .expect("Failed to acquire write lock on health RwLock");
 
         if let Some(client_health) = health.get_mut(client.region()) {
             client_health.update(healthy);
@@ -243,9 +255,10 @@ impl MultiRegionClient {
 
     /// Check if a client needs a health recheck
     fn needs_recheck(&self, client: &Arc<dyn DynamoDbClient>) -> bool {
-        let health = self.health.read().unwrap();
+        let health = self.health.read().expect("Failed to read health RwLock");
 
-        health.get(client.region())
+        health
+            .get(client.region())
             .map(|h| h.needs_recheck(self.recheck_interval))
             .unwrap_or(true)
     }
@@ -256,7 +269,7 @@ impl MultiRegionClient {
             Ok(true) => {
                 self.update_health(client, true).await;
                 true
-            },
+            }
             _ => {
                 self.update_health(client, false).await;
                 false
@@ -326,7 +339,9 @@ impl MultiRegionClient {
             }
         }
 
-        Err(Error::Metastore("All DynamoDB clients failed after retries".into()))
+        Err(Error::Metastore(
+            "All DynamoDB clients failed after retries".into(),
+        ))
     }
 
     /// Execute an async operation with failover
@@ -388,11 +403,14 @@ impl MultiRegionClient {
             tokio::time::sleep(Duration::from_millis(100 * (2_u64.pow(retries as u32)))).await;
         }
 
-        Err(last_error.unwrap_or_else(|| Error::Metastore("All DynamoDB clients failed after retries".into())))
+        Err(last_error.unwrap_or_else(|| {
+            Error::Metastore("All DynamoDB clients failed after retries".into())
+        }))
     }
 }
 
 /// DynamoDB metastore implementation with global table support
+#[derive(Debug)]
 pub struct DynamoDbMetastore {
     /// Multi-region DynamoDB client
     client: MultiRegionClient,
@@ -414,13 +432,7 @@ impl DynamoDbMetastore {
         table_name: Option<String>,
         use_region_suffix: bool,
     ) -> Self {
-        Self::with_replicas(
-            client,
-            Vec::new(),
-            table_name,
-            use_region_suffix,
-            false,
-        )
+        Self::with_replicas(client, Vec::new(), table_name, use_region_suffix, false)
     }
 
     /// Creates a new DynamoDbMetastore with multiple region clients for global tables
@@ -443,7 +455,7 @@ impl DynamoDbMetastore {
             primary,
             replicas,
             Duration::from_secs(30), // Recheck unhealthy clients every 30 seconds
-            3, // Maximum 3 retries
+            3,                       // Maximum 3 retries
         );
 
         Self {
@@ -533,13 +545,14 @@ impl Metastore for DynamoDbMetastore {
 
         // Execute the operation with failover
         let table_name = self.table_name.clone();
-        let item = self.client.execute_async(|client| {
-            let key = key.clone();
-            let table_name = table_name.clone();
-            async move {
-                client.get_item(&table_name, key).await
-            }
-        }).await?;
+        let item = self
+            .client
+            .execute_async(|client| {
+                let key = key.clone();
+                let table_name = table_name.clone();
+                async move { client.get_item(&table_name, key).await }
+            })
+            .await?;
 
         // Decode the item if it exists
         let result = if let Some(item) = item {
@@ -565,13 +578,14 @@ impl Metastore for DynamoDbMetastore {
         // Execute the operation with failover
         let table_name = self.table_name.clone();
         let id_with_suffix_clone = id_with_suffix.clone();
-        let items = self.client.execute_async(|client| {
-            let table_name = table_name.clone();
-            let id = id_with_suffix_clone.clone();
-            async move {
-                client.query_latest(&table_name, &id).await
-            }
-        }).await?;
+        let items = self
+            .client
+            .execute_async(|client| {
+                let table_name = table_name.clone();
+                let id = id_with_suffix_clone.clone();
+                async move { client.query_latest(&table_name, &id).await }
+            })
+            .await?;
 
         // Decode the item if it exists
         let result = if let Some(item) = items.into_iter().next() {
@@ -595,11 +609,9 @@ impl Metastore for DynamoDbMetastore {
         let id_with_suffix = self.get_id_with_suffix(id);
 
         // Create the key metadata
-        let parent_key_meta = envelope.parent_key_meta.as_ref().map(|km| {
-            DynamoDbKeyMeta {
-                id: km.id.clone(),
-                created: km.created,
-            }
+        let parent_key_meta = envelope.parent_key_meta.as_ref().map(|km| DynamoDbKeyMeta {
+            id: km.id.clone(),
+            created: km.created,
         });
 
         // Create the envelope
@@ -620,13 +632,14 @@ impl Metastore for DynamoDbMetastore {
         // Execute the operation with failover
         let table_name = self.table_name.clone();
         let item_clone = item.clone();
-        let result = self.client.execute_async(|client| {
-            let table_name = table_name.clone();
-            let item = item_clone.clone();
-            async move {
-                client.put_item_if_not_exists(&table_name, item).await
-            }
-        }).await;
+        let result = self
+            .client
+            .execute_async(|client| {
+                let table_name = table_name.clone();
+                let item = item_clone.clone();
+                async move { client.put_item_if_not_exists(&table_name, item).await }
+            })
+            .await;
 
         if let Some(t) = timer {
             t.observe_duration();

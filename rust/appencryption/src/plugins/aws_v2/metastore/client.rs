@@ -240,7 +240,10 @@ impl MultiRegionClient {
 
     /// Update client health status
     async fn update_health(&self, client: &Arc<dyn DynamoDbClient>, healthy: bool) {
-        let mut health = self.health.write().expect("Failed to acquire write lock on health");
+        let mut health = self
+            .health
+            .write()
+            .expect("Failed to acquire write lock on health");
 
         if let Some(client_health) = health.get_mut(client.region()) {
             client_health.update(healthy);

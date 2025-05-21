@@ -9,6 +9,7 @@ use std::sync::{Arc, RwLock};
 /// An in-memory implementation of the Metastore trait
 ///
 /// This implementation is meant for testing and should not be used in production.
+#[derive(Debug)]
 pub struct MemoryMetastore {
     /// Map of key ID -> map of created timestamp -> envelope key record
     envelopes: Arc<RwLock<HashMap<String, HashMap<i64, EnvelopeKeyRecord>>>>,
@@ -32,7 +33,10 @@ impl Default for MemoryMetastore {
 #[async_trait]
 impl Metastore for MemoryMetastore {
     async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
-        let envelopes = self.envelopes.read().unwrap();
+        let envelopes = self
+            .envelopes
+            .read()
+            .expect("Failed to acquire read lock on envelopes");
 
         if let Some(key_map) = envelopes.get(id) {
             if let Some(record) = key_map.get(&created) {
@@ -44,7 +48,10 @@ impl Metastore for MemoryMetastore {
     }
 
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
-        let envelopes = self.envelopes.read().unwrap();
+        let envelopes = self
+            .envelopes
+            .read()
+            .expect("Failed to acquire read lock on envelopes");
 
         if let Some(key_map) = envelopes.get(id) {
             if key_map.is_empty() {
@@ -63,7 +70,10 @@ impl Metastore for MemoryMetastore {
     }
 
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
-        let mut envelopes = self.envelopes.write().unwrap();
+        let mut envelopes = self
+            .envelopes
+            .write()
+            .expect("Failed to acquire write lock on envelopes");
 
         // Get or create the key map
         let key_map = envelopes.entry(id.to_string()).or_default();

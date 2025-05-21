@@ -2,16 +2,28 @@ use crate::crypto::{AeadImpl, Aes256GcmAead};
 use crate::error::Result;
 use crate::KeyManagementService;
 use async_trait::async_trait;
+use std::fmt;
 
 /// A static key management service for testing
 ///
 /// This implementation uses a static master key for encryption/decryption,
 /// which is useful for testing but should not be used in production.
+#[derive(Clone)]
 pub struct StaticKeyManagementService {
     /// The static master key
     master_key: Vec<u8>,
     /// AEAD implementation for encryption/decryption
     aead: Aes256GcmAead,
+}
+
+// Implement Debug manually to avoid exposing the master key
+impl fmt::Debug for StaticKeyManagementService {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("StaticKeyManagementService")
+            .field("master_key", &"[REDACTED]")
+            .field("aead", &self.aead)
+            .finish()
+    }
 }
 
 impl StaticKeyManagementService {

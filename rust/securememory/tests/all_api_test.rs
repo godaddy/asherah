@@ -1,7 +1,7 @@
 //! A comprehensive test of all public APIs that exercises the core functionality
 //! in a safe manner.
 
-use securememory::memguard::{wipe_bytes, Buffer, Enclave};
+use securememory::memguard::wipe_bytes;
 use securememory::protected_memory::DefaultSecretFactory;
 use securememory::secret::{Secret, SecretExtensions, SecretFactory};
 

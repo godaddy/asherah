@@ -67,14 +67,18 @@ static METRICS_PROVIDER: RwLock<Option<Box<dyn MetricsProvider>>> = RwLock::new(
 
 /// Set the metrics provider for the application encryption library
 pub fn set_metrics_provider(provider: Box<dyn MetricsProvider>) {
-    let mut global_provider = METRICS_PROVIDER.write().expect("Failed to acquire write lock on global metrics provider");
+    let mut global_provider = METRICS_PROVIDER
+        .write()
+        .expect("Failed to acquire write lock on global metrics provider");
     *global_provider = Some(provider);
     METRICS_ENABLED.store(true, Ordering::SeqCst);
 }
 
 /// Disable metrics collection
 pub fn disable_metrics() {
-    let mut global_provider = METRICS_PROVIDER.write().expect("Failed to acquire write lock on global metrics provider");
+    let mut global_provider = METRICS_PROVIDER
+        .write()
+        .expect("Failed to acquire write lock on global metrics provider");
     *global_provider = None;
     METRICS_ENABLED.store(false, Ordering::SeqCst);
 }
@@ -87,7 +91,11 @@ pub fn metrics_enabled() -> bool {
 /// Register a counter metric
 pub fn register_counter(name: &str) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.register_counter(name);
         }
     }
@@ -96,7 +104,11 @@ pub fn register_counter(name: &str) {
 /// Register a gauge metric
 pub fn register_gauge(name: &str) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.register_gauge(name);
         }
     }
@@ -105,7 +117,11 @@ pub fn register_gauge(name: &str) {
 /// Register a timer metric
 pub fn register_timer(name: &str) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.register_timer(name);
         }
     }
@@ -114,7 +130,11 @@ pub fn register_timer(name: &str) {
 /// Increment a counter metric
 pub fn increment_counter(name: &str, value: u64) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.increment_counter(name, value);
         }
     }
@@ -123,7 +143,11 @@ pub fn increment_counter(name: &str, value: u64) {
 /// Record a gauge metric
 pub fn record_gauge(name: &str, value: f64) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.record_gauge(name, value);
         }
     }
@@ -132,7 +156,11 @@ pub fn record_gauge(name: &str, value: f64) {
 /// Record a timer metric
 pub fn record_timer(name: &str, duration: Duration) {
     if metrics_enabled() {
-        if let Some(provider) = METRICS_PROVIDER.read().expect("Failed to acquire read lock on global metrics provider").as_ref() {
+        if let Some(provider) = METRICS_PROVIDER
+            .read()
+            .expect("Failed to acquire read lock on global metrics provider")
+            .as_ref()
+        {
             provider.record_timer(name, duration);
         }
     }
@@ -291,17 +319,26 @@ pub mod prometheus {
         }
 
         fn register_counter(&self, name: &str) {
-            let mut counters = self.counters.lock().expect("Failed to acquire lock on counters map");
+            let mut counters = self
+                .counters
+                .lock()
+                .expect("Failed to acquire lock on counters map");
             counters.insert(name.to_string(), ());
         }
 
         fn register_gauge(&self, name: &str) {
-            let mut gauges = self.gauges.lock().expect("Failed to acquire lock on gauges map");
+            let mut gauges = self
+                .gauges
+                .lock()
+                .expect("Failed to acquire lock on gauges map");
             gauges.insert(name.to_string(), ());
         }
 
         fn register_timer(&self, name: &str) {
-            let mut timers = self.timers.lock().expect("Failed to acquire lock on timers map");
+            let mut timers = self
+                .timers
+                .lock()
+                .expect("Failed to acquire lock on timers map");
             timers.insert(name.to_string(), ());
         }
     }

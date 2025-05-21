@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 
 /// Builder for the AWS KMS implementation
+#[derive(Debug)]
 pub struct AwsKmsBuilder {
     /// Map of region -> ARN
     arn_map: HashMap<String, String>,
@@ -55,7 +56,7 @@ impl AwsKmsBuilder {
 
         // Get the preferred region
         let preferred_region = self.preferred_region.unwrap_or_else(|| {
-            self.arn_map.keys().next().unwrap().clone()
+            self.arn_map.keys().next().expect("ARN map cannot be empty").clone()
         });
 
         // Create the regional clients

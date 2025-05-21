@@ -28,7 +28,7 @@ fn test_protected_memory_secret_destruction() {
     let mut orig = b"testing".to_vec();
 
     // Create and explicitly destroy a secret
-    let mut secret = factory.new(&mut orig).unwrap();
+    let secret = factory.new(&mut orig).unwrap();
     secret.close().unwrap();
 
     // Verify it's closed

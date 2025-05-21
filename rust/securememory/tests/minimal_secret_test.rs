@@ -48,7 +48,7 @@ fn test_explicit_close() {
 
 #[test]
 fn test_without_memcall() {
-    use memcall::{self, MemoryProtection};
+    use memcall::{self};
 
     // Test if memcall is working properly
     let page_size = memcall::page_size();

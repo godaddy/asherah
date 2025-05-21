@@ -1,6 +1,8 @@
 use super::*;
-use crate::plugins::aws_v2::metastore::{DynamoDbClient, DynamoDbKey, DynamoDbItem, DynamoDbEnvelope, DynamoDbMetastore};
 use crate::envelope::{EnvelopeKeyRecord, KeyMeta};
+use crate::plugins::aws_v2::metastore::{
+    DynamoDbClient, DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbMetastore,
+};
 use crate::Metastore;
 use async_trait::async_trait;
 use std::collections::HashMap;
@@ -61,7 +63,11 @@ impl DynamoDbClient for MockDynamoDbClient {
         Ok(true)
     }
 
-    async fn query_latest(&self, _table_name: &str, partition_key: &str) -> Result<Vec<DynamoDbItem>> {
+    async fn query_latest(
+        &self,
+        _table_name: &str,
+        partition_key: &str,
+    ) -> Result<Vec<DynamoDbItem>> {
         let store = self.store.lock().unwrap();
 
         // Find partition
@@ -95,11 +101,7 @@ async fn test_dynamodb_metastore_single_region() {
     let client = Arc::new(MockDynamoDbClient::new("us-west-2"));
 
     // Create DynamoDB metastore
-    let metastore = DynamoDbMetastore::new(
-        client,
-        Some("TestTable".to_string()),
-        false,
-    );
+    let metastore = DynamoDbMetastore::new(client, Some("TestTable".to_string()), false);
 
     // Create a test key record
     let key_record = EnvelopeKeyRecord {
@@ -114,11 +116,17 @@ async fn test_dynamodb_metastore_single_region() {
     };
 
     // Store the key
-    let stored = metastore.store("test-key", 1234567890, &key_record).await.expect("Failed to store key");
+    let stored = metastore
+        .store("test-key", 1234567890, &key_record)
+        .await
+        .expect("Failed to store key");
     assert!(stored, "Key should have been stored");
 
     // Load the key by exact ID and timestamp
-    let loaded = metastore.load("test-key", 1234567890).await.expect("Failed to load key");
+    let loaded = metastore
+        .load("test-key", 1234567890)
+        .await
+        .expect("Failed to load key");
     assert!(loaded.is_some(), "Key should have been loaded");
 
     let loaded_key = loaded.unwrap();
@@ -127,7 +135,10 @@ async fn test_dynamodb_metastore_single_region() {
     assert_eq!(key_record.encrypted_key, loaded_key.encrypted_key);
 
     // Load the latest key
-    let latest = metastore.load_latest("test-key").await.expect("Failed to load latest key");
+    let latest = metastore
+        .load_latest("test-key")
+        .await
+        .expect("Failed to load latest key");
     assert!(latest.is_some(), "Latest key should have been loaded");
 
     let latest_key = latest.unwrap();
@@ -163,11 +174,17 @@ async fn test_dynamodb_metastore_multi_region() {
     };
 
     // Store the key
-    let stored = metastore.store("test-key", 1234567890, &key_record).await.expect("Failed to store key");
+    let stored = metastore
+        .store("test-key", 1234567890, &key_record)
+        .await
+        .expect("Failed to store key");
     assert!(stored, "Key should have been stored");
 
     // Load the key by exact ID and timestamp
-    let loaded = metastore.load("test-key", 1234567890).await.expect("Failed to load key");
+    let loaded = metastore
+        .load("test-key", 1234567890)
+        .await
+        .expect("Failed to load key");
     assert!(loaded.is_some(), "Key should have been loaded");
 
     // Check region suffix

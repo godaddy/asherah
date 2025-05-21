@@ -18,9 +18,9 @@ fn test_cycle() {
     lock(buffer).expect("Failed to lock memory");
 
     // Modify and check the buffer
-    for i in 0..buffer.len() {
-        buffer[i] = 1;
-        assert_eq!(buffer[i], 1, "read back data different to what was written");
+    for byte in buffer.iter_mut() {
+        *byte = 1;
+        assert_eq!(*byte, 1, "read back data different to what was written");
     }
 
     // Unlock and free the memory
@@ -45,7 +45,10 @@ fn test_protect() {
     // Test invalid flag case
     // In Go this is: if err := Protect(buffer, MemoryProtectionFlag{4}); err.Error() != ErrInvalidFlag {
     // This creates an invalid flag with value 4, which should return an error containing ErrInvalidFlag
-    let invalid_flag_error = protect(buffer, unsafe { std::mem::transmute(4u32) }).unwrap_err();
+    let invalid_flag_error = protect(buffer, unsafe {
+        std::mem::transmute::<u32, MemoryProtection>(4_u32)
+    })
+    .expect_err("Should have failed with invalid flag");
 
     // Error message should match ERR_INVALID_FLAG from Go
     assert!(invalid_flag_error.to_string().contains("<memcall> memory protection flag is undefined"),

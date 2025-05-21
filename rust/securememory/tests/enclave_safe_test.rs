@@ -1,6 +1,6 @@
 // A safe test for the actual enclave module (using the successful patterns from custom_buffer_test)
 
-use securememory::memguard::{Buffer, Enclave};
+use securememory::memguard::Enclave;
 
 #[test]
 fn test_enclave_direct() {

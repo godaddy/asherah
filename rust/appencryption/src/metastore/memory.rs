@@ -11,6 +11,7 @@ use std::sync::{Arc, RwLock};
 /// This implementation stores keys in memory, which is useful for testing
 /// but should not be used in production as keys will be lost when the
 /// process terminates.
+#[derive(Debug)]
 pub struct InMemoryMetastore {
     /// Storage for keys: map of ID -> map of created -> EnvelopeKeyRecord
     store: Arc<RwLock<HashMap<String, HashMap<i64, EnvelopeKeyRecord>>>>,
@@ -34,7 +35,10 @@ impl Default for InMemoryMetastore {
 #[async_trait]
 impl Metastore for InMemoryMetastore {
     async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
-        let store = self.store.read().unwrap();
+        let store = self
+            .store
+            .read()
+            .expect("Failed to acquire read lock on store");
 
         if let Some(id_map) = store.get(id) {
             if let Some(record) = id_map.get(&created) {
@@ -46,7 +50,10 @@ impl Metastore for InMemoryMetastore {
     }
 
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
-        let store = self.store.read().unwrap();
+        let store = self
+            .store
+            .read()
+            .expect("Failed to acquire read lock on store");
 
         if let Some(id_map) = store.get(id) {
             // Find the record with the highest created timestamp
@@ -62,7 +69,10 @@ impl Metastore for InMemoryMetastore {
     }
 
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
-        let mut store = self.store.write().unwrap();
+        let mut store = self
+            .store
+            .write()
+            .expect("Failed to acquire write lock on store");
 
         // Get or create the map for this ID
         let id_map = store.entry(id.to_string()).or_default();

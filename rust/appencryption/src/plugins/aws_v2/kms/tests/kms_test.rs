@@ -1,8 +1,8 @@
 // No super imports needed
 use crate::crypto::Aes256GcmAead as Aes256Gcm;
 use crate::error::Result;
-use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
 use crate::plugins::aws_v2::kms::client::GenerateDataKeyResponse;
+use crate::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
 use crate::KeyManagementService;
 use async_trait::async_trait;
 use std::collections::HashMap;

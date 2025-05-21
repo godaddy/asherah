@@ -1,6 +1,5 @@
-use securememory::error::SecureMemoryError;
 use securememory::memguard::{Buffer, Enclave};
-use securememory::secret::{Secret, SecretExtensions, SecretFactory};
+use securememory::secret::{Secret, SecretFactory};
 
 #[test]
 fn test_memguard_secret_creation() {
@@ -34,7 +33,7 @@ fn test_memguard_secret_creation() {
 
 #[test]
 fn test_buffer_destruction() {
-    let mut buffer = Buffer::new(16).unwrap();
+    let buffer = Buffer::new(16).unwrap();
 
     // Destroy the buffer
     buffer.destroy().unwrap();
@@ -49,7 +48,7 @@ fn test_buffer_destruction() {
 
 #[test]
 fn test_buffer_random_data() {
-    let mut buffer = Buffer::new(32).unwrap();
+    let buffer = Buffer::new(32).unwrap();
 
     // Fill with random data manually
     buffer

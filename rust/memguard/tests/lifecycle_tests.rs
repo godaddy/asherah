@@ -205,7 +205,7 @@ fn test_stream_operations_after_purge() {
         }
         Ok(_) => {
             // If write succeeds, flush should fail
-            match stream.flush() {
+            match stream.flush_stream() {
                 Err(e) => {
                     println!("Stream flush failed after purge as expected: {:?}", e);
                 }
@@ -227,7 +227,7 @@ fn test_stream_operations_after_purge() {
 
     // Flush the stream to get the buffer with all data
     let (buffer, io_err) = new_stream
-        .flush()
+        .flush_stream()
         .expect("Failed to flush new stream after purge");
     assert!(io_err.is_none(), "I/O error during new stream flush");
 

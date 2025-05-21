@@ -2,7 +2,6 @@ use securememory::protected_memory::DefaultSecretFactory;
 use securememory::secret::{Secret, SecretExtensions, SecretFactory};
 use securememory::stream::{Stream, STREAM_CHUNK_SIZE};
 use std::io::{Read, Write};
-use std::sync::{Arc, Mutex};
 
 #[test]
 fn test_basic_stream_operations() {
@@ -79,8 +78,8 @@ fn test_stream_next_and_flush() {
         })
         .unwrap();
 
-    // Use flush() to get the remaining data
-    let secret2 = stream.flush().unwrap();
+    // Use flush_stream() to get the remaining data
+    let secret2 = stream.flush_stream().unwrap();
     secret2
         .with_bytes(|bytes| {
             assert_eq!(bytes, b"second chunk");
@@ -259,7 +258,7 @@ fn test_stream_close_behavior() {
     let secret = stream.next().unwrap();
 
     // Close the secret explicitly
-    let mut secret = secret;
+    let secret = secret;
     secret.close().unwrap();
 
     // Trying to use the secret after closing should fail

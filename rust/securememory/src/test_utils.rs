@@ -18,6 +18,10 @@ static TEST_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 /// of the test and automatically released when the test completes, even if
 /// the test panics.
 pub struct TestGuard {
+    // This field is intentionally named with an underscore prefix
+    // as it's only used for RAII (Resource Acquisition Is Initialization) pattern
+    // and not directly accessed.
+    #[allow(clippy::used_underscore_binding)]
     _lock: std::sync::MutexGuard<'static, ()>,
 }
 
@@ -28,8 +32,15 @@ impl TestGuard {
     ///
     /// A guard that holds the lock until it's dropped
     pub fn new() -> Self {
+        #[allow(clippy::used_underscore_binding)]
         let _lock = TEST_MUTEX.lock().expect("Failed to acquire test lock");
         Self { _lock }
+    }
+}
+
+impl Default for TestGuard {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

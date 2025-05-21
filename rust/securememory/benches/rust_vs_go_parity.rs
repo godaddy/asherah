@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box as hint_black_box;
 
 // This benchmark proves Rust CAN match Go's performance

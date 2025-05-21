@@ -1,3 +1,5 @@
+#![allow(clippy::print_stderr, clippy::ptr_as_ptr)]
+
 use crate::error::MemguardError;
 use crate::globals;
 use crate::util::{scramble, wipe, PAGE_SIZE};
@@ -119,7 +121,10 @@ impl Buffer {
         if !self.is_alive() {
             return;
         }
-        let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state in test_corrupt_canary");
+        let mut state = self
+            .inner
+            .lock()
+            .expect("Failed to acquire lock on buffer state in test_corrupt_canary");
         if state.canary_region_len > 0 {
             // Make inner region writable to modify canary
             let start = state.inner_offset;
@@ -210,6 +215,9 @@ impl Drop for BufferState {
             let _cap = temp_vec.capacity();
 
             // Prevent the Vec from being dropped and freeing the memory
+            // We're intentionally using forget here since we need to
+            // transfer ownership of this memory to the Buffer
+            #[allow(clippy::mem_forget)]
             std::mem::forget(temp_vec);
 
             // Ensure it's not a zero-sized slice if ptr is dangling
@@ -590,7 +598,7 @@ impl Buffer {
 
         let buffer_for_registry = Arc::new(Mutex::new(registry_buffer));
 
-        match globals::get_buffer_registry().lock() { 
+        match globals::get_buffer_registry().lock() {
             Ok(mut registry) => {
                 registry.add(buffer_for_registry);
             }
@@ -671,6 +679,7 @@ impl Buffer {
     ///     Ok(())
     /// }).expect("Failed to read data");
     /// ```
+    #[allow(clippy::unwrap_in_result)]
     pub fn with_data<F, T>(&self, action: F) -> Result<T>
     where
         F: FnOnce(&[u8]) -> Result<T>,
@@ -683,7 +692,10 @@ impl Buffer {
         // We need to check current state first.
         let needs_protection_change;
         {
-            let state = self.inner.lock().expect("Failed to acquire lock on buffer state");
+            let state = self
+                .inner
+                .lock()
+                .expect("Failed to acquire lock on buffer state");
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
@@ -696,7 +708,10 @@ impl Buffer {
 
         let result;
         {
-            let state = self.inner.lock().expect("Failed to acquire lock on buffer state for read operation");
+            let state = self
+                .inner
+                .lock()
+                .expect("Failed to acquire lock on buffer state for read operation");
             // Get a reference to the data region
             let data_slice = &state.memory_allocation
                 [state.data_region_offset..(state.data_region_offset + state.data_region_len)];
@@ -742,6 +757,7 @@ impl Buffer {
     ///     Ok(())
     /// }).expect("Failed to write data");
     /// ```
+    #[allow(clippy::unwrap_in_result)]
     pub fn with_data_mut<F, T>(&self, action: F) -> Result<T>
     where
         F: FnOnce(&mut [u8]) -> Result<T>,
@@ -771,7 +787,10 @@ impl Buffer {
 
         let result;
         {
-            let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state for write operation");
+            let mut state = self
+                .inner
+                .lock()
+                .expect("Failed to acquire lock on buffer state for write operation");
             if state.memory_allocation.is_empty() {
                 // Should be caught by destroyed() but good check
                 // Release lock before returning to avoid poisoning if protect fails next
@@ -835,12 +854,16 @@ impl Buffer {
     ///
     /// * `MemguardError::SecretClosed` - If the buffer has been destroyed
     /// * Other errors if memory protection fails
+    #[allow(clippy::unwrap_in_result)]
     fn protect(&self, protection: MemoryProtection) -> Result<()> {
         if self.destroyed() {
             return Err(MemguardError::SecretClosed);
         }
 
-        let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state for destroy operation");
+        let mut state = self
+            .inner
+            .lock()
+            .expect("Failed to acquire lock on buffer state for destroy operation");
 
         // Skip if buffer is empty
         if state.memory_allocation.is_empty() {
@@ -868,6 +891,7 @@ impl Buffer {
     }
 
     /// Internal destroy method used by registry's destroy_all to avoid double-locking
+    #[allow(clippy::print_stderr)]
     pub(crate) fn destroy_internal(&self) -> Result<()> {
         eprintln!(
             "DEBUG: Buffer::destroy_internal() called for buffer {:p}",
@@ -906,6 +930,7 @@ impl Buffer {
     /// buffer.destroy().expect("Failed to destroy buffer");
     /// assert!(!buffer.is_alive());
     /// ```
+    #[allow(clippy::print_stderr, clippy::unwrap_in_result)]
     pub fn destroy(&self) -> Result<()> {
         eprintln!("DEBUG: Buffer::destroy() called for buffer {:p}", self);
         // Atomically mark as destroyed. If already marked, return.
@@ -1334,7 +1359,7 @@ impl Buffer {
     ) -> Result<(Self, Option<MemguardError>)> {
         let initial_capacity = size_hint.filter(|&s| s > 0).unwrap_or(*PAGE_SIZE);
         let mut bytes_read_vec = Vec::with_capacity(initial_capacity);
-        let mut byte_buf = [0u8; 1];
+        let mut byte_buf = [0_u8; 1];
         let mut io_error_opt: Option<std::io::Error> = None;
 
         loop {
@@ -1423,7 +1448,7 @@ impl Buffer {
     /// ```
     pub fn new_from_entire_reader(reader: &mut impl Read) -> Result<(Self, Option<MemguardError>)> {
         let mut bytes_read_vec = Vec::with_capacity(*PAGE_SIZE);
-        let mut chunk = vec![0u8; *PAGE_SIZE]; // Read in page-sized chunks like Go
+        let mut chunk = vec![0_u8; *PAGE_SIZE]; // Read in page-sized chunks like Go
         let mut io_error_opt: Option<std::io::Error> = None;
 
         loop {
@@ -1629,9 +1654,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<u16>()
-                || data_ptr.align_offset(align_of::<u16>()) != 0
-            {
+            if data_len < size_of::<u16>() || data_ptr.align_offset(align_of::<u16>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -1721,9 +1744,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<u32>()
-                || data_ptr.align_offset(align_of::<u32>()) != 0
-            {
+            if data_len < size_of::<u32>() || data_ptr.align_offset(align_of::<u32>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -1813,9 +1834,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<u64>()
-                || data_ptr.align_offset(align_of::<u64>()) != 0
-            {
+            if data_len < size_of::<u64>() || data_ptr.align_offset(align_of::<u64>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -1984,9 +2003,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<i16>()
-                || data_ptr.align_offset(align_of::<i16>()) != 0
-            {
+            if data_len < size_of::<i16>() || data_ptr.align_offset(align_of::<i16>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -2076,9 +2093,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<i32>()
-                || data_ptr.align_offset(align_of::<i32>()) != 0
-            {
+            if data_len < size_of::<i32>() || data_ptr.align_offset(align_of::<i32>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -2168,9 +2183,7 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < size_of::<i64>()
-                || data_ptr.align_offset(align_of::<i64>()) != 0
-            {
+            if data_len < size_of::<i64>() || data_ptr.align_offset(align_of::<i64>()) != 0 {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
@@ -2514,7 +2527,10 @@ mod tests {
         );
 
         {
-            let state = b.inner.lock().unwrap();
+            let state = b
+                .inner
+                .lock()
+                .expect("Failed to acquire lock on buffer state for testing");
             assert_eq!(
                 state.memory_allocation.len(),
                 round_to_page_size(32) + (2 * *PAGE_SIZE),
@@ -2532,7 +2548,10 @@ mod tests {
         // In test mode, we don't check global registry consistency
         #[cfg(not(test))]
         assert!(
-            globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
+            globals::get_buffer_registry()
+                .lock()
+                .expect("Failed to acquire lock on buffer registry")
+                .exists(&b),
             "Buffer not found in global registry"
         );
 
@@ -2566,7 +2585,10 @@ mod tests {
             );
 
             {
-                let state = b.inner.lock().unwrap();
+                let state = b
+                    .inner
+                    .lock()
+                    .expect("Failed to acquire lock on buffer state for size testing");
                 assert_eq!(
                     state.memory_allocation.len(),
                     round_to_page_size(i) + 2 * *PAGE_SIZE,
@@ -2693,7 +2715,10 @@ mod tests {
 
         // Let's also check the original buffer for existence before destruction
         assert!(
-            globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
+            globals::get_buffer_registry()
+                .lock()
+                .expect("Failed to acquire lock on buffer registry")
+                .exists(&b),
             "Buffer should exist in registry before destroy"
         );
 
@@ -2705,7 +2730,10 @@ mod tests {
             "Destroyed buffer should not be mutable"
         );
         assert!(
-            !globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
+            !globals::get_buffer_registry()
+                .lock()
+                .expect("Failed to acquire lock on buffer registry")
+                .exists(&b),
             "Buffer should be removed from registry"
         );
 
@@ -2799,7 +2827,7 @@ mod tests {
 
         let _ = b_seek
             .reader(|mut cursor| {
-                let mut byte_buf = [0u8; 1];
+                let mut byte_buf = [0_u8; 1];
 
                 // Seek to end, check position
                 assert_eq!(cursor.seek(SeekFrom::End(0)).unwrap(), 32);

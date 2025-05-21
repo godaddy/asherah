@@ -14,6 +14,8 @@
 //!   Windows settings. Applications requiring stricter control over crash dumps on Windows
 //!   may need to configure WER or use Windows-specific APIs.
 
+#![allow(clippy::panic)]
+
 use crate::coffer::Coffer;
 use crate::registry::BufferRegistry;
 use log::warn;

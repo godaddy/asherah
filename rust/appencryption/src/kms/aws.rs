@@ -26,6 +26,7 @@ pub trait AwsKmsClient: Send + Sync {
 }
 
 /// Response from the GenerateDataKey operation
+#[derive(Debug)]
 pub struct GenerateDataKeyResponse {
     /// The Amazon Resource Name (ARN) of the CMK that encrypted the data key
     pub key_id: String,
@@ -38,6 +39,7 @@ pub struct GenerateDataKeyResponse {
 }
 
 /// Regional client for KMS operations
+#[derive(Debug, Clone)]
 struct RegionalClient {
     /// The KMS client for a specific region
     client: Arc<dyn AwsKmsClient>,
@@ -109,6 +111,7 @@ struct Envelope {
 }
 
 /// AWS KMS implementation of the KeyManagementService trait
+#[derive(Debug)]
 pub struct AwsKms {
     /// Regional clients for KMS operations
     clients: Vec<RegionalClient>,
@@ -165,7 +168,9 @@ impl AwsKms {
 
                 let tx_clone = tx.clone();
                 tokio::spawn(async move {
-                    let _ = tx_clone.send(kek).await;
+                    if let Err(e) = tx_clone.send(kek).await {
+                        log::debug!("Failed to send KEK through channel: {}", e);
+                    }
                 });
 
                 continue;
@@ -184,7 +189,9 @@ impl AwsKms {
                             encrypted_kek: encrypted_key,
                         };
 
-                        let _ = tx_clone.send(kek).await;
+                        if let Err(e) = tx_clone.send(kek).await {
+                            log::debug!("Failed to send KEK through channel: {}", e);
+                        }
                     }
                     Err(e) => {
                         log::debug!(

@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Final cleanup - in a real application, you might want to process any remaining data
-        match consumer_stream.flush() {
+        match consumer_stream.flush_stream() {
             Ok(final_secret) => {
                 final_secret
                     .with_bytes(|bytes| {

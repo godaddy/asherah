@@ -16,6 +16,13 @@ pub enum MemoryProtection {
     ReadWrite = 6,
 }
 
+// Implement conversion from MemoryProtection to u32
+impl From<MemoryProtection> for u32 {
+    fn from(prot: MemoryProtection) -> u32 {
+        prot as u32
+    }
+}
+
 /// Resource limit identifiers used with `set_limit`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RlimitResource {

@@ -122,6 +122,7 @@ pub trait SecretFactory: Send + Sync {
     /// // Password data is now wiped from the original slice
     /// assert_ne!(password, b"secure-password-123");
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn new(&self, b: &mut [u8]) -> Result<Self::SecretType>;
 
     /// Creates a new secret with random data of the specified size.
@@ -159,14 +160,14 @@ pub trait SecretFactory: Send + Sync {
 ///
 /// This struct implements the `Read` trait, allowing secrets to be used
 /// with standard I/O interfaces.
-pub struct SecretReader<'a, S: Secret + SecretExtensions + ?Sized> {
+pub struct SecretReader<'secret, S: Secret + SecretExtensions + ?Sized> {
     /// Reference to the secret being read
-    secret: &'a S,
+    secret: &'secret S,
     /// Current position within the secret
     position: usize,
 }
 
-impl<'a, S: Secret + SecretExtensions + ?Sized> SecretReader<'a, S> {
+impl<'secret, S: Secret + SecretExtensions + ?Sized> SecretReader<'secret, S> {
     /// Creates a new SecretReader for the given secret.
     ///
     /// # Arguments
@@ -176,7 +177,7 @@ impl<'a, S: Secret + SecretExtensions + ?Sized> SecretReader<'a, S> {
     /// # Returns
     ///
     /// * `SecretReader` - A new SecretReader instance
-    pub fn new(secret: &'a S) -> Self {
+    pub fn new(secret: &'secret S) -> Self {
         Self {
             secret,
             position: 0,
@@ -184,7 +185,7 @@ impl<'a, S: Secret + SecretExtensions + ?Sized> SecretReader<'a, S> {
     }
 }
 
-impl<'a, S: Secret + SecretExtensions + ?Sized> Read for SecretReader<'a, S> {
+impl<S: Secret + SecretExtensions + ?Sized> Read for SecretReader<'_, S> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let result = self.secret.with_bytes(|bytes| {
             // Check for EOF

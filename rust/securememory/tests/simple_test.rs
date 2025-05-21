@@ -166,10 +166,13 @@ fn test_concurrent_access_safe() {
     // Wait for all threads to complete
     for (i, handle) in handles.into_iter().enumerate() {
         println!("Waiting for thread {} to join", i);
-        if let Err(e) = handle.join() {
-            println!("Thread {} join failed: {:?}", i, e);
-        } else {
-            println!("Thread {} joined successfully", i);
+        match handle.join() {
+            Err(e) => {
+                println!("Thread {} join failed: {:?}", i, e);
+            }
+            _ => {
+                println!("Thread {} joined successfully", i);
+            }
         }
     }
 

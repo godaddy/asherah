@@ -1,8 +1,8 @@
-use appencryption::{kms::StaticKeyManagementService, Session};
 #[cfg(feature = "mysql")]
 use appencryption::metastore::MySqlMetastore;
 use appencryption::policy::CryptoPolicy;
 use appencryption::session::SessionFactory;
+use appencryption::{kms::StaticKeyManagementService, Session};
 use securememory::protected_memory::DefaultSecretFactory;
 #[cfg(feature = "mysql")]
 use sqlx::mysql::MySqlPoolOptions;

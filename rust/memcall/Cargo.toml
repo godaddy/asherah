@@ -42,12 +42,7 @@ workspace = true
 
 [workspace.lints.rust]
 # Note: memcall explicitly requires unsafe code for memory management
-# unsafe_code = "forbid"
-# Temporarily allow certain warnings during initial transition to new lint rules
-trivial_numeric_casts = "allow"
-let_underscore_drop = "allow"
-missing_debug_implementations = "allow"
-dead_code = "allow"
+unsafe_code = "allow"
 # Deny-level lints
 future_incompatible = { level = "deny", priority = -1 }
 # Warn-level lints
@@ -65,7 +60,7 @@ redundant_lifetimes = "warn"
 rust_2018_idioms = { level = "warn", priority = -1 }
 single_use_lifetimes = "warn"
 trivial_casts = "warn"
-# trivial_numeric_casts = "warn"
+trivial_numeric_casts = "warn"
 unit_bindings = "warn"
 unsafe_attr_outside_unsafe = "warn"
 unused = { level = "warn", priority = -1 }

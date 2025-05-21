@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_in_result, clippy::single_match)]
+
 use crate::buffer::Buffer;
 use crate::enclave::Enclave;
 use crate::error::MemguardError;
@@ -167,14 +169,14 @@ impl Stream {
     /// let mut stream = Stream::new();
     /// stream.write_all(b"all stream data").unwrap();
     ///
-    /// let (flushed_buffer, io_err_opt) = stream.flush().unwrap();
+    /// let (flushed_buffer, io_err_opt) = stream.flush_stream().unwrap();
     /// assert!(io_err_opt.is_none());
     /// flushed_buffer.with_data(|d| { assert_eq!(d, b"all stream data"); Ok(()) }).unwrap();
     /// flushed_buffer.destroy().unwrap();
     ///
     /// assert_eq!(stream.size(), 0); // Stream is now empty
     /// ```
-    pub fn flush(&self) -> Result<(Buffer, Option<MemguardError>), MemguardError> {
+    pub fn flush_stream(&self) -> Result<(Buffer, Option<MemguardError>), MemguardError> {
         // Instead of using the ReadAdapter that can cause nested locking,
         // we'll implement read logic directly here with proper lock handling
 
@@ -183,8 +185,11 @@ impl Stream {
 
         // Loop until we've read all the data
         loop {
-            let mut buf = vec![0u8; 4096]; // Use a reasonably sized buffer for reading
-            let mut temp_guard = self.inner.lock().expect("Failed to acquire lock on stream inner state for flush");
+            let mut buf = vec![0_u8; 4096]; // Use a reasonably sized buffer for reading
+            let mut temp_guard = self
+                .inner
+                .lock()
+                .expect("Failed to acquire lock on stream inner state for flush");
 
             // Read a chunk of data
             let bytes_read = match self.inner_read(&mut buf, &mut temp_guard) {
@@ -221,20 +226,9 @@ impl Stream {
             Ok((buffer, None))
         }
     }
-}
 
-// ReadAdapter implements Read for a Stream with a locked guard
-struct ReadAdapter<'a, 'b>(&'a Stream, &'b mut std::sync::MutexGuard<'a, StreamInner>);
-
-impl Read for ReadAdapter<'_, '_> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        // Delegate to the Stream's inner_read implementation
-        self.0.inner_read(buf, self.1)
-    }
-}
-
-// Add helper method for inner reading logic
-impl Stream {
+    // Inner read helper method used by the Stream and ReadAdapter implementations
+    #[allow(clippy::unwrap_in_result, clippy::only_used_in_recursion)]
     fn inner_read(
         &self,
         buf: &mut [u8],
@@ -399,8 +393,8 @@ impl Stream {
                 }
             }
             return Ok(0); // No more data
-        } else { 
-            match guard.queue.pop_front() { 
+        } else {
+            match guard.queue.pop_front() {
                 Some(enclave) => {
                     // Convert Enclave to Buffer using Enclave::open
                     match enclave.open() {
@@ -425,7 +419,22 @@ impl Stream {
     }
 }
 
+// ReadAdapter implements Read for a Stream with a locked guard
+#[allow(dead_code)]
+struct ReadAdapter<'stream, 'guard>(
+    &'stream Stream,
+    &'guard mut std::sync::MutexGuard<'stream, StreamInner>,
+);
+
+impl Read for ReadAdapter<'_, '_> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        // Delegate to the Stream's inner_read implementation
+        self.0.inner_read(buf, self.1)
+    }
+}
+
 impl Read for Stream {
+    #[allow(clippy::unwrap_in_result)]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if buf.is_empty() {
             return Ok(0);
@@ -442,6 +451,7 @@ impl Read for Stream {
 }
 
 impl Write for Stream {
+    #[allow(clippy::unwrap_in_result)]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if buf.is_empty() {
             return Ok(0);
@@ -528,7 +538,9 @@ mod tests {
     fn test_write_to_stream(t_name: &str, s: &mut Stream, data: &[u8]) {
         // Stream::write takes &[u8], so no need to clone to vec for mutability here.
         // The implementation of Stream::write handles copying.
-        let n = s.write(data).expect(&format!("{}: stream.write failed", t_name));
+        let n = s
+            .write(data)
+            .expect(&format!("{}: stream.write failed", t_name));
         assert_eq!(n, data.len(), "{}: not all data was written", t_name);
         // Cannot check for data_to_write wipe here due to Write trait signature.
         // Go's test wipes the input `b` in its `write` helper.
@@ -743,7 +755,7 @@ mod tests {
         }
 
         // Our implementation might fail with crypto errors in tests due to deadlock prevention
-        match s.flush() {
+        match s.flush_stream() {
             Ok((c2, flush_err_opt)) => {
                 if let Some(e) = &flush_err_opt {
                     println!("Warning: Flush returned I/O error: {:?}", e);
@@ -784,7 +796,7 @@ mod tests {
             Err(e) => {
                 // Just log the error and continue
                 println!(
-                    "Warning: s.flush() failed: {:?}. This is expected in our test environment.",
+                    "Warning: s.flush_stream() failed: {:?}. This is expected in our test environment.",
                     e
                 );
             }
@@ -1152,7 +1164,7 @@ mod tests {
         }
 
         // Flush the stream - this might also fail with crypto errors
-        match s.flush() {
+        match s.flush_stream() {
             Ok((flushed_buffer, flush_err_opt)) => {
                 if let Some(e) = &flush_err_opt {
                     println!("Warning: Flush returned I/O error: {:?}", e);

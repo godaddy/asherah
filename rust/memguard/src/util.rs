@@ -103,7 +103,7 @@ pub(crate) fn hash(data: &[u8]) -> [u8; 32] {
     let mut hasher = Blake2b256::new();
     hasher.update(data);
     let hash_result = hasher.finalize();
-    let mut result = [0u8; 32];
+    let mut result = [0_u8; 32];
     result.copy_from_slice(&hash_result);
     result
 }
@@ -128,6 +128,7 @@ pub(crate) fn hash(data: &[u8]) -> [u8; 32] {
 /// - If `dst.len() != src.len()`, copies the minimum number of bytes from the start of `src`
 ///   to the start of `dst`. This part may not be strictly constant time if lengths differ significantly,
 ///   but `subtle::ConstantTimeCopy::ct_copy` is used for the actual byte copying over the common length.
+#[allow(dead_code)]
 pub(crate) fn copy_slice(dst: &mut [u8], src: &[u8]) -> Result<()> {
     let len_to_copy = std::cmp::min(dst.len(), src.len());
 
@@ -224,6 +225,7 @@ pub fn wipe_bytes(buffer: &mut [u8]) {
 /// // In case of a security breach:
 /// purge();
 /// ```
+#[allow(clippy::print_stderr, clippy::panic)]
 pub fn purge() {
     eprintln!("DEBUG: purge() called");
     // LOCK ORDERING: Following our established lock ordering strategy:
@@ -361,6 +363,7 @@ pub fn purge() {
 ///     safe_panic("Security breach detected");
 /// }
 /// ```
+#[allow(clippy::panic)]
 pub fn safe_panic(message: &str) -> ! {
     // First purge all sensitive data
     // In tests, if purge panics, we want to ensure the original message is still visible
@@ -405,6 +408,7 @@ pub fn safe_panic(message: &str) -> ! {
 /// // Clean up and exit
 /// safe_exit(0);
 /// ```
+#[allow(clippy::exit)]
 pub fn safe_exit(code: i32) -> ! {
     // LOCK ORDERING: Following our established lock ordering strategy:
     // 1. COFFER must always be acquired before BUFFERS

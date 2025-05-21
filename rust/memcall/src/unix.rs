@@ -1,19 +1,29 @@
 use crate::error::MemcallError;
 use crate::types::{MemoryProtection, RlimitResource};
-use libc;
 use once_cell::sync::Lazy;
 use std::ptr;
 
-static PAGE_SIZE: Lazy<usize> = Lazy::new(|| unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize });
+static PAGE_SIZE: Lazy<usize> = Lazy::new(|| unsafe {
+    // Convert from libc::c_long to usize, which is necessary but not trivial
+    let page_size = libc::sysconf(libc::_SC_PAGESIZE);
+    // This conversion is safe because page sizes are always positive and much smaller than usize::MAX
+    page_size.try_into().unwrap_or(4096) // Default to 4096 if conversion fails
+});
 
 #[inline]
 fn as_mut_ptr(memory: &mut [u8]) -> *mut libc::c_void {
-    memory.as_mut_ptr() as *mut libc::c_void
+    // This cast is required for FFI compatibility with libc
+    memory.as_mut_ptr().cast::<libc::c_void>()
 }
 
 #[inline]
 fn as_len(memory: &[u8]) -> libc::size_t {
-    memory.len() as libc::size_t
+    // This conversion is necessary for FFI compatibility
+    // size_t is always large enough to hold any slice length on supported platforms
+    #[allow(trivial_numeric_casts)]
+    {
+        memory.len() as libc::size_t
+    }
 }
 
 /// Allocates a new memory region with the given size and accessibility.
@@ -39,7 +49,10 @@ pub fn alloc(size: usize) -> Result<&'static mut [u8], MemcallError> {
     }
 
     // Create a slice from the allocated memory
-    let memory = unsafe { std::slice::from_raw_parts_mut(ptr as *mut u8, size) };
+    // This cast is necessary because mmap returns void* which must be cast to u8*
+    // for Rust's slice types. This is safe because we're just reinterpreting the
+    // raw memory pointer for our specific use case.
+    let memory = unsafe { std::slice::from_raw_parts_mut(ptr.cast::<u8>(), size) };
 
     // Wipe it just in case there is some remnant data - exactly as Go does
     for byte in memory.iter_mut() {
@@ -57,9 +70,7 @@ pub fn free(ptr: &mut [u8]) -> Result<(), MemcallError> {
     }
 
     // Make the memory region readable and writable - exactly as Go does
-    if let Err(e) = protect(ptr, MemoryProtection::ReadWrite) {
-        return Err(e);
-    }
+    protect(ptr, MemoryProtection::ReadWrite)?;
 
     // Wipe the memory for security - exactly as Go does
     for byte in ptr.iter_mut() {
@@ -91,7 +102,8 @@ pub fn protect(ptr: &mut [u8], protection: MemoryProtection) -> Result<(), Memca
     }
 
     // Mimic Go's protection flag handling exactly, including checks for invalid flags
-    let prot = match protection as u32 {
+    // Use the numeric value from the enum safely
+    let prot = match u32::from(protection) {
         1 => libc::PROT_NONE,                    // NoAccess
         2 => libc::PROT_READ,                    // ReadOnly
         6 => libc::PROT_READ | libc::PROT_WRITE, // ReadWrite

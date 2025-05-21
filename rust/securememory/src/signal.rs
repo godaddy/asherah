@@ -169,7 +169,8 @@ fn signal_handler_thread(rx: Receiver<SignalEvent>) {
                 // Perform cleanup
                 purge();
 
-                // Exit the process
+                // Exit the process - this is an appropriate use of exit in a signal handler
+                #[allow(clippy::exit)]
                 process::exit(1);
             }
         }
@@ -221,61 +222,69 @@ use crate::secret::Secret; // Added Secret trait
 
 /// This function is called when a signal is received to ensure all secure
 /// memory is wiped before the program terminates.
+#[allow(clippy::print_stderr)]
 fn purge() {
+    // We use eprintln here because this may run during process termination
+    // when the logger might not be available anymore
     eprintln!("Purging all secure memory before termination...");
     log::info!("Purging all secure memory due to signal.");
 
     if let Some(registry_mutex) = SECRET_REGISTRY.get() {
-        if let Ok(mut registry_guard) = registry_mutex.lock() {
-            log::debug!(
-                "Accessed secret registry. Found {} weak references.",
-                registry_guard.len()
-            );
-            // Iterate and attempt to close live secrets.
-            // We use retain to remove weak pointers that no longer point to live data.
-            registry_guard.retain(|weak_secret_internal| {
-                if let Some(strong_secret_internal) = weak_secret_internal.upgrade() {
-                    // The secret is still alive, attempt to close it.
-                    // Create a temporary ProtectedMemorySecret to call its close method.
-                    let temp_secret = ProtectedMemorySecret {
-                        inner: strong_secret_internal,
-                    };
+        match registry_mutex.lock() {
+            Ok(mut registry_guard) => {
+                log::debug!(
+                    "Accessed secret registry. Found {} weak references.",
+                    registry_guard.len()
+                );
+                // Iterate and attempt to close live secrets.
+                // We use retain to remove weak pointers that no longer point to live data.
+                registry_guard.retain(|weak_secret_internal| {
+                    if let Some(strong_secret_internal) = weak_secret_internal.upgrade() {
+                        // The secret is still alive, attempt to close it.
+                        // Create a temporary ProtectedMemorySecret to call its close method.
+                        let temp_secret = ProtectedMemorySecret {
+                            inner: strong_secret_internal,
+                        };
 
-                    // Call close() which maps to close_impl().
-                    // close_impl is idempotent.
-                    if let Err(e) = temp_secret.close() {
-                        log::error!("Error closing a secret during purge: {:?}", e);
-                    } else {
-                        log::trace!("Successfully closed a secret during purge.");
+                        // Call close() which maps to close_impl().
+                        // close_impl is idempotent.
+                        if let Err(e) = temp_secret.close() {
+                            log::error!("Error closing a secret during purge: {:?}", e);
+                        } else {
+                            log::trace!("Successfully closed a secret during purge.");
+                        }
+                        // Explicitly drop the temporary secret wrapper. The Arc<SecretInternal>
+                        // it holds might still be pointed to by an application elsewhere,
+                        // or this might be the last reference if only the registry held it.
+                        drop(temp_secret);
+
+                        // Keep the weak reference in the registry if it's still somehow alive
+                        // (e.g. close failed, or another Arc exists).
+                        // If close was successful and this was the last strong ref via upgrade,
+                        // weak_secret_internal.strong_count() would be 0 after this.
+                        // Retain will keep it if strong_count > 0 after our operations.
+                        return weak_secret_internal.strong_count() > 0;
                     }
-                    // Explicitly drop the temporary secret wrapper. The Arc<SecretInternal>
-                    // it holds might still be pointed to by an application elsewhere,
-                    // or this might be the last reference if only the registry held it.
-                    drop(temp_secret);
-
-                    // Keep the weak reference in the registry if it's still somehow alive
-                    // (e.g. close failed, or another Arc exists).
-                    // If close was successful and this was the last strong ref via upgrade,
-                    // weak_secret_internal.strong_count() would be 0 after this.
-                    // Retain will keep it if strong_count > 0 after our operations.
-                    return weak_secret_internal.strong_count() > 0;
-                }
-                // The Arc<SecretInternal> has been dropped elsewhere, remove weak ptr.
-                log::trace!("Pruned a dead weak reference from secret registry during purge.");
-                false
-            });
-            log::debug!(
-                "Secret registry pruned. {} weak references remaining.",
-                registry_guard.len()
-            );
-        } else {
-            log::error!(
-                "Failed to lock SECRET_REGISTRY during purge. Secrets may not be cleaned up."
-            );
+                    // The Arc<SecretInternal> has been dropped elsewhere, remove weak ptr.
+                    log::trace!("Pruned a dead weak reference from secret registry during purge.");
+                    false
+                });
+                log::debug!(
+                    "Secret registry pruned. {} weak references remaining.",
+                    registry_guard.len()
+                );
+            }
+            Err(_) => {
+                log::error!(
+                    "Failed to lock SECRET_REGISTRY during purge. Secrets may not be cleaned up."
+                );
+            }
         }
     } else {
         log::info!("SECRET_REGISTRY not initialized. No secrets to purge.");
     }
+    // We use eprintln here because this may run during process termination
+    // when the logger might not be available anymore
     eprintln!("Purge attempt complete.");
 }
 
@@ -396,11 +405,13 @@ where
 /// # Arguments
 ///
 /// * `exit_code` - The exit code to use when terminating the process
+#[allow(clippy::exit)]
 pub fn exit(exit_code: i32) -> ! {
     // Purge all secure memory
     purge();
 
-    // Exit the process
+    // Exit the process - this is intentional as we want to cleanly terminate
+    // after purging all secure memory
     process::exit(exit_code)
 }
 
@@ -412,10 +423,13 @@ pub fn exit(exit_code: i32) -> ! {
 /// # Arguments
 ///
 /// * `msg` - The panic message
+#[allow(clippy::panic)]
 pub fn panic(msg: String) -> ! {
     // Purge all secure memory
     purge();
 
-    // Panic with the provided message
+    // This is an intentional panic that happens after we've safely cleaned up
+    // all secure memory. This is used as part of a graceful shutdown process
+    // in exceptional cases.
     std::panic::panic_any(msg)
 }

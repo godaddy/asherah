@@ -1,6 +1,5 @@
 use securememory::protected_memory::DefaultSecretFactory;
 use securememory::secret::{Secret, SecretExtensions, SecretFactory};
-use std::io::Read;
 
 // This example explicitly does not use signals to avoid potential issues
 

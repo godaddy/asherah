@@ -80,7 +80,9 @@ impl DynamoDbClient for StandardDynamoDbClient {
         }
 
         // Parse the result
-        let item = result.item().expect("Item cannot be None after checking it exists");
+        let item = result
+            .item()
+            .expect("Item cannot be None after checking it exists");
 
         // Extract key record attribute
         let key_record_json = item
