@@ -51,7 +51,7 @@ impl CachedCryptoKey {
 }
 
 /// Entry in the key cache
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CacheEntry {
     /// Time when this entry was loaded
     loaded_at: DateTime<Utc>,
