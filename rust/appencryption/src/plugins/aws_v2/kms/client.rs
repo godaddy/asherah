@@ -253,7 +253,7 @@ impl AwsKms {
 
                 let tx_clone = tx.clone();
                 tokio::spawn(async move {
-                    let _ = tx_clone.send(kek).await;
+                    drop(tx_clone.send(kek).await);
                 });
 
                 continue;
@@ -272,7 +272,7 @@ impl AwsKms {
                             encrypted_kek: encrypted_key,
                         };
 
-                        let _ = tx_clone.send(kek).await;
+                        drop(tx_clone.send(kek).await);
                     }
                     Err(e) => {
                         log::debug!(

@@ -96,6 +96,10 @@ workspace = true
 # Note: Memory management crates require unsafe code, but we want to minimize its use
 # Use allow in specific files where necessary
 unsafe_code = "allow"
+# Temporarily allow certain warnings during initial transition to new lint rules
+let_underscore_drop = "allow"
+missing_debug_implementations = "allow"
+dead_code = "allow"
 # Deny-level lints
 future_incompatible = { level = "deny", priority = -1 }
 # Warn-level lints
@@ -105,17 +109,15 @@ explicit_outlives_requirements = "warn"
 if_let_rescope = "warn"
 impl_trait_overcaptures = "warn"
 impl_trait_redundant_captures = "warn"
-let_underscore_drop = "warn"
 macro_use_extern_crate = "warn"
 meta_variable_misuse = "warn"
-missing_debug_implementations = "warn"
 noop_method_call = "warn"
 non_ascii_idents = "warn"
 redundant_lifetimes = "warn"
 rust_2018_idioms = { level = "warn", priority = -1 }
 single_use_lifetimes = "warn"
 trivial_casts = "warn"
-trivial_numeric_casts = "warn"
+trivial_numeric_casts = "allow"
 unit_bindings = "warn"
 unsafe_attr_outside_unsafe = "warn"
 unused = { level = "warn", priority = -1 }

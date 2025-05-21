@@ -211,7 +211,7 @@ impl MultiRegionClient {
 
     /// Get a list of healthy clients, preferring the primary
     fn healthy_clients(&self) -> Vec<Arc<dyn DynamoDbClient>> {
-        let health = self.health.read().unwrap();
+        let health = self.health.read().expect("Failed to read health lock");
 
         let mut clients = Vec::new();
 
@@ -240,7 +240,7 @@ impl MultiRegionClient {
 
     /// Update client health status
     async fn update_health(&self, client: &Arc<dyn DynamoDbClient>, healthy: bool) {
-        let mut health = self.health.write().unwrap();
+        let mut health = self.health.write().expect("Failed to acquire write lock on health");
 
         if let Some(client_health) = health.get_mut(client.region()) {
             client_health.update(healthy);
@@ -249,7 +249,7 @@ impl MultiRegionClient {
 
     /// Check if a client needs a health recheck
     fn needs_recheck(&self, client: &Arc<dyn DynamoDbClient>) -> bool {
-        let health = self.health.read().unwrap();
+        let health = self.health.read().expect("Failed to read health lock");
 
         health
             .get(client.region())
@@ -261,7 +261,7 @@ impl MultiRegionClient {
     async fn check_health(&self, client: &Arc<dyn DynamoDbClient>) -> bool {
         // Only check if enough time has passed since last check
         if !self.needs_recheck(client) {
-            let health = self.health.read().unwrap();
+            let health = self.health.read().expect("Failed to read health lock");
             return health
                 .get(client.region())
                 .map(|h| h.is_healthy())

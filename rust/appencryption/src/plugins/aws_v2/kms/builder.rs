@@ -120,7 +120,8 @@ impl AwsKmsBuilder {
     /// ```
     pub fn new(crypto: Arc<dyn Aead>, arn_map: HashMap<String, String>) -> Self {
         if arn_map.is_empty() {
-            panic!("arnMap must contain at least one entry");
+            log::error!("arnMap must contain at least one entry");
+            panic!("ARN map is empty, which is not allowed");
         }
 
         Self {
@@ -360,14 +361,14 @@ impl AwsKmsBuilder {
         client: Arc<dyn AwsKmsClient>,
     ) -> Self {
         let region_str = region.into();
-        
+
         // Create a factory that will return the provided client for the specified region
         let factory = move |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
             let config_region = config
                 .region()
                 .map(|r| r.as_ref().to_string())
                 .unwrap_or_else(|| "unknown".to_string());
-            
+
             if config_region == region_str {
                 client.clone()
             } else {
@@ -375,7 +376,7 @@ impl AwsKmsBuilder {
                 default_kms_factory(config)
             }
         };
-        
+
         self.factory = Some(Arc::new(factory));
         self
     }
@@ -429,7 +430,7 @@ impl AwsKmsBuilder {
 
         // Load SDK configuration
         let sdk_config = if self.using_custom_config {
-            self.sdk_config.take().unwrap()
+            self.sdk_config.take().expect("SDK config must be set when using_custom_config is true")
         } else {
             let mut config_loader = aws_config::from_env();
 
@@ -455,7 +456,7 @@ impl AwsKmsBuilder {
         let preferred_region = self
             .preferred_region
             .clone()
-            .unwrap_or_else(|| self.arn_map.keys().next().unwrap().clone());
+            .unwrap_or_else(|| self.arn_map.keys().next().expect("ARN map must contain at least one key").clone());
 
         // Create the regional clients
         let mut regional_clients = Vec::new();
