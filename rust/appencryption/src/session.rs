@@ -160,7 +160,7 @@ impl SessionFactory {
 
                 // Create encryption
                 let encryption = Arc::new(
-                    crate::envelope::encryption::EnvelopeEncryption::builder()
+                    EnvelopeEncryption::builder()
                         .with_partition(partition)
                         .with_metastore(factory_metastore.clone())
                         .with_kms(factory_kms.clone())
@@ -520,7 +520,7 @@ impl SessionFactoryBuilder {
             // Initialize session cache
             if policy.cache_sessions {
                 // Convert session cache policy string to enum
-                let cache_policy =
+                let _cache_policy =
                     crate::key::cache::parse_cache_policy(&policy.session_cache_eviction_policy)
                         .unwrap_or(crate::cache::CachePolicy::LRU); // Default to LRU if unknown
                 let max_size = policy.session_cache_max_size;
@@ -576,7 +576,7 @@ impl SessionFactoryBuilder {
 
                     // Create encryption
                     let encryption = Arc::new(
-                        crate::envelope::encryption::EnvelopeEncryption::builder()
+                        EnvelopeEncryption::builder()
                             .with_partition(partition)
                             .with_metastore(factory_metastore.clone())
                             .with_kms(factory_kms.clone())
@@ -699,7 +699,7 @@ impl Session for EnvelopeSession {
         let drr = loader
             .load(key)
             .await?
-            .ok_or_else(|| crate::error::Error::Internal("Data not found for key".to_string()))?;
+            .ok_or_else(|| Error::Internal("Data not found for key".to_string()))?;
 
         // Decrypt the data
         self.decrypt(&drr).await

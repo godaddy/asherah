@@ -329,6 +329,57 @@ impl AwsKmsBuilder {
         self
     }
 
+    /// Sets a specific KMS client for a region
+    ///
+    /// This is primarily used for testing to inject mock KMS clients.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    /// use std::sync::Arc;
+    /// use appencryption::crypto::Aes256GcmAead;
+    /// use appencryption::plugins::aws_v2::kms::{AwsKmsBuilder, AwsKmsClient};
+    ///
+    /// // Create a mock KMS client
+    /// let mock_client = // ... create a mock implementation of AwsKmsClient
+    ///     todo!("Create mock KMS client");
+    ///
+    /// // Create builder with the mock client
+    /// let mut arn_map = HashMap::new();
+    /// arn_map.insert("us-west-2".to_string(), "arn:aws:kms:us-west-2:123456789012:key/abcd-1234".to_string());
+    ///
+    /// let crypto = Arc::new(Aes256GcmAead::new());
+    ///
+    /// let builder = AwsKmsBuilder::new(crypto, arn_map)
+    ///     .with_kms_client("us-west-2", Arc::new(mock_client));
+    /// ```
+    pub fn with_kms_client(
+        mut self,
+        region: impl Into<String>,
+        client: Arc<dyn AwsKmsClient>,
+    ) -> Self {
+        let region_str = region.into();
+        
+        // Create a factory that will return the provided client for the specified region
+        let factory = move |config: SdkConfig| -> Arc<dyn AwsKmsClient> {
+            let config_region = config
+                .region()
+                .map(|r| r.as_ref().to_string())
+                .unwrap_or_else(|| "unknown".to_string());
+            
+            if config_region == region_str {
+                client.clone()
+            } else {
+                // For other regions, use the default factory
+                default_kms_factory(config)
+            }
+        };
+        
+        self.factory = Some(Arc::new(factory));
+        self
+    }
+
     /// Builds the AWS KMS implementation
     ///
     /// This asynchronously builds the AWS KMS implementation, creating the necessary

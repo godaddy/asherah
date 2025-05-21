@@ -156,12 +156,12 @@ impl ClientHealth {
 }
 
 /// Multi-region DynamoDB client
-struct MultiRegionClient {
+pub struct MultiRegionClient {
     /// Primary region client
-    primary: Arc<dyn DynamoDbClient>,
+    pub primary: Arc<dyn DynamoDbClient>,
 
     /// Replica region clients
-    replicas: Vec<Arc<dyn DynamoDbClient>>,
+    pub replicas: Vec<Arc<dyn DynamoDbClient>>,
 
     /// Client health status
     health: RwLock<HashMap<String, ClientHealth>>,
@@ -175,7 +175,7 @@ struct MultiRegionClient {
 
 impl MultiRegionClient {
     /// Create a new multi-region client
-    fn new(
+    pub fn new(
         primary: Arc<dyn DynamoDbClient>,
         replicas: Vec<Arc<dyn DynamoDbClient>>,
         recheck_interval: Duration,
@@ -208,7 +208,7 @@ impl MultiRegionClient {
     }
 
     /// Get a list of healthy clients, preferring the primary
-    fn healthy_clients(&self) -> Vec<Arc<dyn DynamoDbClient>> {
+    pub fn healthy_clients(&self) -> Vec<Arc<dyn DynamoDbClient>> {
         let health = self.health.read().unwrap();
 
         let mut clients = Vec::new();
@@ -330,7 +330,7 @@ impl MultiRegionClient {
     }
 
     /// Execute an async operation with failover
-    async fn execute_async<F, Fut, R>(&self, operation: F) -> Result<R>
+    pub async fn execute_async<F, Fut, R>(&self, operation: F) -> Result<R>
     where
         F: Fn(&Arc<dyn DynamoDbClient>) -> Fut + Send + Sync,
         Fut: std::future::Future<Output = Result<R>> + Send,

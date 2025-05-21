@@ -12,7 +12,7 @@ pub trait Logger: Send + Sync {
     fn debug(&self, message: &str);
 
     /// Log a debug message with formatting
-    fn debugf(&self, fmt: fmt::Arguments);
+    fn debugf(&self, fmt: fmt::Arguments<'_>);
 }
 
 /// A no-op logger that does nothing
@@ -38,7 +38,7 @@ impl NoopLogger {
 
 impl Logger for NoopLogger {
     fn debug(&self, _message: &str) {}
-    fn debugf(&self, _fmt: fmt::Arguments) {}
+    fn debugf(&self, _fmt: fmt::Arguments<'_>) {}
 }
 
 // Global logger (default to noop)
@@ -101,7 +101,7 @@ impl Logger for StdoutLogger {
         println!("[DEBUG] {}", message);
     }
 
-    fn debugf(&self, fmt: fmt::Arguments) {
+    fn debugf(&self, fmt: fmt::Arguments<'_>) {
         println!("[DEBUG] {}", fmt);
     }
 }

@@ -6,6 +6,9 @@
 mod builder;
 mod client;
 
+#[cfg(test)]
+mod tests;
+
 pub use builder::DynamoDbClientBuilder;
 pub use client::{
     DynamoDbClient, DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbKeyMeta, DynamoDbMetastore,

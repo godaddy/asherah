@@ -67,7 +67,7 @@ impl SharedEncryption {
         }
 
         // Close the underlying encryption
-        let _ = futures::executor::block_on(self.inner.close());
+        drop(futures::executor::block_on(self.inner.close()));
     }
 }
 

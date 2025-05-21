@@ -12,6 +12,7 @@ mod tests {
     use tokio_test::block_on;
 
     // A mock DynamoDB client for testing
+    #[derive(Debug)]
     struct MockDynamoDbClient {
         region: String,
         healthy: bool,

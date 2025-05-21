@@ -51,3 +51,10 @@ pub use crate::plugins::aws_v2::metastore::*;
 #[cfg(feature = "aws-v1-dynamodb")]
 #[cfg(not(feature = "aws-v2-dynamodb"))]
 pub use crate::plugins::aws_v1::metastore::*;
+
+// Include the DynamoDB implementation for testing
+#[cfg(test)]
+mod dynamodb;
+
+#[cfg(test)]
+mod dynamodb_impl_test;

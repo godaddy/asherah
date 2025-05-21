@@ -89,21 +89,21 @@ impl AdoMetastore {
 
 #[async_trait]
 impl Metastore for AdoMetastore {
-    async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
+    async fn load(&self, _id: &str, _created: i64) -> Result<Option<EnvelopeKeyRecord>> {
         // In a real implementation, this would execute a SQL query like:
         // SELECT key_record FROM encryption_key WHERE id = @P1 AND created = @P2
 
         Err(Error::NotImplemented("ADO.NET metastore is a placeholder implementation - full implementation will be available in a future release".to_string()))
     }
 
-    async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
+    async fn load_latest(&self, _id: &str) -> Result<Option<EnvelopeKeyRecord>> {
         // In a real implementation, this would execute a SQL query like:
         // SELECT key_record FROM encryption_key WHERE id = @P1 ORDER BY created DESC LIMIT 1
 
         Err(Error::NotImplemented("ADO.NET metastore is a placeholder implementation - full implementation will be available in a future release".to_string()))
     }
 
-    async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
+    async fn store(&self, _id: &str, _created: i64, _envelope: &EnvelopeKeyRecord) -> Result<bool> {
         // In a real implementation, this would execute a SQL query like:
         // INSERT INTO encryption_key (id, created, key_record) VALUES (@P1, @P2, @P3)
         // ON CONFLICT DO NOTHING

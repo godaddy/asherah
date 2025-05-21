@@ -42,7 +42,7 @@ impl SqlMetastoreDbType {
                 // Convert ? to $1, $2, etc.
                 let re = Regex::new(r"\?").unwrap();
                 let mut counter = 0;
-                re.replace_all(sql, |_: &regex::Captures| {
+                re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
                     format!("${}", counter)
                 })
@@ -52,7 +52,7 @@ impl SqlMetastoreDbType {
                 // Convert ? to :1, :2, etc.
                 let re = Regex::new(r"\?").unwrap();
                 let mut counter = 0;
-                re.replace_all(sql, |_: &regex::Captures| {
+                re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
                     format!(":{}", counter)
                 })
@@ -62,7 +62,7 @@ impl SqlMetastoreDbType {
                 // Convert ? to @p1, @p2, etc.
                 let re = Regex::new(r"\?").unwrap();
                 let mut counter = 0;
-                re.replace_all(sql, |_: &regex::Captures| {
+                re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
                     format!("@p{}", counter)
                 })

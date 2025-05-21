@@ -78,7 +78,7 @@ where
     /// Compute hash for a key
     fn hash_key(&self, key: &K) -> [usize; 4] {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        std::hash::Hash::hash(key, &mut hasher);
+        Hash::hash(key, &mut hasher);
         let h = hasher.finish();
 
         // Use 4 different hash functions derived from h
