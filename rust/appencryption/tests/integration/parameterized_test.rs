@@ -62,7 +62,7 @@ async fn test_different_policy_configurations() {
         let mut policy = CryptoPolicy::new();
         if config.name == "short_expiry" {
             policy.expire_key_after =
-                std::time::Duration::from_secs(config.key_expiry_seconds as u64);
+                Duration::from_secs(config.key_expiry_seconds as u64);
         }
 
         let app_config = Config {

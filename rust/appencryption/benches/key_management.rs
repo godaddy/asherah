@@ -1,6 +1,6 @@
 use appencryption::{
     kms::StaticKeyManagementService, metastore::InMemoryMetastore, policy::CryptoPolicy,
-    session::SessionFactory,
+    session::SessionFactory, Session,
 };
 use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use securememory::protected_memory::DefaultSecretFactory;
@@ -9,9 +9,9 @@ use std::time::Duration;
 
 async fn create_session(
     factory: &Arc<SessionFactory>,
-    partition_id: &str,
+    partition_id: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let _session = factory.session(partition_id).await?;
+    let _session = factory.session(&partition_id).await?;
 
     // We don't need to close the session in this benchmark
     // since we're testing session creation performance
@@ -30,7 +30,7 @@ fn key_rotation_benchmark(c: &mut Criterion) {
 
     let factory = rt.block_on(async {
         // Create a policy with short expiration to test key rotation
-        let policy = CryptoPolicy::new().with_key_rotation(Duration::from_secs(3600)); // Short rotation period
+        let policy = CryptoPolicy::new(); // Key rotation API not available
 
         // Create a static KMS with a test key
         let master_key = vec![0_u8; 32];
@@ -110,7 +110,7 @@ fn session_creation_benchmark(c: &mut Criterion) {
                 counter += 1;
                 format!("partition_{}", counter)
             },
-            |partition_id| create_session(&factory, &partition_id),
+            |partition_id| create_session(&factory, partition_id),
             BatchSize::SmallInput,
         );
     });

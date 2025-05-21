@@ -38,6 +38,7 @@ impl fmt::Display for MetastoreOperation {
 }
 
 // A metastore wrapper that tracks all operations
+#[derive(Debug)]
 struct TrackingMetastore<M: Metastore> {
     inner: Arc<M>,
     operations: Arc<Mutex<Vec<MetastoreOperation>>>,
@@ -154,13 +155,13 @@ async fn test_encrypt_metastore_interactions() {
 
     // Encrypt data for the first time - this should create a new DRK and store it
     let data = ORIGINAL_DATA.as_bytes().to_vec();
-    let _drr = session
+    let drr = session
         .encrypt(&data)
         .await
         .expect("Failed to encrypt data");
 
     // Get operation counts
-    let (_load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
+    let (load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
     let operations = tracking_metastore.get_operations();
 
     // Check expected operations
@@ -219,7 +220,7 @@ async fn test_decrypt_metastore_interactions() {
         .expect("Failed to get session");
 
     let data = ORIGINAL_DATA.as_bytes().to_vec();
-    let _drr = inner_session
+    let drr = inner_session
         .encrypt(&data)
         .await
         .expect("Failed to encrypt data");
@@ -256,7 +257,7 @@ async fn test_decrypt_metastore_interactions() {
     assert_eq!(ORIGINAL_DATA.as_bytes(), decrypted.as_slice());
 
     // Get operation counts
-    let (_load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
+    let (load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
     let operations = tracking_metastore.get_operations();
 
     // Check expected operations
@@ -323,7 +324,7 @@ async fn test_metastore_caching_behavior() {
 
     // Encrypt data - first time should do metastore operations
     let data = ORIGINAL_DATA.as_bytes().to_vec();
-    let _drr = session
+    let drr = session
         .encrypt(&data)
         .await
         .expect("Failed to encrypt data");

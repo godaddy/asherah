@@ -17,6 +17,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 // A metastore wrapper that counts operations
+#[derive(Debug)]
 struct CountingMetastore<M: Metastore> {
     inner: Arc<M>,
     load_count: AtomicUsize,
@@ -180,7 +181,7 @@ async fn test_cache_expiration_behavior() {
 
     // Create dependencies with a very short expiry
     let mut policy = CryptoPolicy::new();
-    policy.expire_key_after = std::time::Duration::from_secs(2);
+    policy.expire_key_after = Duration::from_secs(2);
 
     let config = Config {
         product: PRODUCT.to_string(),
