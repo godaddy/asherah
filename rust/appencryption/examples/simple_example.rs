@@ -6,6 +6,7 @@ use securememory::protected_memory::DefaultSecretFactory;
 use std::sync::Arc;
 
 #[tokio::main]
+#[allow(clippy::print_stdout)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up components
     let policy = CryptoPolicy::new();

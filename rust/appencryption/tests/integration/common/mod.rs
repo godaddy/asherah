@@ -1,9 +1,6 @@
 // Module for common test utilities and fixtures used across integration tests
 
-use appencryption::{
-    crypto::Aes256GcmAead, envelope::EnvelopeKeyRecord, kms::StaticKeyManagementService,
-    policy::CryptoPolicy,
-};
+use appencryption::{crypto::Aes256GcmAead, kms::StaticKeyManagementService, policy::CryptoPolicy};
 use std::sync::Arc;
 
 // Constants for tests

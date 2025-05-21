@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced SessionFactory Example");
 
     // Create KMS with a static key (only for demonstration)
-    let master_key = vec![0u8; 32];
+    let master_key = vec![0_u8; 32];
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
 
     // Create in-memory metastore

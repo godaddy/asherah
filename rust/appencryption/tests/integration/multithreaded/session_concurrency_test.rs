@@ -21,7 +21,7 @@ async fn test_concurrent_encrypt_decrypt_with_same_session() {
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 
@@ -100,7 +100,7 @@ async fn test_concurrent_encrypt_decrypt_with_multiple_sessions() {
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 
@@ -175,7 +175,7 @@ async fn test_concurrent_factory_operations() {
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 

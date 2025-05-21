@@ -25,7 +25,7 @@ async fn test_session_factory_with_dynamodb_metastore_encrypt_decrypt() {
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Get metastore with suffix disabled
@@ -102,7 +102,7 @@ async fn test_session_factory_with_dynamodb_metastore_encrypt_decrypt_region_suf
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // First, encrypt using a default, non-suffixed DynamoDB metastore

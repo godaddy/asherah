@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==================================");
 
     // Create dependencies
-    let master_key = vec![0u8; 32]; // In a real app, use a secure key
+    let master_key = vec![0_u8; 32]; // In a real app, use a secure key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(InMemoryMetastore::new());
     let secret_factory = Arc::new(DefaultSecretFactory::new());

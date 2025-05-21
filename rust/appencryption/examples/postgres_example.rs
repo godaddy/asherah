@@ -3,6 +3,7 @@ use appencryption::kms::StaticKeyManagementService;
 use appencryption::metastore::PostgresMetastore;
 use appencryption::policy::CryptoPolicy;
 use appencryption::session::SessionFactory;
+use appencryption::Session;
 use securememory::protected_memory::DefaultSecretFactory;
 #[cfg(feature = "postgres")]
 use sqlx::postgres::PgPoolOptions;
@@ -54,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_session_cache_duration(cache_max_age.to_std().unwrap())
         .with_session_cache();
 
-    let master_key = vec![0u8; 32]; // In production, use a real master key
+    let master_key = vec![0_u8; 32]; // In production, use a real master key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
 
     // Create PostgreSQL metastore

@@ -7,7 +7,7 @@
 //! This example shows the intended usage pattern for when full implementation
 //! is available in a future release.
 
-use appencryption::kms::static_kms::StaticKeyManagementService;
+use appencryption::kms::StaticKeyManagementService;
 use appencryption::metastore::AdoMetastore;
 use appencryption::policy::CryptoPolicy;
 use appencryption::session::{Session, SessionFactory};

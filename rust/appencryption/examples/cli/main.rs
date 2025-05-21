@@ -185,6 +185,7 @@ struct SimpleMetrics {
     metrics: Arc<Mutex<HashMap<String, f64>>>,
 }
 
+#[allow(dead_code)]
 impl SimpleMetrics {
     fn new() -> Self {
         Self {
@@ -192,6 +193,7 @@ impl SimpleMetrics {
         }
     }
 
+    #[allow(clippy::print_stdout)] // CLI tool needs output
     async fn display_metrics(&self) {
         let metrics = self.metrics.lock().await;
         println!("\n=== Metrics ===");
@@ -211,8 +213,10 @@ impl SimpleMetrics {
         metrics.insert(format!("{}_last", name), duration_ms);
         *metrics.entry(format!("{}_count", name)).or_insert(0.0) += 1.0;
         let key = format!("{}_avg", name);
-        let curr_avg = metrics.entry(key.clone()).or_insert(duration_ms).clone();
-        let count = *metrics.get(&format!("{}_count", name)).unwrap();
+        let curr_avg = *metrics.entry(key.clone()).or_insert(duration_ms);
+        let count = *metrics
+            .get(&format!("{}_count", name))
+            .expect("count metric should exist");
         metrics.insert(key, (curr_avg * (count - 1.0) + duration_ms) / count);
     }
 }
@@ -263,6 +267,7 @@ async fn decrypt_data<S: Session>(
     Ok(decrypted)
 }
 
+#[allow(clippy::print_stdout)] // CLI tool needs output
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -301,17 +306,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let create_date_precision = TimeDelta::minutes(1); // Default
 
     let policy = CryptoPolicy::new()
-        .with_expire_after(expire_after.to_std().unwrap())
+        .with_expire_after(expire_after.to_std().expect("expire_after should be valid"))
         .with_session_cache()
-        .with_session_cache_duration(cache_max_age.to_std().unwrap())
-        .with_create_date_precision(create_date_precision.to_std().unwrap());
+        .with_session_cache_duration(
+            cache_max_age
+                .to_std()
+                .expect("cache_max_age should be valid"),
+        )
+        .with_create_date_precision(
+            create_date_precision
+                .to_std()
+                .expect("create_date_precision should be valid"),
+        );
 
     // Create the KMS
     println!("Setting up KMS...");
     let kms: Arc<dyn appencryption::KeyManagementService> = match cli.kms {
         KmsType::Static => {
             println!("Using static KMS");
-            let key = vec![0u8; 32]; // Static key for testing only
+            let key = vec![0_u8; 32]; // Static key for testing only
             Arc::new(StaticKeyManagementService::new(key))
         }
         KmsType::Aws => {
@@ -324,9 +337,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             {
                 use appencryption::crypto::Aes256GcmAead;
                 use appencryption::plugins::aws_v2::kms::AwsKmsBuilder;
-                let crypto = Arc::new(Aes256GcmAead::default());
+                let crypto = Arc::new(Aes256GcmAead::new());
 
-                let mut arn_map = std::collections::HashMap::new();
+                let mut arn_map = HashMap::new();
                 arn_map.insert(region.clone(), key_id.clone());
 
                 let builder = AwsKmsBuilder::new(crypto, arn_map).with_preferred_region(&region);
@@ -520,7 +533,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Starting session with partition ID: {}", partition_id);
                 }
 
-                let session = factory.session(&partition_id).await.unwrap();
+                let session = factory
+                    .session(&partition_id)
+                    .await
+                    .expect("session creation should succeed");
 
                 let start_time = Instant::now();
                 let mut run_count = 0;
@@ -535,12 +551,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if results {
                             println!(
                                 "Before encryption: {}",
-                                serde_json::to_string(&contact).unwrap()
+                                serde_json::to_string(&contact).expect("contact should serialize")
                             );
                         }
 
                         let encrypt_start = Instant::now();
-                        let encrypted = encrypt_contact(&session, &contact).await.unwrap();
+                        let encrypted = encrypt_contact(&session, &contact)
+                            .await
+                            .expect("encryption should succeed");
                         let encrypt_duration = encrypt_start.elapsed();
 
                         if results {
@@ -554,14 +572,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // Decrypt phase
                     for record in &encrypted_records {
                         let decrypt_start = Instant::now();
-                        let decrypted = decrypt_data(&session, record).await.unwrap();
+                        let decrypted = decrypt_data(&session, record)
+                            .await
+                            .expect("decryption should succeed");
                         let decrypt_duration = decrypt_start.elapsed();
 
                         if results {
-                            let contact: Contact = serde_json::from_slice(&decrypted).unwrap();
+                            let contact: Contact = serde_json::from_slice(&decrypted)
+                                .expect("contact should deserialize");
                             println!(
                                 "After decryption: {}",
-                                serde_json::to_string(&contact).unwrap()
+                                serde_json::to_string(&contact).expect("contact should serialize")
                             );
                         }
 
@@ -579,7 +600,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                session.close().await.unwrap();
+                session.close().await.expect("session close should succeed");
 
                 if verbose {
                     println!("Session completed. Ran {} times", run_count);
@@ -615,8 +636,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !encrypt_times.is_empty() {
         let encrypt_total: std::time::Duration = encrypt_times.iter().copied().sum();
         let encrypt_avg = encrypt_total / encrypt_times.len() as u32;
-        let encrypt_min = encrypt_times.iter().min().unwrap();
-        let encrypt_max = encrypt_times.iter().max().unwrap();
+        let encrypt_min = encrypt_times
+            .iter()
+            .min()
+            .expect("min encrypt time should exist");
+        let encrypt_max = encrypt_times
+            .iter()
+            .max()
+            .expect("max encrypt time should exist");
 
         println!("\n=== Encryption ===");
         println!("Count: {}", encrypt_times.len());
@@ -629,8 +656,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !decrypt_times.is_empty() {
         let decrypt_total: std::time::Duration = decrypt_times.iter().copied().sum();
         let decrypt_avg = decrypt_total / decrypt_times.len() as u32;
-        let decrypt_min = decrypt_times.iter().min().unwrap();
-        let decrypt_max = decrypt_times.iter().max().unwrap();
+        let decrypt_min = decrypt_times
+            .iter()
+            .min()
+            .expect("min decrypt time should exist");
+        let decrypt_max = decrypt_times
+            .iter()
+            .max()
+            .expect("max decrypt time should exist");
 
         println!("\n=== Decryption ===");
         println!("Count: {}", decrypt_times.len());

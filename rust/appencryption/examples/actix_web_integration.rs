@@ -5,6 +5,7 @@ use appencryption::{
     policy::CryptoPolicy,
     session::{Session, SessionFactory},
 };
+use base64::prelude::*;
 use securememory::protected_memory::DefaultSecretFactory;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -60,7 +61,7 @@ async fn encrypt(data: web::Json<EncryptRequest>, state: web::Data<AppState>) ->
             match session.encrypt(plaintext).await {
                 Ok(encrypted) => {
                     // Encode as base64 for JSON transport
-                    let encrypted_b64 = base64::encode(&encrypted.data);
+                    let encrypted_b64 = BASE64_STANDARD.encode(&encrypted.data);
                     HttpResponse::Ok().json(EncryptResponse {
                         encrypted_data: encrypted_b64,
                         key_id: encrypted.key.id.clone(),
@@ -79,7 +80,7 @@ async fn decrypt(data: web::Json<DecryptRequest>, state: web::Data<AppState>) ->
     let user_id = &data.user_id;
 
     // Decode base64 encrypted data
-    let encrypted_data = match base64::decode(&data.encrypted_data) {
+    let encrypted_data = match BASE64_STANDARD.decode(&data.encrypted_data) {
         Ok(data) => data,
         Err(e) => {
             return HttpResponse::BadRequest().body(format!("Invalid base64 data: {}", e));
@@ -147,7 +148,7 @@ async fn main() -> std::io::Result<()> {
         .with_session_cache_duration(cache_max_age.to_std().unwrap())
         .with_create_date_precision(create_date_precision.to_std().unwrap());
 
-    let master_key = vec![0u8; 32]; // In a real app, use a secure key
+    let master_key = vec![0_u8; 32]; // In a real app, use a secure key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(InMemoryMetastore::new());
     let secret_factory = Arc::new(DefaultSecretFactory::new());

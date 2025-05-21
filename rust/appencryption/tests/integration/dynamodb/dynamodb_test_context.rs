@@ -4,7 +4,8 @@ use appencryption::{
     crypto::Aes256GcmAead, envelope::EnvelopeKeyRecord, metastore::InMemoryMetastore, Aead,
     KeyMeta, Metastore,
 };
-use chrono::{DateTime, Utc};
+#[allow(unused_imports)]
+use chrono::Utc;
 use hex;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -56,7 +57,7 @@ impl DynamoDbTestContext {
 
         // Create a properly encrypted intermediate key
         let crypto = Aes256GcmAead::new();
-        let dummy_key = vec![0u8; 32]; // Dummy AES-256 key
+        let dummy_key = vec![0_u8; 32]; // Dummy AES-256 key
 
         // Use the same static key that's used in the test
         let static_key_hex = "0000000000000000000000000000000000000000000000000000000000000000";

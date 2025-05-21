@@ -10,7 +10,6 @@ use appencryption::{
 };
 use async_trait::async_trait;
 use securememory::protected_memory::DefaultSecretFactory;
-use std::collections::HashMap;
 use std::fmt;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
@@ -122,7 +121,7 @@ impl<M: Metastore> Metastore for TrackingMetastore<M> {
 async fn test_encrypt_metastore_interactions() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore
@@ -155,13 +154,13 @@ async fn test_encrypt_metastore_interactions() {
 
     // Encrypt data for the first time - this should create a new DRK and store it
     let data = ORIGINAL_DATA.as_bytes().to_vec();
-    let drr = session
+    let _drr = session
         .encrypt(&data)
         .await
         .expect("Failed to encrypt data");
 
     // Get operation counts
-    let (load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
+    let (_load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
     let operations = tracking_metastore.get_operations();
 
     // Check expected operations
@@ -195,7 +194,7 @@ async fn test_encrypt_metastore_interactions() {
 async fn test_decrypt_metastore_interactions() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore
@@ -220,7 +219,7 @@ async fn test_decrypt_metastore_interactions() {
         .expect("Failed to get session");
 
     let data = ORIGINAL_DATA.as_bytes().to_vec();
-    let drr = inner_session
+    let _drr = inner_session
         .encrypt(&data)
         .await
         .expect("Failed to encrypt data");
@@ -257,7 +256,7 @@ async fn test_decrypt_metastore_interactions() {
     assert_eq!(ORIGINAL_DATA.as_bytes(), decrypted.as_slice());
 
     // Get operation counts
-    let (load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
+    let (_load_count, load_latest_count, store_count) = tracking_metastore.get_operation_counts();
     let operations = tracking_metastore.get_operations();
 
     // Check expected operations
@@ -291,7 +290,7 @@ async fn test_decrypt_metastore_interactions() {
 async fn test_metastore_caching_behavior() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore

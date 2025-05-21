@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use securememory::protected_memory::DefaultSecretFactory;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
-    Arc, Mutex,
+    Arc,
 };
 use std::time::Duration;
 use tokio::time::sleep;
@@ -83,7 +83,7 @@ impl<M: Metastore> Metastore for CountingMetastore<M> {
 async fn test_lru_cache_behavior() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore and wrap it
@@ -120,7 +120,7 @@ async fn test_lru_cache_behavior() {
             .expect("Failed to encrypt data");
 
         // Should have metastore operations for a cache miss
-        let (load_count, load_latest_count, store_count) = metastore.get_counts();
+        let (_load_count, load_latest_count, store_count) = metastore.get_counts();
         assert!(
             load_latest_count > 0 || store_count > 0,
             "Should have metastore operations for partition {}",
@@ -144,7 +144,7 @@ async fn test_lru_cache_behavior() {
         .expect("Failed to encrypt data");
 
     // Should have metastore operations for a cache miss
-    let (load_count, load_latest_count, store_count) = metastore.get_counts();
+    let (_load_count, load_latest_count, store_count) = metastore.get_counts();
     assert!(
         load_latest_count > 0 || store_count > 0,
         "Should have metastore operations for partition 3"
@@ -165,7 +165,7 @@ async fn test_lru_cache_behavior() {
         .expect("Failed to encrypt data");
 
     // Should have metastore operations for a cache miss
-    let (load_count, load_latest_count, store_count) = metastore.get_counts();
+    let (_load_count, load_latest_count, store_count) = metastore.get_counts();
     assert!(
         load_latest_count > 0 || store_count > 0,
         "Should have metastore operations for partition 0 after eviction"
@@ -188,7 +188,7 @@ async fn test_cache_expiration_behavior() {
         policy: Arc::new(policy),
     };
 
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore and wrap it
@@ -223,7 +223,7 @@ async fn test_cache_expiration_behavior() {
         .expect("Failed to encrypt data");
 
     // Should have metastore operations for a cache miss
-    let (load_count1, load_latest_count1, store_count1) = metastore.get_counts();
+    let (_load_count1, load_latest_count1, store_count1) = metastore.get_counts();
     assert!(
         load_latest_count1 > 0 || store_count1 > 0,
         "Should have metastore operations for first encryption"
@@ -238,7 +238,7 @@ async fn test_cache_expiration_behavior() {
         .expect("Failed to encrypt data");
 
     // Should have fewer metastore operations for a cache hit
-    let (load_count2, load_latest_count2, store_count2) = metastore.get_counts();
+    let (_load_count2, load_latest_count2, store_count2) = metastore.get_counts();
     assert!(
         load_latest_count2 <= load_latest_count1 && store_count2 <= store_count1,
         "Should have fewer metastore operations for cache hit"
@@ -256,7 +256,7 @@ async fn test_cache_expiration_behavior() {
         .expect("Failed to encrypt data");
 
     // Should have metastore operations for a cache miss
-    let (load_count3, load_latest_count3, store_count3) = metastore.get_counts();
+    let (_load_count3, load_latest_count3, store_count3) = metastore.get_counts();
     assert!(
         load_latest_count3 > 0 || store_count3 > 0,
         "Should have metastore operations after cache expiry"
@@ -271,7 +271,7 @@ async fn test_tlfu_cache_behavior() {
 
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
 
     // Create a basic metastore and wrap it

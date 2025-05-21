@@ -1,4 +1,7 @@
-#![allow(clippy::empty_line_after_doc_comments, clippy::unseparated_literal_suffix)]
+#![allow(
+    clippy::empty_line_after_doc_comments,
+    clippy::unseparated_literal_suffix
+)]
 
 use appencryption::{
     kms::StaticKeyManagementService,
@@ -50,6 +53,7 @@ impl MetricsCollector {
         );
     }
 
+    #[allow(clippy::print_stdout)]
     fn print_metrics(&self) {
         let encrypt_count = self
             .encrypt_count
@@ -104,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create dependencies
     println!("Creating Asherah dependencies...");
-    let master_key = vec![0u8; 32]; // In a real app, use a secure key
+    let master_key = vec![0_u8; 32]; // In a real app, use a secure key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(InMemoryMetastore::new());
     let secret_factory = Arc::new(DefaultSecretFactory::new());

@@ -1,19 +1,14 @@
 // Expanded PostgreSQL integration tests
 
-use crate::integration::common::{
-    create_crypto, create_static_kms, create_test_config, ORIGINAL_DATA, PARTITION_ID, PRODUCT,
-    SERVICE,
-};
+// Unused common imports removed
 use appencryption::{
     envelope::EnvelopeKeyRecord,
     // Using InMemoryMetastore as a placeholder for PostgresMetastore
     metastore::InMemoryMetastore,
-    KeyMeta,
     Metastore,
-    Session,
-    SessionFactory,
 };
-use chrono::{Duration, Utc};
+#[allow(unused_imports)]
+use chrono::Utc;
 use std::sync::Arc;
 
 // NOTE: The actual PostgreSQL integration tests are not implemented yet.

@@ -12,7 +12,7 @@ use std::sync::Arc;
 async fn test_session_factory_with_memory_metastore_encrypt_decrypt() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 
@@ -58,7 +58,7 @@ async fn test_session_factory_with_memory_metastore_encrypt_decrypt() {
 async fn test_session_factory_with_memory_metastore_decrypt_with_mismatch_partition_should_fail() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 

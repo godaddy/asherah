@@ -1,6 +1,4 @@
 #![allow(clippy::unwrap_used)]
-#![feature(rustc_attrs)]
-#![rustc_edition = "2021"]
 
 use appencryption::{
     envelope::{DataRowRecord, EnvelopeKeyRecord},

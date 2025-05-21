@@ -83,7 +83,7 @@ async fn run_mysql_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create session factory components
     let policy = CryptoPolicy::new();
-    let master_key = vec![0u8; 32]; // In production, use a real master key
+    let master_key = vec![0_u8; 32]; // In production, use a real master key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(MySqlMetastore::new(Arc::new(pool)));
     let secret_factory = Arc::new(DefaultSecretFactory::new());
@@ -132,7 +132,7 @@ async fn run_postgres_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create session factory components
     let policy = CryptoPolicy::new();
-    let master_key = vec![0u8; 32]; // In production, use a real master key
+    let master_key = vec![0_u8; 32]; // In production, use a real master key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
     let metastore = Arc::new(PostgresMetastore::new(Arc::new(pool)));
     let secret_factory = Arc::new(DefaultSecretFactory::new());

@@ -19,6 +19,7 @@ mod tests {
         items: Mutex<HashMap<String, DynamoDbItem>>, // key is "id:created"
     }
 
+    #[allow(dead_code)]
     impl MockDynamoDbClient {
         fn new(region: &str, healthy: bool) -> Self {
             Self {

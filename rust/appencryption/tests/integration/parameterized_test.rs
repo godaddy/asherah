@@ -1,12 +1,9 @@
 // Parameterized tests to verify behavior with different configurations
 
 use crate::integration::common::{
-    create_crypto, create_static_kms, create_test_config, Config, ORIGINAL_DATA, PARTITION_ID,
-    PRODUCT, SERVICE,
+    create_crypto, create_static_kms, Config, ORIGINAL_DATA, PARTITION_ID, PRODUCT, SERVICE,
 };
-use appencryption::{
-    metastore::InMemoryMetastore, CryptoPolicy, Metastore, Session, SessionFactory,
-};
+use appencryption::{metastore::InMemoryMetastore, CryptoPolicy, Session, SessionFactory};
 use securememory::protected_memory::DefaultSecretFactory;
 use std::sync::Arc;
 use std::time::Duration;
@@ -74,7 +71,7 @@ async fn test_different_policy_configurations() {
             policy: Arc::new(policy),
         };
 
-        let crypto = create_crypto();
+        let _crypto = create_crypto();
         let kms = create_static_kms().await;
         let metastore = Arc::new(InMemoryMetastore::new());
 

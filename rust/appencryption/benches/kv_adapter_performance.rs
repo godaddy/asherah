@@ -122,7 +122,7 @@ fn bench_send_metastore(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
 
     c.bench_function("send_metastore_operations", |b| {
-        b.to_async(&rt).iter(|| async {
+        b.to_async(&rt).iter(async || {
             let kv_store = Arc::new(SendKvStore::new());
             let metastore = KeyValueMetastoreForSend::<_, String, String>::new(kv_store);
 
@@ -137,7 +137,7 @@ fn bench_local_metastore(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
 
     c.bench_function("local_metastore_operations", |b| {
-        b.to_async(&rt).iter(|| async {
+        b.to_async(&rt).iter(async || {
             let kv_store = Arc::new(LocalKvStore::new());
             let metastore = KeyValueMetastoreForLocal::<_, String, String>::new(kv_store);
 
@@ -154,7 +154,7 @@ fn bench_comparative_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("metastore_comparison");
 
     group.bench_function("send_adapter", |b| {
-        b.to_async(&rt).iter(|| async {
+        b.to_async(&rt).iter(async || {
             let kv_store = Arc::new(SendKvStore::new());
             let metastore = KeyValueMetastoreForSend::<_, String, String>::new(kv_store);
 
@@ -165,7 +165,7 @@ fn bench_comparative_performance(c: &mut Criterion) {
     });
 
     group.bench_function("local_adapter_with_spawn_blocking", |b| {
-        b.to_async(&rt).iter(|| async {
+        b.to_async(&rt).iter(async || {
             let kv_store = Arc::new(LocalKvStore::new());
             let metastore = KeyValueMetastoreForLocal::<_, String, String>::new(kv_store);
 

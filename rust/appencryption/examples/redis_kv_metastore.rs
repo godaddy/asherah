@@ -1,15 +1,13 @@
 use appencryption::{
     kms::StaticKeyManagementService,
-    metastore::{KeyValueStore, StringKeyValueMetastore, TtlKeyValueStore},
+    metastore::{KeyValueStoreSend, StringKeyValueMetastore, TtlKeyValueStoreSend},
     policy::CryptoPolicy,
     session::{Session, SessionFactory},
     Result,
 };
 #[cfg(feature = "async-trait-compat")]
 use async_trait::async_trait;
-use color_eyre::eyre::{self, WrapErr};
-use env_logger;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use securememory::protected_memory::DefaultSecretFactory;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -32,12 +30,10 @@ enum RedisError {
     LockError(#[source] Box<dyn std::error::Error + Send + Sync>),
 
     #[error("System time error")]
-    #[from]
-    TimeError(#[source] std::time::SystemTimeError),
+    TimeError(#[from] std::time::SystemTimeError),
 
     #[error("Serialization error")]
-    #[from]
-    SerializationError(#[source] serde_json::Error),
+    SerializationError(#[from] serde_json::Error),
 }
 
 // Define a simple data container to store with TTL
@@ -81,7 +77,7 @@ impl RedisStore {
 }
 
 #[cfg_attr(feature = "async-trait-compat", async_trait)]
-impl KeyValueStore for RedisStore {
+impl KeyValueStoreSend for RedisStore {
     type Key = String;
     type Value = String;
     type Error = RedisError;
@@ -178,7 +174,7 @@ impl KeyValueStore for RedisStore {
 }
 
 #[cfg_attr(feature = "async-trait-compat", async_trait)]
-impl TtlKeyValueStore for RedisStore {
+impl TtlKeyValueStoreSend for RedisStore {
     async fn expire(&self, key: &Self::Key, ttl_seconds: i64) -> Result<bool, Self::Error> {
         // Calculate expiration time outside the lock
         let now = Self::now()?;

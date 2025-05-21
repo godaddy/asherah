@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let kms = {
         // Fall back to static KMS if AWS KMS feature is not enabled
         use appencryption::kms::StaticKeyManagementService;
-        let master_key = vec![0u8; 32];
+        let master_key = vec![0_u8; 32];
         Arc::new(StaticKeyManagementService::new(master_key))
     };
 

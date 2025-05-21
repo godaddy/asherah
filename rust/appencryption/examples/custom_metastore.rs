@@ -1,7 +1,7 @@
 use appencryption::{
     envelope::EnvelopeKeyRecord,
     kms::StaticKeyManagementService,
-    metastore::{CompositeKey, KeyValueStore, TtlKeyValueStore},
+    metastore::{KeyValueStoreSend, TtlKeyValueStoreSend},
     policy::CryptoPolicy,
     session::{Session, SessionFactory},
     Error, Metastore, Result,
@@ -110,9 +110,9 @@ impl RedisMetastore {
     }
 }
 
-// We can implement the KeyValueStore trait for better interoperability
+// We can implement the KeyValueStoreSend trait for better interoperability
 #[async_trait]
-impl KeyValueStore for RedisMetastore {
+impl KeyValueStoreSend for RedisMetastore {
     type Key = String;
     type Value = EnvelopeKeyRecord;
     type Error = RedisMetastoreError;
@@ -169,9 +169,9 @@ impl KeyValueStore for RedisMetastore {
     }
 }
 
-// We can also implement the TtlKeyValueStore trait for TTL operations
+// We can also implement the TtlKeyValueStoreSend trait for TTL operations
 #[async_trait]
-impl TtlKeyValueStore for RedisMetastore {
+impl TtlKeyValueStoreSend for RedisMetastore {
     async fn expire(&self, key: &Self::Key, ttl_seconds: i64) -> Result<bool, Self::Error> {
         let mut store = self
             .store

@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create dependencies for session factory
     let policy = CryptoPolicy::new();
-    let master_key = vec![0u8; 32]; // In production, use a real master key
+    let master_key = vec![0_u8; 32]; // In production, use a real master key
     let kms = Arc::new(StaticKeyManagementService::new(master_key));
 
     // Create MySQL metastore

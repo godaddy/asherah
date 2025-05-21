@@ -11,7 +11,7 @@ use std::sync::Arc;
 async fn test_cross_partition_decrypt_with_different_partitions() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 
@@ -86,7 +86,7 @@ async fn test_cross_partition_decrypt_with_different_partitions() {
 async fn test_cross_partition_decrypt_with_suffixed_partition() {
     // Create dependencies
     let config = create_test_config();
-    let crypto = create_crypto();
+    let _crypto = create_crypto();
     let kms = create_static_kms().await;
     let metastore = Arc::new(InMemoryMetastore::new());
 
