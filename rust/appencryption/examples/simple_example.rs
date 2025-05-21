@@ -9,7 +9,7 @@ use std::sync::Arc;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up components
     let policy = CryptoPolicy::new();
-    let kms = Arc::new(StaticKeyManagementService::new(vec![0u8; 32]));
+    let kms = Arc::new(StaticKeyManagementService::new(vec![0_u8; 32]));
     let metastore = Arc::new(InMemoryMetastore::new());
     let secret_factory = Arc::new(DefaultSecretFactory::new());
 
