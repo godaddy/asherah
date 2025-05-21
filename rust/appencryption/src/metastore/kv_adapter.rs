@@ -15,6 +15,10 @@ use super::kv_store::{CompositeKey, KeyValueStore};
 /// This adapter handles the conversion between Asherah's specific key/value semantics
 /// and a generic key/value store interface, allowing any KeyValueStore implementation
 /// to be used as a Metastore.
+///
+/// Note that KeyValueStore already has Send + Sync bounds, but we repeat them here for clarity
+/// since this struct stores the KeyValueStore in an Arc. This adapter pattern is one of the main
+/// reasons why KeyValueStore requires Send + Sync bounds.
 #[derive(Debug)]
 pub struct KeyValueMetastore<KV, K, V> 
 where
@@ -89,7 +93,7 @@ where
         }
     }
 
-    async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
+    async fn load_latest(&self, _id: &str) -> Result<Option<EnvelopeKeyRecord>> {
         // This is a simplified implementation that may not be efficient for all key-value stores
         // For a real implementation, you would want to optimize this based on the specific
         // capabilities of your key-value store (e.g., range queries, prefix filtering)
@@ -122,7 +126,14 @@ where
     }
 }
 
+// Helper function for string-based key-value stores
+fn to_string_key(id: &str, created: i64) -> String {
+    CompositeKey::new(id, created).to_string_key()
+}
+
 // A specialized adapter for string-based key-value stores, which is the most common case
+/// This is a type alias to make it easier to work with string-based key-value stores
+/// The implementation is provided by the generic KeyValueMetastore implementation
 pub type StringKeyValueMetastore<KV> = KeyValueMetastore<KV, String, String>;
 
 impl<KV> StringKeyValueMetastore<KV> 
@@ -132,51 +143,5 @@ where
     /// Creates a new StringKeyValueMetastore with the given store
     pub fn new_string_store(store: Arc<KV>) -> Self {
         Self::new(store)
-    }
-    
-    /// Specialized key conversion for string-based stores
-    fn to_string_key(&self, id: &str, created: i64) -> String {
-        CompositeKey::new(id, created).to_string_key()
-    }
-}
-
-// Implementation for string-based key-value stores
-#[async_trait]
-impl<KV> Metastore for StringKeyValueMetastore<KV>
-where
-    KV: KeyValueStore<Key = String, Value = String> + Send + Sync,
-{
-    async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
-        let key = self.to_string_key(id, created);
-        
-        let result = self.store.get(&key).await
-            .map_err(|e| Error::Metastore(format!("Error loading from store: {}", e)))?;
-            
-        match result {
-            Some(json_str) => {
-                let record = self.deserialize_record(&json_str)?;
-                Ok(Some(record))
-            }
-            None => Ok(None),
-        }
-    }
-
-    async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
-        // For a string-based store, we would likely implement this by scanning
-        // all keys with a prefix matching the id
-        
-        // This is still a placeholder implementation
-        Err(Error::Metastore(
-            "load_latest not implemented for string-based KeyValueMetastore adapter".to_string()
-        ))
-    }
-
-    async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
-        let key = self.to_string_key(id, created);
-        let json = self.serialize_record(envelope)?;
-        
-        // Only store if the key doesn't already exist
-        self.store.put(&key, &json, true).await
-            .map_err(|e| Error::Metastore(format!("Error storing in KV store: {}", e)))
     }
 }

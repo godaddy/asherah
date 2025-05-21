@@ -509,7 +509,7 @@ impl Encryption for EnvelopeEncryption {
         Ok(())
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
+    fn as_any(&self) -> &(dyn std::any::Any + Send + Sync) {
         self
     }
 }

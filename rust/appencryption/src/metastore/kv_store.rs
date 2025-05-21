@@ -9,6 +9,11 @@ use std::fmt::Debug;
 /// implementation used by Asherah's metastores. Implementors should provide
 /// appropriate error handling and ensure thread safety.
 /// 
+/// The `Send + Sync` bounds are required because:
+/// 1. Metastore implementations are stored in an Arc and shared between threads
+/// 2. KeyValueStore implementations are often wrapped in Arc<KV> in the KeyValueMetastore adapter
+/// 3. All operations may be called concurrently from different threads in an async context
+/// 
 /// For Rust versions earlier than 1.75, enable the "async-trait-compat" feature
 /// to use the async-trait crate for compatibility.
 #[cfg_attr(feature = "async-trait-compat", async_trait)]
@@ -78,6 +83,9 @@ pub trait KeyValueStore: Send + Sync {
 ///
 /// This extends the basic KeyValueStore with TTL capabilities.
 /// 
+/// This trait inherits the `Send + Sync` bounds from KeyValueStore, which are necessary
+/// for concurrent usage in Asherah's async environment.
+/// 
 /// For Rust versions earlier than 1.75, enable the "async-trait-compat" feature
 /// to use the async-trait crate for compatibility.
 #[cfg_attr(feature = "async-trait-compat", async_trait)]
@@ -146,5 +154,12 @@ impl From<(&str, i64)> for CompositeKey {
             id: id.to_string(),
             created,
         }
+    }
+}
+
+// Add From<CompositeKey> for String implementation for string-based key-value stores
+impl From<CompositeKey> for String {
+    fn from(key: CompositeKey) -> Self {
+        key.to_string_key()
     }
 }

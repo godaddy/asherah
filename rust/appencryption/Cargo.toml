@@ -93,8 +93,9 @@ criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 workspace = true
 
 [workspace.lints.rust]
-# Forbid/Deny level lints
-unsafe_code = "forbid"
+# Note: Memory management crates require unsafe code, but we want to minimize its use
+# Use allow in specific files where necessary
+unsafe_code = "allow"
 # Deny-level lints
 future_incompatible = { level = "deny", priority = -1 }
 # Warn-level lints

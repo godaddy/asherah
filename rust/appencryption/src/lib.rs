@@ -245,7 +245,7 @@ pub trait Encryption: Send + Sync {
     async fn close(&self) -> Result<()>;
 
     /// Convert to Any for downcasting
-    fn as_any(&self) -> &dyn std::any::Any;
+    fn as_any(&self) -> &(dyn std::any::Any + Send + Sync);
 }
 
 /// Key Management Service interface for encrypting and decrypting system keys

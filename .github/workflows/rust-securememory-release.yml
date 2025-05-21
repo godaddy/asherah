@@ -14,10 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
+      # Using pre-installed Rust toolchain on Ubuntu runners
+      - name: Set up Rust toolchain
+        run: |
+          rustup default stable
+          rustup component add rustfmt clippy
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2

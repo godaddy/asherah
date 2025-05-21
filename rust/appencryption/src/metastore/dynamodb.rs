@@ -344,9 +344,10 @@ impl MultiRegionClient {
 
             if !clients.is_empty() {
                 // Randomize order to distribute load
-                let mut rng = rand::thread_rng();
+                // Create clients_copy outside the random operation to avoid thread_rng() issues with Send
                 let mut clients_copy = clients.clone();
-                clients_copy.shuffle(&mut rng);
+                // Use a thread-safe random operation
+                clients_copy.shuffle(&mut rand::thread_rng());
 
                 for client in clients_copy {
                     match operation(&client).await {
@@ -519,7 +520,7 @@ impl DynamoDbMetastore {
 impl Metastore for DynamoDbMetastore {
     async fn load(&self, id: &str, created: i64) -> Result<Option<EnvelopeKeyRecord>> {
         let timer = crate::timer!("ael.metastore.dynamodb.load");
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Apply region suffix if needed
         let id_with_suffix = self.get_id_with_suffix(id);
@@ -531,8 +532,13 @@ impl Metastore for DynamoDbMetastore {
         };
 
         // Execute the operation with failover
-        let item = self.client.execute_async(|client| async move {
-            client.get_item(&self.table_name, key.clone()).await
+        let table_name = self.table_name.clone();
+        let item = self.client.execute_async(|client| {
+            let key = key.clone();
+            let table_name = table_name.clone();
+            async move {
+                client.get_item(&table_name, key).await
+            }
         }).await?;
 
         // Decode the item if it exists
@@ -551,14 +557,20 @@ impl Metastore for DynamoDbMetastore {
 
     async fn load_latest(&self, id: &str) -> Result<Option<EnvelopeKeyRecord>> {
         let timer = crate::timer!("ael.metastore.dynamodb.loadlatest");
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Apply region suffix if needed
         let id_with_suffix = self.get_id_with_suffix(id);
 
         // Execute the operation with failover
-        let items = self.client.execute_async(|client| async move {
-            client.query_latest(&self.table_name, &id_with_suffix).await
+        let table_name = self.table_name.clone();
+        let id_with_suffix_clone = id_with_suffix.clone();
+        let items = self.client.execute_async(|client| {
+            let table_name = table_name.clone();
+            let id = id_with_suffix_clone.clone();
+            async move {
+                client.query_latest(&table_name, &id).await
+            }
         }).await?;
 
         // Decode the item if it exists
@@ -577,7 +589,7 @@ impl Metastore for DynamoDbMetastore {
 
     async fn store(&self, id: &str, created: i64, envelope: &EnvelopeKeyRecord) -> Result<bool> {
         let timer = crate::timer!("ael.metastore.dynamodb.store");
-        let start = Instant::now();
+        let _start = Instant::now();
 
         // Apply region suffix if needed
         let id_with_suffix = self.get_id_with_suffix(id);
@@ -606,8 +618,14 @@ impl Metastore for DynamoDbMetastore {
         };
 
         // Execute the operation with failover
-        let result = self.client.execute_async(|client| async move {
-            client.put_item_if_not_exists(&self.table_name, item.clone()).await
+        let table_name = self.table_name.clone();
+        let item_clone = item.clone();
+        let result = self.client.execute_async(|client| {
+            let table_name = table_name.clone();
+            let item = item_clone.clone();
+            async move {
+                client.put_item_if_not_exists(&table_name, item).await
+            }
         }).await;
 
         if let Some(t) = timer {

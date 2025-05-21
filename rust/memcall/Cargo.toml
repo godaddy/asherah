@@ -36,3 +36,72 @@ libc = "0.2"
 
 [dev-dependencies]
 criterion = "0.5"
+
+[lints]
+workspace = true
+
+[workspace.lints.rust]
+# Note: memcall explicitly requires unsafe code for memory management
+# unsafe_code = "forbid"
+# Deny-level lints
+future_incompatible = { level = "deny", priority = -1 }
+# Warn-level lints
+ambiguous_negative_literals = "warn"
+closure_returning_async_block = "warn"
+explicit_outlives_requirements = "warn"
+if_let_rescope = "warn"
+impl_trait_overcaptures = "warn"
+impl_trait_redundant_captures = "warn"
+let_underscore_drop = "warn"
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_debug_implementations = "warn"
+noop_method_call = "warn"
+non_ascii_idents = "warn"
+redundant_lifetimes = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unit_bindings = "warn"
+unsafe_attr_outside_unsafe = "warn"
+unused = { level = "warn", priority = -1 }
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+unused_macro_rules = "warn"
+variant_size_differences = "warn"
+
+[workspace.lints.clippy]
+# Deny-level lints
+default_union_representation = "deny"
+exit = "deny"
+lossy_float_literal = "deny"
+mem_forget = "deny"
+multiple_inherent_impl = "deny"
+mut_mut = "deny"
+ptr_as_ptr = "deny"
+unwrap_in_result = "deny"
+unwrap_used = "deny"
+wildcard_dependencies = "deny"
+# Warn-level lints
+dbg_macro = "warn"
+empty_drop = "warn"
+fallible_impl_from = "warn"
+inefficient_to_string = "warn"
+macro_use_imports = "warn"
+match_same_arms = "warn"
+# multiple_crate_versions = "warn"
+no_effect_underscore_binding = "warn"
+panic = "warn"
+print_stderr = "warn"
+print_stdout = "warn"
+same_name_method = "warn"
+single_char_lifetime_names = "warn"
+string_to_string = "warn"
+trait_duplication_in_bounds = "warn"
+type_repetition_in_bounds = "warn"
+unimplemented = "warn"
+unneeded_field_pattern = "warn"
+unseparated_literal_suffix = "warn"
+used_underscore_binding = "warn"
