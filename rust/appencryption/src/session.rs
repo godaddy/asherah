@@ -39,6 +39,7 @@ pub trait Session: Send + Sync {
 pub type FactoryOption = Box<dyn Fn(&mut SessionFactory) + Send + Sync>;
 
 /// A session factory for creating encryption sessions
+#[derive(Debug)]
 pub struct SessionFactory {
     /// Service identifier
     service: String,
@@ -118,12 +119,9 @@ impl SessionFactory {
 
             // Define the eviction policy
             let eviction_policy = match policy.session_cache_eviction_policy.as_str() {
-                "lru" => Some(crate::cache::CachePolicy::LRU),
                 "lfu" => Some(crate::cache::CachePolicy::LFU),
                 "tlfu" => Some(crate::cache::CachePolicy::TLFU),
-                "slru" => Some(crate::cache::CachePolicy::LRU), // SLRU not implemented yet, use LRU as default
-                "" => Some(crate::cache::CachePolicy::LRU),
-                _ => Some(crate::cache::CachePolicy::LRU),
+                _ => Some(crate::cache::CachePolicy::LRU), // Default to LRU for all other policies including "lru", "slru", ""
             };
 
             // Define the session loader
@@ -532,12 +530,9 @@ impl SessionFactoryBuilder {
 
                 // Define the eviction policy
                 let eviction_policy = match policy.session_cache_eviction_policy.as_str() {
-                    "lru" => Some(crate::cache::CachePolicy::LRU),
                     "lfu" => Some(crate::cache::CachePolicy::LFU),
                     "tlfu" => Some(crate::cache::CachePolicy::TLFU),
-                    "slru" => Some(crate::cache::CachePolicy::LRU), // SLRU not implemented yet, use LRU as default
-                    "" => Some(crate::cache::CachePolicy::LRU),
-                    _ => Some(crate::cache::CachePolicy::LRU),
+                    _ => Some(crate::cache::CachePolicy::LRU), // Default to LRU for all other cases including "lru", "slru", and ""
                 };
 
                 // Define the session loader
@@ -647,7 +642,7 @@ pub fn with_metrics(enabled: bool) -> FactoryOption {
 }
 
 /// Session implementation using envelope encryption
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EnvelopeSession {
     /// Encryption implementation
     pub(crate) encryption: Arc<dyn Encryption>,

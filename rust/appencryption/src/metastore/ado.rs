@@ -17,9 +17,11 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct AdoMetastore {
     // Connection string for the ADO.NET database
+    #[allow(dead_code)]
     connection_string: String,
 
     // Table name for storing the encryption keys
+    #[allow(dead_code)]
     table_name: String,
 }
 
@@ -114,6 +116,7 @@ impl Metastore for AdoMetastore {
 }
 
 // Factory function to create a boxed AdoMetastore
+#[allow(dead_code)]
 pub fn new_ado_metastore(
     connection_string: impl Into<String>,
     table_name: impl Into<String>,

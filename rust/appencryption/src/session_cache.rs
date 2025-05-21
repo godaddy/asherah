@@ -4,7 +4,7 @@
 //! with thread-safe session sharing and automatic cleanup.
 
 use crate::cache::{Cache, CacheBuilder, CachePolicy};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::session::EnvelopeSession;
 use crate::Encryption;
 
@@ -14,7 +14,7 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 /// Interface for session caching
-pub trait SessionCache: Send + Sync {
+pub trait SessionCache: Send + Sync + fmt::Debug {
     /// Get a session for the given partition ID
     fn get(&self, id: &str) -> Result<Arc<EnvelopeSession>>;
 
@@ -37,6 +37,7 @@ pub struct SharedEncryption {
     access_counter: Mutex<usize>,
 
     /// Condition variable for waiting until session is unused
+    #[allow(unused)]
     cond: Condvar,
 }
 
@@ -53,17 +54,26 @@ impl SharedEncryption {
 
     /// Increment the usage counter
     pub fn increment_usage(&self) {
-        let mut counter = self.access_counter.lock().unwrap();
+        let mut counter = self
+            .access_counter
+            .lock()
+            .expect("Failed to acquire lock on access counter");
         *counter += 1;
     }
 
     /// Remove the session, waiting until all users are done
     pub fn remove(&self) {
-        let mut counter = self.access_counter.lock().unwrap();
+        let mut counter = self
+            .access_counter
+            .lock()
+            .expect("Failed to acquire lock on access counter");
 
         // Wait until no more users
         while *counter > 0 {
-            counter = self.cond.wait(counter).unwrap();
+            counter = self
+                .cond
+                .wait(counter)
+                .expect("Failed while waiting on condition variable");
         }
 
         // Close the underlying encryption
@@ -85,7 +95,10 @@ impl Encryption for SharedEncryption {
     }
 
     async fn close(&self) -> Result<()> {
-        let mut counter = self.access_counter.lock().unwrap();
+        let mut counter = self
+            .access_counter
+            .lock()
+            .expect("Failed to acquire lock on access counter");
         *counter -= 1;
 
         // Notify waiters
@@ -201,9 +214,20 @@ impl CacheWrapper {
     }
 }
 
+impl fmt::Debug for CacheWrapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CacheWrapper")
+            .field("cache", &self.cache)
+            .finish()
+    }
+}
+
 impl SessionCache for CacheWrapper {
     fn get(&self, id: &str) -> Result<Arc<EnvelopeSession>> {
-        let _guard = self.lock.write().unwrap();
+        let _guard = self
+            .lock
+            .write()
+            .map_err(|_| Error::Internal("Failed to acquire write lock".to_string()))?;
 
         let session = self.get_or_add(id)?;
 

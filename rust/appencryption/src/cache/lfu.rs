@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
+use std::fmt;
 use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -6,7 +7,11 @@ use std::time::{Duration, Instant};
 use super::{Cache, EvictCallback};
 
 /// LFU (Least Frequently Used) cache implementation
-pub struct LfuCache<K, V> {
+pub struct LfuCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
     /// Current entries in the cache
     entries: RwLock<HashMap<K, Arc<V>>>,
 
@@ -30,10 +35,30 @@ pub struct LfuCache<K, V> {
     ttl: Option<Duration>,
 }
 
+impl<K, V> fmt::Debug for LfuCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let entries_len = self
+            .entries
+            .read()
+            .map(|entries| entries.len())
+            .unwrap_or(0);
+
+        f.debug_struct("LfuCache")
+            .field("capacity", &self.capacity)
+            .field("ttl", &self.ttl)
+            .field("entries_len", &entries_len)
+            .finish()
+    }
+}
+
 impl<K, V> LfuCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     /// Create a new LFU cache with the given capacity
     pub fn new(
@@ -55,7 +80,12 @@ where
     /// Check if an entry has expired
     fn is_expired(&self, key: &K) -> bool {
         if let Some(ttl) = self.ttl {
-            if let Some(last_accessed) = self.access_times.read().unwrap().get(key) {
+            if let Some(last_accessed) = self
+                .access_times
+                .read()
+                .expect("Failed to acquire read lock for access_times")
+                .get(key)
+            {
                 return last_accessed.elapsed() > ttl;
             }
         }
@@ -64,7 +94,10 @@ where
 
     /// Evict the least frequently used item from the cache
     fn evict_lfu(&self) -> bool {
-        let mut frequency_list = self.frequency_list.write().unwrap();
+        let mut frequency_list = self
+            .frequency_list
+            .write()
+            .expect("Failed to acquire write lock for frequency_list");
 
         // Find the lowest frequency with at least one key
         if let Some((&freq, keys)) = frequency_list.iter_mut().next() {
@@ -75,9 +108,18 @@ where
                 }
 
                 // Remove the key from entries, frequencies, and access_times
-                let mut entries = self.entries.write().unwrap();
-                let mut frequencies = self.frequencies.write().unwrap();
-                let mut access_times = self.access_times.write().unwrap();
+                let mut entries = self
+                    .entries
+                    .write()
+                    .expect("Failed to acquire write lock for entries");
+                let mut frequencies = self
+                    .frequencies
+                    .write()
+                    .expect("Failed to acquire write lock for frequencies");
+                let mut access_times = self
+                    .access_times
+                    .write()
+                    .expect("Failed to acquire write lock for access_times");
 
                 if let Some(value) = entries.remove(&key) {
                     frequencies.remove(&key);
@@ -98,9 +140,18 @@ where
 
     /// Update the frequency for a key
     fn update_frequency(&self, key: &K) {
-        let mut frequencies = self.frequencies.write().unwrap();
-        let mut frequency_list = self.frequency_list.write().unwrap();
-        let mut access_times = self.access_times.write().unwrap();
+        let mut frequencies = self
+            .frequencies
+            .write()
+            .expect("Failed to acquire write lock for frequencies");
+        let mut frequency_list = self
+            .frequency_list
+            .write()
+            .expect("Failed to acquire write lock for frequency_list");
+        let mut access_times = self
+            .access_times
+            .write()
+            .expect("Failed to acquire write lock for access_times");
 
         // Update access time
         access_times.insert(key.clone(), Instant::now());
@@ -136,8 +187,8 @@ where
 
 impl<K, V> Cache<K, V> for LfuCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     fn get(&self, key: &K) -> Option<Arc<V>> {
         // Check if key exists and hasn't expired
@@ -146,7 +197,7 @@ where
             return None;
         }
 
-        let entries = self.entries.read().unwrap();
+        let entries = self.entries.read().ok()?;
         if let Some(value) = entries.get(key) {
             // Update frequency
             self.update_frequency(key);
@@ -159,7 +210,10 @@ where
     fn insert(&self, key: K, value: V) -> bool {
         // If at capacity, evict the least frequently used item
         let current_len = {
-            let entries = self.entries.read().unwrap();
+            let entries = self
+                .entries
+                .read()
+                .expect("Failed to acquire read lock for entries");
             entries.len()
         };
 
@@ -169,7 +223,10 @@ where
 
         // Insert new value
         let arc_value = Arc::new(value);
-        let mut entries = self.entries.write().unwrap();
+        let mut entries = self
+            .entries
+            .write()
+            .expect("Failed to acquire write lock for entries");
         entries.insert(key.clone(), arc_value);
 
         // Initialize frequency to 1
@@ -179,12 +236,24 @@ where
     }
 
     fn remove(&self, key: &K) -> bool {
-        let mut entries = self.entries.write().unwrap();
+        let mut entries = self
+            .entries
+            .write()
+            .expect("Failed to acquire write lock for entries");
         if let Some(value) = entries.remove(key) {
             // Update frequency data structures
-            let mut frequencies = self.frequencies.write().unwrap();
-            let mut frequency_list = self.frequency_list.write().unwrap();
-            let mut access_times = self.access_times.write().unwrap();
+            let mut frequencies = self
+                .frequencies
+                .write()
+                .expect("Failed to acquire write lock for frequencies");
+            let mut frequency_list = self
+                .frequency_list
+                .write()
+                .expect("Failed to acquire write lock for frequency_list");
+            let mut access_times = self
+                .access_times
+                .write()
+                .expect("Failed to acquire write lock for access_times");
 
             if let Some(freq) = frequencies.remove(key) {
                 if let Some(keys) = frequency_list.get_mut(&freq) {
@@ -213,7 +282,10 @@ where
     }
 
     fn len(&self) -> usize {
-        let entries = self.entries.read().unwrap();
+        let entries = self
+            .entries
+            .read()
+            .expect("Failed to acquire read lock for entries");
         entries.len()
     }
 
@@ -222,10 +294,22 @@ where
     }
 
     fn clear(&self) {
-        let mut entries = self.entries.write().unwrap();
-        let mut frequencies = self.frequencies.write().unwrap();
-        let mut frequency_list = self.frequency_list.write().unwrap();
-        let mut access_times = self.access_times.write().unwrap();
+        let mut entries = self
+            .entries
+            .write()
+            .expect("Failed to acquire write lock for entries");
+        let mut frequencies = self
+            .frequencies
+            .write()
+            .expect("Failed to acquire write lock for frequencies");
+        let mut frequency_list = self
+            .frequency_list
+            .write()
+            .expect("Failed to acquire write lock for frequency_list");
+        let mut access_times = self
+            .access_times
+            .write()
+            .expect("Failed to acquire write lock for access_times");
 
         // Call eviction callback for all entries if provided
         if let Some(callback) = &self.evict_callback {

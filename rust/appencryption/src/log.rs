@@ -47,19 +47,25 @@ static LOGGER: RwLock<Option<Box<dyn Logger>>> = RwLock::new(None);
 
 /// Set the logger for the application encryption library
 pub fn set_logger(logger: Box<dyn Logger>) {
-    let mut global_logger = LOGGER.write().expect("Failed to acquire write lock on global logger");
+    let mut global_logger = LOGGER
+        .write()
+        .expect("Failed to acquire write lock on global logger");
     *global_logger = Some(logger);
 }
 
 /// Check if debug logging is enabled
 pub fn debug_enabled() -> bool {
-    let global_logger = LOGGER.read().expect("Failed to acquire read lock on global logger");
+    let global_logger = LOGGER
+        .read()
+        .expect("Failed to acquire read lock on global logger");
     global_logger.is_some()
 }
 
 /// Log a debug message
 pub fn debug(message: &str) {
-    let global_logger = LOGGER.read().expect("Failed to acquire read lock on global logger");
+    let global_logger = LOGGER
+        .read()
+        .expect("Failed to acquire read lock on global logger");
     if let Some(logger) = global_logger.as_ref() {
         logger.debug(message);
     }
@@ -99,10 +105,12 @@ impl StdoutLogger {
 }
 
 impl Logger for StdoutLogger {
+    #[allow(clippy::print_stdout)]
     fn debug(&self, message: &str) {
         println!("[DEBUG] {}", message);
     }
 
+    #[allow(clippy::print_stdout)]
     fn debugf(&self, fmt: fmt::Arguments<'_>) {
         println!("[DEBUG] {}", fmt);
     }
@@ -125,7 +133,9 @@ impl LoggingGuard {
     /// Create a new logging guard with the given logger
     pub fn new(logger: Box<dyn Logger>) -> Self {
         let previous_logger = {
-            let mut global_logger = LOGGER.write().expect("Failed to acquire write lock on global logger");
+            let mut global_logger = LOGGER
+                .write()
+                .expect("Failed to acquire write lock on global logger");
             std::mem::replace(&mut *global_logger, Some(logger))
         };
 
@@ -135,7 +145,9 @@ impl LoggingGuard {
 
 impl Drop for LoggingGuard {
     fn drop(&mut self) {
-        let mut global_logger = LOGGER.write().expect("Failed to acquire write lock on global logger");
+        let mut global_logger = LOGGER
+            .write()
+            .expect("Failed to acquire write lock on global logger");
         *global_logger = self.previous_logger.take();
     }
 }

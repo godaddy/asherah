@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
@@ -16,7 +17,11 @@ const DECAY_INTERVAL: usize = 10000;
 ///
 /// This implementation uses a count-min sketch to approximate frequency counting
 /// and an admission policy to improve cache hit rates.
-pub struct TlfuCache<K, V> {
+pub struct TlfuCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
     /// Current entries in the cache
     entries: RwLock<HashMap<K, Arc<V>>>,
 
@@ -42,10 +47,30 @@ pub struct TlfuCache<K, V> {
     ttl: Option<Duration>,
 }
 
+impl<K, V> fmt::Debug for TlfuCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let entries_len = self
+            .entries
+            .read()
+            .map(|entries| entries.len())
+            .unwrap_or(0);
+
+        f.debug_struct("TlfuCache")
+            .field("capacity", &self.capacity)
+            .field("ttl", &self.ttl)
+            .field("entries_len", &entries_len)
+            .finish()
+    }
+}
+
 impl<K, V> TlfuCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     /// Create a new TinyLFU cache with the given capacity
     pub fn new(
@@ -68,8 +93,10 @@ where
     /// Check if an entry has expired
     fn is_expired(&self, key: &K) -> bool {
         if let Some(ttl) = self.ttl {
-            if let Some(last_accessed) = self.access_times.read().unwrap().get(key) {
-                return last_accessed.elapsed() > ttl;
+            if let Ok(access_times) = self.access_times.read() {
+                if let Some(last_accessed) = access_times.get(key) {
+                    return last_accessed.elapsed() > ttl;
+                }
             }
         }
         false
@@ -92,7 +119,9 @@ where
 
     /// Increment the frequency count for a key
     fn increment_frequency(&self, key: &K) {
-        let mut sketch = self.sketch.write().unwrap();
+        let Ok(mut sketch) = self.sketch.write() else {
+            return;
+        };
         let hashes = self.hash_key(key);
 
         for &h in &hashes {
@@ -100,7 +129,9 @@ where
         }
 
         // Update access count and possibly decay counters
-        let mut access_count = self.access_count.write().unwrap();
+        let Ok(mut access_count) = self.access_count.write() else {
+            return;
+        };
         *access_count += 1;
 
         if *access_count >= DECAY_INTERVAL {
@@ -116,7 +147,9 @@ where
 
     /// Get the estimated frequency count for a key
     fn get_frequency(&self, key: &K) -> u16 {
-        let sketch = self.sketch.read().unwrap();
+        let Ok(sketch) = self.sketch.read() else {
+            return 0;
+        };
         let hashes = self.hash_key(key);
 
         // Return the minimum count from all hash functions
@@ -126,18 +159,24 @@ where
     /// Evict an item from the cache using the Tiny-LFU policy
     fn evict_tlfu(&self) -> bool {
         // Try to admit an item from the window if available
-        let mut window = self.window.write().unwrap();
+        let Ok(mut window) = self.window.write() else {
+            return false;
+        };
         if !window.is_empty() {
             // Get most recent candidate from window (drop the borrow immediately)
             let (time, window_key) = {
-                let last_entry = window.iter().next_back().unwrap();
+                let Some(last_entry) = window.iter().next_back() else {
+                    return false;
+                };
                 (*last_entry.0, last_entry.1.clone())
             };
             let window_key = window_key.clone();
 
             // If main cache is not full, admit without eviction
             let entries_len = {
-                let entries = self.entries.read().unwrap();
+                let Ok(entries) = self.entries.read() else {
+                    return false;
+                };
                 entries.len()
             };
 
@@ -154,7 +193,9 @@ where
             let mut victim_key = None;
 
             {
-                let entries = self.entries.read().unwrap();
+                let Ok(entries) = self.entries.read() else {
+                    return false;
+                };
                 for key in entries.keys() {
                     let freq = self.get_frequency(key);
                     if freq < min_freq {
@@ -186,7 +227,9 @@ where
         let mut victim_key = None;
 
         {
-            let entries = self.entries.read().unwrap();
+            let Ok(entries) = self.entries.read() else {
+                return false;
+            };
             for key in entries.keys() {
                 let freq = self.get_frequency(key);
                 if freq < min_freq {
@@ -207,8 +250,8 @@ where
 
 impl<K, V> Cache<K, V> for TlfuCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     fn get(&self, key: &K) -> Option<Arc<V>> {
         // Check if key exists and hasn't expired
@@ -218,13 +261,16 @@ where
         }
 
         // Check if key is in main cache
-        let entries = self.entries.read().unwrap();
+        let Ok(entries) = self.entries.read() else {
+            return None;
+        };
         if let Some(value) = entries.get(key) {
             // Update frequency and access time
             self.increment_frequency(key);
 
-            let mut access_times = self.access_times.write().unwrap();
-            access_times.insert(key.clone(), Instant::now());
+            if let Ok(mut access_times) = self.access_times.write() {
+                access_times.insert(key.clone(), Instant::now());
+            }
 
             return Some(value.clone());
         }
@@ -234,7 +280,9 @@ where
 
     fn insert(&self, key: K, value: V) -> bool {
         let entries_len = {
-            let entries = self.entries.read().unwrap();
+            let Ok(entries) = self.entries.read() else {
+                return false;
+            };
             entries.len()
         };
 
@@ -246,7 +294,9 @@ where
 
         // Insert new value into main cache
         let arc_value = Arc::new(value);
-        let mut entries = self.entries.write().unwrap();
+        let Ok(mut entries) = self.entries.write() else {
+            return false;
+        };
 
         // Skip if key already exists
         if entries.contains_key(&key) {
@@ -258,18 +308,22 @@ where
         // Initialize frequency and access time
         self.increment_frequency(&key);
 
-        let mut access_times = self.access_times.write().unwrap();
-        access_times.insert(key, Instant::now());
+        if let Ok(mut access_times) = self.access_times.write() {
+            access_times.insert(key, Instant::now());
+        }
 
         true
     }
 
     fn remove(&self, key: &K) -> bool {
-        let mut entries = self.entries.write().unwrap();
+        let Ok(mut entries) = self.entries.write() else {
+            return false;
+        };
         if let Some(value) = entries.remove(key) {
             // Update access times
-            let mut access_times = self.access_times.write().unwrap();
-            access_times.remove(key);
+            if let Ok(mut access_times) = self.access_times.write() {
+                access_times.remove(key);
+            }
 
             // Call eviction callback if provided
             if let Some(callback) = &self.evict_callback {
@@ -283,8 +337,10 @@ where
     }
 
     fn len(&self) -> usize {
-        let entries = self.entries.read().unwrap();
-        entries.len()
+        self.entries
+            .read()
+            .map(|entries| entries.len())
+            .unwrap_or(0)
     }
 
     fn capacity(&self) -> usize {
@@ -292,10 +348,18 @@ where
     }
 
     fn clear(&self) {
-        let mut entries = self.entries.write().unwrap();
-        let mut window = self.window.write().unwrap();
-        let mut access_times = self.access_times.write().unwrap();
-        let mut sketch = self.sketch.write().unwrap();
+        let Ok(mut entries) = self.entries.write() else {
+            return;
+        };
+        let Ok(mut window) = self.window.write() else {
+            return;
+        };
+        let Ok(mut access_times) = self.access_times.write() else {
+            return;
+        };
+        let Ok(mut sketch) = self.sketch.write() else {
+            return;
+        };
 
         // Call eviction callback for all entries if provided
         if let Some(callback) = &self.evict_callback {

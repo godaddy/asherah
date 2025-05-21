@@ -2,8 +2,6 @@
 mod simple_cache_test {
     use crate::cache::simple::SimpleCache;
     use crate::cache::Cache;
-    use std::sync::Arc;
-    use std::time::Duration;
 
     #[test]
     fn test_simple_cache_basic() {

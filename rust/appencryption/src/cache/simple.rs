@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -12,7 +13,11 @@ use super::{Cache, EvictCallback};
 /// and maximum performance is desired.
 ///
 /// The cache tracks entry access time for TTL expiration if configured.
-pub struct SimpleCache<K, V> {
+pub struct SimpleCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
     /// Current entries in the cache
     entries: RwLock<HashMap<K, Arc<V>>>,
 
@@ -20,10 +25,28 @@ pub struct SimpleCache<K, V> {
     evict_callback: Option<EvictCallback<K, V>>,
 }
 
+impl<K, V> fmt::Debug for SimpleCache<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let entries_len = self
+            .entries
+            .read()
+            .map(|entries| entries.len())
+            .unwrap_or(0);
+
+        f.debug_struct("SimpleCache")
+            .field("entries_len", &entries_len)
+            .finish()
+    }
+}
+
 impl<K, V> SimpleCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     /// Create a new simple cache
     pub fn new(
@@ -40,36 +63,47 @@ where
 
 impl<K, V> Cache<K, V> for SimpleCache<K, V>
 where
-    K: Eq + Hash + Clone + Send + Sync + 'static,
-    V: Clone + Send + Sync + 'static,
+    K: Eq + Hash + Clone + Send + Sync + 'static + fmt::Debug,
+    V: Clone + Send + Sync + 'static + fmt::Debug,
 {
     fn get(&self, key: &K) -> Option<Arc<V>> {
-        let entries = self.entries.read().unwrap();
+        let entries = self.entries.read().ok()?;
         entries.get(key).cloned()
     }
 
     fn insert(&self, key: K, value: V) -> bool {
-        let mut entries = self.entries.write().unwrap();
-        entries.insert(key, Arc::new(value));
-        true
+        match self.entries.write() {
+            Ok(mut entries) => {
+                entries.insert(key, Arc::new(value));
+                true
+            }
+            Err(_) => false,
+        }
     }
 
     fn remove(&self, key: &K) -> bool {
-        let mut entries = self.entries.write().unwrap();
-
-        if let Some(value) = entries.remove(key) {
-            // Call eviction callback if provided
-            if let Some(callback) = &self.evict_callback {
-                callback(key, &value);
+        match self.entries.write() {
+            Ok(mut entries) => {
+                match entries.remove(key) {
+                    Some(value) => {
+                        // Call eviction callback if provided
+                        if let Some(callback) = &self.evict_callback {
+                            callback(key, &value);
+                        }
+                        true
+                    }
+                    None => false,
+                }
             }
-            return true;
+            Err(_) => false,
         }
-
-        false
     }
 
     fn len(&self) -> usize {
-        self.entries.read().unwrap().len()
+        self.entries
+            .read()
+            .map(|entries| entries.len())
+            .unwrap_or(0)
     }
 
     fn capacity(&self) -> usize {
@@ -78,16 +112,21 @@ where
     }
 
     fn clear(&self) {
-        let mut entries = self.entries.write().unwrap();
+        match self.entries.write() {
+            Ok(mut entries) => {
+                // Call eviction callback for all items if provided
+                if let Some(callback) = &self.evict_callback {
+                    for (key, value) in entries.iter() {
+                        callback(key, value);
+                    }
+                }
 
-        // Call eviction callback for all items if provided
-        if let Some(callback) = &self.evict_callback {
-            for (key, value) in entries.iter() {
-                callback(key, value);
+                entries.clear();
+            }
+            Err(_) => {
+                // Unable to acquire lock, nothing to clear
             }
         }
-
-        entries.clear();
     }
 
     fn close(&self) {
@@ -96,6 +135,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -109,9 +149,27 @@ mod tests {
         assert!(cache.insert("c", 3));
 
         // Retrieve items
-        assert_eq!(cache.get(&"a").unwrap().as_ref(), &1);
-        assert_eq!(cache.get(&"b").unwrap().as_ref(), &2);
-        assert_eq!(cache.get(&"c").unwrap().as_ref(), &3);
+        assert_eq!(
+            cache
+                .get(&"a")
+                .expect("Failed to acquire lock in SimpleCache")
+                .as_ref(),
+            &1
+        );
+        assert_eq!(
+            cache
+                .get(&"b")
+                .expect("Failed to acquire lock in SimpleCache")
+                .as_ref(),
+            &2
+        );
+        assert_eq!(
+            cache
+                .get(&"c")
+                .expect("Failed to acquire lock in SimpleCache")
+                .as_ref(),
+            &3
+        );
 
         // Check size
         assert_eq!(cache.len(), 3);
@@ -131,7 +189,13 @@ mod tests {
 
         // Verify all items exist
         for i in 0..100 {
-            assert_eq!(cache.get(&i).unwrap().as_ref(), &(i * 2));
+            assert_eq!(
+                cache
+                    .get(&i)
+                    .expect("Failed to acquire lock in SimpleCache")
+                    .as_ref(),
+                &(i * 2)
+            );
         }
     }
 

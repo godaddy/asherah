@@ -54,3 +54,9 @@ pub enum Error {
     #[error("Not implemented: {0}")]
     NotImplemented(String),
 }
+
+impl From<Box<dyn std::error::Error + Send + Sync>> for Error {
+    fn from(err: Box<dyn std::error::Error + Send + Sync>) -> Self {
+        Error::Internal(err.to_string())
+    }
+}

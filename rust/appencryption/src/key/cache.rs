@@ -166,11 +166,11 @@ impl KeyCache {
 
     /// Gets a fresh key from the cache
     fn get_fresh(&self, meta: &KeyMeta) -> Option<Arc<CachedCryptoKey>> {
-        let keys = self.keys.read().unwrap();
+        let keys = self.keys.read().ok()?;
 
         // If looking for the latest, use the stored latest metadata
         let cache_key_str = if meta.is_latest() {
-            let latest = self.latest.read().unwrap();
+            let latest = self.latest.read().ok()?;
             if let Some(latest_meta) = latest.get(&meta.id) {
                 cache_key(&latest_meta.id, latest_meta.created)
             } else {
@@ -201,19 +201,20 @@ impl KeyCache {
 
     /// Gets the latest key metadata for an ID
     fn get_latest_key_meta(&self, id: &str) -> Option<KeyMeta> {
-        let latest = self.latest.read().unwrap();
+        let latest = self.latest.read().ok()?;
         latest.get(&cache_key(id, 0)).cloned()
     }
 
     /// Maps the latest key metadata to an ID
     fn map_latest_key_meta(&self, id: &str, latest: KeyMeta) {
-        let mut latest_map = self.latest.write().unwrap();
-        latest_map.insert(cache_key(id, 0), latest);
+        if let Ok(mut latest_map) = self.latest.write() {
+            latest_map.insert(cache_key(id, 0), latest);
+        }
     }
 
     /// Reads an entry from the cache
     fn read(&self, meta: &KeyMeta) -> Option<CacheEntry> {
-        let keys = self.keys.read().unwrap();
+        let keys = self.keys.read().ok()?;
 
         let id = if meta.is_latest() {
             if let Some(latest) = self.get_latest_key_meta(&meta.id) {
@@ -230,7 +231,9 @@ impl KeyCache {
 
     /// Writes an entry to the cache
     fn write(&self, meta: KeyMeta, entry: CacheEntry) {
-        let mut keys = self.keys.write().unwrap();
+        let Ok(mut keys) = self.keys.write() else {
+            return;
+        };
 
         if meta.is_latest() {
             let updated_meta = KeyMeta {
@@ -309,14 +312,15 @@ impl KeyCacher for KeyCache {
 
         // Update latest if this was a latest request
         if meta.is_latest() {
-            let mut latest = self.latest.write().unwrap();
-            latest.insert(
-                meta.id.clone(),
-                KeyMeta {
-                    id: meta.id,
-                    created: result.crypto_key.created(),
-                },
-            );
+            if let Ok(mut latest) = self.latest.write() {
+                latest.insert(
+                    meta.id.clone(),
+                    KeyMeta {
+                        id: meta.id,
+                        created: result.crypto_key.created(),
+                    },
+                );
+            }
         }
 
         // Increment reference count for the caller
@@ -355,8 +359,9 @@ impl KeyCacher for KeyCache {
 
         // Update the latest mapping
         {
-            let mut latest = self.latest.write().unwrap();
-            latest.insert(id.to_string(), new_meta.clone());
+            if let Ok(mut latest) = self.latest.write() {
+                latest.insert(id.to_string(), new_meta.clone());
+            }
         }
 
         let result = Arc::clone(&entry.key);
@@ -371,7 +376,9 @@ impl KeyCacher for KeyCache {
     async fn close(&self) -> Result<()> {
         log::debug!("{} closing", self.cache_type);
 
-        let mut keys = self.keys.write().unwrap();
+        let Ok(mut keys) = self.keys.write() else {
+            return Ok(());
+        };
 
         for (_, entry) in keys.drain() {
             entry.key.close()?;
