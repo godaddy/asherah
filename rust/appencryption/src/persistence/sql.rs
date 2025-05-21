@@ -40,7 +40,7 @@ impl SqlMetastoreDbType {
             SqlMetastoreDbType::MySql => sql.to_string(),
             SqlMetastoreDbType::Postgres => {
                 // Convert ? to $1, $2, etc.
-                let re = Regex::new(r"\?").unwrap();
+                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
@@ -50,7 +50,7 @@ impl SqlMetastoreDbType {
             }
             SqlMetastoreDbType::Oracle => {
                 // Convert ? to :1, :2, etc.
-                let re = Regex::new(r"\?").unwrap();
+                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
@@ -60,7 +60,7 @@ impl SqlMetastoreDbType {
             }
             SqlMetastoreDbType::SqlServer => {
                 // Convert ? to @p1, @p2, etc.
-                let re = Regex::new(r"\?").unwrap();
+                let re = Regex::new(r"\?").expect("Failed to create regex pattern for SQL placeholders");
                 let mut counter = 0;
                 re.replace_all(sql, |_: &regex::Captures<'_>| {
                     counter += 1;
@@ -74,7 +74,7 @@ impl SqlMetastoreDbType {
 
 /// SQL database client trait for metastore operations
 #[async_trait]
-pub trait SqlClient: Send + Sync {
+pub trait SqlClient: Send + Sync + std::fmt::Debug {
     /// Loads a key record by ID and created timestamp
     async fn load_key(
         &self,
@@ -97,6 +97,7 @@ pub trait SqlClient: Send + Sync {
 }
 
 /// SQL metastore implementation
+#[derive(Debug)]
 pub struct SqlMetastore {
     /// SQL client
     client: Arc<dyn SqlClient>,

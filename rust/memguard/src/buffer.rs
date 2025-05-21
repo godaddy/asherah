@@ -6,10 +6,12 @@ use memcall::{self, MemoryProtection};
 use std::fmt;
 use std::fmt::Debug;
 use std::io::{ErrorKind, Read};
+use std::mem::{align_of, size_of};
+use std::result::Result as StdResult;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-type Result<T> = std::result::Result<T, MemguardError>;
+type Result<T> = StdResult<T, MemguardError>;
 
 // Note: Go's canary size is implicit, derived from page padding.
 // The `actual_canary_len` calculated in `Buffer::new` is the source of truth.
@@ -117,7 +119,7 @@ impl Buffer {
         if !self.is_alive() {
             return;
         }
-        let mut state = self.inner.lock().unwrap();
+        let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state in test_corrupt_canary");
         if state.canary_region_len > 0 {
             // Make inner region writable to modify canary
             let start = state.inner_offset;
@@ -126,7 +128,7 @@ impl Buffer {
                 &mut state.memory_allocation[start..end],
                 MemoryProtection::ReadWrite,
             )
-            .unwrap();
+            .expect("Failed to set memory protection to ReadWrite for canary corruption");
             state.mutable = true;
 
             let start = state.canary_region_offset;
@@ -142,7 +144,7 @@ impl Buffer {
                 &mut state.memory_allocation[start..end],
                 MemoryProtection::ReadOnly,
             )
-            .unwrap();
+            .expect("Failed to reset memory protection to ReadOnly after canary corruption");
             state.mutable = false;
         }
     }
@@ -192,7 +194,7 @@ struct BufferState {
 impl Drop for BufferState {
     fn drop(&mut self) {
         // If we're shutting down, don't try to clean up memory
-        if crate::globals::is_shutdown_in_progress() {
+        if globals::is_shutdown_in_progress() {
             return;
         }
 
@@ -404,7 +406,7 @@ impl Buffer {
         // Create buffer instance
         let destroyed = Arc::new(AtomicBool::new(false));
 
-        let page_size = *crate::util::PAGE_SIZE;
+        let page_size = *PAGE_SIZE;
         let user_data_len = size;
 
         // The inner region contains user data + canary. Its total length is rounded to page size.
@@ -588,12 +590,15 @@ impl Buffer {
 
         let buffer_for_registry = Arc::new(Mutex::new(registry_buffer));
 
-        if let Ok(mut registry) = globals::get_buffer_registry().lock() {
-            registry.add(buffer_for_registry);
-        } else {
-            // If the lock is poisoned, this buffer won't be registered.
-            // Purge/safe_exit might panic later if they also can't get the registry lock.
-            error!("Failed to lock buffer registry during Buffer::new (poisoned). Buffer will not be registered globally.");
+        match globals::get_buffer_registry().lock() { 
+            Ok(mut registry) => {
+                registry.add(buffer_for_registry);
+            }
+            _ => {
+                // If the lock is poisoned, this buffer won't be registered.
+                // Purge/safe_exit might panic later if they also can't get the registry lock.
+                error!("Failed to lock buffer registry during Buffer::new (poisoned). Buffer will not be registered globally.");
+            }
         }
 
         // Return the newly created buffer
@@ -678,7 +683,7 @@ impl Buffer {
         // We need to check current state first.
         let needs_protection_change;
         {
-            let state = self.inner.lock().unwrap();
+            let state = self.inner.lock().expect("Failed to acquire lock on buffer state");
             if state.memory_allocation.is_empty() {
                 return Err(MemguardError::SecretClosed);
             }
@@ -691,7 +696,7 @@ impl Buffer {
 
         let result;
         {
-            let state = self.inner.lock().unwrap();
+            let state = self.inner.lock().expect("Failed to acquire lock on buffer state for read operation");
             // Get a reference to the data region
             let data_slice = &state.memory_allocation
                 [state.data_region_offset..(state.data_region_offset + state.data_region_len)];
@@ -766,7 +771,7 @@ impl Buffer {
 
         let result;
         {
-            let mut state = self.inner.lock().unwrap();
+            let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state for write operation");
             if state.memory_allocation.is_empty() {
                 // Should be caught by destroyed() but good check
                 // Release lock before returning to avoid poisoning if protect fails next
@@ -835,7 +840,7 @@ impl Buffer {
             return Err(MemguardError::SecretClosed);
         }
 
-        let mut state = self.inner.lock().unwrap();
+        let mut state = self.inner.lock().expect("Failed to acquire lock on buffer state for destroy operation");
 
         // Skip if buffer is empty
         if state.memory_allocation.is_empty() {
@@ -918,9 +923,9 @@ impl Buffer {
         // to avoid lock order inversion (see LOCK_ORDERING.md and globals.rs comment)
         if result_of_destroy.is_ok() {
             eprintln!("DEBUG: Buffer::destroy() removing from registry");
-            crate::globals::get_buffer_registry()
+            globals::get_buffer_registry()
                 .lock()
-                .unwrap()
+                .expect("Failed to acquire lock on buffer registry for removal")
                 .remove(self);
             eprintln!("DEBUG: Buffer::destroy() removed from registry");
         }
@@ -1624,14 +1629,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<u16>()
-                || data_ptr.align_offset(std::mem::align_of::<u16>()) != 0
+            if data_len < size_of::<u16>()
+                || data_ptr.align_offset(align_of::<u16>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u16 values we can get from the buffer
-                let len_u16 = data_len / std::mem::size_of::<u16>();
+                let len_u16 = data_len / size_of::<u16>();
 
                 if len_u16 == 0 {
                     slice_ref = &[];
@@ -1716,14 +1721,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<u32>()
-                || data_ptr.align_offset(std::mem::align_of::<u32>()) != 0
+            if data_len < size_of::<u32>()
+                || data_ptr.align_offset(align_of::<u32>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u32 values we can get from the buffer
-                let len_u32 = data_len / std::mem::size_of::<u32>();
+                let len_u32 = data_len / size_of::<u32>();
 
                 if len_u32 == 0 {
                     slice_ref = &[];
@@ -1808,14 +1813,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<u64>()
-                || data_ptr.align_offset(std::mem::align_of::<u64>()) != 0
+            if data_len < size_of::<u64>()
+                || data_ptr.align_offset(align_of::<u64>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete u64 values we can get from the buffer
-                let len_u64 = data_len / std::mem::size_of::<u64>();
+                let len_u64 = data_len / size_of::<u64>();
 
                 if len_u64 == 0 {
                     slice_ref = &[];
@@ -1979,14 +1984,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<i16>()
-                || data_ptr.align_offset(std::mem::align_of::<i16>()) != 0
+            if data_len < size_of::<i16>()
+                || data_ptr.align_offset(align_of::<i16>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i16 values we can get from the buffer
-                let len_i16 = data_len / std::mem::size_of::<i16>();
+                let len_i16 = data_len / size_of::<i16>();
 
                 if len_i16 == 0 {
                     slice_ref = &[];
@@ -2071,14 +2076,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<i32>()
-                || data_ptr.align_offset(std::mem::align_of::<i32>()) != 0
+            if data_len < size_of::<i32>()
+                || data_ptr.align_offset(align_of::<i32>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i32 values we can get from the buffer
-                let len_i32 = data_len / std::mem::size_of::<i32>();
+                let len_i32 = data_len / size_of::<i32>();
 
                 if len_i32 == 0 {
                     slice_ref = &[];
@@ -2163,14 +2168,14 @@ impl Buffer {
             let data_len = state.data_region_len;
 
             // Check alignment and length
-            if data_len < std::mem::size_of::<i64>()
-                || data_ptr.align_offset(std::mem::align_of::<i64>()) != 0
+            if data_len < size_of::<i64>()
+                || data_ptr.align_offset(align_of::<i64>()) != 0
             {
                 // Prepare an empty return
                 slice_ref = &[];
             } else {
                 // Calculate how many complete i64 values we can get from the buffer
-                let len_i64 = data_len / std::mem::size_of::<i64>();
+                let len_i64 = data_len / size_of::<i64>();
 
                 if len_i64 == 0 {
                     slice_ref = &[];
@@ -2527,7 +2532,7 @@ mod tests {
         // In test mode, we don't check global registry consistency
         #[cfg(not(test))]
         assert!(
-            globals::get_buffer_registry().lock().unwrap().exists(&b),
+            globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
             "Buffer not found in global registry"
         );
 
@@ -2688,7 +2693,7 @@ mod tests {
 
         // Let's also check the original buffer for existence before destruction
         assert!(
-            globals::get_buffer_registry().lock().unwrap().exists(&b),
+            globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
             "Buffer should exist in registry before destroy"
         );
 
@@ -2700,7 +2705,7 @@ mod tests {
             "Destroyed buffer should not be mutable"
         );
         assert!(
-            !globals::get_buffer_registry().lock().unwrap().exists(&b),
+            !globals::get_buffer_registry().lock().expect("Failed to acquire lock on buffer registry").exists(&b),
             "Buffer should be removed from registry"
         );
 

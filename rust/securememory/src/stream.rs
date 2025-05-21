@@ -353,7 +353,7 @@ where
                 }
 
                 // Get the next chunk
-                next_secret = queue.pop().unwrap();
+                next_secret = queue.pop().expect("Queue should not be empty at this point");
             }
 
             // Process the secret outside the lock

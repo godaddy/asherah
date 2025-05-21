@@ -443,7 +443,7 @@ impl Drop for Coffer {
         self.destroyed.store(true, Ordering::SeqCst);
 
         // Give a brief moment for rekey thread to notice
-        std::thread::sleep(std::time::Duration::from_millis(1));
+        thread::sleep(Duration::from_millis(1));
 
         // Don't call destroy() during drop as it can cause issues
         // during static cleanup
@@ -511,13 +511,13 @@ mod tests {
         let left_is_zero = coffer
             .left
             .with_data(|d| Ok(d.iter().all(|&x| x == 0)))
-            .unwrap();
+            .expect("Failed to check left buffer contents");
         assert!(!left_is_zero, "left buffer is all zeros after init");
 
         let right_is_zero = coffer
             .right
             .with_data(|d| Ok(d.iter().all(|&x| x == 0)))
-            .unwrap();
+            .expect("Failed to check right buffer contents");
         assert!(!right_is_zero, "right buffer is all zeros after init");
     }
 
@@ -526,15 +526,15 @@ mod tests {
         let coffer = new_test_coffer();
         let view1_data = coffer
             .view()
-            .unwrap()
+            .expect("First coffer.view() failed")
             .with_data(|d| Ok(d.to_vec()))
-            .unwrap();
+            .expect("Failed to read first coffer view data");
         coffer.init().expect("Coffer re-init failed");
         let view2_data = coffer
             .view()
-            .unwrap()
+            .expect("Second coffer.view() failed")
             .with_data(|d| Ok(d.to_vec()))
-            .unwrap();
+            .expect("Failed to read second coffer view data");
         assert_ne!(
             view1_data, view2_data,
             "Coffer value should change after init"

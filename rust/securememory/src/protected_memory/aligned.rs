@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn test_aligned_memory_new() {
-        let memory = AlignedMemory::new(100).unwrap();
+        let memory = AlignedMemory::new(100).expect("Failed to create aligned memory");
         assert_eq!(memory.len(), 100);
         assert!(memory.capacity() >= 100);
         assert_eq!(memory.protection(), ProtectionState::ReadWrite);
@@ -260,11 +260,11 @@ mod tests {
     #[test]
     fn test_aligned_memory_from_data() {
         let data = vec![1, 2, 3, 4, 5];
-        let memory = AlignedMemory::from_data(&data).unwrap();
+        let memory = AlignedMemory::from_data(&data).expect("Failed to create aligned memory from data");
 
         // Change to ReadOnly to verify data was copied
         let mut memory = memory;
-        memory.protect(ProtectionState::ReadOnly).unwrap();
+        memory.protect(ProtectionState::ReadOnly).expect("Failed to set memory protection to ReadOnly");
 
         assert_eq!(memory.as_slice(), &[1, 2, 3, 4, 5]);
         assert_eq!(memory.len(), 5);
@@ -272,29 +272,29 @@ mod tests {
 
     #[test]
     fn test_aligned_memory_protection() {
-        let mut memory = AlignedMemory::new(100).unwrap();
+        let mut memory = AlignedMemory::new(100).expect("Failed to create aligned memory");
 
         // Test protection transitions
-        memory.protect(ProtectionState::NoAccess).unwrap();
+        memory.protect(ProtectionState::NoAccess).expect("Failed to set memory protection to NoAccess");
         assert_eq!(memory.protection(), ProtectionState::NoAccess);
 
-        memory.protect(ProtectionState::ReadOnly).unwrap();
+        memory.protect(ProtectionState::ReadOnly).expect("Failed to set memory protection to ReadOnly");
         assert_eq!(memory.protection(), ProtectionState::ReadOnly);
 
-        memory.protect(ProtectionState::ReadWrite).unwrap();
+        memory.protect(ProtectionState::ReadWrite).expect("Failed to set memory protection to ReadWrite");
         assert_eq!(memory.protection(), ProtectionState::ReadWrite);
     }
 
     #[test]
     fn test_aligned_memory_zeroize() {
         let data = vec![1, 2, 3, 4, 5];
-        let mut memory = AlignedMemory::from_data(&data).unwrap();
+        let mut memory = AlignedMemory::from_data(&data).expect("Failed to create aligned memory from data");
 
         // Test zeroing
-        memory.zeroize().unwrap();
+        memory.zeroize().expect("Failed to zeroize memory");
 
         // Make readable to verify
-        memory.protect(ProtectionState::ReadOnly).unwrap();
+        memory.protect(ProtectionState::ReadOnly).expect("Failed to set memory protection to ReadOnly");
 
         // Verify zeroed
         for &byte in memory.as_slice() {
@@ -306,7 +306,7 @@ mod tests {
     fn test_aligned_memory_drop() {
         let data = vec![0xFFu8; 100];
         let ptr = {
-            let memory = AlignedMemory::from_data(&data).unwrap();
+            let memory = AlignedMemory::from_data(&data).expect("Failed to create aligned memory from data");
             // Capture the pointer address
             memory.ptr
         };

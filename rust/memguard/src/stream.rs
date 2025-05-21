@@ -67,7 +67,7 @@ impl Stream {
         let guard = self
             .inner
             .lock()
-            .unwrap_or_else(|e| panic!("Stream mutex poisoned: {}", e));
+            .expect("Failed to acquire lock on stream inner state");
         let mut total_size = 0;
         for enclave in &guard.queue {
             total_size += enclave.size();
@@ -121,7 +121,7 @@ impl Stream {
         let mut guard = self
             .inner
             .lock()
-            .unwrap_or_else(|e| panic!("Stream mutex poisoned: {}", e));
+            .expect("Failed to acquire lock on stream inner state for next()");
 
         // Discard any partially read chunk, as `next` implies getting a fresh full enclave.
         if let Some(old_chunk) = guard.current_chunk_buffer.take() {
@@ -184,7 +184,7 @@ impl Stream {
         // Loop until we've read all the data
         loop {
             let mut buf = vec![0u8; 4096]; // Use a reasonably sized buffer for reading
-            let mut temp_guard = self.inner.lock().unwrap();
+            let mut temp_guard = self.inner.lock().expect("Failed to acquire lock on stream inner state for flush");
 
             // Read a chunk of data
             let bytes_read = match self.inner_read(&mut buf, &mut temp_guard) {
@@ -399,20 +399,25 @@ impl Stream {
                 }
             }
             return Ok(0); // No more data
-        } else if let Some(enclave) = guard.queue.pop_front() {
-            // Convert Enclave to Buffer using Enclave::open
-            match enclave.open() {
-                Ok(buffer) => {
-                    guard.current_chunk_buffer = Some(buffer);
-                    guard.current_chunk_offset = 0; // Reset offset for new buffer
-                    return self.inner_read(buf, guard);
+        } else { 
+            match guard.queue.pop_front() { 
+                Some(enclave) => {
+                    // Convert Enclave to Buffer using Enclave::open
+                    match enclave.open() {
+                        Ok(buffer) => {
+                            guard.current_chunk_buffer = Some(buffer);
+                            guard.current_chunk_offset = 0; // Reset offset for new buffer
+                            return self.inner_read(buf, guard);
+                        }
+                        Err(e) => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::Other,
+                                format!("Failed to open enclave: {}", e),
+                            ));
+                        }
+                    }
                 }
-                Err(e) => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("Failed to open enclave: {}", e),
-                    ));
-                }
+                None => {}
             }
         }
 
@@ -429,7 +434,7 @@ impl Read for Stream {
         let mut guard = self
             .inner
             .lock()
-            .unwrap_or_else(|e| panic!("Stream mutex poisoned: {}", e));
+            .expect("Failed to acquire lock on stream inner state for read");
         let result = self.inner_read(buf, &mut guard);
         drop(guard); // Explicitly release the lock
         result
@@ -445,7 +450,7 @@ impl Write for Stream {
         let mut guard = self
             .inner
             .lock()
-            .unwrap_or_else(|e| panic!("Stream mutex poisoned: {}", e));
+            .expect("Failed to acquire lock on stream inner state for write");
         let mut total_bytes_written = 0;
 
         #[cfg(test)]
@@ -523,9 +528,7 @@ mod tests {
     fn test_write_to_stream(t_name: &str, s: &mut Stream, data: &[u8]) {
         // Stream::write takes &[u8], so no need to clone to vec for mutability here.
         // The implementation of Stream::write handles copying.
-        let n = s.write(data).unwrap_or_else(|e| {
-            panic!("{}: stream.write failed: {:?}", t_name, e);
-        });
+        let n = s.write(data).expect(&format!("{}: stream.write failed", t_name));
         assert_eq!(n, data.len(), "{}: not all data was written", t_name);
         // Cannot check for data_to_write wipe here due to Write trait signature.
         // Go's test wipes the input `b` in its `write` helper.
@@ -774,9 +777,9 @@ mod tests {
                 }
 
                 // Attempt to destroy the buffer
-                c2.destroy().unwrap_or_else(|e| {
+                if let Err(e) = c2.destroy() {
                     println!("Warning: Failed to destroy flushed buffer: {:?}", e);
-                });
+                };
             }
             Err(e) => {
                 // Just log the error and continue
@@ -1023,10 +1026,10 @@ mod tests {
                         assert_eq!(d, ref1.as_slice());
                         Ok(())
                     })
-                    .unwrap();
+                    .expect("Failed to verify buffer data in test");
                 }
 
-                b2.destroy().unwrap();
+                b2.destroy().expect("Failed to destroy buffer in test");
                 test_read_from_stream(
                     "TestStreamingSanity-EOF2",
                     &mut s,
