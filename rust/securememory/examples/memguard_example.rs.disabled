@@ -1,0 +1,167 @@
+//! Example demonstrating the use of the memguard module.
+//!
+//! This example shows the core functionality of the memguard module,
+//! including buffer creation, encryption with enclaves, and emergency
+//! data wiping.
+
+use securememory::memguard::{Buffer, Enclave, purge, safe_exit, scramble_bytes, wipe_bytes};
+use securememory::mem_sys::DefaultMemoryManager;
+use std::sync::Arc;
+use std::time::Duration;
+use std::thread;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Memguard Secure Memory Example");
+    println!("==============================\n");
+
+    // Create a secure buffer
+    println!("1. Creating secure buffer with guard pages and canary protection...");
+    let memory_manager = Arc::new(DefaultMemoryManager::new());
+    let mut buffer = Buffer::new(64, memory_manager.clone())?;
+    
+    // Fill buffer with data
+    println!("2. Writing sensitive data to the buffer...");
+    buffer.with_data_mut(|data| {
+        for i in 0..data.len() {
+            data[i] = (i % 256) as u8;
+        }
+        println!("   - Wrote {} bytes of data", data.len());
+        Ok(())
+    })?;
+    
+    // Demonstrate reading data
+    println!("3. Reading data from the buffer...");
+    buffer.with_data(|data| {
+        println!("   - First 8 bytes: {:?}", &data[0..8]);
+        println!("   - Buffer is {} bytes", data.len());
+        Ok(())
+    })?;
+    
+    // Freeze the buffer to make it immutable
+    println!("4. Freezing the buffer (making it immutable)...");
+    buffer.freeze()?;
+    
+    // Try reading the frozen buffer
+    println!("5. Reading from frozen buffer (should succeed)...");
+    buffer.with_data(|data| {
+        println!("   - First 8 bytes (frozen): {:?}", &data[0..8]);
+        Ok(())
+    })?;
+    
+    // Trying to modify a frozen buffer would fail with SecureMemoryError::ReadOnlyMemory
+    println!("6. Writing to frozen buffer (would fail, commented out)...");
+    // This would fail:
+    // buffer.with_data_mut(|data| {
+    //     data[0] = 99;
+    //     Ok(())
+    // })?;
+    
+    // Make the buffer mutable again
+    println!("7. Melting the buffer (making it mutable again)...");
+    buffer.melt()?;
+    
+    // Now we can modify it
+    println!("8. Modifying the buffer after melting...");
+    buffer.with_data_mut(|data| {
+        data[0] = 99;
+        data[1] = 98;
+        data[2] = 97;
+        println!("   - Modified first 3 bytes");
+        Ok(())
+    })?;
+    
+    // Verify modification
+    buffer.with_data(|data| {
+        println!("   - First 8 bytes after modification: {:?}", &data[0..8]);
+        Ok(())
+    })?;
+    
+    // Fill with random data
+    println!("9. Filling buffer with cryptographically secure random data...");
+    buffer.scramble()?;
+    buffer.with_data(|data| {
+        println!("   - First 8 bytes after scrambling: {:?}", &data[0..8]);
+        Ok(())
+    })?;
+    
+    // Create a new buffer for enclave demo
+    println!("\n10. Creating a new buffer for enclave demo...");
+    let mut demo_buffer = Buffer::new(32, memory_manager.clone())?;
+    
+    // Fill with pattern
+    demo_buffer.with_data_mut(|data| {
+        for i in 0..data.len() {
+            data[i] = (i * 2) as u8;
+        }
+        println!("    - Filled buffer with pattern");
+        Ok(())
+    })?;
+    
+    // Show buffer contents
+    demo_buffer.with_data(|data| {
+        println!("    - Buffer contents: {:?}", data);
+        Ok(())
+    })?;
+    
+    // Seal the buffer in an encrypted enclave
+    println!("11. Sealing buffer in an encrypted enclave...");
+    let enclave = Enclave::seal(&mut demo_buffer)?;
+    
+    // Verify buffer is destroyed after sealing
+    println!("    - Original buffer alive after sealing: {}", demo_buffer.is_alive());
+    
+    // Open the enclave
+    println!("12. Opening the enclave to retrieve the data...");
+    let unsealed = enclave.open()?;
+    
+    // Check the unsealed data
+    unsealed.with_data(|data| {
+        println!("    - Retrieved data from enclave: {:?}", data);
+        
+        // Verify the pattern is preserved
+        for i in 0..data.len() {
+            assert_eq!(data[i], (i * 2) as u8);
+        }
+        println!("    - Verified data integrity after unsealing");
+        Ok(())
+    })?;
+    
+    // Demonstrate utility functions
+    println!("\n13. Demonstrating utility functions...");
+    
+    // Create a buffer for scrambling
+    println!("    - Scrambling a byte array");
+    let mut key = vec![0u8; 16];
+    scramble_bytes(&mut key);
+    println!("    - Scrambled bytes: {:?}", key);
+    
+    // Wiping data
+    println!("    - Wiping sensitive data");
+    let mut sensitive = vec![1, 2, 3, 4, 5, 6, 7, 8];
+    println!("    - Before wiping: {:?}", sensitive);
+    wipe_bytes(&mut sensitive);
+    println!("    - After wiping: {:?}", sensitive);
+    
+    // Demonstrate emergency operations
+    println!("\n14. Demonstrating emergency operations...");
+    println!("    - Creating a buffer that will be purged");
+    let emergency_buffer = Buffer::new(16, memory_manager.clone())?;
+    
+    // Purge all data
+    println!("    - Purging all sensitive data (wiping all buffers)");
+    purge();
+    
+    // Verify buffer is destroyed after purge
+    println!("    - Buffer alive after purge: {}", emergency_buffer.is_alive());
+    
+    println!("\nDemonstration completed successfully!");
+    println!("\nIn a real application, you could use safe_exit() to safely terminate.");
+    println!("This example will terminate normally in 2 seconds.");
+    
+    thread::sleep(Duration::from_secs(2));
+    
+    // Uncomment to demonstrate safe exit:
+    // safe_exit(0);
+    
+    Ok(())
+}

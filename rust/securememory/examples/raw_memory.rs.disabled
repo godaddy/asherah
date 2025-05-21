@@ -1,0 +1,70 @@
+use std::slice;
+use libc;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Testing raw memory allocation without Vec...");
+    
+    let size = 1024;
+    
+    // Get the page size
+    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as usize;
+    println!("Page size: {} bytes", page_size);
+    
+    // Align size to page boundary
+    let aligned_size = if size % page_size == 0 {
+        size
+    } else {
+        size + (page_size - (size % page_size))
+    };
+    println!("Aligned size: {} bytes", aligned_size);
+    
+    // Allocate memory using mmap
+    println!("Allocating memory with mmap...");
+    let ptr = unsafe {
+        libc::mmap(
+            std::ptr::null_mut(),
+            aligned_size,
+            libc::PROT_READ | libc::PROT_WRITE,
+            libc::MAP_PRIVATE | libc::MAP_ANON,
+            -1,
+            0,
+        )
+    };
+    
+    if ptr == libc::MAP_FAILED {
+        return Err(format!("mmap failed with error code {}", std::io::Error::last_os_error()).into());
+    }
+    
+    println!("Memory allocated at {:p}", ptr);
+    
+    // Create a mutable slice from the raw pointer
+    let memory = unsafe { slice::from_raw_parts_mut(ptr as *mut u8, size) };
+    
+    // Write some data
+    println!("Writing to memory...");
+    memory[0] = 42;
+    println!("Value written: {}", memory[0]);
+    
+    // Read back the data
+    println!("Reading from memory...");
+    let value = memory[0];
+    println!("Value read: {}", value);
+    
+    // Wipe the memory
+    println!("Wiping memory...");
+    for i in 0..size {
+        unsafe { *((ptr as *mut u8).add(i)) = 0 };
+    }
+    
+    // Free memory using munmap
+    println!("Freeing memory with munmap...");
+    unsafe {
+        if libc::munmap(ptr, aligned_size) != 0 {
+            return Err(format!("munmap failed with error code {}", std::io::Error::last_os_error()).into());
+        }
+    }
+    
+    println!("Memory freed successfully");
+    println!("All operations completed successfully");
+    Ok(())
+}

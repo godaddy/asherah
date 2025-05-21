@@ -1,0 +1,45 @@
+name: '[Rust] SecureMemory Benchmarks'
+
+on:
+  workflow_dispatch:
+    inputs:
+      rust-version:
+        description: 'Rust toolchain version'
+        required: false
+        default: 'stable'
+
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Using pre-installed Rust toolchain on Ubuntu runners
+      - name: Set up Rust toolchain
+        run: |
+          rustup default ${{ inputs.rust-version || 'stable' }}
+          rustup component add rustfmt clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run benchmarks
+        run: |
+          cd rust/securememory
+          sudo prlimit --pid $$ --core=-1
+          sudo prlimit --pid $$ --memlock=-1:-1
+          ./scripts/benchmark_test.sh
+
+      - name: Store benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-securememory-bench-results
+          path: rust/securememory/target/criterion

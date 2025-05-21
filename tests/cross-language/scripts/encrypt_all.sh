@@ -44,6 +44,11 @@ echo "----------------------Encrypting payload using Go-----------------------"
 go test -v -test.run '^TestEncryptFeatures$' -godog.paths=../features/encrypt.feature
 cd ..
 
+cd rust
+echo "----------------------Encrypting payload using Rust---------------------"
+cargo test --test encrypt
+cd ..
+
 cd sidecar
 pip3 install -r requirements.txt
 echo "----------Encrypting payload with Go sidecar and python client----------"

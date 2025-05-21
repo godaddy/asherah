@@ -1,0 +1,47 @@
+# Fixes for PR #1351
+
+This PR addresses several lint issues and code quality improvements in the Rust port of Asherah:
+
+## Unwrap() Replacements
+- Replaced all unwrap() calls with expect() to provide better error messages and comply with GoDaddy's lint rules
+- Fixed unwrap() calls in:
+  - MultiRegionClient in src/plugins/aws_v2/metastore/client.rs
+  - DynamoDbMetastore in src/metastore/dynamodb.rs
+  - SharedEncryption and CacheWrapper in src/session_cache.rs
+  - KeyCache in src/key/cache.rs
+
+## Debug Implementations
+- Added #[derive(Debug)] to all structs that needed it:
+  - ClientHealth, MultiRegionClient, and DynamoDbMetastore in src/metastore/dynamodb.rs
+  - CacheWrapper in src/session_cache.rs
+  - StandardDynamoDbClient and DynamoDbClientBuilder in src/metastore/dynamodb_impl.rs
+  - MemoryMetastore in src/persistence/memory.rs
+  - SqlMetastore in src/persistence/sql.rs
+
+## Let Underscore Drop Fixes
+- Fixed non-binding let on types with destructors (let _ = ...) in:
+  - src/kms/aws.rs (fixed two instances in the tokio::spawn async blocks)
+  - src/oracle.rs (fixed test case)
+  - benches/key_management.rs (fixed test cases with encrypted data)
+
+## Unnecessary Qualifications
+- Fixed unnecessarily qualified paths in the memguard crate:
+  - Removed std::result::Result qualification in buffer.rs
+  - Removed std::error::Error qualification in lib.rs
+
+## Trivial Numeric Casts
+- Fixed trivial numeric casts in the memcall crate:
+  - Added proper From<MemoryProtection> for u32 implementation in types.rs
+  - Added comments explaining necessary casts in unix.rs and lib.rs
+  - Made libc::sysconf conversion more robust
+
+## Lint Rule Configurations
+- Restored all lint rules in Cargo.toml files to their original strict values
+- Kept `unsafe_code = "allow"` for memory-related crates where it's necessary
+- Properly enabled all the previously-weakened lint rules:
+  - `missing_debug_implementations`
+  - `let_underscore_drop`
+  - `unused_qualifications`
+  - `trivial_numeric_casts`
+
+These changes ensure the code complies with GoDaddy's lint rules while maintaining its functionality.

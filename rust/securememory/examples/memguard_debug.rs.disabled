@@ -1,0 +1,56 @@
+use securememory::error::Result;
+use securememory::mem_sys::{DefaultMemoryManager, MemoryManager, MemoryProtection};
+use std::sync::Arc;
+
+fn main() -> Result<()> {
+    // Basic test to identify where the issue is occurring
+    println!("Creating memory manager...");
+    let memory_manager = Arc::new(DefaultMemoryManager::new());
+    println!("Memory manager created");
+    
+    println!("Allocating memory...");
+    let mut memory = memory_manager.alloc(64)?;
+    println!("Memory allocated, size: {}", memory.len());
+    
+    println!("Filling memory with test data...");
+    for i in 0..memory.len() {
+        memory[i] = (i % 256) as u8;
+    }
+    println!("Memory filled");
+    
+    println!("Locking memory...");
+    memory_manager.lock(&mut memory)?;
+    println!("Memory locked");
+    
+    println!("Setting protection to ReadOnly...");
+    memory_manager.protect(&mut memory, MemoryProtection::ReadOnly)?;
+    println!("Protection set to ReadOnly");
+    
+    println!("Reading from memory...");
+    for i in 0..memory.len() {
+        let val = memory[i];
+        assert_eq!(val, (i % 256) as u8);
+    }
+    println!("Read successful");
+    
+    println!("Setting protection to ReadWrite...");
+    memory_manager.protect(&mut memory, MemoryProtection::ReadWrite)?;
+    println!("Protection set to ReadWrite");
+    
+    println!("Writing to memory again...");
+    for i in 0..memory.len() {
+        memory[i] = 255 - (i % 256) as u8;
+    }
+    println!("Write successful");
+    
+    println!("Unlocking memory...");
+    memory_manager.unlock(&mut memory)?;
+    println!("Memory unlocked");
+    
+    println!("Freeing memory...");
+    memory_manager.free(&mut memory)?;
+    println!("Memory freed");
+    
+    println!("Success!");
+    Ok(())
+}

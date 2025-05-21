@@ -1,0 +1,48 @@
+// Test protected memory secret implementation
+use securememory::mem_sys::DefaultMemoryManager;
+use securememory::protected_memory::DefaultSecretFactory;
+use securememory::secret::{Secret, SecretFactory, SecretExtensions};
+use std::sync::Arc;
+
+#[test]
+fn test_protected_memory_secret() {
+    let memory_manager = Arc::new(DefaultMemoryManager::new());
+    let factory = DefaultSecretFactory::new();
+    
+    // Create some test data
+    let mut test_data = b"This is a test secret".to_vec();
+    
+    // Create a secret
+    let secret = factory.new(&mut test_data).unwrap();
+    
+    // Verify it's not closed
+    assert!(!secret.is_closed());
+    
+    // Access the data
+    secret.with_bytes(|bytes| {
+        assert_eq!(bytes, b"This is a test secret");
+        Ok(())
+    }).unwrap();
+    
+    // Create a cloned secret
+    let cloned = secret.clone();
+    
+    // Access the cloned data
+    cloned.with_bytes(|bytes| {
+        assert_eq!(bytes, b"This is a test secret");
+        Ok(())
+    }).unwrap();
+    
+    // Close the secret
+    secret.close().unwrap();
+    
+    // Verify it's closed
+    assert!(secret.is_closed());
+    
+    // Verify cloned secret is also closed (they share state)
+    assert!(cloned.is_closed());
+    
+    // Try to access closed secret (should fail)
+    let access_result = secret.with_bytes(|_| Ok(()));
+    assert!(access_result.is_err());
+}
