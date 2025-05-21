@@ -8,13 +8,20 @@
 //! - PostgreSQL metastore for SQL database integration (requires the 'postgres' feature)
 //! - SQL Server metastore for SQL database integration (requires the 'mssql' feature)
 //! - ADO.NET metastore for .NET database integration (placeholder implementation)
+//! - Generic key-value store abstraction for implementing custom backends
 //! - Other metastore implementations can be added by implementing the Metastore trait
 //!
 //! For AWS DynamoDB implementations, see the `plugins` module:
 //! - AWS SDK v1: `plugins::aws_v1::metastore`
 //! - AWS SDK v2: `plugins::aws_v2::metastore`
+//!
+//! For implementing custom key-value store based metastores, see:
+//! - `kv_store` module: Generic key-value store traits
+//! - `kv_adapter` module: Adapter to convert a key-value store to a Metastore
 
 pub mod memory;
+pub mod kv_store;
+pub mod kv_adapter;
 
 #[cfg(feature = "mysql")]
 mod mysql;
@@ -30,6 +37,10 @@ mod oracle;
 mod ado;
 
 pub use memory::InMemoryMetastore;
+
+// Re-export key-value store traits and adapters
+pub use kv_store::{KeyValueStore, TtlKeyValueStore, CompositeKey};
+pub use kv_adapter::{KeyValueMetastore, StringKeyValueMetastore};
 
 #[cfg(feature = "mysql")]
 pub use mysql::MySqlMetastore;
