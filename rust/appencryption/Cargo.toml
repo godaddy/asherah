@@ -90,6 +90,9 @@ color-eyre = "0.6"
 # Benchmarking
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
+[workspace]
+exclude = ["examples/cli", "tools/traces"]
+
 [lints]
 workspace = true
 
