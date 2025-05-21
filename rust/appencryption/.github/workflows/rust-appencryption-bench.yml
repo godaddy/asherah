@@ -1,0 +1,41 @@
+name: '[Rust] AppEncryption Benchmarks'
+
+on:
+  workflow_dispatch:
+    inputs:
+      rust-version:
+        description: 'Rust toolchain version'
+        required: false
+        default: 'stable'
+
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Ubuntu already has Rust installed, just add components
+      - name: Setup Rust tools
+        run: |
+          rustup component add rustfmt clippy
+          cargo install cargo-criterion || true
+
+      - name: Run benchmarks
+        run: |
+          cd rust/appencryption
+          cargo bench --features full
+        
+      - name: Archive benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: rust/appencryption/target/criterion/
+          retention-days: 90
