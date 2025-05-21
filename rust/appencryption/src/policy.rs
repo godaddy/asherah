@@ -105,12 +105,36 @@ impl CryptoPolicy {
     }
 
     /// Sets the expire after duration
+    /// 
+    /// This defines how long encryption keys remain valid before they're considered expired.
+    /// Default is 90 days.
+    /// 
+    /// # Example
+    /// ```
+    /// use appencryption::policy::CryptoPolicy;
+    /// use std::time::Duration;
+    /// 
+    /// let policy = CryptoPolicy::new()
+    ///     .with_expire_after(Duration::from_secs(60 * 60 * 24 * 30)); // 30 days
+    /// ```
     pub fn with_expire_after(mut self, duration: time::Duration) -> Self {
         self.expire_key_after = duration;
         self
     }
 
     /// Sets the revoke check interval
+    /// 
+    /// This defines how often to check for revoked keys in the cache.
+    /// Default is 60 minutes.
+    /// 
+    /// # Example
+    /// ```
+    /// use appencryption::policy::CryptoPolicy;
+    /// use std::time::Duration;
+    /// 
+    /// let policy = CryptoPolicy::new()
+    ///     .with_revoke_check_interval(Duration::from_secs(60 * 30)); // 30 minutes
+    /// ```
     pub fn with_revoke_check_interval(mut self, duration: time::Duration) -> Self {
         self.revoke_check_interval = duration;
         self
@@ -143,12 +167,37 @@ impl CryptoPolicy {
     }
 
     /// Sets the session cache duration
+    /// 
+    /// This controls how long sessions remain in the cache before being evicted.
+    /// Default is 2 hours.
+    /// 
+    /// # Example
+    /// ```
+    /// use appencryption::policy::CryptoPolicy;
+    /// use std::time::Duration;
+    /// 
+    /// let policy = CryptoPolicy::new()
+    ///     .with_session_cache_duration(Duration::from_secs(60 * 60)); // 1 hour
+    /// ```
     pub fn with_session_cache_duration(mut self, duration: time::Duration) -> Self {
         self.session_cache_duration = duration;
         self
     }
 
     /// Sets the create date precision for new key timestamps
+    /// 
+    /// This controls the granularity of timestamps for new keys, which affects
+    /// how many unique keys are created over time.
+    /// Default is 1 minute.
+    /// 
+    /// # Example
+    /// ```
+    /// use appencryption::policy::CryptoPolicy;
+    /// use std::time::Duration;
+    /// 
+    /// let policy = CryptoPolicy::new()
+    ///     .with_create_date_precision(Duration::from_secs(60 * 5)); // 5 minutes
+    /// ```
     pub fn with_create_date_precision(mut self, duration: time::Duration) -> Self {
         self.create_date_precision = duration;
         self

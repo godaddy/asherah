@@ -5,6 +5,7 @@ use appencryption::{
     session::{Session, SessionFactory},
     Result,
 };
+#[cfg(feature = "async-trait-compat")]
 use async_trait::async_trait;
 use color_eyre::eyre::{self, WrapErr};
 use env_logger;
@@ -83,7 +84,7 @@ impl RedisStore {
     }
 }
 
-#[async_trait]
+#[cfg_attr(feature = "async-trait-compat", async_trait)]
 impl KeyValueStore for RedisStore {
     type Key = String;
     type Value = String;
@@ -169,7 +170,7 @@ impl KeyValueStore for RedisStore {
     }
 }
 
-#[async_trait]
+#[cfg_attr(feature = "async-trait-compat", async_trait)]
 impl TtlKeyValueStore for RedisStore {
     async fn expire(&self, key: &Self::Key, ttl_seconds: i64) -> Result<bool, Self::Error> {
         // Calculate expiration time outside the lock

@@ -1,3 +1,4 @@
+#[cfg(feature = "async-trait-compat")]
 use async_trait::async_trait;
 use std::error::Error as StdError;
 use std::fmt::Debug;
@@ -7,7 +8,10 @@ use std::fmt::Debug;
 /// This trait defines the essential operations for any key-value storage
 /// implementation used by Asherah's metastores. Implementors should provide
 /// appropriate error handling and ensure thread safety.
-#[async_trait]
+/// 
+/// For Rust versions earlier than 1.75, enable the "async-trait-compat" feature
+/// to use the async-trait crate for compatibility.
+#[cfg_attr(feature = "async-trait-compat", async_trait)]
 pub trait KeyValueStore: Send + Sync {
     /// The type of keys used in this store
     type Key: Send + Sync;
@@ -73,7 +77,10 @@ pub trait KeyValueStore: Send + Sync {
 /// A trait for key-value stores that support time-to-live (TTL) expiration.
 ///
 /// This extends the basic KeyValueStore with TTL capabilities.
-#[async_trait]
+/// 
+/// For Rust versions earlier than 1.75, enable the "async-trait-compat" feature
+/// to use the async-trait crate for compatibility.
+#[cfg_attr(feature = "async-trait-compat", async_trait)]
 pub trait TtlKeyValueStore: KeyValueStore {
     /// Sets an expiration time on a key
     ///
