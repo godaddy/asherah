@@ -12,6 +12,7 @@ use async_trait::async_trait;
 ///
 /// This is a placeholder implementation that would need to be completed
 /// with actual SQL Server connectivity using your preferred driver.
+#[derive(Debug)]
 pub struct MssqlMetastore;
 
 impl Default for MssqlMetastore {

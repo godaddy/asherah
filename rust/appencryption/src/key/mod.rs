@@ -112,7 +112,7 @@ impl CryptoKey {
     {
         // Since the trait object doesn't support generic methods, we need to read the bytes
         // via the reader interface and then call the action
-        let mut buf = vec![0u8; self.secret.len()];
+        let mut buf = vec![0_u8; self.secret.len()];
         let reader = self.secret.reader().map_err(Error::SecureMemory)?;
         let mut std_reader = std::io::BufReader::new(reader);
         use std::io::Read;
@@ -128,7 +128,7 @@ impl CryptoKey {
         F: FnOnce(&[u8]) -> Result<(R, Vec<u8>)>,
     {
         // Similar to with_bytes, but we get back a pair and handle the cleanup
-        let mut buf = vec![0u8; self.secret.len()];
+        let mut buf = vec![0_u8; self.secret.len()];
         let reader = self.secret.reader().map_err(Error::SecureMemory)?;
         let mut std_reader = std::io::BufReader::new(reader);
         use std::io::Read;

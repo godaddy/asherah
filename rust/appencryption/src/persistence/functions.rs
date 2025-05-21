@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 /// A function adapter for implementing the Loader trait
 pub struct LoaderFn<K, F>
 where
-    F: for<'a> Fn(&'a K) -> Result<Option<DataRowRecord>> + Send + Sync,
+    F: for<'key> Fn(&'key K) -> Result<Option<DataRowRecord>> + Send + Sync,
     K: Send + Sync,
 {
     /// The load function
@@ -19,7 +19,7 @@ where
 
 impl<K, F> LoaderFn<K, F>
 where
-    F: for<'a> Fn(&'a K) -> Result<Option<DataRowRecord>> + Send + Sync,
+    F: for<'key> Fn(&'key K) -> Result<Option<DataRowRecord>> + Send + Sync,
     K: Send + Sync,
 {
     /// Creates a new LoaderFn with the given function
@@ -34,7 +34,7 @@ where
 #[async_trait]
 impl<K, F> Loader for LoaderFn<K, F>
 where
-    F: for<'a> Fn(&'a K) -> Result<Option<DataRowRecord>> + Send + Sync,
+    F: for<'key> Fn(&'key K) -> Result<Option<DataRowRecord>> + Send + Sync,
     K: Send + Sync,
 {
     type Key = K;

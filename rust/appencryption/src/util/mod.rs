@@ -11,7 +11,7 @@ pub fn fill_random(buf: &mut [u8]) {
 
 /// Generates a random byte array of the specified size
 pub fn get_rand_bytes(size: usize) -> Vec<u8> {
-    let mut bytes = vec![0u8; size];
+    let mut bytes = vec![0_u8; size];
     fill_random(&mut bytes);
     bytes
 }

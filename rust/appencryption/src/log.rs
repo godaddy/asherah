@@ -16,6 +16,7 @@ pub trait Logger: Send + Sync {
 }
 
 /// A no-op logger that does nothing
+#[derive(Debug)]
 pub struct NoopLogger;
 
 impl Default for NoopLogger {
@@ -76,6 +77,7 @@ macro_rules! debugf {
 }
 
 /// Provides a simple logger that writes to standard output
+#[derive(Debug)]
 pub struct StdoutLogger;
 
 impl Default for StdoutLogger {
@@ -109,6 +111,14 @@ impl Logger for StdoutLogger {
 /// Helper struct to enable logging within a scope
 pub struct LoggingGuard {
     previous_logger: Option<Box<dyn Logger>>,
+}
+
+impl std::fmt::Debug for LoggingGuard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LoggingGuard")
+            .field("has_previous_logger", &self.previous_logger.is_some())
+            .finish()
+    }
 }
 
 impl LoggingGuard {

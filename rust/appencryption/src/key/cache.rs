@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, RwLock};
 
 /// A cached CryptoKey with reference counting
+#[derive(Debug)]
 pub struct CachedCryptoKey {
     /// The underlying CryptoKey
     pub crypto_key: Arc<CryptoKey>,
@@ -113,6 +114,7 @@ fn cache_key(id: &str, created: i64) -> String {
 }
 
 /// Implements a cache with an LRU eviction policy
+#[derive(Debug)]
 pub struct KeyCache {
     /// The crypto policy
     policy: Arc<CryptoPolicy>,
@@ -380,10 +382,11 @@ impl KeyCacher for KeyCache {
 }
 
 /// A cache implementation that never caches, always loads
+#[derive(Debug)]
 pub struct NeverCache;
 
 /// Wrapper enum for different cache implementations
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AnyCache {
     KeyCache(Arc<KeyCache>),
     NeverCache(Arc<NeverCache>),

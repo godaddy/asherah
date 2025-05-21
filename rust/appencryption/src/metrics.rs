@@ -32,6 +32,7 @@ pub trait MetricsProvider: Send + Sync {
 }
 
 /// A no-op metrics provider that discards all metrics
+#[derive(Debug)]
 pub struct NoopMetricsProvider;
 
 impl Default for NoopMetricsProvider {
@@ -138,6 +139,7 @@ pub fn record_timer(name: &str, duration: Duration) {
 }
 
 /// Timer for measuring and recording operation duration
+#[derive(Debug)]
 pub struct Timer {
     /// Name of the timer metric
     name: String,
@@ -207,6 +209,7 @@ macro_rules! counter {
 }
 
 /// Helper struct for counter operations
+#[derive(Debug)]
 pub struct CounterHelper {
     /// Name of the counter metric
     name: String,
@@ -234,6 +237,7 @@ pub mod prometheus {
     use std::sync::Mutex;
 
     /// A simple prometheus metrics provider
+    #[derive(Debug)]
     pub struct PrometheusMetricsProvider {
         /// Registered counters
         counters: Mutex<HashMap<String, ()>>,

@@ -14,6 +14,7 @@ use std::sync::Arc;
 ///
 /// This is a placeholder implementation that would need to be connected
 /// to a real ADO.NET compatible database using an appropriate driver.
+#[derive(Debug)]
 pub struct AdoMetastore {
     // Connection string for the ADO.NET database
     connection_string: String,

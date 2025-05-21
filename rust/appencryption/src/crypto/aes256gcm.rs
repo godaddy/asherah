@@ -9,7 +9,7 @@ use aes_gcm::{
 use super::aead::{GCM_MAX_DATA_SIZE, GCM_NONCE_SIZE, GCM_TAG_SIZE};
 
 /// AES-256-GCM implementation of AEAD
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Aes256GcmAead;
 
 impl Aes256GcmAead {
@@ -35,7 +35,7 @@ impl AeadImpl for Aes256GcmAead {
         let size = GCM_NONCE_SIZE + data.len() + GCM_TAG_SIZE;
 
         // Create buffer for encrypted data + nonce
-        let mut nonce_and_cipher = vec![0u8; size];
+        let mut nonce_and_cipher = vec![0_u8; size];
 
         // Fill the nonce area with random bytes
         fill_random(&mut nonce_and_cipher[..GCM_NONCE_SIZE]);
