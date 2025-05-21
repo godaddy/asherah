@@ -586,9 +586,10 @@ mod tests {
         // Create components
         let kms = Arc::new(StaticKeyManagementService::new(vec![0; 32]));
         let metastore = Arc::new(InMemoryMetastore::new());
-        let mut policy = CryptoPolicy::default();
-        policy.expire_key_after = Duration::from_secs(0); // Force key rotation on every encrypt
-        let policy = Arc::new(policy);
+        let policy = Arc::new(CryptoPolicy {
+            expire_key_after: Duration::from_secs(0), // Force key rotation on every encrypt
+            ..Default::default()
+        });
         let crypto = Arc::new(Aes256GcmAead::new());
         let secret_factory = Arc::new(DefaultSecretFactory::new());
         let partition = Arc::new(DefaultPartition::new("test", "service", "product"));

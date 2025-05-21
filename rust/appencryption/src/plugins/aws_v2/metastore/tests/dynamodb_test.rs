@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::unwrap_or_default)]
+
 use super::*;
 use crate::envelope::{EnvelopeKeyRecord, KeyMeta};
 use crate::plugins::aws_v2::metastore::{

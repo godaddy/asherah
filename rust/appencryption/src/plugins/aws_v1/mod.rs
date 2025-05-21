@@ -27,6 +27,6 @@ mod tests {
     fn test_aws_v1_feature_flags() {
         // This is just a placeholder test to verify the feature flags are working.
         // The actual functionality is tested in the respective submodules.
-        assert!(true);
+        // Test passes by completion without errors
     }
 }

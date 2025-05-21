@@ -118,6 +118,7 @@ impl AwsKmsBuilder {
     /// // Create a new builder
     /// let builder = AwsKmsBuilder::new(crypto, arn_map);
     /// ```
+    #[allow(clippy::panic)]
     pub fn new(crypto: Arc<dyn Aead>, arn_map: HashMap<String, String>) -> Self {
         if arn_map.is_empty() {
             log::error!("arnMap must contain at least one entry");

@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod simple_cache_test {
     use crate::cache::simple::SimpleCache;
     use crate::cache::Cache;

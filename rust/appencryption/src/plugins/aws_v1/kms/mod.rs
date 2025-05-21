@@ -80,27 +80,21 @@ impl RegionalClient {
     pub async fn generate_data_key(&self) -> Result<GenerateDataKeyResponse> {
         let _timer = timer!("ael.kms.aws.generatedatakey", "region" => self.region.clone());
 
-        let result = self.client.generate_data_key(&self.master_key_arn).await;
-
-        result
+        self.client.generate_data_key(&self.master_key_arn).await
     }
 
     /// Encrypts a key using the master key
     pub async fn encrypt_key(&self, key_bytes: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.encryptkey");
 
-        let result = self.client.encrypt(&self.master_key_arn, key_bytes).await;
-
-        result
+        self.client.encrypt(&self.master_key_arn, key_bytes).await
     }
 
     /// Decrypts a key using the master key
     pub async fn decrypt_key(&self, encrypted_key: &[u8]) -> Result<Vec<u8>> {
         let _timer = timer!("ael.kms.aws.decryptkey");
 
-        let result = self.client.decrypt(encrypted_key).await;
-
-        result
+        self.client.decrypt(encrypted_key).await
     }
 }
 

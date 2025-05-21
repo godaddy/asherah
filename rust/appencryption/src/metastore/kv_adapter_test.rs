@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use super::kv_adapter::{KeyValueMetastoreForLocal, KeyValueMetastoreForSend};
 use super::kv_store::{KeyValueStoreLocal, KeyValueStoreSend};
 use crate::envelope::{EnvelopeKeyRecord, KeyMeta};

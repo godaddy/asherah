@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_variables, clippy::unwrap_used, clippy::panic, clippy::map_clone, clippy::clone_on_copy, unused_must_use)]
+
 // No super imports needed
 use crate::crypto::Aes256GcmAead as Aes256Gcm;
 use crate::error::Result;

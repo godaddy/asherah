@@ -59,6 +59,7 @@ impl Metastore for OracleMetastore {
 
 #[cfg(feature = "oracle")]
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
     use crate::KeyMeta;
