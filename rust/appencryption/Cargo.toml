@@ -80,6 +80,8 @@ clap = { version = "4.4", features = ["derive"] }
 env_logger = "0.11"
 getrandom = "0.2"
 metrics-exporter-prometheus = "0.13"
+# Benchmarking
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
 [lints]
 workspace = true
@@ -149,3 +151,11 @@ unimplemented = "warn"
 unneeded_field_pattern = "warn"
 unseparated_literal_suffix = "warn"
 used_underscore_binding = "warn"
+
+[[bench]]
+name = "encryption"
+harness = false
+
+[[bench]]
+name = "key_management"
+harness = false

@@ -26,16 +26,51 @@ jobs:
       - name: Setup Rust tools
         run: |
           rustup component add rustfmt clippy
-          cargo install cargo-criterion || true
+          rustup override set stable  # Ensure we're using stable Rust
 
-      - name: Run benchmarks
+      - name: Install gnuplot
+        run: sudo apt-get install -y gnuplot
+
+      - name: Build benchmarks
         run: |
           cd rust/appencryption
-          cargo bench --features full
+          cargo bench --no-run --features aws-all,mysql,postgres
+
+      - name: Run encryption benchmarks
+        run: |
+          cd rust/appencryption
+          cargo bench --bench encryption -- --verbose
+
+      - name: Run key management benchmarks
+        run: |
+          cd rust/appencryption
+          cargo bench --bench key_management -- --verbose
         
       - name: Archive benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-results
           path: rust/appencryption/target/criterion/
+          retention-days: 90
+          
+      # Optional: Generate a plot summary
+      - name: Generate benchmark summary
+        run: |
+          cd rust/appencryption
+          echo "# Benchmark Results" > benchmark-summary.md
+          echo "" >> benchmark-summary.md
+          echo "## Encryption Performance" >> benchmark-summary.md
+          echo "" >> benchmark-summary.md
+          ls -la target/criterion/encrypt_decrypt/ | grep "100000$" | sed 's/^.*encrypt_decrypt\/\(.*\)$/\1/' | xargs -I{} cat target/criterion/encrypt_decrypt/{}/new/estimates.json | jq '.mean | { "Data Size": "{}", "Mean Time (ns)": . }' >> benchmark-summary.md
+          echo "" >> benchmark-summary.md
+          echo "## Key Management Performance" >> benchmark-summary.md
+          echo "" >> benchmark-summary.md
+          ls -la target/criterion/key_rotation/ | grep new | sed 's/^.*key_rotation\/\(.*\)$/\1/' | xargs -I{} cat target/criterion/key_rotation/{}/estimates.json | jq '.mean | { "Operation": "Key Rotation", "Mean Time (ns)": . }' >> benchmark-summary.md
+          ls -la target/criterion/session_creation/ | grep new | sed 's/^.*session_creation\/\(.*\)$/\1/' | xargs -I{} cat target/criterion/session_creation/{}/estimates.json | jq '.mean | { "Operation": "Session Creation", "Mean Time (ns)": . }' >> benchmark-summary.md
+          
+      - name: Upload benchmark summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-summary
+          path: rust/appencryption/benchmark-summary.md
           retention-days: 90
