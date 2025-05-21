@@ -19,6 +19,7 @@ pub use client::{DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbKeyMeta};
 const DEFAULT_TABLE_NAME: &str = "EncryptionKey";
 
 /// DynamoDB metastore implementation
+#[derive(Debug)]
 pub struct DynamoDbMetastore {
     /// DynamoDB client
     client: Arc<dyn DynamoDbClient>,

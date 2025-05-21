@@ -1,13 +1,12 @@
 use super::*;
 use crate::envelope::{EnvelopeKeyRecord, KeyMeta};
 use crate::plugins::aws_v2::metastore::{
-    DynamoDbClient, DynamoDbEnvelope, DynamoDbItem, DynamoDbKey, DynamoDbMetastore,
+    DynamoDbClient, DynamoDbItem, DynamoDbKey, DynamoDbMetastore,
 };
 use crate::Metastore;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
 // Mock DynamoDB client for testing
 struct MockDynamoDbClient {
@@ -188,5 +187,5 @@ async fn test_dynamodb_metastore_multi_region() {
     assert!(loaded.is_some(), "Key should have been loaded");
 
     // Check region suffix
-    assert_eq!(Some("us-west-2".to_string()), metastore.get_region_suffix());
+    assert_eq!(Some("us-west-2"), metastore.region_suffix());
 }

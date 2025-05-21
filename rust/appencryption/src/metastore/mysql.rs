@@ -19,6 +19,7 @@ const STORE_KEY_QUERY: &str =
     "INSERT INTO encryption_key (id, created, key_record) VALUES (?, ?, ?)";
 
 /// MySQL metastore implementation
+#[derive(Debug)]
 pub struct MySqlMetastore {
     /// The MySQL connection pool
     pool: Arc<Pool<MySql>>,

@@ -27,7 +27,7 @@ impl MockKmsClient {
 impl AwsKmsClient for MockKmsClient {
     async fn encrypt(&self, _key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>> {
         // Simple XOR with master key for testing
-        let mut result = vec![0u8; plaintext.len()];
+        let mut result = vec![0_u8; plaintext.len()];
         for (i, byte) in plaintext.iter().enumerate() {
             result[i] = byte ^ self.master_key[i % self.master_key.len()];
         }
@@ -36,7 +36,7 @@ impl AwsKmsClient for MockKmsClient {
 
     async fn decrypt(&self, _key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>> {
         // Same XOR operation decrypts
-        let mut result = vec![0u8; ciphertext.len()];
+        let mut result = vec![0_u8; ciphertext.len()];
         for (i, byte) in ciphertext.iter().enumerate() {
             result[i] = byte ^ self.master_key[i % self.master_key.len()];
         }

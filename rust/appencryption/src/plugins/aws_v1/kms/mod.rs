@@ -56,6 +56,15 @@ pub struct RegionalClient {
     pub(crate) master_key_arn: String,
 }
 
+impl std::fmt::Debug for RegionalClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RegionalClient")
+            .field("region", &self.region)
+            .field("master_key_arn", &self.master_key_arn)
+            .finish()
+    }
+}
+
 impl RegionalClient {
     /// Creates a new RegionalClient
     pub fn new(client: Arc<dyn AwsKmsClient>, master_key_arn: String) -> Self {
@@ -96,6 +105,7 @@ impl RegionalClient {
 }
 
 /// AWS KMS implementation
+#[derive(Debug)]
 pub struct AwsKms {
     /// Regional clients for KMS operations
     clients: Vec<RegionalClient>,

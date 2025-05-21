@@ -112,6 +112,7 @@ enum ClientStatus {
 }
 
 /// Client health information
+#[derive(Debug)]
 struct ClientHealth {
     /// Last known status
     status: ClientStatus,
@@ -173,6 +174,16 @@ struct MultiRegionClient {
 
     /// Maximum retries before giving up
     max_retries: usize,
+}
+
+impl std::fmt::Debug for MultiRegionClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MultiRegionClient")
+            .field("replicas_count", &self.replicas.len())
+            .field("recheck_interval", &self.recheck_interval)
+            .field("max_retries", &self.max_retries)
+            .finish()
+    }
 }
 
 impl MultiRegionClient {
@@ -351,6 +362,7 @@ impl MultiRegionClient {
 }
 
 /// DynamoDB metastore implementation with global table support
+#[derive(Debug)]
 pub struct DynamoDbMetastore {
     /// Multi-region DynamoDB client
     client: MultiRegionClient,

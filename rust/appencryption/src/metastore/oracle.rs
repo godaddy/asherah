@@ -10,6 +10,7 @@ use std::sync::Arc;
 /// NOTE: This is a placeholder implementation for feature parity with Go.
 /// A full implementation would require an Oracle database driver for Rust.
 /// Currently implemented as a wrapper around InMemoryMetastore for compatibility.
+#[derive(Debug)]
 pub struct OracleMetastore {
     // In a real implementation, this would be an Oracle connection pool
     // For now, we use InMemoryMetastore to maintain API compatibility
