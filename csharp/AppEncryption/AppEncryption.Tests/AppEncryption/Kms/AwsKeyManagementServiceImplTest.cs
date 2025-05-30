@@ -225,8 +225,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             byte[] keyEncryptionKey = { 2, 3 };
             bool revoked = false;
             byte[] plaintextBackingBytes = { 4, 5 };
-            amazonKeyManagementServiceClientMock.Setup(x => x.Decrypt(It.IsAny<byte[]>(), null))
-                .Returns(plaintextBackingBytes);
+
+            // Create a DecryptResponse with the plaintext bytes
+            DecryptResponse decryptResponse = new DecryptResponse
+            {
+                Plaintext = new MemoryStream(plaintextBackingBytes, 0, plaintextBackingBytes.Length, true, true),
+            };
+
+            amazonKeyManagementServiceClientMock.Setup(x => x.DecryptAsync(
+                    It.IsAny<DecryptRequest>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(decryptResponse));
             cryptoMock.Setup(x => x.GenerateKeyFromBytes(plaintextBackingBytes)).Returns(cryptoKeyMock.Object);
             Mock<CryptoKey> expectedKey = new Mock<CryptoKey>();
             cryptoMock.Setup(x => x.DecryptKey(cipherText, now, cryptoKeyMock.Object, revoked))
@@ -242,7 +251,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         {
             byte[] cipherText = { 0, 1 };
             byte[] keyEncryptionKey = { 2, 3 };
-            amazonKeyManagementServiceClientMock.Setup(x => x.Decrypt(It.IsAny<byte[]>(), null))
+            amazonKeyManagementServiceClientMock.Setup(x => x.DecryptAsync(
+                    It.IsAny<DecryptRequest>(),
+                    It.IsAny<CancellationToken>()))
                 .Throws<AmazonServiceException>();
             Assert.Throws<AmazonServiceException>(() =>
                 awsKeyManagementServiceImplSpy.Object.DecryptKmsEncryptedKey(
@@ -261,8 +272,17 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             byte[] keyEncryptionKey = { 2, 3 };
             bool revoked = false;
             byte[] plaintextBackingBytes = { 4, 5 };
-            amazonKeyManagementServiceClientMock.Setup(x => x.Decrypt(It.IsAny<byte[]>(), null))
-                .Returns(plaintextBackingBytes);
+
+            // Create a DecryptResponse with the plaintext bytes
+            DecryptResponse decryptResponse = new DecryptResponse
+            {
+                Plaintext = new MemoryStream(plaintextBackingBytes, 0, plaintextBackingBytes.Length, true, true),
+            };
+
+            amazonKeyManagementServiceClientMock.Setup(x => x.DecryptAsync(
+                    It.IsAny<DecryptRequest>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(decryptResponse));
             cryptoMock.Setup(x => x.GenerateKeyFromBytes(plaintextBackingBytes)).Returns(cryptoKeyMock.Object);
             cryptoMock.Setup(x => x.DecryptKey(cipherText, now, cryptoKeyMock.Object, revoked))
                 .Throws(new AppEncryptionException("fake error"));
@@ -298,15 +318,21 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         {
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
-            Mock<GenerateDataKeyResult> dataKeyResultMock = new Mock<GenerateDataKeyResult>();
+            GenerateDataKeyResponse dataKeyResult = new GenerateDataKeyResponse
+            {
+                Plaintext = new MemoryStream(new byte[] { 1, 2 }, 0, 2, true, true),
+                CiphertextBlob = new MemoryStream(new byte[] { 3, 4 }, 0, 2, true, true),
+            };
 
             // preferred region's ARN, verify it's the first and hence returned
             amazonKeyManagementServiceClientMock
-                .Setup(x => x.GenerateDataKey(ArnUsWest1, null, DataKeySpec.AES_256))
-                .Returns(dataKeyResultMock.Object);
-            GenerateDataKeyResult dataKeyResponseActual =
+                .Setup(x => x.GenerateDataKeyAsync(
+                    It.Is<GenerateDataKeyRequest>(r => r.KeyId == ArnUsWest1 && r.KeySpec == DataKeySpec.AES_256),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(dataKeyResult));
+            GenerateDataKeyResponse dataKeyResponseActual =
                 awsKeyManagementServiceImplSpy.Object.GenerateDataKey(sortedRegionToArnAndClient, out _);
-            Assert.Equal(dataKeyResultMock.Object, dataKeyResponseActual);
+            Assert.Equal(dataKeyResult, dataKeyResponseActual);
         }
 
         [Fact]
@@ -315,7 +341,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
             amazonKeyManagementServiceClientMock
-                .Setup(x => x.GenerateDataKey(It.IsAny<string>(), null, It.IsAny<string>()))
+                .Setup(x => x.GenerateDataKeyAsync(
+                    It.IsAny<GenerateDataKeyRequest>(),
+                    It.IsAny<CancellationToken>()))
                 .Throws<AmazonServiceException>();
             Assert.Throws<KmsException>(() =>
                 awsKeyManagementServiceImplSpy.Object.GenerateDataKey(sortedRegionToArnAndClient, out _));
@@ -327,8 +355,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             byte[] encryptedKey = { 0, 1 };
             EncryptResponse encryptResponse = new EncryptResponse
             {
-                CiphertextBlob = new MemoryStream(encryptedKey),
+                CiphertextBlob = new MemoryStream(encryptedKey, 0, encryptedKey.Length, true, true),
             };
+
             byte[] dataKeyPlainText = { 2, 3 };
             amazonKeyManagementServiceClientMock
                 .Setup(x => x.EncryptAsync(It.IsAny<EncryptRequest>(), It.IsAny<CancellationToken>()))
@@ -390,20 +419,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                     }
                 },
             });
-            GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
+            GenerateDataKeyResponse generateDataKeyResult = new GenerateDataKeyResponse
             {
-                KeyPlaintext = dataKeyPlainText,
-                KeyCiphertext = dataKeyCipherText,
+                Plaintext = new MemoryStream(dataKeyPlainText, 0, dataKeyPlainText.Length, true, true),
+                CiphertextBlob = new MemoryStream(dataKeyCipherText, 0, dataKeyCipherText.Length, true, true),
             };
 
             Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
             string keyId = ArnUsWest1;
 
+            string outKeyId = keyId;
             awsKeyManagementServiceImplSpy
-                .Setup(x =>
-                    x.GenerateDataKey(awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out keyId))
+                .Setup(x => x.GenerateDataKey(
+                    It.IsAny<OrderedDictionary>(),
+                    out outKeyId))
                 .Returns(generateDataKeyResult);
-            cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.KeyPlaintext))
+            cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.Plaintext.ToArray()))
                 .Returns(generatedDataKeyCryptoKey.Object);
             cryptoMock.Setup(x => x.EncryptKey(cryptoKeyMock.Object, generatedDataKeyCryptoKey.Object))
                 .Returns(encryptedKey);
@@ -440,10 +471,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
             byte[] dataKeyPlainText = { 1, 2 };
             byte[] encryptedKey = { 3, 4 };
 
-            GenerateDataKeyResult generateDataKeyResult = new GenerateDataKeyResult
+            // Mock a data key with a MemoryStream that we can capture
+            MemoryStream plaintextStream = new MemoryStream(dataKeyPlainText, 0, 2, true, true);
+            GenerateDataKeyResponse generateDataKeyResult = new GenerateDataKeyResponse
             {
-                KeyPlaintext = dataKeyPlainText,
+                Plaintext = plaintextStream,
+                CiphertextBlob = new MemoryStream([5, 6], 0, 2, true, true),
             };
+
             Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
             string someKey = "some_key";
             awsKeyManagementServiceImplSpy
@@ -451,10 +486,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                     x.GenerateDataKey(
                         awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary, out someKey))
                 .Returns(generateDataKeyResult);
-            cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.KeyPlaintext))
+
+            cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.Plaintext.GetBuffer()))
                 .Returns(generatedDataKeyCryptoKey.Object);
 
-            // Inject unexpected exception so the Task.WaitAll throws an  exception
+            // crypto.EncryptKey should be called with the generated data key, return our dummy encrypted key
+            cryptoMock.Setup(x => x.EncryptKey(cryptoKeyMock.Object, generatedDataKeyCryptoKey.Object))
+                .Returns(encryptedKey);
+
+            // Inject exception to trigger the error handling code path
             awsKeyManagementServiceImplSpy
                 .Setup(x => x.EncryptKeyAndBuildResult(
                     It.IsAny<IAmazonKeyManagementService>(),
@@ -462,11 +502,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                     It.IsAny<string>(),
                     It.IsAny<byte[]>()))
                 .Throws<SystemException>();
-            cryptoMock.Setup(x => x.EncryptKey(cryptoKeyMock.Object, generatedDataKeyCryptoKey.Object))
-                .Returns(encryptedKey);
 
+            // Test the exception handling
             Assert.Throws<AppEncryptionException>(() =>
                 awsKeyManagementServiceImplSpy.Object.EncryptKey(cryptoKeyMock.Object));
+
+            // Ensure the buffer containing the data key is wiped
             Assert.Equal(new byte[] { 0, 0 }, dataKeyPlainText);
         }
     }

@@ -59,7 +59,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 .WithEndPointConfiguration(serviceUrl, Region)
                 .Build();
 
-            table = Table.LoadTable(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName);
+            table = (Table)new TableBuilder(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName)
+                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                .Build();
 
             JObject jObject = JObject.FromObject(keyRecord);
             Document document = new Document
@@ -294,7 +297,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestBuilderPathWithRegion()
         {
             Mock<Builder> builder = new Mock<Builder>(Region);
-            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+            Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
+                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                .Build();
 
             builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
                 .Returns(loadTable);
@@ -343,9 +349,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         private void TestBuilderPathWithInvalidCredentials()
         {
+            var emptySecretKey = string.Empty;
             Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
-                .WithCredentials(new BasicAWSCredentials("not-dummykey", "dummy_secret"))
+                .WithCredentials(new BasicAWSCredentials("not-dummykey", emptySecretKey))
                 .Build());
         }
 
@@ -364,7 +371,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             CreateTableSchema(tempDynamoDbClient, tempTableName);
 
             // Put the object in temp table
-            Table tempTable = Table.LoadTable(tempDynamoDbClient, tempTableName);
+            Table tempTable = (Table)new TableBuilder(tempDynamoDbClient, tempTableName)
+                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                .Build();
             JObject jObject = JObject.FromObject(keyRecord);
             Document document = new Document
             {
@@ -390,7 +400,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private void TestPrimaryBuilderPath()
         {
             Mock<Builder> builder = new Mock<Builder>(Region);
-            Table loadTable = Table.LoadTable(amazonDynamoDbClient, "EncryptionKey");
+            Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
+                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                .Build();
 
             builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
                 .Returns(loadTable);
