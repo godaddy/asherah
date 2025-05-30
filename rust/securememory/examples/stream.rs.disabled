@@ -1,0 +1,58 @@
+use securememory::mem_sys::{DefaultMemoryManager, MemoryManager, MemoryProtection};
+
+fn main() -> std::io::Result<()> {
+    println!("\nLow-level memory function test\n");
+
+    // Create a memory manager
+    let memory_manager = DefaultMemoryManager::new();
+    println!("Created memory manager");
+    
+    // Test basic functionality to verify the memory system is working
+    let mut memory = memory_manager.alloc(64).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory allocation failed: {}", e))
+    )?;
+    println!("Allocated {} bytes of memory", memory.len());
+    
+    // Test writing
+    memory_manager.protect(&mut memory, MemoryProtection::ReadWrite).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory protection failed: {}", e))
+    )?;
+    memory[0] = 42;
+    println!("Successfully wrote to memory");
+    
+    // Test reading 
+    memory_manager.protect(&mut memory, MemoryProtection::ReadOnly).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory protection failed: {}", e))
+    )?;
+    let value = memory[0];
+    println!("Successfully read value: {}", value);
+    
+    // Test locking
+    memory_manager.lock(&mut memory).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory lock failed: {}", e))
+    )?;
+    println!("Memory locked successfully");
+    
+    // Unlock for cleanup
+    memory_manager.unlock(&mut memory).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory unlock failed: {}", e))
+    )?;
+    
+    // Free the memory
+    memory_manager.protect(&mut memory, MemoryProtection::ReadWrite).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory protection failed: {}", e))
+    )?;
+    
+    // Zero out the memory before freeing
+    for byte in memory.iter_mut() {
+        *byte = 0;
+    }
+    
+    memory_manager.free(&mut memory).map_err(|e| 
+        std::io::Error::new(std::io::ErrorKind::Other, format!("Memory free failed: {}", e))
+    )?;
+    println!("Memory freed successfully");
+    
+    println!("\nAll tests passed successfully");
+    Ok(())
+}

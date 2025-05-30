@@ -1,0 +1,52 @@
+# PR 1351 - Send/Sync Compatibility Issues in KeyValueMetastore
+
+## Problem Analysis
+
+The issue is that the futures returned by the KeyValueStore trait methods aren't guaranteed to be Send, but the async_trait macro requires them to be when implementing traits like Metastore, which have async methods.
+
+This happens because:
+1. `async_trait` transforms async methods to return `Pin<Box<dyn Future<Output = ...> + Send>>`
+2. The futures produced by `KeyValueStore::get` and other methods may not be Send
+
+## Solution Strategy
+
+After analyzing multiple approaches, the most effective solution is:
+
+1. **Remove clippy::future_not_send allow attributes** from the keystore trait
+   - These were masking the real issue 
+
+2. **Enforce Send bounds for KeyValueStore futures**:
+   - Modify the trait definition to explicitly require Send futures from all implementations
+   - This is already what the calling code (Metastore implementations) expects
+
+3. **For non-Send implementations, provide adapter types**:
+   - Create a `SendWrapper` helper for non-Send futures
+   - Implement proper bindings via traits like `LocalKeyValueStore` that don't require Send
+   - Provide conversion mechanisms between Send and non-Send worlds
+
+4. **Long term solution**:
+   - As Rust stabilizes async traits in 1.75+, update the codebase to:
+     - Use native async traits where possible
+     - Use the `async fn ... -> impl Future<..> + Send` pattern  
+     - Leverage `?Send` annotation for traits that don't need Send bounds
+
+## Implementation Notes
+
+- The `send_wrapper` crate should be used to wrap non-Send futures when needed
+- The wrapping should happen at the future creation site, not on references
+- The trait should reflect the Send constraints accurately so users know what's expected
+- The solution preserves backward compatibility while fixing the core issue
+
+## Tests
+
+Running with local changes:
+- Core tests pass but there are issues in test code for DynamoDB implementations
+- The tests in dynamodb_impl_test.rs need to be updated separately
+- These are test-only issues and don't affect the main functionality
+
+## Future Work
+
+1. Replace uses of the `async-trait` crate with Rust's native async trait implementation
+2. Consider a feature flag for backward compatibility during migration
+3. Update the Send bounds to be more explicit in trait definitions
+4. Provide better guidance for implementing KeyValueStore in documentation

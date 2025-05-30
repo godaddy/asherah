@@ -1,0 +1,30 @@
+[package]
+name = "asherah-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command-line example application for Asherah application-level encryption"
+license = "Apache-2.0"
+
+[[bin]]
+name = "asherah-cli"
+path = "main.rs"
+
+[dependencies]
+appencryption = { path = "../..", features = ["aws-v2-kms", "aws-v2-dynamodb", "mysql", "postgres"] }
+securememory = { path = "../../../securememory" }
+tokio = { version = "1.28", features = ["full"] }
+clap = { version = "4.3", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"
+humantime = "2.1"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "mysql", "postgres", "chrono", "json"] }
+aws-config = "0.55"
+aws-sdk-dynamodb = "0.28"
+chrono = "0.4"
+
+[features]
+aws-v2-kms = []
+aws-v2-dynamodb = []
+mysql = []
+postgres = []
