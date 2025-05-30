@@ -39,7 +39,7 @@
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.13</jacoco.version>
     <jna.version>5.17.0</jna.version>
-    <junit.jupiter.version>5.12.2</junit.jupiter.version>
+    <junit.jupiter.version>5.13.0</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
     <logback.version>1.5.18</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
@@ -49,7 +49,7 @@
     <maven.scm.version>2.1.0</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
     <maven.surefire.version>3.5.3</maven.surefire.version>
-    <mockito.core.version>5.17.0</mockito.core.version>
+    <mockito.core.version>5.18.0</mockito.core.version>
     <nexus.staging.maven.version>1.7.0</nexus.staging.maven.version>
     <slf4j.version>2.0.17</slf4j.version>
   </properties>
