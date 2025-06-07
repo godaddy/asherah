@@ -1,0 +1,125 @@
+[package]
+name = "securememory"
+version = "0.1.0"
+edition = "2021"
+description = "Secure memory management for sensitive data"
+license = "Apache-2.0"
+repository = "https://github.com/godaddy/asherah"
+
+[dependencies]
+memcall = { path = "../memcall" }
+memguard = { path = "../memguard" }
+log = "0.4"
+thiserror = "1.0"
+zeroize = "1.6"
+metrics = "0.20"
+backtrace = { version = "0.3.69", optional = true }
+ctrlc = "3.4"
+signal-hook = "0.3"
+once_cell = "1.18"
+page_size = "0.6"
+subtle = "2.6"
+getrandom = "0.2"
+parking_lot = "0.12"
+
+[lints]
+workspace = true
+
+[workspace.lints.rust]
+# Note: securememory explicitly requires unsafe code for memory management 
+# unsafe_code = "forbid"
+# Temporarily allow certain warnings during initial transition to new lint rules
+let_underscore_drop = "allow"
+missing_debug_implementations = "allow"
+dead_code = "allow"
+# Deny-level lints
+future_incompatible = { level = "deny", priority = -1 }
+# Warn-level lints
+ambiguous_negative_literals = "warn"
+closure_returning_async_block = "warn"
+explicit_outlives_requirements = "warn"
+if_let_rescope = "warn"
+impl_trait_overcaptures = "warn"
+impl_trait_redundant_captures = "warn"
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+noop_method_call = "warn"
+non_ascii_idents = "warn"
+redundant_lifetimes = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "allow"
+unit_bindings = "warn"
+unsafe_attr_outside_unsafe = "warn"
+unused = { level = "warn", priority = -1 }
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+unused_macro_rules = "warn"
+variant_size_differences = "warn"
+
+[workspace.lints.clippy]
+# Deny-level lints
+default_union_representation = "deny"
+exit = "deny"
+lossy_float_literal = "deny"
+mem_forget = "deny"
+multiple_inherent_impl = "deny"
+mut_mut = "deny"
+ptr_as_ptr = "deny"
+unwrap_in_result = "deny"
+unwrap_used = "deny"
+wildcard_dependencies = "deny"
+# Warn-level lints
+dbg_macro = "warn"
+empty_drop = "warn"
+fallible_impl_from = "warn"
+inefficient_to_string = "warn"
+macro_use_imports = "warn"
+match_same_arms = "warn"
+# multiple_crate_versions = "warn"
+no_effect_underscore_binding = "warn"
+panic = "warn"
+print_stderr = "warn"
+print_stdout = "warn"
+same_name_method = "warn"
+single_char_lifetime_names = "warn"
+string_to_string = "warn"
+trait_duplication_in_bounds = "warn"
+type_repetition_in_bounds = "warn"
+unimplemented = "warn"
+unneeded_field_pattern = "warn"
+unseparated_literal_suffix = "warn"
+used_underscore_binding = "warn"
+
+[dev-dependencies]
+criterion = "0.5"
+rayon = "1.7"
+num_cpus = "1.15"
+
+[features]
+default = []
+no-mlock = []  # Disable memory locking for benchmarking only - DO NOT USE IN PRODUCTION
+debug_backtrace = ["backtrace"]
+metrics = []
+
+[[bench]]
+name = "secret_benchmark"
+harness = false
+
+[[bench]]
+name = "rust_vs_go_parity"
+harness = false
+
+[[bench]]
+name = "final_benchmark"
+harness = false
+
+[[bench]]
+name = "simple_parity_bench"
+harness = false
+
+[[bench]]
+name = "detailed_parity_bench"
+harness = false

@@ -1,0 +1,51 @@
+use securememory::mem_sys::{DefaultMemoryManager, MemoryManager, MemoryProtection};
+
+#[test]
+fn test_default_memory_manager() {
+    let manager = DefaultMemoryManager::new();
+    
+    // Test allocation
+    let size = 1024;
+    let mut memory = manager.alloc(size).expect("Failed to allocate memory");
+    assert_eq!(memory.len(), size);
+    
+    // Test protection - ReadWrite
+    manager.protect(&mut memory, MemoryProtection::ReadWrite).expect("Failed to set ReadWrite protection");
+    
+    // Fill memory with data
+    for (i, byte) in memory.iter_mut().enumerate() {
+        *byte = (i % 256) as u8;
+    }
+    
+    // Test protection - ReadOnly
+    manager.protect(&mut memory, MemoryProtection::ReadOnly).expect("Failed to set ReadOnly protection");
+    
+    // Verify memory contents
+    for (i, &byte) in memory.iter().enumerate() {
+        assert_eq!(byte, (i % 256) as u8);
+    }
+    
+    // Test locking
+    manager.lock(&mut memory).expect("Failed to lock memory");
+    
+    // Test protection - NoAccess 
+    manager.protect(&mut memory, MemoryProtection::ReadWrite).expect("Failed to reset to ReadWrite protection");
+    manager.protect(&mut memory, MemoryProtection::NoAccess).expect("Failed to set NoAccess protection");
+    
+    // Test unlocking
+    manager.protect(&mut memory, MemoryProtection::ReadWrite).expect("Failed to reset to ReadWrite protection");
+    manager.unlock(&mut memory).expect("Failed to unlock memory");
+    
+    // Test freeing
+    manager.free(&mut memory).expect("Failed to free memory");
+}
+
+#[test]
+fn test_disable_core_dumps() {
+    // This test just makes sure the function doesn't panic or error
+    // The actual effect would need to be verified in a real environment
+    #[cfg(not(target_os = "windows"))]
+    {
+        securememory::mem_sys::disable_core_dumps().expect("Failed to disable core dumps");
+    }
+}

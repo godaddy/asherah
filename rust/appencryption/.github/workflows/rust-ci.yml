@@ -1,0 +1,69 @@
+name: '[Rust] CI'
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/rust-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/rust-ci.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Ubuntu already has Rust installed, just add components
+      - name: Setup Rust tools
+        run: |
+          rustup component add rustfmt clippy
+
+      - name: Format check
+        run: cd rust/appencryption && cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cd rust/appencryption && cargo clippy -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # Ubuntu already has Rust installed
+      - name: Run tests
+        run: cd rust/appencryption && cargo test --all-features
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # Ubuntu already has Rust installed
+      - name: Build
+        run: cd rust/appencryption && cargo build --release
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-appencryption
+          path: rust/appencryption/target/release/libappencryption.rlib
+          retention-days: 7
