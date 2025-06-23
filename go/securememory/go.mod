@@ -1,6 +1,8 @@
 module github.com/godaddy/asherah/go/securememory
 
-go 1.19
+go 1.23.0
+
+toolchain go1.23.9
 
 require (
 	github.com/awnumar/memcall v0.4.0

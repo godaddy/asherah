@@ -1,0 +1,44 @@
+// Minimal test to verify memory management functionality
+#[cfg(test)]
+mod tests {
+    use securememory::mem_sys::{DefaultMemoryManager, MemoryManager, MemoryProtection};
+    use std::sync::Arc;
+
+    #[test]
+    fn test_basic_memory_operations() {
+        let memory_manager = DefaultMemoryManager::new();
+        let size = 32;
+        
+        // Test allocation
+        let mut memory = memory_manager.alloc(size).expect("Failed to allocate memory");
+        assert_eq!(memory.len(), size);
+        
+        // Test protection
+        memory_manager.protect(&mut memory, MemoryProtection::ReadWrite)
+            .expect("Failed to set ReadWrite protection");
+        
+        // Test writing
+        memory[0] = 42;
+        assert_eq!(memory[0], 42);
+        
+        // Test read-only protection
+        memory_manager.protect(&mut memory, MemoryProtection::ReadOnly)
+            .expect("Failed to set ReadOnly protection");
+        
+        // Test reading
+        assert_eq!(memory[0], 42);
+        
+        // Test locking
+        memory_manager.lock(&mut memory).expect("Failed to lock memory");
+        
+        // Make writable again for cleanup
+        memory_manager.protect(&mut memory, MemoryProtection::ReadWrite)
+            .expect("Failed to set ReadWrite for cleanup");
+        
+        // Test unlocking
+        memory_manager.unlock(&mut memory).expect("Failed to unlock memory");
+        
+        // Test freeing
+        memory_manager.free(&mut memory).expect("Failed to free memory");
+    }
+}

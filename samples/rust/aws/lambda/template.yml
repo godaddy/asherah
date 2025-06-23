@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Asherah Rust Lambda Example
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Tracing: Active
+    Environment:
+      Variables:
+        ASHERAH_METASTORE_TABLE_NAME: !Ref AsherahKeyTable
+
+Parameters:
+  KmsKeyArn:
+    Type: String
+    Description: ARN of the KMS key to use for encryption
+    Default: '' # You will need to provide this when deploying
+
+Resources:
+  AsherahKeyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: encryption_key
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: created
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: created
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  AsherahLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/lambda/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          ASHERAH_KMS_KEY_ARN: !Ref KmsKeyArn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AsherahKeyTable
+        - KMSDecryptPolicy:
+            KeyId: !Ref KmsKeyArn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - kms:Encrypt
+                - kms:Decrypt
+                - kms:GenerateDataKey
+              Resource: !Ref KmsKeyArn
+
+Outputs:
+  AsherahLambdaFunction:
+    Description: "Asherah Rust Lambda Function ARN"
+    Value: !GetAtt AsherahLambdaFunction.Arn
+  AsherahLambdaFunctionRole:
+    Description: "IAM Role created for Asherah Lambda function"
+    Value: !GetAtt AsherahLambdaFunctionRole.Arn
+  AsherahKeyTable:
+    Description: "DynamoDB table for Asherah encryption keys"
+    Value: !Ref AsherahKeyTable
