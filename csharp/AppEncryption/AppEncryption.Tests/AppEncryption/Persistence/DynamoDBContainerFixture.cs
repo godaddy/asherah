@@ -25,6 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy_secret");
 
                 dynamoDbContainer = new DynamoDbBuilder()
+                    .WithImage("amazon/dynamodb-local:2.6.0")
                     .Build();
             }
         }

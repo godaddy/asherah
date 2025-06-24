@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -133,7 +134,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                         AttributesToGet = new List<string> { AttributeKeyRecord },
                         ConsistentRead = true, // Always use strong consistency
                     };
-                    Document result = table.GetItemAsync(keyId, created.ToUnixTimeSeconds(), config).Result;
+                    Task<Document> getItemTask = table.GetItemAsync(keyId, created.ToUnixTimeSeconds(), config);
+                    Document result = getItemTask.Result;
                     if (result != null)
                     {
                         // TODO Optimize Document to JObject conversion. Helper method could enumerate over Document KeyPairs
@@ -173,8 +175,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                         AttributesToGet = new List<string> { AttributeKeyRecord },
                         Select = SelectValues.SpecificAttributes,
                     };
-                    Search search = table.Query(config);
-                    List<Document> result = search.GetNextSetAsync().Result;
+                    ISearch search = table.Query(config);
+                    Task<List<Document>> searchTask = search.GetNextSetAsync();
+                    List<Document> result = searchTask.Result;
                     if (result.Count > 0)
                     {
                         Document keyRecordDocument = result.First();
@@ -225,7 +228,9 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     // existence of this item's composite primary key and if it contains the specified attribute name,
                     // either of which is inherently required.
                     Expression expr = new Expression
-                    { ExpressionStatement = "attribute_not_exists(" + PartitionKey + ")" };
+                    {
+                        ExpressionStatement = "attribute_not_exists(" + PartitionKey + ")",
+                    };
                     PutItemOperationConfig config = new PutItemOperationConfig
                     {
                         ConditionalExpression = expr,
@@ -347,13 +352,17 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(PreferredRegion);
                 }
 
-                DbClient = new AmazonDynamoDBClient(Credentials ?? FallbackCredentialsFactory.GetCredentials(dbConfig), dbConfig);
+                DbClient = new AmazonDynamoDBClient(Credentials, dbConfig);
+
                 return new DynamoDbMetastoreImpl(this);
             }
 
             internal virtual Table LoadTable(IAmazonDynamoDB client, string tableName)
             {
-                return Table.LoadTable(client, tableName);
+                return new TableBuilder(client, tableName)
+                    .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                    .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                    .Build();
             }
         }
     }
