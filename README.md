@@ -47,22 +47,43 @@ builder pattern, specifically a _step builder_. This ensures all required proper
 To obtain an instance of the builder, use the static factory method `newBuilder`. Once you have a builder, you can
 use the `withXXX` setter methods to configure the session factory properties.
 
-Below is an example of a session factory that uses in-memory persistence and static key management.
+Below is an example of a session factory that uses in-memory persistence and static key management in Rust:
 
-```java
-SessionFactory sessionFactory = SessionFactory.newBuilder("some_product", "some_service")
-    .withInMemoryMetastore() // in-memory metastore
-    .withNeverExpiredCryptoPolicy()
-    .withStaticKeyManagementService("thisIsAStaticMasterKeyForTesting") // hard-coded/static master key
-    .build());
+```rust
+use asherah::{
+    appencryption::{
+        SessionFactory, 
+        kms::StaticKeyManagementServiceImpl,
+        metastore::MemoryMetastoreImpl,
+        policy::NeverExpiredCryptoPolicy,
+    },
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a session factory with in-memory metastore and static KMS
+    let session_factory = SessionFactory::builder("some_product", "some_service")
+        .with_metastore(MemoryMetastoreImpl::new())
+        .with_crypto_policy(NeverExpiredCryptoPolicy::new())
+        .with_kms(StaticKeyManagementServiceImpl::new("thisIsAStaticMasterKeyForTesting"))
+        .build()?;
+
+    // Now you can use the session factory to create sessions for encryption/decryption
+    Ok(())
+}
 ```
 
 ### Step 2: Create a session
 
 Use the factory to create a session.
 
+For Java:
 ```java
 Session<byte[], byte[]> sessionBytes = sessionFactory.getSessionBytes("shopper123");
+```
+
+For Rust:
+```rust
+let session = session_factory.get_session_bytes("shopper123")?;
 ```
 
 The scope of a session is limited to a partition id, i.e. every partition id should have its own session. Also note
@@ -77,6 +98,7 @@ The SDK supports 2 usage patterns:
 This usage style is similar to common encryption utilities where payloads are simply encrypted and
 decrypted, and it is completely up to the calling application for storage responsibility.
 
+For Java:
 ```java
 String originalPayloadString = "mysupersecretpayload";
 
@@ -87,12 +109,24 @@ byte[] dataRowRecordBytes = sessionBytes.encrypt(originalPayloadString.getBytes(
 String decryptedPayloadString = new String(sessionBytes.decrypt(dataRowRecordBytes), StandardCharsets.UTF_8);
 ```
 
+For Rust:
+```rust
+let original_payload = b"mysupersecretpayload";
+
+// encrypt the payload
+let encrypted_data = session.encrypt(original_payload)?;
+
+// decrypt the payload 
+let decrypted_data = session.decrypt(&encrypted_data)?;
+assert_eq!(original_payload, &decrypted_data[..]);
+```
+
 #### Store / Load
 
 This pattern uses a key-value/document storage model. A `Session` can accept a `Persistence`
 implementation and hooks into its load and store calls.
 
-Example `HashMap`-backed `Persistence` implementation:
+Example `HashMap`-backed `Persistence` implementation in Java:
 
 ```java
 Persistence dataPersistence = new Persistence<JSONObject>() {
@@ -111,14 +145,46 @@ Persistence dataPersistence = new Persistence<JSONObject>() {
 };
 ```
 
+Example `HashMap`-backed `Persistence` implementation in Rust:
+
+```rust
+struct HashMapPersistence {
+    storage: std::collections::HashMap<String, Vec<u8>>
+}
+
+impl Persistence for HashMapPersistence {
+    fn load(&self, key: &str) -> Result<Option<Vec<u8>>, PersistenceError> {
+        Ok(self.storage.get(key).cloned())
+    }
+
+    fn store(&mut self, key: &str, value: &[u8]) -> Result<(), PersistenceError> {
+        self.storage.insert(key.to_string(), value.to_vec());
+        Ok(())
+    }
+}
+```
+
 Putting it all together, an example end-to-end use of the store and load calls:
 
+For Java:
 ```java
 // Encrypts the payload, stores it in the dataPersistence and returns a look up key
 String persistenceKey = sessionJson.store(originalPayload.toJsonObject(), dataPersistence);
 
 // Uses the persistenceKey to look-up the payload in the dataPersistence, decrypts the payload if any and then returns it
 Optional<JSONObject> payload = sessionJson.load(persistenceKey, dataPersistence);
+```
+
+For Rust:
+```rust
+// Create a persistence implementation
+let mut persistence = HashMapPersistence::new();
+
+// Encrypts the payload, stores it in the persistence and returns a lookup key
+let persistence_key = session.store(b"some secret data", &mut persistence)?;
+
+// Uses the persistence_key to look up the payload in the persistence, decrypts it and returns it
+let payload = session.load(&persistence_key, &persistence)?;
 ```
 
 ## Sample Applications
@@ -143,6 +209,7 @@ languages and platforms.
 * [Java](java/app-encryption)
 * [.NET](csharp/AppEncryption)
 * [Go](go/appencryption)
+* [Rust](rust/appencryption)
 * [Service Layer (gRPC)](/server)
 
 ### Derived Projects
@@ -161,6 +228,7 @@ languages and platforms.
 * Session caching
 * Encrypt/Decrypt pattern
 * Store/Load pattern
+
 
 ## Contributing
 
