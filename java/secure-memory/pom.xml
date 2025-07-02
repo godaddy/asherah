@@ -44,7 +44,7 @@
     <logback.version>1.5.18</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.14.0</maven.compiler.version>
-    <maven.gpg.version>3.2.7</maven.gpg.version>
+    <maven.gpg.version>3.2.8</maven.gpg.version>
     <maven.javadoc.version>3.11.2</maven.javadoc.version>
     <maven.scm.version>2.1.0</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
