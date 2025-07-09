@@ -13,8 +13,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.jupiter.version>5.13.2</junit.jupiter.version>
-    <junit.jupiter.api.version>5.13.2</junit.jupiter.api.version>
+    <junit.jupiter.version>5.13.3</junit.jupiter.version>
+    <junit.jupiter.api.version>5.13.3</junit.jupiter.api.version>
     <io.grpc.version>1.73.0</io.grpc.version>
     <protobuf.version>4.31.1</protobuf.version>
     <appencryption.version>0.3.2</appencryption.version>
