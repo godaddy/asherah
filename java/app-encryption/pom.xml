@@ -42,7 +42,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <!--      Project Dependencies-->
-    <apache.commons.version>3.17.0</apache.commons.version>
+    <apache.commons.version>3.18.0</apache.commons.version>
     <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.787</aws.sdk.version>
     <aws.sdk-v2.version>2.31.70</aws.sdk-v2.version>
