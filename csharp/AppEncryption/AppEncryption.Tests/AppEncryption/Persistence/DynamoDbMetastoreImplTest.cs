@@ -11,21 +11,22 @@ using LanguageExt;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
+
 using static GoDaddy.Asherah.AppEncryption.Persistence.DynamoDbMetastoreImpl;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
-    [Collection("Logger Fixture collection")]
-    public class DynamoDbMetastoreImplTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
-    {
-        private const string TestKey = "some_key";
-        private const string DynamoDbPort = "8000";
-        private const string Region = "us-west-2";
-        private const string TestKeyWithRegionSuffix = TestKey + "_" + Region;
+  [Collection("Logger Fixture collection")]
+  public class DynamoDbMetastoreImplTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+  {
+    private const string TestKey = "some_key";
+    private const string DynamoDbPort = "8000";
+    private const string Region = "us-west-2";
+    private const string TestKeyWithRegionSuffix = TestKey + "_" + Region;
 
-        private readonly IAmazonDynamoDB amazonDynamoDbClient;
+    private readonly AmazonDynamoDBClient amazonDynamoDbClient;
 
-        private readonly Dictionary<string, object> keyRecord = new Dictionary<string, object>
+    private readonly Dictionary<string, object> keyRecord = new Dictionary<string, object>
         {
             {
                 "ParentKeyMeta", new Dictionary<string, object>
@@ -38,380 +39,381 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             { "Created", 1541461380 },
         };
 
-        private readonly Table table;
-        private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
-        private readonly DateTimeOffset created = DateTimeOffset.Now.AddDays(-1);
-        private string serviceUrl;
+    private readonly Table table;
+    private readonly DynamoDbMetastoreImpl dynamoDbMetastoreImpl;
+    private readonly DateTimeOffset created = DateTimeOffset.Now.AddDays(-1);
+    private string serviceUrl;
 
-        public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
-        {
-            serviceUrl = dynamoDbContainerFixture.GetServiceUrl();
-            AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
-            {
-                ServiceURL = serviceUrl,
-                AuthenticationRegion = "us-west-2",
-            };
-            amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
+    public DynamoDbMetastoreImplTest(DynamoDBContainerFixture dynamoDbContainerFixture)
+    {
+      serviceUrl = dynamoDbContainerFixture.GetServiceUrl();
+      AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+      {
+        ServiceURL = serviceUrl,
+        AuthenticationRegion = "us-west-2",
+      };
+      amazonDynamoDbClient = new AmazonDynamoDBClient(clientConfig);
 
-            CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
+      CreateTableSchema(amazonDynamoDbClient, "EncryptionKey");
 
-            dynamoDbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .Build();
+      dynamoDbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .Build();
 
-            table = (Table)new TableBuilder(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName)
-                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
-                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
-                .Build();
+      table = (Table)new TableBuilder(amazonDynamoDbClient, dynamoDbMetastoreImpl.TableName)
+          .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+          .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+          .Build();
 
-            JObject jObject = JObject.FromObject(keyRecord);
-            Document document = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
+      JObject jObject = JObject.FromObject(keyRecord);
+      Document document = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = created.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+      };
 
-            table.PutItemAsync(document).Wait();
+      table.PutItemAsync(document).Wait();
 
-            document = new Document
-            {
-                [PartitionKey] = TestKeyWithRegionSuffix,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
+      document = new Document
+      {
+        [PartitionKey] = TestKeyWithRegionSuffix,
+        [SortKey] = created.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+      };
 
-            table.PutItemAsync(document).Wait();
-        }
+      table.PutItemAsync(document).Wait();
+    }
 
-        public void Dispose()
-        {
-            try
-            {
-                DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
-                    .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
-                    .Result;
-            }
-            catch (AggregateException)
-            {
-                // There is no such table.
-            }
-        }
+    public void Dispose()
+    {
+      try
+      {
+        DeleteTableResponse deleteTableResponse = amazonDynamoDbClient
+            .DeleteTableAsync(dynamoDbMetastoreImpl.TableName)
+            .Result;
+      }
+      catch (AggregateException)
+      {
+        // There is no such table.
+      }
+      GC.SuppressFinalize(this);
+    }
 
-        private void CreateTableSchema(IAmazonDynamoDB client, string tableName)
-        {
-            CreateTableRequest request = new CreateTableRequest
-            {
-                TableName = tableName,
-                AttributeDefinitions = new List<AttributeDefinition>
+    private static void CreateTableSchema(AmazonDynamoDBClient client, string tableName)
+    {
+      CreateTableRequest request = new CreateTableRequest
+      {
+        TableName = tableName,
+        AttributeDefinitions = new List<AttributeDefinition>
                 {
                     new AttributeDefinition(PartitionKey, ScalarAttributeType.S),
                     new AttributeDefinition(SortKey, ScalarAttributeType.N),
                 },
-                KeySchema = new List<KeySchemaElement>
+        KeySchema = new List<KeySchemaElement>
                 {
                     new KeySchemaElement(PartitionKey, KeyType.HASH),
                     new KeySchemaElement(SortKey, KeyType.RANGE),
                 },
-                ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
-            };
+        ProvisionedThroughput = new ProvisionedThroughput(1L, 1L),
+      };
 
-            CreateTableResponse createTableResponse = client.CreateTableAsync(request).Result;
-        }
+      CreateTableResponse createTableResponse = client.CreateTableAsync(request).Result;
+    }
 
-        [Fact]
-        private void TestLoadSuccess()
-        {
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
+    [Fact]
+    private void TestLoadSuccess()
+    {
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
 
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
-        }
+      Assert.True(actualJsonObject.IsSome);
+      Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+    }
 
-        [Fact]
-        private void TestLoadWithNoResultShouldReturnEmpty()
-        {
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load("fake_key", created);
+    [Fact]
+    private void TestLoadWithNoResultShouldReturnEmpty()
+    {
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load("fake_key", created);
 
-            Assert.False(actualJsonObject.IsSome);
-        }
+      Assert.False(actualJsonObject.IsSome);
+    }
 
-        [Fact]
-        private void TestLoadWithFailureShouldReturnEmpty()
-        {
-            Dispose();
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
+    [Fact]
+    private void TestLoadWithFailureShouldReturnEmpty()
+    {
+      Dispose();
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
 
-            Assert.False(actualJsonObject.IsSome);
-        }
+      Assert.False(actualJsonObject.IsSome);
+    }
 
-        [Fact]
-        private void TestLoadLatestWithSingleRecord()
-        {
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
+    [Fact]
+    private void TestLoadLatestWithSingleRecord()
+    {
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
-        }
+      Assert.True(actualJsonObject.IsSome);
+      Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+    }
 
-        [Fact]
-        private void TestLoadLatestWithSingleRecordAndSuffix()
-        {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .WithKeySuffix()
-                .Build();
+    [Fact]
+    private void TestLoadLatestWithSingleRecordAndSuffix()
+    {
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .WithKeySuffix()
+          .Build();
 
-            Option<JObject> actualJsonObject = dbMetastoreImpl.LoadLatest(TestKey);
+      Option<JObject> actualJsonObject = dbMetastoreImpl.LoadLatest(TestKey);
 
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
-        }
+      Assert.True(actualJsonObject.IsSome);
+      Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+    }
 
-        [Fact]
-        private async Task TestLoadLatestWithMultipleRecords()
-        {
-            DateTimeOffset createdMinusOneHour = created.AddHours(-1);
-            DateTimeOffset createdPlusOneHour = created.AddHours(1);
-            DateTimeOffset createdMinusOneDay = created.AddDays(-1);
-            DateTimeOffset createdPlusOneDay = created.AddDays(1);
+    [Fact]
+    private async Task TestLoadLatestWithMultipleRecords()
+    {
+      DateTimeOffset createdMinusOneHour = created.AddHours(-1);
+      DateTimeOffset createdPlusOneHour = created.AddHours(1);
+      DateTimeOffset createdMinusOneDay = created.AddDays(-1);
+      DateTimeOffset createdPlusOneDay = created.AddDays(1);
 
-            // intentionally mixing up insertion order
-            Document documentPlusOneHour = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = createdPlusOneHour.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(new JObject
+      // intentionally mixing up insertion order
+      Document documentPlusOneHour = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = createdPlusOneHour.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
                     { "mytime", createdPlusOneHour },
                 }.ToString()),
-            };
-            await table.PutItemAsync(documentPlusOneHour);
+      };
+      await table.PutItemAsync(documentPlusOneHour, TestContext.Current.CancellationToken);
 
-            Document documentPlusOneDay = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = createdPlusOneDay.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(new JObject
+      Document documentPlusOneDay = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = createdPlusOneDay.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
                     { "mytime", createdPlusOneDay },
                 }.ToString()),
-            };
-            await table.PutItemAsync(documentPlusOneDay);
+      };
+      await table.PutItemAsync(documentPlusOneDay, TestContext.Current.CancellationToken);
 
-            Document documentMinusOneHour = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = createdMinusOneHour.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(new JObject
+      Document documentMinusOneHour = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = createdMinusOneHour.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
                     { "mytime", createdMinusOneHour },
                 }.ToString()),
-            };
-            await table.PutItemAsync(documentMinusOneHour);
+      };
+      await table.PutItemAsync(documentMinusOneHour, TestContext.Current.CancellationToken);
 
-            Document documentMinusOneDay = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = createdMinusOneDay.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(new JObject
+      Document documentMinusOneDay = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = createdMinusOneDay.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(new JObject
                 {
                     { "mytime", createdMinusOneDay },
                 }.ToString()),
-            };
-            await table.PutItemAsync(documentMinusOneDay);
+      };
+      await table.PutItemAsync(documentMinusOneDay, TestContext.Current.CancellationToken);
 
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(createdPlusOneDay, ((JObject)actualJsonObject).GetValue("mytime")));
-        }
-
-        [Fact]
-        private void TestLoadLatestWithNoResultShouldReturnEmpty()
-        {
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest("fake_key");
-
-            Assert.False(actualJsonObject.IsSome);
-        }
-
-        [Fact]
-        private void TestLoadLatestWithFailureShouldReturnEmpty()
-        {
-            Dispose();
-            Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
-
-            Assert.False(actualJsonObject.IsSome);
-        }
-
-        [Fact]
-        private void TestStore()
-        {
-            bool actualValue = dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
-
-            Assert.True(actualValue);
-        }
-
-        [Fact]
-        private void TestStoreWithSuffixSuccess()
-        {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .WithKeySuffix()
-                .Build();
-            bool actualValue = dbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
-
-            Assert.True(actualValue);
-        }
-
-        [Fact]
-        private void TestStoreWithDbErrorShouldThrowException()
-        {
-            Dispose();
-            Assert.Throws<AppEncryptionException>(() =>
-                dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord)));
-        }
-
-        [Fact]
-        private void TestStoreWithDuplicateShouldReturnFalse()
-        {
-            DateTimeOffset now = DateTimeOffset.Now;
-            bool firstAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
-            bool secondAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
-
-            Assert.True(firstAttempt);
-            Assert.False(secondAttempt);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithEndPointConfiguration()
-        {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithRegion()
-        {
-            Mock<Builder> builder = new Mock<Builder>(Region);
-            Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
-                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
-                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
-                .Build();
-
-            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
-                .Returns(loadTable);
-
-            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
-                .WithRegion(Region)
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithKeySuffix()
-        {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .WithKeySuffix()
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-            Assert.Equal(Region, dbMetastoreImpl.GetKeySuffix());
-        }
-
-        [Fact]
-        private void TestBuilderPathWithoutKeySuffix()
-        {
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-            Assert.Equal(string.Empty, dbMetastoreImpl.GetKeySuffix());
-        }
-
-        [Fact]
-        private void TestBuilderPathWithCredentials()
-        {
-            var dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .WithCredentials(new BasicAWSCredentials("dummykey", "dummy_secret"))
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
-
-        [Fact]
-        private void TestBuilderPathWithInvalidCredentials()
-        {
-            var emptySecretKey = string.Empty;
-            Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, Region)
-                .WithCredentials(new BasicAWSCredentials("not-dummykey", emptySecretKey))
-                .Build());
-        }
-
-        [Fact]
-        private async Task TestBuilderPathWithTableName()
-        {
-            const string tempTableName = "DummyTable";
-
-            // Use AWS SDK to create client
-            AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
-            {
-                ServiceURL = serviceUrl,
-                AuthenticationRegion = "us-west-2",
-            };
-            AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
-            CreateTableSchema(tempDynamoDbClient, tempTableName);
-
-            // Put the object in temp table
-            Table tempTable = (Table)new TableBuilder(tempDynamoDbClient, tempTableName)
-                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
-                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
-                .Build();
-            JObject jObject = JObject.FromObject(keyRecord);
-            Document document = new Document
-            {
-                [PartitionKey] = TestKey,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
-            await tempTable.PutItemAsync(document);
-
-            // Create a metastore object using the withTableName step
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, "us-west-2")
-                .WithTableName(tempTableName)
-                .Build();
-            Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
-
-            // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
-        }
-
-        [Fact]
-        private void TestPrimaryBuilderPath()
-        {
-            Mock<Builder> builder = new Mock<Builder>(Region);
-            Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
-                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
-                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
-                .Build();
-
-            builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
-                .Returns(loadTable);
-
-            DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
-                .Build();
-
-            Assert.NotNull(dbMetastoreImpl);
-        }
+      Assert.True(actualJsonObject.IsSome);
+      Assert.True(JToken.DeepEquals(createdPlusOneDay, ((JObject)actualJsonObject).GetValue("mytime")));
     }
+
+    [Fact]
+    private void TestLoadLatestWithNoResultShouldReturnEmpty()
+    {
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest("fake_key");
+
+      Assert.False(actualJsonObject.IsSome);
+    }
+
+    [Fact]
+    private void TestLoadLatestWithFailureShouldReturnEmpty()
+    {
+      Dispose();
+      Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
+
+      Assert.False(actualJsonObject.IsSome);
+    }
+
+    [Fact]
+    private void TestStore()
+    {
+      bool actualValue = dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
+
+      Assert.True(actualValue);
+    }
+
+    [Fact]
+    private void TestStoreWithSuffixSuccess()
+    {
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .WithKeySuffix()
+          .Build();
+      bool actualValue = dbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
+
+      Assert.True(actualValue);
+    }
+
+    [Fact]
+    private void TestStoreWithDbErrorShouldThrowException()
+    {
+      Dispose();
+      Assert.Throws<AppEncryptionException>(() =>
+          dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord)));
+    }
+
+    [Fact]
+    private void TestStoreWithDuplicateShouldReturnFalse()
+    {
+      DateTimeOffset now = DateTimeOffset.Now;
+      bool firstAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
+      bool secondAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
+
+      Assert.True(firstAttempt);
+      Assert.False(secondAttempt);
+    }
+
+    [Fact]
+    private void TestBuilderPathWithEndPointConfiguration()
+    {
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+    }
+
+    [Fact]
+    private void TestBuilderPathWithRegion()
+    {
+      Mock<Builder> builder = new Mock<Builder>(Region);
+      Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
+          .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+          .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+          .Build();
+
+      builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+          .Returns(loadTable);
+
+      DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+          .WithRegion(Region)
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+    }
+
+    [Fact]
+    private void TestBuilderPathWithKeySuffix()
+    {
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .WithKeySuffix()
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+      Assert.Equal(Region, dbMetastoreImpl.GetKeySuffix());
+    }
+
+    [Fact]
+    private void TestBuilderPathWithoutKeySuffix()
+    {
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+      Assert.Equal(string.Empty, dbMetastoreImpl.GetKeySuffix());
+    }
+
+    [Fact]
+    private void TestBuilderPathWithCredentials()
+    {
+      var dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .WithCredentials(new BasicAWSCredentials("dummykey", "dummy_secret"))
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+    }
+
+    [Fact]
+    private void TestBuilderPathWithInvalidCredentials()
+    {
+      var emptySecretKey = string.Empty;
+      Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, Region)
+          .WithCredentials(new BasicAWSCredentials("not-dummykey", emptySecretKey))
+          .Build());
+    }
+
+    [Fact]
+    private async Task TestBuilderPathWithTableName()
+    {
+      const string tempTableName = "DummyTable";
+
+      // Use AWS SDK to create client
+      AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
+      {
+        ServiceURL = serviceUrl,
+        AuthenticationRegion = "us-west-2",
+      };
+      AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
+      CreateTableSchema(tempDynamoDbClient, tempTableName);
+
+      // Put the object in temp table
+      Table tempTable = (Table)new TableBuilder(tempDynamoDbClient, tempTableName)
+          .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+          .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+          .Build();
+      JObject jObject = JObject.FromObject(keyRecord);
+      Document document = new Document
+      {
+        [PartitionKey] = TestKey,
+        [SortKey] = created.ToUnixTimeSeconds(),
+        [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+      };
+      await tempTable.PutItemAsync(document, TestContext.Current.CancellationToken);
+
+      // Create a metastore object using the withTableName step
+      DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+          .WithEndPointConfiguration(serviceUrl, "us-west-2")
+          .WithTableName(tempTableName)
+          .Build();
+      Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
+
+      // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
+      Assert.True(actualJsonObject.IsSome);
+      Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+    }
+
+    [Fact]
+    private void TestPrimaryBuilderPath()
+    {
+      Mock<Builder> builder = new Mock<Builder>(Region);
+      Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
+          .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+          .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+          .Build();
+
+      builder.Setup(x => x.LoadTable(It.IsAny<IAmazonDynamoDB>(), Region))
+          .Returns(loadTable);
+
+      DynamoDbMetastoreImpl dbMetastoreImpl = builder.Object
+          .Build();
+
+      Assert.NotNull(dbMetastoreImpl);
+    }
+  }
 }

@@ -3,11 +3,11 @@ using GoDaddy.Asherah.Crypto.Envelope;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Engine.BouncyCastle
 {
-    public class BouncyAes256GcmCryptoTest : GenericAeadCryptoTest
+  public class BouncyAes256GcmCryptoTest : GenericAeadCryptoTest
+  {
+    protected override AeadEnvelopeCrypto GetCryptoInstance()
     {
-        protected override AeadEnvelopeCrypto GetCryptoInstance()
-        {
-            return new BouncyAes256GcmCrypto();
-        }
+      return new BouncyAes256GcmCrypto();
     }
+  }
 }

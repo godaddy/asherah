@@ -5,25 +5,25 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
 {
-    public static class SessionFactoryGenerator
+  public static class SessionFactoryGenerator
+  {
+    public static SessionFactory CreateDefaultSessionFactory(
+        KeyManagementService keyManagementService, IMetastore<JObject> metastore)
     {
-        public static SessionFactory CreateDefaultSessionFactory(
-            KeyManagementService keyManagementService, IMetastore<JObject> metastore)
-        {
-            return CreateDefaultSessionFactory(DefaultProductId, DefaultServiceId, keyManagementService, metastore);
-        }
-
-        private static SessionFactory CreateDefaultSessionFactory(
-            string productId,
-            string serviceId,
-            KeyManagementService keyManagementService,
-            IMetastore<JObject> metastore)
-        {
-            return SessionFactory.NewBuilder(productId, serviceId)
-                .WithMetastore(metastore)
-                .WithNeverExpiredCryptoPolicy()
-                .WithKeyManagementService(keyManagementService)
-                .Build();
-        }
+      return CreateDefaultSessionFactory(DefaultProductId, DefaultServiceId, keyManagementService, metastore);
     }
+
+    private static SessionFactory CreateDefaultSessionFactory(
+        string productId,
+        string serviceId,
+        KeyManagementService keyManagementService,
+        IMetastore<JObject> metastore)
+    {
+      return SessionFactory.NewBuilder(productId, serviceId)
+          .WithMetastore(metastore)
+          .WithNeverExpiredCryptoPolicy()
+          .WithKeyManagementService(keyManagementService)
+          .Build();
+    }
+  }
 }

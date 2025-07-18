@@ -6,40 +6,62 @@ using GoDaddy.Asherah.SecureMemory;
 
 namespace GoDaddy.Asherah.AppEncryption.Kms
 {
+  /// <summary>
+  /// An implementation of <see cref="KeyManagementService"/> that uses <see cref="BouncyAes256GcmCrypto"/> to
+  /// encrypt/decrypt keys.
+  /// Note: This should never be used in a production environment.
+  /// </summary>
+  public class StaticKeyManagementServiceImpl : KeyManagementService, IDisposable
+  {
+    private readonly SecretCryptoKey encryptionKey;
+    private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
+
     /// <summary>
-    /// An implementation of <see cref="KeyManagementService"/> that uses <see cref="BouncyAes256GcmCrypto"/> to
-    /// encrypt/decrypt keys.
-    /// Note: This should never be used in a production environment.
+    /// Initializes a new instance of the <see cref="StaticKeyManagementServiceImpl"/> class. It uses a hard coded
+    /// static master key,
     /// </summary>
-    public class StaticKeyManagementServiceImpl : KeyManagementService
+    ///
+    /// <param name="key">The static master key to use.</param>
+    public StaticKeyManagementServiceImpl(string key)
     {
-        private readonly CryptoKey encryptionKey;
-        private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
+      byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+      Secret secretKey = new TransientSecretFactory().CreateSecret(keyBytes);
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StaticKeyManagementServiceImpl"/> class. It uses a hard coded
-        /// static master key,
-        /// </summary>
-        ///
-        /// <param name="key">The static master key to use.</param>
-        public StaticKeyManagementServiceImpl(string key)
-        {
-            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
-            Secret secretKey = new TransientSecretFactory().CreateSecret(keyBytes);
-
-            encryptionKey = new SecretCryptoKey(secretKey, DateTimeOffset.UtcNow, false);
-        }
-
-        /// <inheritdoc/>
-        public override byte[] EncryptKey(CryptoKey key)
-        {
-            return crypto.EncryptKey(key, encryptionKey);
-        }
-
-        /// <inheritdoc/>
-        public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
-        {
-            return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
-        }
+      encryptionKey = new SecretCryptoKey(secretKey, DateTimeOffset.UtcNow, false);
     }
+
+    /// <inheritdoc/>
+    public override byte[] EncryptKey(CryptoKey key)
+    {
+      return crypto.EncryptKey(key, encryptionKey);
+    }
+
+    /// <inheritdoc/>
+    public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
+    {
+      return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
+    }
+
+    /// <summary>
+    /// Disposes of the managed resources.
+    /// </summary>
+    public void Dispose()
+    {
+      Dispose(true);
+      GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes of the managed resources.
+    /// </summary>
+    /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+      if (disposing)
+      {
+        encryptionKey?.Dispose();
+        crypto?.Dispose();
+      }
+    }
+  }
 }

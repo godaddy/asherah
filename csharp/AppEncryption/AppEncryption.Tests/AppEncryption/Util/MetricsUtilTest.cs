@@ -5,24 +5,24 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
 {
-    [Collection("Logger Fixture collection")]
-    public class MetricsUtilTest
+  [Collection("Logger Fixture collection")]
+  public class MetricsUtilTest
+  {
+    [Fact]
+    private void TestMetricsInstance()
     {
-        [Fact]
-        private void TestMetricsInstance()
-        {
-            IMetrics metrics = AppMetrics.CreateDefaultBuilder().Build();
-            MetricsUtil.SetMetricsInstance(metrics);
+      IMetrics metrics = AppMetrics.CreateDefaultBuilder().Build();
+      MetricsUtil.SetMetricsInstance(metrics);
 
-            Assert.Equal(metrics, MetricsUtil.MetricsInstance);
-        }
-
-        [Fact]
-        private void TestMetricsInstanceWithNull()
-        {
-            MetricsUtil.SetMetricsInstance(null);
-
-            Assert.Throws<ArgumentNullException>(() => MetricsUtil.MetricsInstance);
-        }
+      Assert.Equal(metrics, MetricsUtil.MetricsInstance);
     }
+
+    [Fact]
+    private void TestMetricsInstanceWithNull()
+    {
+      MetricsUtil.SetMetricsInstance(null);
+
+      Assert.Throws<ArgumentNullException>(() => MetricsUtil.MetricsInstance);
+    }
+  }
 }
