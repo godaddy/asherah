@@ -35,7 +35,7 @@ bld/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
-Logging.Tests/test-result.xml
+test-result.xml
 
 # NUNIT
 *.VisualState.xml

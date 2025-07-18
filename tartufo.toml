@@ -37,6 +37,9 @@ exclude-signatures = [
     { signature = "b1204a9d074ae04eaf94aa244195c41dd2ca5c463d2f655b730c6a2f1b50fb42", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "0637850be3829dc235fae4784a89685f7737de1f235fe6540e742eed1271756c", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "e34175b04464dd09c1ac6efce79597f650cf8c11bdf4304e63aab68c0736a356", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "e82758f33c162b35d2127c2298c9eedfd5bf8c96548c71e1e6b47170c3d18f13", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "d99b60d74ea9b225cc6d620c4717511bed5d6b13dec8c8faac1459cb6f9e5058", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "f8cf368cc27e574b8b7be9c44a8acddde37a4c9913165a131cdedc8643c8f51e", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
 
     { signature = "0d4a2e3037d931239373f7f547542616cc64fc583072029e6b3a2e77e8b7f89e", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
     { signature = "3b43730726f7dd09bb41870ddb5b65e77b6b2b8aab52f40e9237e6d2423cfcb3", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
@@ -61,6 +64,8 @@ exclude-signatures = [
 ]
 
 exclude-path-patterns = [
+    {path-pattern = '.*/(L|LL)P64/.*', reason = 'Exclude LP64 paths'},
+    {path-pattern = '.*\.DotSettings', reason = 'Exclude DotSettings files'},
     {path-pattern = '.*/go.mod', reason = 'Exclude go.mod files'},
     {path-pattern = '.*/go.sum', reason = 'Exclude go.sum files'},
     {path-pattern = '.*/go.work.sum', reason = 'Exclude go.work.sum files'},

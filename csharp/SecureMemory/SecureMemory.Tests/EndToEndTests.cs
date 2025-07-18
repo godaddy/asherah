@@ -1,4 +1,3 @@
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -7,74 +6,76 @@ using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
 {
-    [Collection("Logger Fixture collection")]
-    public class EndToEndTests
+  [Collection("Logger Fixture collection")]
+  public class EndToEndTests
+  {
+    private static readonly byte[] SecretBytes = new byte[] { 0, 1, 2, 3 };
+
+    [Fact]
+    private void EndToEndTest()
     {
-        [Fact]
-        private void EndToEndTest()
+      Trace.Listeners.Clear();
+      var consoleListener = new ConsoleTraceListener();
+      Trace.Listeners.Add(consoleListener);
+
+      var configuration = new ConfigurationBuilder()
+          .AddInMemoryCollection()
+          .Build();
+
+      try
+      {
+        Debug.WriteLine("SampleTest.EndToEndTest");
+        using (var secretFactory = new SecureMemorySecretFactory(configuration))
         {
-            Trace.Listeners.Clear();
-            var consoleListener = new ConsoleTraceListener();
-            Trace.Listeners.Add(consoleListener);
-
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection()
-                .Build();
-
-            try
-            {
-                Debug.WriteLine("SampleTest.EndToEndTest");
-                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
-                {
-                    var secretBytes = new byte[] { 0, 1, 2, 3 };
-                    using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
-                    {
-                        secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
-                    }
-                }
-                Debug.WriteLine("SampleTest.EndToEndTest finish");
-            }
-            catch(Exception e)
-            {
-                Debug.WriteLine("SampleTest.EndToEndTest exception: " + e.Message);
-            }
+          var secretBytes = SecretBytes;
+          using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
+          {
+            secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
+          }
         }
+        Debug.WriteLine("SampleTest.EndToEndTest finish");
+      }
+      catch (Exception e)
+      {
+        Debug.WriteLine("SampleTest.EndToEndTest exception: " + e.Message);
+      }
+    }
 
-        [Fact]
-        private void EndToEndOpenSSLTest()
-        {
-            Trace.Listeners.Clear();
-            var consoleListener = new ConsoleTraceListener();
-            Trace.Listeners.Add(consoleListener);
+    [Fact]
+    private void EndToEndOpenSSLTest()
+    {
+      Trace.Listeners.Clear();
+      var consoleListener = new ConsoleTraceListener();
+      Trace.Listeners.Add(consoleListener);
 
-            var dictionary = new Dictionary<string,string>
+      var dictionary = new Dictionary<string, string>
             {
                 { "secureHeapEngine", "openssl11" },
                 { "heapSize", "32000" },
                 { "minimumAllocationSize", "128" }
             };
 
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(dictionary)
-                .Build();
+      var configuration = new ConfigurationBuilder()
+          .AddInMemoryCollection(dictionary)
+          .Build();
 
-            try
-            {
-                Debug.WriteLine("SampleTest.EndToEndOpenSSLTest");
-                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
-                {
-                    var secretBytes = new byte[] { 0, 1, 2, 3 };
-                    using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
-                    {
-                        secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
-                    }
-                }
-                Debug.WriteLine("SampleTest.EndToEndOpenSSLTest finish");
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("SampleTest.EndToEndOpenSSLTest exception: " + e.Message);
-            }
+      try
+      {
+        Debug.WriteLine("SampleTest.EndToEndOpenSSLTest");
+        using (var secretFactory = new SecureMemorySecretFactory(configuration))
+        {
+          var secretBytes = SecretBytes;
+          using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
+          {
+            secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
+          }
         }
+        Debug.WriteLine("SampleTest.EndToEndOpenSSLTest finish");
+      }
+      catch (Exception e)
+      {
+        Debug.WriteLine("SampleTest.EndToEndOpenSSLTest exception: " + e.Message);
+      }
     }
+  }
 }

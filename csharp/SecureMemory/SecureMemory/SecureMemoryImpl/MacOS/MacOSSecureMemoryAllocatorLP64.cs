@@ -9,80 +9,70 @@ using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS
 {
-    /*
-     * MacOS protected memory implementation supports:
-     *
-     * mmap(MAP_PRIVATE | MAP_ANON) - Private anonymous
-     * setrlimit(RLIMIT_CORE, 0) - Globally disable core dumps
-     * madvise(MADV_ZERO_WIRED_PAGES) - Request that the pages are zeroed before deallocation
-     */
+  /*
+   * MacOS protected memory implementation supports:
+   *
+   * mmap(MAP_PRIVATE | MAP_ANON) - Private anonymous
+   * setrlimit(RLIMIT_CORE, 0) - Globally disable core dumps
+   * madvise(MADV_ZERO_WIRED_PAGES) - Request that the pages are zeroed before deallocation
+   */
 
-    internal class MacOSSecureMemoryAllocatorLP64 : LibcSecureMemoryAllocatorLP64
+  internal class MacOSSecureMemoryAllocatorLP64 : LibcSecureMemoryAllocatorLP64
+  {
+    public MacOSSecureMemoryAllocatorLP64()
     {
-        private readonly MacOSLibcLP64 libc;
-
-        public MacOSSecureMemoryAllocatorLP64()
-            : base(new MacOSLibcLP64())
-        {
-            libc = (MacOSLibcLP64)GetLibc();
-            DisableCoreDumpGlobally();
-        }
-
-        public MacOSSecureMemoryAllocatorLP64(MacOSLibcLP64 libc)
-            : base(libc)
-        {
-            this.libc = libc;
-        }
-
-        public override void Dispose()
-        {
-        }
-
-        internal override int GetRlimitCoreResource()
-        {
-            return (int)RlimitResource.RLIMIT_CORE;
-        }
-
-        // Platform specific blocking memory from core dump
-        internal override void SetNoDump(IntPtr secureMemory, ulong length)
-        {
-            // MacOS doesn't have madvise(MAP_DONTDUMP) so we have to disable core dumps globally
-            if (!AreCoreDumpsGloballyDisabled())
-            {
-                DisableCoreDumpGlobally();
-                if (!AreCoreDumpsGloballyDisabled())
-                {
-                    throw new SystemException("Failed to disable core dumps");
-                }
-            }
-        }
-
-        // These flags are platform specific in their integer values
-        internal override int GetProtRead()
-        {
-            return (int)MmapProts.PROT_READ;
-        }
-
-        internal override int GetProtReadWrite()
-        {
-            return (int)(MmapProts.PROT_READ | MmapProts.PROT_WRITE);
-        }
-
-        internal override int GetProtNoAccess()
-        {
-            return (int)MmapProts.PROT_NONE;
-        }
-
-        internal override int GetPrivateAnonymousFlags()
-        {
-            return (int)(MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANON);
-        }
-
-        protected override void ZeroMemory(IntPtr pointer, ulong length)
-        {
-            // This differs on different platforms
-            // MacOS has memset_s which is standardized and secure
-            libc.memset_s(pointer, length, 0, length);
-        }
+      DisableCoreDumpGlobally();
     }
+
+    public override void Dispose()
+    {
+    }
+
+    internal override int GetRlimitCoreResource()
+    {
+      return (int)RlimitResource.RLIMIT_CORE;
+    }
+
+    // Platform specific blocking memory from core dump
+    internal override void SetNoDump(IntPtr secureMemory, ulong length)
+    {
+      // MacOS doesn't have madvise(MAP_DONTDUMP) so we have to disable core dumps globally
+      if (!AreCoreDumpsGloballyDisabled())
+      {
+        DisableCoreDumpGlobally();
+        if (!AreCoreDumpsGloballyDisabled())
+        {
+          throw new SecureMemoryException("Failed to disable core dumps");
+        }
+      }
+    }
+
+    // These flags are platform specific in their integer values
+    internal override int GetProtRead()
+    {
+      return (int)MmapProts.PROT_READ;
+    }
+
+    internal override int GetProtReadWrite()
+    {
+      return (int)(MmapProts.PROT_READ | MmapProts.PROT_WRITE);
+    }
+
+    internal override int GetProtNoAccess()
+    {
+      return (int)MmapProts.PROT_NONE;
+    }
+
+    internal override int GetPrivateAnonymousFlags()
+    {
+      return (int)(MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANON);
+    }
+
+    protected override void ZeroMemory(IntPtr pointer, ulong length)
+    {
+      // This differs on different platforms
+      // MacOS has memset_s which is standardized and secure
+      MacOSLibcLP64.memset_s(pointer, length, 0, length);
+    }
+  }
 }

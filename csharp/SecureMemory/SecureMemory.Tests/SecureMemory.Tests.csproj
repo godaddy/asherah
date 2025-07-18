@@ -3,7 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>GoDaddy.Asherah.SecureMemory.Tests</RootNamespace>
-    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>Recommended</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

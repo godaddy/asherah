@@ -2,11 +2,11 @@ using System;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
-    public class MemoryLimitException : SystemException
+  public class MemoryLimitException : SystemException
+  {
+    public MemoryLimitException(string message)
+        : base(message)
     {
-        public MemoryLimitException(string message)
-            : base(message)
-        {
-        }
     }
+  }
 }
