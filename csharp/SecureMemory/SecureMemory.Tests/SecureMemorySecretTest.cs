@@ -363,7 +363,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
           // Wait for all threads to complete
           Debug.WriteLine("Waiting for threads");
-          countdown.Wait();
+          countdown.Wait(TestContext.Current.CancellationToken);
           Debug.WriteLine("Threads finished");
           Assert.Equal(numTasks, completedTasks);
         }

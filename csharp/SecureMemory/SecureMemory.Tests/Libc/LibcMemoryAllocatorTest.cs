@@ -33,10 +33,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.Libc
         libcMemoryAllocator = null;
       }
     }
-    [SkippableFact]
+
+    [Fact]
     private void TestDisableCoreDumpGlobally()
     {
-      Skip.If(libcMemoryAllocator == null);
+      Assert.SkipWhen(libcMemoryAllocator == null, "LibcMemoryAllocator is not supported on this platform. Skipping test.");
 
       Debug.WriteLine("LibcMemoryAllocatorTest.TestDisableCoreDumpGlobally");
 

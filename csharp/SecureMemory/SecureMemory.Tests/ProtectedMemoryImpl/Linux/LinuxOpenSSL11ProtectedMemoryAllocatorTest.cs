@@ -40,20 +40,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestGetResourceCore()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore");
       Assert.Equal(4, linuxOpenSSL11ProtectedMemoryAllocatorLP64.GetRlimitCoreResource());
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore End");
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestAllocFree()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       byte[] origValue = { 1, 2, 3, 4 };
       var length = (ulong)origValue.Length;
@@ -74,10 +74,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       }
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestSetNoAccessAfterDispose()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -92,10 +92,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       Assert.Equal("Called SetNoAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestReadAccessAfterDispose()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -110,10 +110,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       Assert.Equal("Called SetReadAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestReadWriteAccessAfterDispose()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -128,10 +128,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       Assert.Equal("Called SetReadWriteAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestAllocAfterDispose()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -146,10 +146,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
       Assert.Equal("Called Alloc on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestFreeAfterDispose()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
       linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);

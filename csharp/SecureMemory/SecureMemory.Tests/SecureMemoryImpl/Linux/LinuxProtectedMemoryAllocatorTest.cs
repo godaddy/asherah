@@ -31,27 +31,27 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Linux
       linuxProtectedMemoryAllocator?.Dispose();
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestSetNoDumpInvalidLength()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       var fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
       Assert.Throws<Exception>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestGetResourceCore()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       Assert.Equal(4, linuxProtectedMemoryAllocator.GetRlimitCoreResource());
     }
 
-    [SkippableFact]
+    [Fact]
     private void TestAllocFree()
     {
-      Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
+      Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
 
       byte[] origValue = { 1, 2, 3, 4 };
       var length = (ulong)origValue.Length;
