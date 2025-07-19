@@ -1,5 +1,7 @@
 # FAQ
 
+## Architecture and Design Decisions
+
 #### Why not use something off-the-shelf?
 
 Asherah effectively *is* a composition of off the shelf technologies. All of the envelope encryption keys are rooted in
@@ -58,3 +60,67 @@ The added latency of doing a KMS operation for every database read is not insign
 cost. By maintaining our own key hierarchy that roots in a KMS, we can choose to cache System keys at service startup,
 and Intermediate keys at login. This allows us to minimize the calls to a KMS to generally one call on service startup.
 The performance gains and cost savings are significant.
+
+## Integration and Implementation
+
+#### How do I choose ProductID and ServiceName when initializing a SessionFactory?
+
+The `ProductID` and `ServiceName` (also called `ServiceID`) are crucial identifiers used to uniquely identify the context in which encryption keys are being used. They play a central role in Asherah's hierarchical key management system by segregating keys based on different applications or services.
+
+**ServiceName/ServiceID:**
+- Maps well to existing services or components in your infrastructure
+- Should reflect the specific service or application layer using Asherah for encryption
+- Used in constructing System Key IDs: `_SK_{serviceId}_{productId}`
+
+**ProductID:**
+- Represents a broader product or application that encompasses multiple services
+- Acts as a higher-level identifier grouping several services under a single product umbrella
+- Often aligns with existing product identifiers within your organization (internal project names, product suite codes)
+- Does not directly affect metrics or cost tracking in AWS or Asherah operations
+
+**Key Construction Impact:**
+These identifiers directly influence how keys are named and organized:
+- System Keys: `_SK_servicefoo_productbar`
+- Intermediate Keys: `_IK_partitionId_servicefoo_productbar`
+
+**Best Practices:**
+- **Consistency:** Use standardized naming conventions across your organization
+- **Uniqueness:** Ensure identifiers are unique within your system to prevent key collisions
+- **Documentation:** Document chosen values and their meanings for team clarity
+- **Environment Variables:** Consider using environment variables (e.g., `ASHERAH_PRODUCT_NAME`, `ASHERAH_SERVICE_NAME`) for production deployments
+
+**Example Initialization:**
+```java
+// Java
+SessionFactory sessionFactory = SessionFactory
+    .newBuilder("myProduct", "userService")
+    .withMetastore(metastore)
+    .withCryptoPolicy(cryptoPolicy)
+    .withKeyManagementService(keyManagementService)
+    .build();
+```
+
+```go
+// Go
+config := &appencryption.Config{
+    Product: "myProduct",
+    Service: "userService",
+    Policy:  policy,
+}
+factory := appencryption.NewSessionFactory(config, metastore, kms, crypto)
+```
+
+```csharp
+// C#
+using (SessionFactory sessionFactory = SessionFactory
+    .NewBuilder("myProduct", "userService")
+    .WithMetastore(metastore)
+    .WithCryptoPolicy(cryptoPolicy)
+    .WithKeyManagementService(keyManagementService)
+    .Build())
+{
+    // Use sessionFactory here
+}
+```
+
+The choice of `ProductID` and `ServiceName` should reflect your organizational structure and help logically separate encryption keys for different services and products. As long as they serve this purpose effectively, you have flexibility in how you define them.
