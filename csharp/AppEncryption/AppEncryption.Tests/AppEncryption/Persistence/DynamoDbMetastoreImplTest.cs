@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -188,7 +189,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdPlusOneHour },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentPlusOneHour, TestContext.Current.CancellationToken);
+            await table.PutItemAsync(documentPlusOneHour, CancellationToken.None);
 
             Document documentPlusOneDay = new Document
             {
@@ -199,7 +200,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdPlusOneDay },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentPlusOneDay, TestContext.Current.CancellationToken);
+            await table.PutItemAsync(documentPlusOneDay, CancellationToken.None);
 
             Document documentMinusOneHour = new Document
             {
@@ -210,7 +211,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdMinusOneHour },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentMinusOneHour, TestContext.Current.CancellationToken);
+            await table.PutItemAsync(documentMinusOneHour, CancellationToken.None);
 
             Document documentMinusOneDay = new Document
             {
@@ -221,7 +222,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdMinusOneDay },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentMinusOneDay, TestContext.Current.CancellationToken);
+            await table.PutItemAsync(documentMinusOneDay, CancellationToken.None);
 
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
@@ -384,7 +385,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = created.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
             };
-            await tempTable.PutItemAsync(document, TestContext.Current.CancellationToken);
+            await tempTable.PutItemAsync(document, CancellationToken.None);
 
             // Create a metastore object using the withTableName step
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)

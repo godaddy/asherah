@@ -28,13 +28,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        public ValueTask InitializeAsync() => new ValueTask(container?.StartAsync() ?? Task.CompletedTask);
+        public Task InitializeAsync() => container?.StartAsync() ?? Task.CompletedTask;
 
-        public ValueTask DisposeAsync()
-        {
-            GC.SuppressFinalize(this);
-            return new ValueTask(container?.StopAsync() ?? Task.CompletedTask);
-        }
+        public Task DisposeAsync() => container?.StopAsync() ?? Task.CompletedTask;
 
         public string GetConnectionString() => container?.GetConnectionString() ?? localConnectionString;
     }
