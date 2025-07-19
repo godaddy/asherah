@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using GoDaddy.Asherah.AppEncryption.Envelope;
-using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
-using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
-using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
 using Newtonsoft.Json.Linq;

@@ -1,7 +1,6 @@
 using System;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
-using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 
