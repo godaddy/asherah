@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.SecureMemory;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -42,7 +43,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", linuxOpenSSL11ProtectedMemoryAllocatorLP64);
             cryptProtectMemory.Dispose();
-            Assert.Throws<Exception>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
+            Assert.Throws<SecureMemoryException>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
         }
 
         [SkippableFact]
@@ -52,7 +53,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", linuxOpenSSL11ProtectedMemoryAllocatorLP64);
             cryptProtectMemory.Dispose();
-            Assert.Throws<Exception>(() => cryptProtectMemory.CryptUnprotectMemory(IntPtr.Zero, 0));
+            Assert.Throws<SecureMemoryException>(() => cryptProtectMemory.CryptUnprotectMemory(IntPtr.Zero, 0));
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.SecureMemory;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -85,7 +86,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
-            var exception = Assert.Throws<Exception>(() =>
+            var exception = Assert.Throws<SecureMemoryException>(() =>
             {
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetNoAccess(new IntPtr(-1), 0);
             });
@@ -103,7 +104,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
-            var exception = Assert.Throws<Exception>(() =>
+            var exception = Assert.Throws<SecureMemoryException>(() =>
             {
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetReadAccess(new IntPtr(-1), 0);
             });
@@ -121,7 +122,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
-            var exception = Assert.Throws<Exception>(() =>
+            var exception = Assert.Throws<SecureMemoryException>(() =>
             {
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.SetReadWriteAccess(new IntPtr(-1), 0);
             });
@@ -139,7 +140,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
-            var exception = Assert.Throws<Exception>(() =>
+            var exception = Assert.Throws<SecureMemoryException>(() =>
             {
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.Alloc(0);
             });
@@ -156,7 +157,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
             linuxOpenSSL11ProtectedMemoryAllocatorLP64.Dispose();
 
-            var exception = Assert.Throws<Exception>(() =>
+            var exception = Assert.Throws<SecureMemoryException>(() =>
             {
                 linuxOpenSSL11ProtectedMemoryAllocatorLP64.Free(new IntPtr(-1), 0);
             });

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.SecureMemory;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
 using Xunit;
 
@@ -37,7 +38,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Linux
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
-            Assert.Throws<Exception>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
+            Assert.Throws<SecureMemoryException>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
         }
 
         [SkippableFact]
