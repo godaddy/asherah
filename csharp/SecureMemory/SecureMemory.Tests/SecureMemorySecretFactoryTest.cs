@@ -110,10 +110,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestMlockConfigurationSettingForMac()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Test only runs on macOS");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
             var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
@@ -126,10 +126,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.IsNotType<MacOSProtectedMemoryAllocatorLP64>(allocator);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestMlockConfigurationSettingForLinux()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
@@ -142,10 +142,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.IsNotType<LinuxProtectedMemoryAllocatorLP64>(allocator);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestMlockConfigurationSettingForMacWithInvalidValueThrowsException()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Test only runs on macOS");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
             var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
@@ -155,10 +155,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForMacOS64(testConfiguration));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestMlockConfigurationSettingForLinuxWithInvalidValueThrowsException()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
@@ -168,10 +168,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForLinux64(testConfiguration));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDefaultMlockConfigurationForLinux()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var allocator = SecureMemorySecretFactory.ConfigureForLinux64(configuration);
 
@@ -179,10 +179,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.IsNotType<LinuxSecureMemoryAllocatorLP64>(allocator);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestDefaultMlockConfigurationForMac()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Test only runs on macOS");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
             var allocator = SecureMemorySecretFactory.ConfigureForMacOS64(configuration);
 

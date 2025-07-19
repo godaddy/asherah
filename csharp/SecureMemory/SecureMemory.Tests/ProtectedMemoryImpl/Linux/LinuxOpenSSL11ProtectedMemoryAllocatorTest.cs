@@ -40,20 +40,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestGetResourceCore()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore");
             Assert.Equal(4, linuxOpenSSL11ProtectedMemoryAllocatorLP64.GetRlimitCoreResource());
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest TestGetResourceCore End");
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocFree()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             byte[] origValue = { 1, 2, 3, 4 };
             var length = (ulong)origValue.Length;
@@ -74,10 +74,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestSetNoAccessAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -92,10 +92,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             Assert.Equal("Called SetNoAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestReadAccessAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -110,10 +110,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             Assert.Equal("Called SetReadAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestReadWriteAccessAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -128,10 +128,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             Assert.Equal("Called SetReadWriteAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
 
@@ -146,10 +146,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             Assert.Equal("Called Alloc on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64", exception.Message);
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestFreeAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             Debug.WriteLine("\nLinuxOpenSSL11ProtectedMemoryAllocatorTest ctor");
             linuxOpenSSL11ProtectedMemoryAllocatorLP64 = new LinuxOpenSSL11ProtectedMemoryAllocatorLP64(configuration);

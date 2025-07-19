@@ -53,10 +53,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocWithResourceLimitZeroShouldFail()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -78,10 +78,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocWithResourceLimitMaxValueShouldSucceed()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -97,10 +97,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocWithResourceLimitLargeValueShouldSucceed()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -116,10 +116,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
 
@@ -145,10 +145,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
 
@@ -163,10 +163,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestFreeWithInvalidLengthShouldFail()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestFreeWithInvalidLengthShouldFail");
 
@@ -174,10 +174,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Assert.Throws<LibcOperationFailedException>(() => libcProtectedMemoryAllocator.Free(fakePtr, 0));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
 
@@ -187,10 +187,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
 
@@ -200,40 +200,40 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroWithZeroResult()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
 
             Check.Zero(0, "TestCheckZeroWithZeroResult");
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroWithNonZeroResult()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
 
             Assert.Throws<LibcOperationFailedException>(() => { Check.Zero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
 
             Check.Zero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
-            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Test requires libc-based platform (Linux or macOS)");
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
 

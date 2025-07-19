@@ -35,20 +35,20 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
             linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestProtectAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", linuxOpenSSL11ProtectedMemoryAllocatorLP64);
             cryptProtectMemory.Dispose();
             Assert.Throws<Exception>(() => cryptProtectMemory.CryptProtectMemory(IntPtr.Zero, 0));
         }
 
-        [Fact]
+        [SkippableFact]
         private void TestUnprotectAfterDispose()
         {
-            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Linux), "Test only runs on Linux");
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             var cryptProtectMemory = new OpenSSLCryptProtectMemory("aes-256-gcm", linuxOpenSSL11ProtectedMemoryAllocatorLP64);
             cryptProtectMemory.Dispose();
