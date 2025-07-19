@@ -72,7 +72,9 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
                 if (position != outputLen)
                 {
 #if DEBUG
-                    Logger.LogError("position {position} not equal to outputLength {outputLen}", position, outputLen);
+#pragma warning disable CA1848 // Use LoggerMessage delegates
+                    Logger.LogError("position {Position} not equal to outputLength {OutputLen}", position, outputLen);
+#pragma warning restore CA1848 // Use LoggerMessage delegates
 #endif
                     throw new AppEncryptionException("unexpected error during decrypt cipher finalization");
                 }

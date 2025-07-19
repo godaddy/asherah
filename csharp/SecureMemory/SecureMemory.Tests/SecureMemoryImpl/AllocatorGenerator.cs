@@ -33,6 +33,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             foreach (var objArray in allocators)
             {
                 ((IDisposable)objArray[0]).Dispose();

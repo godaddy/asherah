@@ -1,6 +1,3 @@
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
-
 namespace GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums
 {
     // /usr/include/x86_64-linux-gnu/bits/mman-linux.h:# define POSIX_MADV_NORMAL      0 /* No further special treatment.  */

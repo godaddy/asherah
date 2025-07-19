@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AppEncryption.IntegrationTests/AppEncryption.IntegrationTests.csproj" />
+  <Project Path="AppEncryption.Tests/AppEncryption.Tests.csproj" />
+  <Project Path="AppEncryption/AppEncryption.csproj" />
+  <Project Path="Crypto/Crypto.csproj" />
+</Solution>

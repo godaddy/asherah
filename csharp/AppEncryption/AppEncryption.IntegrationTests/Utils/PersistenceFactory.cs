@@ -4,14 +4,14 @@ using LanguageExt;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
 {
-    public static class PersistenceFactory<T>
+    public static class PersistenceFactory
     {
-        public static Persistence<T> CreateInMemoryPersistence()
+        public static Persistence<T> CreateInMemoryPersistence<T>()
         {
-            return new DictionaryPersistence();
+            return new DictionaryPersistence<T>();
         }
 
-        private class DictionaryPersistence : Persistence<T>
+        private sealed class DictionaryPersistence<T> : Persistence<T>
         {
             private readonly ConcurrentDictionary<string, T> dictionaryPersistence = new ConcurrentDictionary<string, T>();
 

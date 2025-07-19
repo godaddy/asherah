@@ -6,12 +6,14 @@ using System.Threading;
 
 namespace GoDaddy.Asherah.Crypto.Keys
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "Public API - cannot change without breaking consumers")]
     public class SecureCryptoKeyDictionary<TKey> : IDisposable
     {
         private readonly ConcurrentDictionary<TKey, SharedCryptoKeyEntry> sharedCryptoKeyDictionary =
             new ConcurrentDictionary<TKey, SharedCryptoKeyEntry>();
 
         private readonly long revokeCheckPeriodMillis;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1805:Do not initialize unnecessarily", Justification = "Explicit initialization required for Interlocked operations")]
         private volatile int isClosed = 0; // using volatile int as 0/1 value to mimic Java's AtomicBoolean functionality
 
         /// <summary>
@@ -32,6 +34,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
         /// <param name="key">The key to retrieve.</param>
         /// <returns>A <see cref="CryptoKey"/> object.</returns>
         /// <exception cref="InvalidOperationException">If a closed key is accessed.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Public API - cannot change without breaking consumers")]
         public virtual CryptoKey Get(TKey key)
         {
             if (!Convert.ToBoolean(isClosed))
@@ -127,7 +130,6 @@ namespace GoDaddy.Asherah.Crypto.Keys
                     // We want to return something that can always be closed by the calling method.
                     // If TryAdd returns true, the value was put into the cache, so return the new "shared" version whose
                     // Dispose() calls will not close the underlying now-cached Secret.
-                    // ReSharper disable once PossibleNullReferenceException
                     return cacheValue.SharedCryptoKey;
                 }
 
@@ -135,12 +137,10 @@ namespace GoDaddy.Asherah.Crypto.Keys
                 // mark the shared/cached version as revoked. Otherwise, just update the cachedTime of the shared/cached value
                 if (cryptoKey.IsRevoked())
                 {
-                    // ReSharper disable once PossibleNullReferenceException
                     cacheValue.SharedCryptoKey.MarkRevoked();
                 }
                 else
                 {
-                    // ReSharper disable once PossibleNullReferenceException
                     Interlocked.Exchange(ref cacheValue.CachedTimeMillis, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 }
 
@@ -164,13 +164,13 @@ namespace GoDaddy.Asherah.Crypto.Keys
 
                 sharedCryptoKeyDictionary.Clear();
             }
+
+            GC.SuppressFinalize(this);
         }
 
         private class SharedCryptoKeyEntry
         {
-            #pragma warning disable SA1401
             internal long CachedTimeMillis;
-            #pragma warning restore SA1401
 
             public SharedCryptoKeyEntry(SharedCryptoKey sharedCryptoKey, long cachedTimeMillis)
             {

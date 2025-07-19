@@ -19,19 +19,9 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS
 
     internal class MacOSSecureMemoryAllocatorLP64 : LibcSecureMemoryAllocatorLP64
     {
-        private readonly MacOSLibcLP64 libc;
-
         public MacOSSecureMemoryAllocatorLP64()
-            : base(new MacOSLibcLP64())
         {
-            libc = (MacOSLibcLP64)GetLibc();
             DisableCoreDumpGlobally();
-        }
-
-        public MacOSSecureMemoryAllocatorLP64(MacOSLibcLP64 libc)
-            : base(libc)
-        {
-            this.libc = libc;
         }
 
         public override void Dispose()
@@ -52,7 +42,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS
                 DisableCoreDumpGlobally();
                 if (!AreCoreDumpsGloballyDisabled())
                 {
-                    throw new SystemException("Failed to disable core dumps");
+                    throw new SecureMemoryException("Failed to disable core dumps");
                 }
             }
         }
@@ -82,7 +72,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS
         {
             // This differs on different platforms
             // MacOS has memset_s which is standardized and secure
-            libc.memset_s(pointer, length, 0, length);
+            MacOSLibcLP64.memset_s(pointer, length, 0, length);
         }
     }
 }

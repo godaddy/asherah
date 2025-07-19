@@ -12,7 +12,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
     [Collection("Configuration collection")]
     public class SessionBytesTest : IDisposable
     {
-        private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory<byte[]>.CreateInMemoryPersistence();
+        private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory.CreateInMemoryPersistence<byte[]>();
         private readonly byte[] payload;
         private readonly SessionFactory sessionFactory;
         private readonly string partitionId;
@@ -32,6 +32,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         {
             sessionBytes.Dispose();
             sessionFactory.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

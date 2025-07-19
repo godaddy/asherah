@@ -24,6 +24,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
         public void Dispose()
         {
             secureCryptoKeyDictionary.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

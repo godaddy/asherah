@@ -37,6 +37,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
         public override void Dispose()
         {
             // SharedCryptoKey doesn't *own* any secrets so it doesn't have anything to dispose
+            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />

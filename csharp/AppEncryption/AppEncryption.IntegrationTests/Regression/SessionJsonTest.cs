@@ -14,7 +14,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
     public class SessionJsonTest : IDisposable
     {
         private static readonly Persistence<byte[]> PersistenceBytes =
-            PersistenceFactory<byte[]>.CreateInMemoryPersistence();
+            PersistenceFactory.CreateInMemoryPersistence<byte[]>();
 
         private readonly JObject payload;
         private readonly SessionFactory sessionFactory;
@@ -35,6 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         {
             sessionJson.Dispose();
             sessionFactory.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

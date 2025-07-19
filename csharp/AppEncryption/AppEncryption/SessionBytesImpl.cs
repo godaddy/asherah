@@ -48,6 +48,7 @@ namespace GoDaddy.Asherah.AppEncryption
             {
                 Logger.LogError(e, "unexpected exception during close");
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

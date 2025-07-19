@@ -63,6 +63,7 @@ namespace GoDaddy.Asherah.Crypto.Keys
         public override void Dispose()
         {
             Secret.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />

@@ -1,10 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.PlatformNative.LP64.Libc;
-using GoDaddy.Asherah.PlatformNative.LP64.Linux;
-using GoDaddy.Asherah.PlatformNative.LP64.MacOS;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
+using GoDaddy.Asherah.SecureMemory.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
@@ -20,7 +17,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
     [Collection("Logger Fixture collection")]
     public class LibcProtectedMemoryAllocatorTest : IDisposable
     {
-        private readonly LibcLP64 libc;
         private readonly LibcProtectedMemoryAllocatorLP64 libcProtectedMemoryAllocator;
         private readonly Mock<MacOSProtectedMemoryAllocatorLP64> macOsProtectedMemoryAllocatorMock;
         private readonly Mock<LinuxProtectedMemoryAllocatorLP64> linuxProtectedMemoryAllocatorMock;
@@ -34,19 +30,16 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest ctor");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                libc = new LinuxLibcLP64();
-                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64((LinuxLibcLP64)libc);
+                libcProtectedMemoryAllocator = new LinuxProtectedMemoryAllocatorLP64();
                 linuxProtectedMemoryAllocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                libc = new MacOSLibcLP64();
-                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64((MacOSLibcLP64)libc);
+                libcProtectedMemoryAllocator = new MacOSProtectedMemoryAllocatorLP64();
                 macOsProtectedMemoryAllocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
             }
             else
             {
-                libc = null;
                 libcProtectedMemoryAllocator = null;
                 macOsProtectedMemoryAllocatorMock = null;
             }
@@ -54,6 +47,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.Dispose");
             libcProtectedMemoryAllocator?.Dispose();
         }
@@ -62,7 +56,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestAllocWithResourceLimitZeroShouldFail()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -87,7 +81,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestAllocWithResourceLimitMaxValueShouldSucceed()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -106,18 +100,18 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestAllocWithResourceLimitLargeValueShouldSucceed()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 var allocatorMock = new Mock<MacOSProtectedMemoryAllocatorLP64>() { CallBase = true };
-                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue - 1);
                 allocatorMock.Object.Alloc(1);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 var allocatorMock = new Mock<LinuxProtectedMemoryAllocatorLP64>() { CallBase = true };
-                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue-1);
+                allocatorMock.Setup(x => x.GetMemlockResourceLimit()).Returns(ulong.MaxValue - 1);
                 allocatorMock.Object.Alloc(1);
             }
         }
@@ -125,7 +119,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
 
@@ -154,14 +148,14 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
 
-            IntPtr pointer = libcProtectedMemoryAllocator.Alloc(1);
+            var pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
-                Check.IntPtr(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
+                Check.ValidatePointer(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
             }
             finally
             {
@@ -172,44 +166,44 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestFreeWithInvalidLengthShouldFail()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestFreeWithInvalidLengthShouldFail");
 
-            IntPtr fakePtr = IntPtr.Add(IntPtr.Zero, 1);
+            var fakePtr = IntPtr.Add(IntPtr.Zero, 1);
             Assert.Throws<LibcOperationFailedException>(() => libcProtectedMemoryAllocator.Free(fakePtr, 0));
         }
 
         [SkippableFact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                Check.IntPtr(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
+                Check.ValidatePointer(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
         [SkippableFact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                Check.IntPtr(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
+                Check.ValidatePointer(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
         [SkippableFact]
         private void TestCheckZeroWithZeroResult()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
 
@@ -219,7 +213,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestCheckZeroWithNonZeroResult()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
 
@@ -229,7 +223,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
 
@@ -239,7 +233,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         [SkippableFact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
-            Skip.If(libc == null);
+            Skip.If(libcProtectedMemoryAllocator == null);
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
 

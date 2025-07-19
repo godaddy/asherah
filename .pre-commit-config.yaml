@@ -10,14 +10,23 @@ repos:
     -   id: check-xml
     -   id: check-toml
     -   id: detect-private-key
-    -   id: end-of-file-fixer
     -   id: forbid-new-submodules
     -   id: mixed-line-ending
     -   id: check-added-large-files
     -   id: check-symlinks
     -   id: check-merge-conflict
     -   id: fix-byte-order-marker
-- repo: https://github.com/godaddy/tartufo
-  rev: v5.0.2
-  hooks:
-  - id: tartufo
+-   repo: https://github.com/godaddy/tartufo
+    rev: v5.0.2
+    hooks:
+    -   id: tartufo
+-   repo: local
+    hooks:
+    -   id: csharp-format
+        name: csharp-format
+        entry: sh csharp/pre-commit-dotnet-format.sh
+        language: system
+        types: [file]
+        pass_filenames: false
+        always_run: true
+        verbose: true

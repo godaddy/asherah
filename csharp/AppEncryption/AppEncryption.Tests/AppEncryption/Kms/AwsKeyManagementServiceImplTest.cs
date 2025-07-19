@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
-using Amazon.Runtime.SharedInterfaces;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.Crypto.Envelope;
@@ -62,7 +61,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentials) { CallBase = true };
+                credentials)
+            { CallBase = true };
         }
 
         [Fact]

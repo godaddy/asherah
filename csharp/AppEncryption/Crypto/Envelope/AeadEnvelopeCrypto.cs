@@ -105,7 +105,6 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         {
             using (CryptoKey plaintextKey = DecryptKey(encryptedKey, keyCreated, keyEncryptionKey))
             {
-                // ReSharper disable once AccessToDisposedClosure
                 return Decrypt(cipherText, plaintextKey);
             }
         }

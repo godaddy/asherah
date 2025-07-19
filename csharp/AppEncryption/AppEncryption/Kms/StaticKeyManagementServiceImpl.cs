@@ -11,9 +11,9 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     /// encrypt/decrypt keys.
     /// Note: This should never be used in a production environment.
     /// </summary>
-    public class StaticKeyManagementServiceImpl : KeyManagementService
+    public class StaticKeyManagementServiceImpl : KeyManagementService, IDisposable
     {
-        private readonly CryptoKey encryptionKey;
+        private readonly SecretCryptoKey encryptionKey;
         private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
 
         /// <summary>
@@ -40,6 +40,28 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
         {
             return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                encryptionKey?.Dispose();
+                crypto?.Dispose();
+            }
         }
     }
 }

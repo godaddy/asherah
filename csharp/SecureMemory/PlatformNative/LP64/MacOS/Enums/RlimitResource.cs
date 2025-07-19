@@ -1,5 +1,3 @@
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
 namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
 {
     // /usr/include/sys/resource.h:#define RLIMIT_CPU       0            /* cpu time per process */

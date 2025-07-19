@@ -37,6 +37,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             {
                 Logger.LogError(e, "Unexpected exception during dispose");
             }
+            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc/>

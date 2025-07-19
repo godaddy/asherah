@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -10,6 +8,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
     [Collection("Logger Fixture collection")]
     public class TransientSecretFactoryTest : IDisposable
     {
+        private static readonly byte[] TestBytes = new byte[] { 0, 1 };
+        private static readonly char[] TestChars = new[] { 'a', 'b' };
         private readonly TransientSecretFactory transientSecretFactory;
 
         public TransientSecretFactoryTest()
@@ -28,6 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             transientSecretFactory.Dispose();
             Debug.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
         }
@@ -36,7 +37,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestCreateSecretByteArray()
         {
             Debug.WriteLine("\nTestCreateSecretByteArray: Start");
-            using Secret secret = transientSecretFactory.CreateSecret(new byte[] { 0, 1 });
+            using var secret = transientSecretFactory.CreateSecret(TestBytes);
             Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
             Debug.WriteLine("TestCreateSecretByteArray: Finish\n");
         }
@@ -45,7 +46,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestCreateSecretCharArray()
         {
             Debug.WriteLine("\nTestCreateSecretCharArray: Start");
-            using Secret secret = transientSecretFactory.CreateSecret(new[] { 'a', 'b' });
+            using var secret = transientSecretFactory.CreateSecret(TestChars);
             Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
             Debug.WriteLine("TestCreateSecretCharArray: Finish\n");
         }
