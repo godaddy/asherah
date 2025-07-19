@@ -2,11 +2,11 @@ using System.Linq;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers
 {
-  public static class ByteArray
-  {
-    public static bool IsAllZeros(byte[] input)
+    public static class ByteArray
     {
-      return input.All(b => b == 0);
+        public static bool IsAllZeros(byte[] input)
+        {
+            return input.All(b => b == 0);
+        }
     }
-  }
 }

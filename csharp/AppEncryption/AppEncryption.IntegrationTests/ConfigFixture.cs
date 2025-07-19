@@ -14,117 +14,117 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
-  public class ConfigFixture
-  {
-    private static readonly char[] SplitChars = { ',' };
-    private readonly IConfigurationRoot config;
-
-    public ConfigFixture()
+    public class ConfigFixture
     {
-      // Load the config file name from environment variables. If not found, default to config.yaml
-      string configFile = Environment.GetEnvironmentVariable(ConfigFile);
-      if (string.IsNullOrWhiteSpace(configFile))
-      {
-        configFile = DefaultConfigFile;
-      }
+        private static readonly char[] SplitChars = { ',' };
+        private readonly IConfigurationRoot config;
 
-      config = new ConfigurationBuilder()
-          .AddYamlFile(configFile)
-          .Build();
-
-      MetastoreType = GetParam(Constants.MetastoreType);
-      if (string.IsNullOrWhiteSpace(MetastoreType))
-      {
-        MetastoreType = DefaultMetastoreType;
-      }
-
-      KmsType = GetParam(Constants.KmsType);
-      if (string.IsNullOrWhiteSpace(KmsType))
-      {
-        KmsType = DefaultKeyManagementType;
-      }
-
-      KeyManagementService = CreateKeyManagementService();
-      Metastore = CreateMetastore();
-    }
-
-    public KeyManagementService KeyManagementService { get; }
-
-    public IMetastore<JObject> Metastore { get; }
-
-    private string PreferredRegion { get; set; }
-
-    private string MetastoreType { get; }
-
-    private string KmsType { get; }
-
-    private static string GetEnvVariable(string input)
-    {
-      return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper(CultureInfo.InvariantCulture);
-    }
-
-    private string GetParam(string paramName)
-    {
-      string paramValue = Environment.GetEnvironmentVariable(GetEnvVariable(paramName));
-      if (string.IsNullOrWhiteSpace(paramValue))
-      {
-        paramValue = config[paramName];
-      }
-
-      return paramValue;
-    }
-
-    private IMetastore<JObject> CreateMetastore()
-    {
-      if (MetastoreType.Equals(MetastoreAdo, StringComparison.OrdinalIgnoreCase))
-      {
-        string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
-
-        if (string.IsNullOrWhiteSpace(metastoreAdoConnectionString))
+        public ConfigFixture()
         {
-          throw new AppEncryptionException("Missing ADO connection string");
+            // Load the config file name from environment variables. If not found, default to config.yaml
+            string configFile = Environment.GetEnvironmentVariable(ConfigFile);
+            if (string.IsNullOrWhiteSpace(configFile))
+            {
+                configFile = DefaultConfigFile;
+            }
+
+            config = new ConfigurationBuilder()
+                .AddYamlFile(configFile)
+                .Build();
+
+            MetastoreType = GetParam(Constants.MetastoreType);
+            if (string.IsNullOrWhiteSpace(MetastoreType))
+            {
+                MetastoreType = DefaultMetastoreType;
+            }
+
+            KmsType = GetParam(Constants.KmsType);
+            if (string.IsNullOrWhiteSpace(KmsType))
+            {
+                KmsType = DefaultKeyManagementType;
+            }
+
+            KeyManagementService = CreateKeyManagementService();
+            Metastore = CreateMetastore();
         }
 
-        return AdoMetastoreImpl
-            .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
-            .Build();
-      }
+        public KeyManagementService KeyManagementService { get; }
 
-      if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.OrdinalIgnoreCase))
-      {
-        return DynamoDbMetastoreImpl.NewBuilder("us-west-2").Build();
-      }
+        public IMetastore<JObject> Metastore { get; }
 
-      return new InMemoryMetastoreImpl<JObject>();
-    }
+        private string PreferredRegion { get; set; }
 
-    private KeyManagementService CreateKeyManagementService()
-    {
-      if (KmsType.Equals(KeyManagementAws, StringComparison.OrdinalIgnoreCase))
-      {
-        string regionToArnTuples = GetParam(KmsAwsRegionTuples);
+        private string MetastoreType { get; }
 
-        if (string.IsNullOrWhiteSpace(regionToArnTuples))
+        private string KmsType { get; }
+
+        private static string GetEnvVariable(string input)
         {
-          throw new AppEncryptionException("Missing AWS Region ARN tuples");
+            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper(CultureInfo.InvariantCulture);
         }
 
-        Dictionary<string, string> regionToArnDictionary =
-            regionToArnTuples.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries)
-                .Select(part => part.Split('='))
-                .ToDictionary(split => split[0], split => split[1]);
-
-        PreferredRegion = GetParam(KmsAwsPreferredRegion);
-        if (string.IsNullOrWhiteSpace(PreferredRegion))
+        private string GetParam(string paramName)
         {
-          PreferredRegion = DefaultPreferredRegion;
+            string paramValue = Environment.GetEnvironmentVariable(GetEnvVariable(paramName));
+            if (string.IsNullOrWhiteSpace(paramValue))
+            {
+                paramValue = config[paramName];
+            }
+
+            return paramValue;
         }
 
-        return AwsKeyManagementServiceImpl.NewBuilder(regionToArnDictionary, PreferredRegion)
-            .Build();
-      }
+        private IMetastore<JObject> CreateMetastore()
+        {
+            if (MetastoreType.Equals(MetastoreAdo, StringComparison.OrdinalIgnoreCase))
+            {
+                string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
 
-      return new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+                if (string.IsNullOrWhiteSpace(metastoreAdoConnectionString))
+                {
+                    throw new AppEncryptionException("Missing ADO connection string");
+                }
+
+                return AdoMetastoreImpl
+                    .NewBuilder(MySqlClientFactory.Instance, metastoreAdoConnectionString)
+                    .Build();
+            }
+
+            if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.OrdinalIgnoreCase))
+            {
+                return DynamoDbMetastoreImpl.NewBuilder("us-west-2").Build();
+            }
+
+            return new InMemoryMetastoreImpl<JObject>();
+        }
+
+        private KeyManagementService CreateKeyManagementService()
+        {
+            if (KmsType.Equals(KeyManagementAws, StringComparison.OrdinalIgnoreCase))
+            {
+                string regionToArnTuples = GetParam(KmsAwsRegionTuples);
+
+                if (string.IsNullOrWhiteSpace(regionToArnTuples))
+                {
+                    throw new AppEncryptionException("Missing AWS Region ARN tuples");
+                }
+
+                Dictionary<string, string> regionToArnDictionary =
+                    regionToArnTuples.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(part => part.Split('='))
+                        .ToDictionary(split => split[0], split => split[1]);
+
+                PreferredRegion = GetParam(KmsAwsPreferredRegion);
+                if (string.IsNullOrWhiteSpace(PreferredRegion))
+                {
+                    PreferredRegion = DefaultPreferredRegion;
+                }
+
+                return AwsKeyManagementServiceImpl.NewBuilder(regionToArnDictionary, PreferredRegion)
+                    .Build();
+            }
+
+            return new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+        }
     }
-  }
 }

@@ -8,35 +8,35 @@ using GoDaddy.Asherah.SecureMemory.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
 {
-  internal abstract class LibcSecureMemoryAllocatorLP64 : LibcMemoryAllocatorLP64
-  {
-    // ************************************
-    // alloc / free
-    // ************************************
-    public override IntPtr Alloc(ulong length)
+    internal abstract class LibcSecureMemoryAllocatorLP64 : LibcMemoryAllocatorLP64
     {
-      // Some platforms may require fd to be -1 even if using anonymous
-      var secureMemory = LibcLP64.mmap(
-          IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
+        // ************************************
+        // alloc / free
+        // ************************************
+        public override IntPtr Alloc(ulong length)
+        {
+            // Some platforms may require fd to be -1 even if using anonymous
+            var secureMemory = LibcLP64.mmap(
+                IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-      Check.ValidatePointer(secureMemory, "mmap");
-      SetNoDump(secureMemory, length);
+            Check.ValidatePointer(secureMemory, "mmap");
+            SetNoDump(secureMemory, length);
 
-      return secureMemory;
+            return secureMemory;
+        }
+
+        public override void Free(IntPtr pointer, ulong length)
+        {
+            try
+            {
+                // Wipe the protected memory (assumes memory was made writeable)
+                ZeroMemory(pointer, length);
+            }
+            finally
+            {
+                // Free (unmap) the protected memory
+                Check.Zero(LibcLP64.munmap(pointer, length), "munmap");
+            }
+        }
     }
-
-    public override void Free(IntPtr pointer, ulong length)
-    {
-      try
-      {
-        // Wipe the protected memory (assumes memory was made writeable)
-        ZeroMemory(pointer, length);
-      }
-      finally
-      {
-        // Free (unmap) the protected memory
-        Check.Zero(LibcLP64.munmap(pointer, length), "munmap");
-      }
-    }
-  }
 }

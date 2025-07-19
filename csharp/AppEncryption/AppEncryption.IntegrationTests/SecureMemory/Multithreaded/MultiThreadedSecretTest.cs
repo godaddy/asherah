@@ -11,45 +11,45 @@ using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constant
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.SecureMemory.Multithreaded
 {
-  public class MultiThreadedSecretTest
-  {
-    private static readonly ILogger Logger = LogManager.CreateLogger<MultiThreadedSecretTest>();
-    private readonly byte[] payload;
-
-    public MultiThreadedSecretTest()
+    public class MultiThreadedSecretTest
     {
-      payload = PayloadGenerator.CreateRandomBytePayload(PayloadSizeBytes);
-    }
+        private static readonly ILogger Logger = LogManager.CreateLogger<MultiThreadedSecretTest>();
+        private readonly byte[] payload;
 
-    [Fact]
-    private void MultiThreadedWithSecretBytesAccess()
-    {
-      TransientSecretFactory secretFactory = new TransientSecretFactory(null);
-      Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]);
-
-      // Get the current settings and try to force minWorkers
-      ThreadPool.GetMinThreads(out _, out var currentMinIOC);
-      Assert.True(ThreadPool.SetMinThreads(NumThreads, currentMinIOC));
-
-      int completedTasks = 0;
-
-      Parallel.ForEach(Enumerable.Range(0, NumThreads), i =>
-      {
-        try
+        public MultiThreadedSecretTest()
         {
-          secret.WithSecretBytes(decryptedBytes =>
+            payload = PayloadGenerator.CreateRandomBytePayload(PayloadSizeBytes);
+        }
+
+        [Fact]
+        private void MultiThreadedWithSecretBytesAccess()
+        {
+            TransientSecretFactory secretFactory = new TransientSecretFactory(null);
+            Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]);
+
+            // Get the current settings and try to force minWorkers
+            ThreadPool.GetMinThreads(out _, out var currentMinIOC);
+            Assert.True(ThreadPool.SetMinThreads(NumThreads, currentMinIOC));
+
+            int completedTasks = 0;
+
+            Parallel.ForEach(Enumerable.Range(0, NumThreads), i =>
+            {
+                try
                 {
-                  Assert.Equal(payload, decryptedBytes);
-                  Interlocked.Increment(ref completedTasks);
-                });
+                    secret.WithSecretBytes(decryptedBytes =>
+                    {
+                        Assert.Equal(payload, decryptedBytes);
+                        Interlocked.Increment(ref completedTasks);
+                    });
+                }
+                catch (ThreadInterruptedException e)
+                {
+                    Logger.LogError(e, "Unexpected error during call");
+                    throw;
+                }
+            });
+            Assert.Equal(NumThreads, completedTasks);
         }
-        catch (ThreadInterruptedException e)
-        {
-          Logger.LogError(e, "Unexpected error during call");
-          throw;
-        }
-      });
-      Assert.Equal(NumThreads, completedTasks);
     }
-  }
 }

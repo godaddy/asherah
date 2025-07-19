@@ -6,16 +6,16 @@ using System.Runtime.CompilerServices;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
-  internal interface ISecureMemoryAllocator : IDisposable
-  {
-    IntPtr Alloc(ulong length);
+    internal interface ISecureMemoryAllocator : IDisposable
+    {
+        IntPtr Alloc(ulong length);
 
-    void Free(IntPtr pointer, ulong length);
+        void Free(IntPtr pointer, ulong length);
 
-    void SetReadWriteAccess(IntPtr pointer, ulong len);
+        void SetReadWriteAccess(IntPtr pointer, ulong len);
 
-    void SetReadAccess(IntPtr pointer, ulong length);
+        void SetReadAccess(IntPtr pointer, ulong length);
 
-    void SetNoAccess(IntPtr pointer, ulong length);
-  }
+        void SetNoAccess(IntPtr pointer, ulong length);
+    }
 }

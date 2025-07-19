@@ -4,40 +4,40 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
-  [Collection("Configuration collection")]
-  public class CrossPartitionDecryptTest
-  {
-    private readonly ConfigFixture configFixture;
-
-    public CrossPartitionDecryptTest(ConfigFixture configFixture)
+    [Collection("Configuration collection")]
+    public class CrossPartitionDecryptTest
     {
-      this.configFixture = configFixture;
-    }
+        private readonly ConfigFixture configFixture;
 
-    [Fact]
-    private void TestCrossPartitionDecryptShouldFail()
-    {
-      byte[] payload = PayloadGenerator.CreateDefaultRandomBytePayload();
-      byte[] dataRowRecordBytes;
-
-      string originalPartitionId = "shopper123";
-      string alternatePartitionId = "shopper1234";
-
-      using (SessionFactory sessionFactory =
-          SessionFactoryGenerator.CreateDefaultSessionFactory(
-              configFixture.KeyManagementService,
-              configFixture.Metastore))
-      {
-        using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(originalPartitionId))
+        public CrossPartitionDecryptTest(ConfigFixture configFixture)
         {
-          dataRowRecordBytes = sessionBytes.Encrypt(payload);
+            this.configFixture = configFixture;
         }
 
-        using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(alternatePartitionId))
+        [Fact]
+        private void TestCrossPartitionDecryptShouldFail()
         {
-          Assert.Throws<MetadataMissingException>(() => sessionBytes.Decrypt(dataRowRecordBytes));
+            byte[] payload = PayloadGenerator.CreateDefaultRandomBytePayload();
+            byte[] dataRowRecordBytes;
+
+            string originalPartitionId = "shopper123";
+            string alternatePartitionId = "shopper1234";
+
+            using (SessionFactory sessionFactory =
+                SessionFactoryGenerator.CreateDefaultSessionFactory(
+                    configFixture.KeyManagementService,
+                    configFixture.Metastore))
+            {
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(originalPartitionId))
+                {
+                    dataRowRecordBytes = sessionBytes.Encrypt(payload);
+                }
+
+                using (Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes(alternatePartitionId))
+                {
+                    Assert.Throws<MetadataMissingException>(() => sessionBytes.Decrypt(dataRowRecordBytes));
+                }
+            }
         }
-      }
     }
-  }
 }

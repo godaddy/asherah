@@ -2,30 +2,30 @@ using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
-  public class DecryptMetastoreInteractions
-  {
-    private readonly KeyState cacheIK;
-    private readonly KeyState cacheSK;
-
-    public DecryptMetastoreInteractions(KeyState cacheIK, KeyState cacheSK)
+    public class DecryptMetastoreInteractions
     {
-      this.cacheIK = cacheIK;
-      this.cacheSK = cacheSK;
-    }
+        private readonly KeyState cacheIK;
+        private readonly KeyState cacheSK;
 
-    protected internal bool ShouldLoadIK()
-    {
-      return cacheIK == KeyState.Empty;
-    }
+        public DecryptMetastoreInteractions(KeyState cacheIK, KeyState cacheSK)
+        {
+            this.cacheIK = cacheIK;
+            this.cacheSK = cacheSK;
+        }
 
-    protected internal bool ShouldLoadSK()
-    {
-      if (ShouldLoadIK())
-      {
-        return cacheSK == KeyState.Empty;
-      }
+        protected internal bool ShouldLoadIK()
+        {
+            return cacheIK == KeyState.Empty;
+        }
 
-      return false;
+        protected internal bool ShouldLoadSK()
+        {
+            if (ShouldLoadIK())
+            {
+                return cacheSK == KeyState.Empty;
+            }
+
+            return false;
+        }
     }
-  }
 }

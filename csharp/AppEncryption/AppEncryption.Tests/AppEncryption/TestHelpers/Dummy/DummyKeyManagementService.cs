@@ -5,51 +5,51 @@ using GoDaddy.Asherah.Crypto.Keys;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
-  public class DummyKeyManagementService : KeyManagementService, IDisposable
-  {
-    private readonly CryptoKey encryptionKey;
-    private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
-
-    public DummyKeyManagementService()
+    public class DummyKeyManagementService : KeyManagementService, IDisposable
     {
-      encryptionKey = crypto.GenerateKey();
-    }
+        private readonly CryptoKey encryptionKey;
+        private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
 
-    public override byte[] EncryptKey(CryptoKey key)
-    {
-      return crypto.EncryptKey(key, encryptionKey);
-    }
+        public DummyKeyManagementService()
+        {
+            encryptionKey = crypto.GenerateKey();
+        }
 
-    public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
-    {
-      return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
-    }
+        public override byte[] EncryptKey(CryptoKey key)
+        {
+            return crypto.EncryptKey(key, encryptionKey);
+        }
 
-    public override string ToString()
-    {
-      return typeof(DummyKeyManagementService).FullName + "[kms_arn=LOCAL, crypto=" + crypto + "]";
-    }
+        public override CryptoKey DecryptKey(byte[] keyCipherText, DateTimeOffset keyCreated, bool revoked)
+        {
+            return crypto.DecryptKey(keyCipherText, keyCreated, encryptionKey, revoked);
+        }
 
-    /// <summary>
-    /// Disposes of the managed resources.
-    /// </summary>
-    public void Dispose()
-    {
-      Dispose(true);
-      GC.SuppressFinalize(this);
-    }
+        public override string ToString()
+        {
+            return typeof(DummyKeyManagementService).FullName + "[kms_arn=LOCAL, crypto=" + crypto + "]";
+        }
 
-    /// <summary>
-    /// Disposes of the managed resources.
-    /// </summary>
-    /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-      if (disposing)
-      {
-        encryptionKey?.Dispose();
-        crypto?.Dispose();
-      }
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                encryptionKey?.Dispose();
+                crypto?.Dispose();
+            }
+        }
     }
-  }
 }

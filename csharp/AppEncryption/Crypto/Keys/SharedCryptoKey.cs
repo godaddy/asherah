@@ -6,50 +6,50 @@ using System.Runtime.CompilerServices;
 
 namespace GoDaddy.Asherah.Crypto.Keys
 {
-  public class SharedCryptoKey : CryptoKey
-  {
-    internal SharedCryptoKey(CryptoKey sharedKey)
+    public class SharedCryptoKey : CryptoKey
     {
-      SharedKey = sharedKey;
-    }
+        internal SharedCryptoKey(CryptoKey sharedKey)
+        {
+            SharedKey = sharedKey;
+        }
 
-    internal CryptoKey SharedKey { get; }
+        internal CryptoKey SharedKey { get; }
 
-    /// <inheritdoc />
-    public override DateTimeOffset GetCreated()
-    {
-      return SharedKey.GetCreated();
-    }
+        /// <inheritdoc />
+        public override DateTimeOffset GetCreated()
+        {
+            return SharedKey.GetCreated();
+        }
 
-    /// <inheritdoc />
-    public override void WithKey(Action<byte[]> actionWithKey)
-    {
-      SharedKey.WithKey(actionWithKey);
-    }
+        /// <inheritdoc />
+        public override void WithKey(Action<byte[]> actionWithKey)
+        {
+            SharedKey.WithKey(actionWithKey);
+        }
 
-    /// <inheritdoc />
-    public override TResult WithKey<TResult>(Func<byte[], TResult> actionWithKey)
-    {
-      return SharedKey.WithKey(actionWithKey);
-    }
+        /// <inheritdoc />
+        public override TResult WithKey<TResult>(Func<byte[], TResult> actionWithKey)
+        {
+            return SharedKey.WithKey(actionWithKey);
+        }
 
-    /// <inheritdoc />
-    public override void Dispose()
-    {
-      // SharedCryptoKey doesn't *own* any secrets so it doesn't have anything to dispose
-      GC.SuppressFinalize(this);
-    }
+        /// <inheritdoc />
+        public override void Dispose()
+        {
+            // SharedCryptoKey doesn't *own* any secrets so it doesn't have anything to dispose
+            GC.SuppressFinalize(this);
+        }
 
-    /// <inheritdoc />
-    public override bool IsRevoked()
-    {
-      return SharedKey.IsRevoked();
-    }
+        /// <inheritdoc />
+        public override bool IsRevoked()
+        {
+            return SharedKey.IsRevoked();
+        }
 
-    /// <inheritdoc />
-    public override void MarkRevoked()
-    {
-      SharedKey.MarkRevoked();
+        /// <inheritdoc />
+        public override void MarkRevoked()
+        {
+            SharedKey.MarkRevoked();
+        }
     }
-  }
 }

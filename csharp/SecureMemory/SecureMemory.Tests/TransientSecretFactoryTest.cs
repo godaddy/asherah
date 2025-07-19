@@ -5,50 +5,50 @@ using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
 {
-  [Collection("Logger Fixture collection")]
-  public class TransientSecretFactoryTest : IDisposable
-  {
-    private static readonly byte[] TestBytes = new byte[] { 0, 1 };
-    private static readonly char[] TestChars = new[] { 'a', 'b' };
-    private readonly TransientSecretFactory transientSecretFactory;
-
-    public TransientSecretFactoryTest()
+    [Collection("Logger Fixture collection")]
+    public class TransientSecretFactoryTest : IDisposable
     {
-      Trace.Listeners.Clear();
-      var consoleListener = new ConsoleTraceListener();
-      Trace.Listeners.Add(consoleListener);
+        private static readonly byte[] TestBytes = new byte[] { 0, 1 };
+        private static readonly char[] TestChars = new[] { 'a', 'b' };
+        private readonly TransientSecretFactory transientSecretFactory;
 
-      var configuration = new ConfigurationBuilder()
-          .AddInMemoryCollection()
-          .Build();
+        public TransientSecretFactoryTest()
+        {
+            Trace.Listeners.Clear();
+            var consoleListener = new ConsoleTraceListener();
+            Trace.Listeners.Add(consoleListener);
 
-      Debug.WriteLine("\nTransientSecretFactoryTest: New TransientSecretFactory");
-      transientSecretFactory = new TransientSecretFactory(configuration);
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection()
+                .Build();
+
+            Debug.WriteLine("\nTransientSecretFactoryTest: New TransientSecretFactory");
+            transientSecretFactory = new TransientSecretFactory(configuration);
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            transientSecretFactory.Dispose();
+            Debug.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
+        }
+
+        [Fact]
+        private void TestCreateSecretByteArray()
+        {
+            Debug.WriteLine("\nTestCreateSecretByteArray: Start");
+            using var secret = transientSecretFactory.CreateSecret(TestBytes);
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
+            Debug.WriteLine("TestCreateSecretByteArray: Finish\n");
+        }
+
+        [Fact]
+        private void TestCreateSecretCharArray()
+        {
+            Debug.WriteLine("\nTestCreateSecretCharArray: Start");
+            using var secret = transientSecretFactory.CreateSecret(TestChars);
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
+            Debug.WriteLine("TestCreateSecretCharArray: Finish\n");
+        }
     }
-
-    public void Dispose()
-    {
-      GC.SuppressFinalize(this);
-      transientSecretFactory.Dispose();
-      Debug.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
-    }
-
-    [Fact]
-    private void TestCreateSecretByteArray()
-    {
-      Debug.WriteLine("\nTestCreateSecretByteArray: Start");
-      using var secret = transientSecretFactory.CreateSecret(TestBytes);
-      Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
-      Debug.WriteLine("TestCreateSecretByteArray: Finish\n");
-    }
-
-    [Fact]
-    private void TestCreateSecretCharArray()
-    {
-      Debug.WriteLine("\nTestCreateSecretCharArray: Start");
-      using var secret = transientSecretFactory.CreateSecret(TestChars);
-      Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
-      Debug.WriteLine("TestCreateSecretCharArray: Finish\n");
-    }
-  }
 }

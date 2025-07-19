@@ -2,16 +2,16 @@ using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
 {
-  [Collection("Logger Fixture collection")]
-  public class SecureMemoryAllocationFailedTest
-  {
-    private const string Message = "Failure message";
-
-    [Fact]
-    private void ProtectedMemoryAllocationFailedConstructorTest()
+    [Collection("Logger Fixture collection")]
+    public class SecureMemoryAllocationFailedTest
     {
-      var exception = new SecureMemoryAllocationFailedException(Message);
-      Assert.Equal(Message, exception.Message);
+        private const string Message = "Failure message";
+
+        [Fact]
+        private void ProtectedMemoryAllocationFailedConstructorTest()
+        {
+            var exception = new SecureMemoryAllocationFailedException(Message);
+            Assert.Equal(Message, exception.Message);
+        }
     }
-  }
 }

@@ -7,66 +7,66 @@ using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.Libc
 {
-  internal abstract class LibcMemoryAllocatorLP64 : ISecureMemoryAllocator
-  {
-    private bool globallyDisabledCoreDumps;
-
-    // Implementation order of preference:
-    // memset_s (standards)
-    // explicit_bzero (BSD)
-    // SecureZeroMemory (Windows)
-    // bzero (Linux, same guarantees as explicit_bzero)
-    public virtual void SetNoAccess(IntPtr pointer, ulong length)
+    internal abstract class LibcMemoryAllocatorLP64 : ISecureMemoryAllocator
     {
-      Check.Zero(LibcLP64.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
+        private bool globallyDisabledCoreDumps;
+
+        // Implementation order of preference:
+        // memset_s (standards)
+        // explicit_bzero (BSD)
+        // SecureZeroMemory (Windows)
+        // bzero (Linux, same guarantees as explicit_bzero)
+        public virtual void SetNoAccess(IntPtr pointer, ulong length)
+        {
+            Check.Zero(LibcLP64.mprotect(pointer, length, GetProtNoAccess()), "mprotect(PROT_NONE)");
+        }
+
+        public virtual void SetReadAccess(IntPtr pointer, ulong length)
+        {
+            Check.Zero(LibcLP64.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
+        }
+
+        public abstract IntPtr Alloc(ulong length);
+
+        public abstract void Free(IntPtr pointer, ulong length);
+
+        public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
+        {
+            Check.Zero(LibcLP64.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
+        }
+
+        public abstract void Dispose();
+
+        internal abstract int GetRlimitCoreResource();
+
+        // ************************************
+        // Core dumps
+        // ************************************
+        internal abstract void SetNoDump(IntPtr secureMemory, ulong length);
+
+        internal bool AreCoreDumpsGloballyDisabled()
+        {
+            return globallyDisabledCoreDumps;
+        }
+
+        internal void DisableCoreDumpGlobally()
+        {
+            Check.Zero(LibcLP64.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
+
+            globallyDisabledCoreDumps = true;
+        }
+
+        // ************************************
+        // Memory protection
+        // ************************************
+        internal abstract int GetProtRead();
+
+        internal abstract int GetProtReadWrite();
+
+        internal abstract int GetProtNoAccess();
+
+        internal abstract int GetPrivateAnonymousFlags();
+
+        protected abstract void ZeroMemory(IntPtr pointer, ulong length);
     }
-
-    public virtual void SetReadAccess(IntPtr pointer, ulong length)
-    {
-      Check.Zero(LibcLP64.mprotect(pointer, length, GetProtRead()), "mprotect(PROT_READ)");
-    }
-
-    public abstract IntPtr Alloc(ulong length);
-
-    public abstract void Free(IntPtr pointer, ulong length);
-
-    public virtual void SetReadWriteAccess(IntPtr pointer, ulong length)
-    {
-      Check.Zero(LibcLP64.mprotect(pointer, length, GetProtReadWrite()), "mprotect(PROT_READ|PROT_WRITE)");
-    }
-
-    public abstract void Dispose();
-
-    internal abstract int GetRlimitCoreResource();
-
-    // ************************************
-    // Core dumps
-    // ************************************
-    internal abstract void SetNoDump(IntPtr secureMemory, ulong length);
-
-    internal bool AreCoreDumpsGloballyDisabled()
-    {
-      return globallyDisabledCoreDumps;
-    }
-
-    internal void DisableCoreDumpGlobally()
-    {
-      Check.Zero(LibcLP64.setrlimit(GetRlimitCoreResource(), rlimit.Zero()), "setrlimit(RLIMIT_CORE)");
-
-      globallyDisabledCoreDumps = true;
-    }
-
-    // ************************************
-    // Memory protection
-    // ************************************
-    internal abstract int GetProtRead();
-
-    internal abstract int GetProtReadWrite();
-
-    internal abstract int GetProtNoAccess();
-
-    internal abstract int GetPrivateAnonymousFlags();
-
-    protected abstract void ZeroMemory(IntPtr pointer, ulong length);
-  }
 }
