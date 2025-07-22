@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e # Exit on error
+
 echo "Pre-commit dotnet format"
 
 git diff --exit-code --cached --name-only -- csharp/AppEncryption
