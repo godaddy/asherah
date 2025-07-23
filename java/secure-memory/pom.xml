@@ -39,7 +39,7 @@
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.13</jacoco.version>
     <jna.version>5.17.0</jna.version>
-    <junit.jupiter.version>5.13.3</junit.jupiter.version>
+    <junit.jupiter.version>5.13.4</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
     <logback.version>1.5.18</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
