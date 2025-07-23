@@ -23,15 +23,15 @@
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.1.9" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.3.3" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.3" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.3.7" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="App.Metrics" Version="4.3.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
-    <PackageReference Include="System.Text.Json" Version="9.0.6" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.7" />
+    <PackageReference Include="System.Text.Json" Version="9.0.7" />
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../Crypto/Crypto.csproj" />
