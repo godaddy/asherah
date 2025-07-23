@@ -45,19 +45,19 @@
     <apache.commons.version>3.18.0</apache.commons.version>
     <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.788</aws.sdk.version>
-    <aws.sdk-v2.version>2.32.2</aws.sdk-v2.version>
+    <aws.sdk-v2.version>2.32.7</aws.sdk-v2.version>
     <bouncycastle.version>1.81</bouncycastle.version>
     <build.helper.version>3.6.1</build.helper.version>
     <caffeine.version>3.2.2</caffeine.version>
     <checkerframework.version>3.49.5</checkerframework.version>
-    <commons.codec.version>1.18.0</commons.codec.version>
+    <commons.codec.version>1.19.0</commons.codec.version>
     <commons.logging.version>1.3.5</commons.logging.version>
     <commons.text.version>1.13.1</commons.text.version>
     <guava.version>33.4.8-jre</guava.version>
-    <jackson.version>2.19.1</jackson.version>
+    <jackson.version>2.19.2</jackson.version>
     <jacoco.version>0.8.13</jacoco.version>
     <json.version>20250517</json.version>
-    <junit.jupiter.version>5.13.3</junit.jupiter.version>
+    <junit.jupiter.version>5.13.4</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <logback.version>1.5.18</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
@@ -75,7 +75,7 @@
     <slf4j.version>2.0.17</slf4j.version>
     <sqlite4java.version>1.0.392</sqlite4java.version>
     <testcontainers.version>1.11.2</testcontainers.version>
-    <zaxxer.version>6.3.0</zaxxer.version>
+    <zaxxer.version>6.3.2</zaxxer.version>
   </properties>
 
   <build>
