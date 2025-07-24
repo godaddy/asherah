@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
     public class MultiPartitionMultiThreadedTest : IDisposable
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiPartitionMultiThreadedTest>();
-        private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory<byte[]>.CreateInMemoryPersistence();
+        private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory.CreateInMemoryPersistence<byte[]>();
 
         private readonly SessionFactory sessionFactory;
 
@@ -33,7 +33,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 
         public void Dispose()
         {
-            sessionFactory.Dispose();
+            sessionFactory?.Dispose();
         }
 
         /// <summary>

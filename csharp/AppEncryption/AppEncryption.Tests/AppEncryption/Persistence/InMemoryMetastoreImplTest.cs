@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     [Collection("Logger Fixture collection")]
-    public class InMemoryMetastoreImplTest
+    public class InMemoryMetastoreImplTest : IDisposable
     {
         private readonly InMemoryMetastoreImpl<string> inMemoryMetastoreImpl;
 
@@ -90,6 +90,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             Assert.True(inMemoryMetastoreImpl.Store(keyId, created, value));
             Assert.False(inMemoryMetastoreImpl.Store(keyId, created, value));
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            inMemoryMetastoreImpl?.Dispose();
         }
     }
 }

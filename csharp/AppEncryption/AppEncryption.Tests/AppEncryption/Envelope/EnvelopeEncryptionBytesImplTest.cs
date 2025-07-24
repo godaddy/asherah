@@ -9,7 +9,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
     [Collection("Logger Fixture collection")]
-    public class EnvelopeEncryptionBytesImplTest
+    public class EnvelopeEncryptionBytesImplTest : IDisposable
     {
         private readonly Mock<EnvelopeEncryptionJsonImpl> envelopeEncryptionJsonImplMock;
         private readonly EnvelopeEncryptionBytesImpl envelopeEncryptionBytesImpl;
@@ -63,6 +63,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             envelopeEncryptionBytesImpl.Dispose();
 
             envelopeEncryptionJsonImplMock.Verify(x => x.Dispose());
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            envelopeEncryptionBytesImpl?.Dispose();
         }
     }
 }

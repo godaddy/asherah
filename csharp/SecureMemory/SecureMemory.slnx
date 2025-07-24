@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="PlatformNative/PlatformNative.csproj" />
+  <Project Path="SecureMemory.Tests/SecureMemory.Tests.csproj" />
+  <Project Path="SecureMemory/SecureMemory.csproj" />
+</Solution>

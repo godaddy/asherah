@@ -1,5 +1,5 @@
 using System;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.SecureMemory.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {

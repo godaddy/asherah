@@ -1,7 +1,5 @@
 using System;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
 namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
 {
     // /usr/include/sys/mman.h:#define  PROT_NONE    0x00    /* [MC2] no permissions */

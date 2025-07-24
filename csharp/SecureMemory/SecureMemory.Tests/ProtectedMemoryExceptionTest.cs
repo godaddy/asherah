@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void SecureMemoryExceptionConstructorTest()
         {
-            SecureMemoryException exception = new SecureMemoryException(Message);
+            var exception = new SecureMemoryException(Message);
             Assert.Equal(Message, exception.Message);
         }
     }

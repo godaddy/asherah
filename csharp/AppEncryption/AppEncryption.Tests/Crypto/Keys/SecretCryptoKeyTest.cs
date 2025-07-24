@@ -7,7 +7,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
 {
     [Collection("Logger Fixture collection")]
-    public class SecretCryptoKeyTest
+    public class SecretCryptoKeyTest : IDisposable
     {
         private const bool Revoked = false;
 
@@ -88,6 +88,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
         {
             Secret actualSecret = secretCryptoKey.Secret;
             Assert.Equal(secretMock.Object, actualSecret);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            secretCryptoKey?.Dispose();
         }
     }
 }

@@ -29,11 +29,13 @@ bld/
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
 
+# Visual Studio Code
 .vscode/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+test-result.xml
 
 # NUNIT
 *.VisualState.xml
@@ -113,6 +115,10 @@ _TeamCity*
 
 # DotCover is a Code Coverage Tool
 *.dotCover
+
+# Coverlet code coverage output
+*lcov.info
+**/coverage.*
 
 # NCrunch
 _NCrunch_*
@@ -263,8 +269,3 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-
-# Coverlet code coverage output
-*lcov.info
-**/coverage.*
-*.opencover.xml

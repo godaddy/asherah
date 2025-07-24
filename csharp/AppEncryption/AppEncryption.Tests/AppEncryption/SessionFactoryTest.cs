@@ -18,7 +18,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class SessionFactoryTest
+    public class SessionFactoryTest : IDisposable
     {
         private const string TestPartitionId = "test_partition_id";
         private const string TestServiceId = "test_service_id";
@@ -887,6 +887,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             // Verify metrics were recorded
             Assert.NotEmpty(MetricsUtil.MetricsInstance.Snapshot.Get().Contexts);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            sessionFactory?.Dispose();
         }
     }
 }

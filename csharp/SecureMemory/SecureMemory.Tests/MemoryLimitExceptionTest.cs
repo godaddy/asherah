@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void MemoryLimitExceptionConstructorTest()
         {
-            MemoryLimitException exception = new MemoryLimitException(Message);
+            var exception = new MemoryLimitException(Message);
             Assert.Equal(Message, exception.Message);
         }
     }

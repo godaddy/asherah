@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.Kms;
@@ -15,6 +16,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 {
     public class ConfigFixture
     {
+        private static readonly char[] SplitChars = { ',' };
         private readonly IConfigurationRoot config;
 
         public ConfigFixture()
@@ -58,7 +60,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private static string GetEnvVariable(string input)
         {
-            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper();
+            return string.Concat(input.Select(x => char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToUpper(CultureInfo.InvariantCulture);
         }
 
         private string GetParam(string paramName)
@@ -74,7 +76,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private IMetastore<JObject> CreateMetastore()
         {
-            if (MetastoreType.Equals(MetastoreAdo, StringComparison.InvariantCultureIgnoreCase))
+            if (MetastoreType.Equals(MetastoreAdo, StringComparison.OrdinalIgnoreCase))
             {
                 string metastoreAdoConnectionString = GetParam(MetastoreAdoConnectionString);
 
@@ -88,7 +90,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                     .Build();
             }
 
-            if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.InvariantCultureIgnoreCase))
+            if (MetastoreType.Equals(MetastoreDynamoDb, StringComparison.OrdinalIgnoreCase))
             {
                 return DynamoDbMetastoreImpl.NewBuilder("us-west-2").Build();
             }
@@ -98,7 +100,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
 
         private KeyManagementService CreateKeyManagementService()
         {
-            if (KmsType.Equals(KeyManagementAws, StringComparison.InvariantCultureIgnoreCase))
+            if (KmsType.Equals(KeyManagementAws, StringComparison.OrdinalIgnoreCase))
             {
                 string regionToArnTuples = GetParam(KmsAwsRegionTuples);
 
@@ -108,7 +110,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                 }
 
                 Dictionary<string, string> regionToArnDictionary =
-                    regionToArnTuples.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    regionToArnTuples.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries)
                         .Select(part => part.Split('='))
                         .ToDictionary(split => split[0], split => split[1]);
 

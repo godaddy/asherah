@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using GoDaddy.Asherah.AppEncryption.Envelope;
-using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
-using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
-using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
 using Newtonsoft.Json.Linq;
@@ -15,12 +12,12 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
 {
     [Collection("Logger Fixture collection")]
-    public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>
+    public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>, IDisposable
     {
-        private readonly IMetastore<JObject> metastore;
-        private readonly Persistence<JObject> dataPersistence;
-        private readonly Partition partition;
-        private readonly KeyManagementService keyManagementService;
+        private readonly InMemoryMetastoreImpl<JObject> metastore;
+        private readonly AdhocPersistence<JObject> dataPersistence;
+        private readonly DefaultPartition partition;
+        private readonly DummyKeyManagementService keyManagementService;
 
         public AppJsonEncryptionImplTest()
         {
@@ -34,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             metastore = new InMemoryMetastoreImpl<JObject>();
             keyManagementService = new DummyKeyManagementService();
 
-            AeadEnvelopeCrypto aeadEnvelopeCrypto = new BouncyAes256GcmCrypto();
+            BouncyAes256GcmCrypto aeadEnvelopeCrypto = new BouncyAes256GcmCrypto();
 
             // Generate a dummy systemKey document
             CryptoKey systemKey = aeadEnvelopeCrypto.GenerateKey();
@@ -56,9 +53,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             RoundTripGeneric(testData, new BouncyAes256GcmCrypto());
         }
 
-        private void RoundTripGeneric(string testData, AeadEnvelopeCrypto aeadEnvelopeCrypto)
+        private void RoundTripGeneric(string testData, BouncyAes256GcmCrypto aeadEnvelopeCrypto)
         {
-            CryptoPolicy cryptoPolicy = new DummyCryptoPolicy();
+            DummyCryptoPolicy cryptoPolicy = new DummyCryptoPolicy();
             using (SecureCryptoKeyDictionary<DateTimeOffset> secureCryptoKeyDictionary =
                 new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()))
             {
@@ -85,6 +82,12 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                     Assert.Equal(testData, resultData);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            keyManagementService?.Dispose();
+            metastore?.Dispose();
         }
     }
 }

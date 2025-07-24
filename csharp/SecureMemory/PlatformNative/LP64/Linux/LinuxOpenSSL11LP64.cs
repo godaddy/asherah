@@ -6,12 +6,9 @@ using size_t = System.UInt64;
 
 namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
 {
-    [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Matching native conventions")]
-    [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1121:UseBuiltInTypeAlias", Justification = "Matching native conventions")]
-    [SuppressMessage("Microsoft.StyleCop.CSharp.DocumentationRules", "SA1202:ElementsMustBeOrderedByAccess", Justification = "Matching native conventions")]
-    public class LinuxOpenSSL11LP64 : LinuxLibcLP64
+    public static class LinuxOpenSSL11LP64
     {
-        public const string LibraryName = "libcrypto.so.1.1";
+        private const string LibraryName = "libcrypto.so.1.1";
 
         public static bool IsAvailable()
         {
@@ -30,7 +27,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc_init", SetLastError = true)]
         private static extern int _CRYPTO_secure_malloc_init(size_t size, int minsize);
 
-        public int CRYPTO_secure_malloc_init(size_t size, int minsize)
+        public static int CRYPTO_secure_malloc_init(size_t size, int minsize)
         {
             // Round values up to nearest power of 2 as required by CRYPTO_secure_malloc_init
             size = (size_t)Math.Pow(2, (size_t)Math.Log(size - 1, 2) + 1);
@@ -58,7 +55,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         private static extern int _CRYPTO_secure_malloc_done();
 
         [ExcludeFromCodeCoverage]
-        public int CRYPTO_secure_malloc_done()
+        public static int CRYPTO_secure_malloc_done()
         {
             // CRYPTO_secure_malloc_done() returns 1 if the secure memory area is released, or 0 if not.
             return _CRYPTO_secure_malloc_done();
@@ -67,7 +64,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_malloc", SetLastError = true)]
         private static extern IntPtr _CRYPTO_secure_malloc(size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
-        public IntPtr CRYPTO_secure_malloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static IntPtr CRYPTO_secure_malloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap of the requested size, or NULL if memory could not be allocated.
             return _CRYPTO_secure_malloc(num, file, line);
@@ -77,7 +74,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         private static extern IntPtr _CRYPTO_secure_zalloc(size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         [ExcludeFromCodeCoverage]
-        public IntPtr CRYPTO_secure_zalloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static IntPtr CRYPTO_secure_zalloc(size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             // OPENSSL_secure_malloc() and OPENSSL_secure_zalloc() return a pointer into the secure heap of the requested size, or NULL if memory could not be allocated.
             return _CRYPTO_secure_zalloc(num, file, line);
@@ -86,7 +83,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_free", SetLastError = true)]
         private static extern void _CRYPTO_secure_free(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
-        public void CRYPTO_secure_free(IntPtr ptr, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void CRYPTO_secure_free(IntPtr ptr, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             // OPENSSL_secure_free() releases the memory at ptr back to the heap.
             _CRYPTO_secure_free(ptr, file, line);
@@ -95,7 +92,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         [DllImport(LibraryName, EntryPoint = "CRYPTO_secure_clear_free", SetLastError = true)]
         private static extern void _CRYPTO_secure_clear_free(IntPtr ptr, size_t num, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
-        public void CRYPTO_secure_clear_free(IntPtr ptr, size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void CRYPTO_secure_clear_free(IntPtr ptr, size_t num, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             // OPENSSL_secure_free() releases the memory at ptr back to the heap.
             _CRYPTO_secure_clear_free(ptr, num, file, line);
@@ -105,7 +102,7 @@ namespace GoDaddy.Asherah.PlatformNative.LP64.Linux
         private static extern size_t _CRYPTO_secure_used();
 
         [ExcludeFromCodeCoverage]
-        public size_t CRYPTO_secure_used()
+        public static size_t CRYPTO_secure_used()
         {
             // CRYPTO_secure_used() returns the number of bytes allocated in the secure heap.
             return _CRYPTO_secure_used();

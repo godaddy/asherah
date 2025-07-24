@@ -245,7 +245,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     {
                         if (exception is ConditionalCheckFailedException)
                         {
-                            Logger.LogInformation("Attempted to create duplicate key: {keyId} {created}", keyId, created);
+                            Logger.LogInformation("Attempted to create duplicate key: {KeyId} {Created}", keyId, created);
                             return false;
                         }
                     }
@@ -269,15 +269,20 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <summary>
         /// Builder class to create an instance of the <see cref="DynamoDbMetastoreImpl"/> class.
         /// </summary>
-        public class Builder : IBuildStep
+        public class Builder : IBuildStep, IDisposable
         {
-#pragma warning disable SA1401
-            internal readonly string PreferredRegion;
-            internal IAmazonDynamoDB DbClient;
-            internal bool HasKeySuffix;
-            internal string TableName = DefaultTableName;
-            internal AWSCredentials Credentials;
-#pragma warning restore SA1401
+            private readonly string preferredRegion;
+            private AmazonDynamoDBClient dbClient;
+            private bool hasKeySuffix;
+            private string tableName = DefaultTableName;
+            private AWSCredentials credentials;
+
+            // Internal properties for access
+            internal string PreferredRegion => preferredRegion;
+            internal AmazonDynamoDBClient DbClient => dbClient;
+            internal bool HasKeySuffix => hasKeySuffix;
+            internal string TableName => tableName;
+            internal AWSCredentials Credentials => credentials;
 
             private const string DefaultTableName = "EncryptionKey";
             private readonly AmazonDynamoDBConfig dbConfig = new AmazonDynamoDBConfig();
@@ -290,20 +295,20 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <param name="region">The region to use with AWS DynamoDB.</param>
             public Builder(string region)
             {
-                PreferredRegion = region;
+                preferredRegion = region;
             }
 
             /// <inheritdoc/>
             public IBuildStep WithKeySuffix()
             {
-                HasKeySuffix = true;
+                hasKeySuffix = true;
                 return this;
             }
 
             /// <inheritdoc/>
             public IBuildStep WithTableName(string tableName)
             {
-                TableName = tableName;
+                this.tableName = tableName;
                 return this;
             }
 
@@ -335,7 +340,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <inheritdoc/>
             public IBuildStep WithCredentials(AWSCredentials credentials)
             {
-                Credentials = credentials;
+                this.credentials = credentials;
                 return this;
             }
 
@@ -349,10 +354,10 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             {
                 if (!hasEndPoint && !hasRegion)
                 {
-                    dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(PreferredRegion);
+                    dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(preferredRegion);
                 }
 
-                DbClient = new AmazonDynamoDBClient(Credentials, dbConfig);
+                dbClient = new AmazonDynamoDBClient(credentials, dbConfig);
 
                 return new DynamoDbMetastoreImpl(this);
             }
@@ -363,6 +368,27 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     .AddHashKey(PartitionKey, DynamoDBEntryType.String)
                     .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
                     .Build();
+            }
+
+            /// <summary>
+            /// Disposes of the managed resources.
+            /// </summary>
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Disposes of the managed resources.
+            /// </summary>
+            /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+            protected virtual void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    dbClient?.Dispose();
+                }
             }
         }
     }

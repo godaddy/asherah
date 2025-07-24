@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +7,7 @@ namespace GoDaddy.Asherah.SecureMemory
 {
     public class TransientSecretFactory : ISecretFactory
     {
-        private readonly ISecretFactory secretFactory;
+        private readonly SecureMemorySecretFactory secretFactory;
 
         public TransientSecretFactory(IConfiguration configuration = null)
         {
@@ -25,6 +26,7 @@ namespace GoDaddy.Asherah.SecureMemory
         {
             Debug.WriteLine("TransientSecretFactory: Dispose");
             secretFactory.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public Secret CreateSecret(byte[] secretData)

@@ -36,7 +36,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
         private readonly DateTimeOffset created = new DateTimeOffset(2019, 1, 1, 23, 0, 0, TimeSpan.Zero);
 
-        private readonly DbProviderFactory dbProviderFactory;
+        private readonly MySqlClientFactory dbProviderFactory;
         private readonly DbConnection dbConnection;
         private readonly Mock<AdoMetastoreImpl> adoMetastoreImplSpy;
         private readonly string connectionString;

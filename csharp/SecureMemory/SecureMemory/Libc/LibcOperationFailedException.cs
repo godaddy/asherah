@@ -1,6 +1,6 @@
 using System;
 
-namespace GoDaddy.Asherah.SecureMemory
+namespace GoDaddy.Asherah.SecureMemory.Libc
 {
     public class LibcOperationFailedException : SystemException
     {

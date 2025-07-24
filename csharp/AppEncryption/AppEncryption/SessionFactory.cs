@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using App.Metrics;
 using App.Metrics.Concurrency;
 using GoDaddy.Asherah.AppEncryption.Envelope;
@@ -15,6 +16,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
+
 namespace GoDaddy.Asherah.AppEncryption
 {
     /// <summary>
@@ -22,9 +26,10 @@ namespace GoDaddy.Asherah.AppEncryption
     /// </summary>
     public class SessionFactory : IDisposable
     {
-        #pragma warning disable SA1401
-        protected internal readonly MemoryCache SessionCache;
-        #pragma warning restore SA1401
+        private readonly MemoryCache sessionCache;
+
+        // Internal property for testing purposes
+        internal MemoryCache SessionCache => sessionCache;
 
         // Percentage of session cache to compact if it exceeds size limits and remove unused sessions
         private const int CompactionPercentage = 50;
@@ -69,7 +74,7 @@ namespace GoDaddy.Asherah.AppEncryption
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
             semaphoreLocks = new ConcurrentDictionary<string, object>();
-            SessionCache = new MemoryCache(new MemoryCacheOptions());
+            sessionCache = new MemoryCache(new MemoryCacheOptions());
         }
 
         public interface IMetastoreStep
@@ -190,11 +195,11 @@ namespace GoDaddy.Asherah.AppEncryption
             }
 
             // Actually dispose of all the remaining sessions that might be active in the cache.
-            lock (SessionCache)
+            lock (sessionCache)
             {
                 foreach (KeyValuePair<string, object> sessionCacheKey in semaphoreLocks)
                 {
-                    CachedSession cachedSession = SessionCache.Get<CachedSession>(sessionCacheKey.Key);
+                    CachedSession cachedSession = sessionCache.Get<CachedSession>(sessionCacheKey.Key);
 
                     // We need to check this to ensure that the entry was not removed by the expiration policy
                     if (cachedSession != null)
@@ -204,7 +209,7 @@ namespace GoDaddy.Asherah.AppEncryption
                     }
 
                     // now remove the entry from the cache
-                    SessionCache.Remove(sessionCacheKey.Key);
+                    sessionCache.Remove(sessionCacheKey.Key);
                 }
             }
         }
@@ -302,13 +307,13 @@ namespace GoDaddy.Asherah.AppEncryption
             // TryGetValue is not thread safe and hence we need a lock
             lock (getCachedItemLock)
             {
-                if (!SessionCache.TryGetValue(partitionId, out cachedItem))
+                if (!sessionCache.TryGetValue(partitionId, out cachedItem))
                 {
                     // If the cache size is greater than the maximum count, compact the cache
                     // This will remove all the unused sessions
-                    if (SessionCache.Count >= cryptoPolicy.GetSessionCacheMaxSize())
+                    if (sessionCache.Count >= cryptoPolicy.GetSessionCacheMaxSize())
                     {
-                        SessionCache.Compact(CompactionPercentage);
+                        sessionCache.Compact(CompactionPercentage);
                     }
 
                     // Creating for first time
@@ -317,7 +322,7 @@ namespace GoDaddy.Asherah.AppEncryption
                         .SetPriority(CacheItemPriority.NeverRemove);
 
                     // Save data in cache.
-                    SessionCache.Set(partitionId, cachedItem, cacheEntryOptions);
+                    sessionCache.Set(partitionId, cachedItem, cacheEntryOptions);
                 }
 
                 // Increment the usage counter of the entry
@@ -338,7 +343,7 @@ namespace GoDaddy.Asherah.AppEncryption
         {
             try
             {
-                CachedSession cacheItem = SessionCache.Get<CachedSession>(partitionId);
+                CachedSession cacheItem = sessionCache.Get<CachedSession>(partitionId);
 
                 // Decrements the usage counter of the entry
                 cacheItem.DecrementUsageTracker();
@@ -354,7 +359,7 @@ namespace GoDaddy.Asherah.AppEncryption
                         {
                             ((CachedSession)value).GetEnvelopeEncryptionJsonImpl().Dispose();
                         });
-                    SessionCache.Set(partitionId, cacheItem, cacheEntryOptions);
+                    sessionCache.Set(partitionId, cacheItem, cacheEntryOptions);
                 }
             }
             catch (Exception e)

@@ -1,1 +1,0 @@
-../../../build/csharp/install-dotnet-3.1.sh

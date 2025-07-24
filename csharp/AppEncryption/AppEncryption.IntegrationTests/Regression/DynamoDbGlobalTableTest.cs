@@ -21,7 +21,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         private readonly ConfigFixture configFixture;
         private readonly string serviceUrl;
 
-        private IAmazonDynamoDB tempDynamoDbClient;
+        private AmazonDynamoDBClient tempDynamoDbClient;
 
         public DynamoDbGlobalTableTest(DynamoDBContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
         {

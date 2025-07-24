@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.SecureMemory.Libc;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -41,7 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
             protectedMemoryAllocator.Dispose();
         }
 
-        internal ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
+        internal static ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -84,7 +84,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl
         private void TestAllocSuccess()
         {
             Debug.WriteLine("ProtectedMemoryAllocatorTest.TestAllocSuccess");
-            IntPtr pointer = protectedMemoryAllocator.Alloc(1);
+            var pointer = protectedMemoryAllocator.Alloc(1);
             CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
             try

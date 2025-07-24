@@ -17,7 +17,17 @@ repos:
     -   id: check-symlinks
     -   id: check-merge-conflict
     -   id: fix-byte-order-marker
-- repo: https://github.com/godaddy/tartufo
-  rev: v5.0.2
-  hooks:
-  - id: tartufo
+-   repo: https://github.com/godaddy/tartufo
+    rev: v5.0.2
+    hooks:
+    -   id: tartufo
+-   repo: local
+    hooks:
+    -   id: csharp-format
+        name: csharp-format
+        entry: sh csharp/pre-commit-dotnet-format.sh
+        language: system
+        types: [file]
+        pass_filenames: false
+        always_run: true
+        verbose: true
