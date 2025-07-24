@@ -2,7 +2,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using GoDaddy.Asherah.SecureMemory;
+
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.Crypto.Keys
 {
@@ -164,8 +169,6 @@ namespace GoDaddy.Asherah.Crypto.Keys
 
                 sharedCryptoKeyDictionary.Clear();
             }
-
-            GC.SuppressFinalize(this);
         }
 
         private class SharedCryptoKeyEntry

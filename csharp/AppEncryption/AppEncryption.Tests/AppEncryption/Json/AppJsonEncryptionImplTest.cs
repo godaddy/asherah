@@ -88,7 +88,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
         {
             keyManagementService?.Dispose();
             metastore?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

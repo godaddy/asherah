@@ -36,7 +36,6 @@ namespace GoDaddy.Asherah.Logging.Tests
         public void Dispose()
         {
             loggerFactory?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

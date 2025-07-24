@@ -71,7 +71,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         public void Dispose()
         {
             envelopeEncryptionBytesImpl?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

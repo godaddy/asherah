@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1848:Use LoggerMessage delegates", Justification = "Test code - logging performance not critical")]
+[assembly: SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "Test classes do not need to call GC.SuppressFinalize.")]

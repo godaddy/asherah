@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.SecureMemory;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.Crypto.Keys
 {
@@ -63,7 +64,6 @@ namespace GoDaddy.Asherah.Crypto.Keys
         public override void Dispose()
         {
             Secret.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />

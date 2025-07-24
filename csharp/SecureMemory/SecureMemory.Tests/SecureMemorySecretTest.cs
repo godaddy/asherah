@@ -40,7 +40,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Debug.WriteLine("SecureMemorySecretTest.Dispose");
         }
 

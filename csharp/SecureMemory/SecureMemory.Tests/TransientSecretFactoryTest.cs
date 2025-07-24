@@ -28,7 +28,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             transientSecretFactory.Dispose();
             Debug.WriteLine("TransientSecretFactoryTest: Dispose TransientSecretFactory\n");
         }

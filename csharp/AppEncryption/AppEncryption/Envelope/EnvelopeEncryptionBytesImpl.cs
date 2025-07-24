@@ -1,8 +1,13 @@
 using System;
+using System.Runtime.CompilerServices;
+using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.AppEncryption.Envelope
 {
@@ -37,7 +42,6 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             {
                 Logger.LogError(e, "Unexpected exception during dispose");
             }
-            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc/>

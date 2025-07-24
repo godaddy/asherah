@@ -1,8 +1,11 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
+
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
 
 namespace GoDaddy.Asherah.AppEncryption.Kms
 {

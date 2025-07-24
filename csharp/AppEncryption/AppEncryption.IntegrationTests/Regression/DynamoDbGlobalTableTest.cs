@@ -65,7 +65,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             {
                 // There is no such table.
             }
-            GC.SuppressFinalize(this);
         }
 
         private SessionFactory GetSessionFactory(bool withKeySuffix, string region)

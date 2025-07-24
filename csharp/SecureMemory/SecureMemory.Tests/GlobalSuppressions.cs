@@ -2,3 +2,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Design", "CA2201:Do not raise reserved exception types", Justification = "Tests may intentionally throw general exceptions for coverage or negative testing.")]
+[assembly: SuppressMessage("Usage", "CA1816:Call GC.SuppressFinalize correctly", Justification = "Test classes don't have finalizers and don't need GC.SuppressFinalize calls.")]

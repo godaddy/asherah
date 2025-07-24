@@ -31,7 +31,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Linux
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Debug.WriteLine("OpenSSLCryptProtectMemoryTests.Dispose");
             linuxOpenSSL11ProtectedMemoryAllocatorLP64?.Dispose();
         }

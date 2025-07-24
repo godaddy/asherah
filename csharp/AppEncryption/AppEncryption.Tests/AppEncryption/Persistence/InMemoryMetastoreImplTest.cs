@@ -98,7 +98,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         public void Dispose()
         {
             inMemoryMetastoreImpl?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

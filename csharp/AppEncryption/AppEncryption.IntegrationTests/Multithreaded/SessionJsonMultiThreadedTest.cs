@@ -33,9 +33,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 
         public void Dispose()
         {
-            sessionJson.Dispose();
-            sessionFactory.Dispose();
-            GC.SuppressFinalize(this);
+            sessionJson?.Dispose();
+            sessionFactory?.Dispose();
         }
 
         [Fact]

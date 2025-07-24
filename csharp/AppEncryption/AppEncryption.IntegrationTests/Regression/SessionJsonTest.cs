@@ -35,7 +35,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
         {
             sessionJson.Dispose();
             sessionFactory.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         [Fact]

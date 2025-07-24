@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Design", "CA2201:Do not raise reserved exception types", Justification = "Test methods may use SystemException for testing purposes", Scope = "module")]
+[assembly: SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "Test classes do not need to call GC.SuppressFinalize.")]

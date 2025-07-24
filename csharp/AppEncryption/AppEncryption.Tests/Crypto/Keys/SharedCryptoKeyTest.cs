@@ -74,7 +74,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
         public void Dispose()
         {
             sharedCryptoKey?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -30,9 +30,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         public void Dispose()
         {
-            sessionBytes.Dispose();
-            sessionFactory.Dispose();
-            GC.SuppressFinalize(this);
+            sessionBytes?.Dispose();
+            sessionFactory?.Dispose();
         }
 
         [Fact]

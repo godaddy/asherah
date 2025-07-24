@@ -47,7 +47,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Libc
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Debug.WriteLine("LibcSecureMemoryAllocatorTest.Dispose");
             libcSecureMemoryAllocator?.Dispose();
         }

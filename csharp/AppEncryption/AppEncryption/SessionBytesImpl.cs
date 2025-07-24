@@ -1,7 +1,12 @@
 using System;
+using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
+using GoDaddy.Asherah.AppEncryption.Util;
+
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.AppEncryption
 {
@@ -48,7 +53,6 @@ namespace GoDaddy.Asherah.AppEncryption
             {
                 Logger.LogError(e, "unexpected exception during close");
             }
-            GC.SuppressFinalize(this);
         }
     }
 }

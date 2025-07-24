@@ -82,7 +82,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
 
             dbConnection.Close();
-            GC.SuppressFinalize(this);
         }
 
         private void SetupDatabase()

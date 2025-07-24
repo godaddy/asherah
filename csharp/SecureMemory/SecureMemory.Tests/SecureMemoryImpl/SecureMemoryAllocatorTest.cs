@@ -27,7 +27,6 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Debug.WriteLine("SecureMemoryAllocatorTest.Dispose");
             secureMemoryAllocator.Dispose();
         }

@@ -23,7 +23,6 @@ namespace GoDaddy.Asherah.Logging.Tests
 
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
         }
     }
 }

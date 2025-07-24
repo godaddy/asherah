@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using GoDaddy.Asherah.Crypto.BufferUtils;
+using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.Crypto
 {
@@ -175,7 +177,6 @@ namespace GoDaddy.Asherah.Crypto
         public void Dispose()
         {
             secretFactory?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

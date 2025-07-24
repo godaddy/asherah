@@ -98,7 +98,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             {
                 // There is no such table.
             }
-            GC.SuppressFinalize(this);
         }
 
         private static void CreateTableSchema(AmazonDynamoDBClient client, string tableName)

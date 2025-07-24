@@ -67,7 +67,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         public void Dispose()
         {
             sessionBytesImpl?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

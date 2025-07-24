@@ -895,7 +895,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         public void Dispose()
         {
             sessionFactory?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -96,7 +96,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
         public void Dispose()
         {
             secretCryptoKey?.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }
