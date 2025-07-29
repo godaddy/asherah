@@ -19,7 +19,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
             var secureMemory = LibcLP64.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-            Check.ValidatePointer(secureMemory, "mmap");
+            Check.IntPointer(secureMemory, "mmap");
             SetNoDump(secureMemory, length);
 
             return secureMemory;

@@ -11,7 +11,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void CheckIntPtr()
         {
             var ptr = IntPtr.Add(IntPtr.Zero, 1000);
-            Check.ValidatePointer(ptr, "CheckIntPtr");
+            Check.IntPointer(ptr, "CheckIntPtr");
         }
 
         [Fact]
@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 var ptr = IntPtr.Zero;
-                Check.ValidatePointer(ptr, "CheckBadIntPtr");
+                Check.IntPointer(ptr, "CheckBadIntPtr");
             });
         }
 
@@ -30,7 +30,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Assert.Throws<LibcOperationFailedException>(() =>
             {
                 var ptr = Check.InvalidPointer;
-                Check.ValidatePointer(ptr, "CheckBadIntPtr");
+                Check.IntPointer(ptr, "CheckBadIntPtr");
             });
         }
 

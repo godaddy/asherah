@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using GoDaddy.Asherah.Crypto.BufferUtils;
-using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
 

@@ -42,7 +42,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             var protectedMemory = LibcLP64.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-            Check.ValidatePointer(protectedMemory, "mmap");
+            Check.IntPointer(protectedMemory, "mmap");
             try
             {
                 Check.Zero(LibcLP64.mlock(protectedMemory, length), "mlock");

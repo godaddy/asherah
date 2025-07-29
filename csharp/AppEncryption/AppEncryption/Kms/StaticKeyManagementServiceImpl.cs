@@ -51,7 +51,6 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>

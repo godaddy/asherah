@@ -28,7 +28,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             protRead = allocator.GetProtRead();
 
             evpCipher = OpenSSLCrypto.EVP_get_cipherbyname(cipher);
-            Check.ValidatePointer(evpCipher, "EVP_get_cipherbyname");
+            Check.IntPointer(evpCipher, "EVP_get_cipherbyname");
             Debug.WriteLine("OpenSSL found cipher " + cipher);
 
             blockSize = OpenSSLCrypto.EVP_CIPHER_block_size(evpCipher);
@@ -41,7 +41,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Debug.WriteLine("IV length: " + ivSize);
 
             key = LibcLP64.mmap(IntPtr.Zero, pageSize, allocator.GetProtReadWrite(), allocator.GetPrivateAnonymousFlags(), -1, 0);
-            Check.ValidatePointer(key, "mmap");
+            Check.IntPointer(key, "mmap");
 
             var result = LibcLP64.mlock(key, pageSize);
             Check.Result(result, 0, "mlock");
@@ -53,11 +53,11 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             Debug.WriteLine("EVP_CIPHER_CTX_new encryptCtx");
             encryptCtx = OpenSSLCrypto.EVP_CIPHER_CTX_new();
-            Check.ValidatePointer(encryptCtx, "EVP_CIPHER_CTX_new encryptCtx");
+            Check.IntPointer(encryptCtx, "EVP_CIPHER_CTX_new encryptCtx");
 
             Debug.WriteLine("EVP_CIPHER_CTX_new decryptCtx");
             decryptCtx = OpenSSLCrypto.EVP_CIPHER_CTX_new();
-            Check.ValidatePointer(decryptCtx, "EVP_CIPHER_CTX_new decryptCtx");
+            Check.IntPointer(decryptCtx, "EVP_CIPHER_CTX_new decryptCtx");
 
             result = OpenSSLCrypto.RAND_bytes(key, keySize);
             Check.Result(result, 1, "RAND_bytes");
@@ -101,9 +101,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     try
                     {
                         Debug.WriteLine("EVP_EncryptInit_ex");
-                        Check.ValidatePointer(encryptCtx, "CryptProtectMemory encryptCtx");
-                        Check.ValidatePointer(key, "CryptProtectMemory key");
-                        Check.ValidatePointer(iv, "CryptProtectMemory iv");
+                        Check.IntPointer(encryptCtx, "CryptProtectMemory encryptCtx");
+                        Check.IntPointer(key, "CryptProtectMemory key");
+                        Check.IntPointer(iv, "CryptProtectMemory iv");
                         var result = OpenSSLCrypto.EVP_EncryptInit_ex(encryptCtx, evpCipher, IntPtr.Zero, key, iv);
                         Check.Result(result, 1, "EVP_EncryptInit_ex");
 
@@ -160,9 +160,9 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                     try
                     {
                         Debug.WriteLine("EVP_DecryptInit_ex");
-                        Check.ValidatePointer(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
-                        Check.ValidatePointer(key, "CryptUnprotectMemory key is invalid");
-                        Check.ValidatePointer(iv, "CryptUnprotectMemory iv is invalid");
+                        Check.IntPointer(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
+                        Check.IntPointer(key, "CryptUnprotectMemory key is invalid");
+                        Check.IntPointer(iv, "CryptUnprotectMemory iv is invalid");
                         var result = OpenSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
                         Check.Result(result, 1, "EVP_DecryptInit_ex");
 

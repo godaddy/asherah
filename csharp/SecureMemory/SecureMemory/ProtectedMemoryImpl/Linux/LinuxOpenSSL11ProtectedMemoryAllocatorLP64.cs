@@ -69,7 +69,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new SecureMemoryException("Called SetNoAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
-            Check.ValidatePointer(pointer, "SetNoAccess");
+            Check.IntPointer(pointer, "SetNoAccess");
 
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // NOTE: No rounding for encrypt!
@@ -85,7 +85,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new SecureMemoryException("Called SetReadAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
-            Check.ValidatePointer(pointer, "SetReadAccess");
+            Check.IntPointer(pointer, "SetReadAccess");
 
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // Round up allocation size to nearest block size
@@ -103,7 +103,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
                 throw new SecureMemoryException("Called SetReadWriteAccess on disposed LinuxOpenSSL11ProtectedMemoryAllocatorLP64");
             }
 
-            Check.ValidatePointer(pointer, "SetReadWriteAccess");
+            Check.IntPointer(pointer, "SetReadWriteAccess");
 
             // Per page-protections aren't possible with the OpenSSL secure heap implementation
             // Round up allocation size to nearest block size
@@ -131,7 +131,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc({length})");
             var protectedMemory = LinuxOpenSSL11LP64.CRYPTO_secure_malloc(length);
 
-            Check.ValidatePointer(protectedMemory, "CRYPTO_secure_malloc");
+            Check.IntPointer(protectedMemory, "CRYPTO_secure_malloc");
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Alloc returned {protectedMemory}");
             try
             {
@@ -156,7 +156,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
             // Round up allocation size to nearest block size
             length = (length + (blockSize - 1)) & ~(blockSize - 1);
 
-            Check.ValidatePointer(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
+            Check.IntPointer(pointer, "LinuxOpenSSL11ProtectedMemoryAllocatorLP64.Free");
 
             Debug.WriteLine($"LinuxOpenSSL11ProtectedMemoryAllocatorLP64: Free({pointer},{length})");
             LinuxOpenSSL11LP64.CRYPTO_secure_clear_free(pointer, length);

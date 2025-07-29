@@ -5,7 +5,7 @@ using GoDaddy.Asherah.Crypto.Keys;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
-    public class DummyKeyManagementService : KeyManagementService, IDisposable
+    public sealed class DummyKeyManagementService : KeyManagementService, IDisposable
     {
         private readonly CryptoKey encryptionKey;
         private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
@@ -36,14 +36,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// Disposes of the managed resources.
         /// </summary>
         /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {

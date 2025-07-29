@@ -33,7 +33,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
         internal override void SetNoDump(IntPtr protectedMemory, ulong length)
         {
-            Check.ValidatePointer(protectedMemory, "SetNoDump");
+            Check.IntPointer(protectedMemory, "SetNoDump");
             if (length == 0)
             {
                 throw new SecureMemoryException("SetNoDump: Invalid length");
@@ -81,7 +81,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         // Platform specific zero memory
         protected override void ZeroMemory(IntPtr pointer, ulong length)
         {
-            Check.ValidatePointer(pointer, "ZeroMemory");
+            Check.IntPointer(pointer, "ZeroMemory");
             if (length < 1)
             {
                 throw new SecureMemoryException("ZeroMemory: Invalid length");

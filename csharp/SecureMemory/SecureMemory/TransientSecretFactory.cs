@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
-    public class TransientSecretFactory : ISecretFactory
+    public sealed class TransientSecretFactory : ISecretFactory
     {
         private readonly SecureMemorySecretFactory secretFactory;
 
@@ -26,7 +26,6 @@ namespace GoDaddy.Asherah.SecureMemory
         {
             Debug.WriteLine("TransientSecretFactory: Dispose");
             secretFactory.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         public Secret CreateSecret(byte[] secretData)

@@ -154,7 +154,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             var pointer = libcProtectedMemoryAllocator.Alloc(1);
             try
             {
-                Check.ValidatePointer(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
+                Check.IntPointer(pointer, "TestCheckPointerWithRegularPointerShouldSucceed");
             }
             finally
             {
@@ -182,7 +182,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                Check.ValidatePointer(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
+                Check.IntPointer(IntPtr.Zero, "IGNORE_INTENTIONAL_ERROR");
             });
         }
 
@@ -195,7 +195,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
 
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                Check.ValidatePointer(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
+                Check.IntPointer(new IntPtr(-1), "IGNORE_INTENTIONAL_ERROR");
             });
         }
 

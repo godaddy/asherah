@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;

@@ -9,7 +9,7 @@ namespace GoDaddy.Asherah.SecureMemory
     {
         public static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        public static void ValidatePointer(IntPtr intPointer, string methodName)
+        public static void IntPointer(IntPtr intPointer, string methodName)
         {
             if (intPointer == IntPtr.Zero || intPointer == InvalidPointer)
             {
