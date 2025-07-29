@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using Microsoft.Extensions.Configuration;
 using Xunit;
