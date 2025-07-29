@@ -14,7 +14,7 @@ namespace GoDaddy.Asherah.SecureMemory
             if (intPointer == IntPtr.Zero || intPointer == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"****************** Check.ValidatePointer failed for {methodName} result: {intPointer} errno: {errno}");
+                Debug.WriteLine($"****************** Check.IntPointer failed for {methodName} result: {intPointer} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, intPointer.ToInt64());
             }
         }
