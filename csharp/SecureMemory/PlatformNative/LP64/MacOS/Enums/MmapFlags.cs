@@ -1,7 +1,5 @@
 using System;
 
-// ReSharper disable UnusedMember.Global
-// ReSharper disable InconsistentNaming
 namespace GoDaddy.Asherah.PlatformNative.LP64.MacOS.Enums
 {
     // /usr/include/sys/mman.h:#define MAP_SHARED        0x0001       /* [MF|SHM] share changes */

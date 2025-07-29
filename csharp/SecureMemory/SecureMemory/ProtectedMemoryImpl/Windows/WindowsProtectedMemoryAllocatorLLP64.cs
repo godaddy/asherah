@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows;
 using GoDaddy.Asherah.PlatformNative.LLP64.Windows.Enums;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 
 namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 {
@@ -53,7 +52,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             }
         }
 
-        public void ZeroMemory(IntPtr pointer, ulong length)
+        public static void ZeroMemory(IntPtr pointer, ulong length)
         {
             WindowsInterop.ZeroMemory(pointer, (UIntPtr)length);
         }
@@ -62,7 +61,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
         {
         }
 
-        protected void LockMemory(IntPtr pointer, ulong length)
+        protected static void LockMemory(IntPtr pointer, ulong length)
         {
             if (!WindowsInterop.VirtualLock(pointer, (UIntPtr)length))
             {
@@ -71,7 +70,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             }
         }
 
-        protected void UnlockMemory(IntPtr pointer, ulong length)
+        protected static void UnlockMemory(IntPtr pointer, ulong length)
         {
             if (!WindowsInterop.VirtualUnlock(pointer, (UIntPtr)length))
             {
@@ -85,7 +84,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             }
         }
 
-        protected ulong AdjustLength(ulong length)
+        protected static ulong AdjustLength(ulong length)
         {
             return length % CryptProtect.BLOCKSIZE != 0
                 ? ((length / CryptProtect.BLOCKSIZE) + 1) * CryptProtect.BLOCKSIZE

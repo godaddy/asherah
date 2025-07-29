@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +15,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
     [Collection("Logger Fixture collection")]
     public class SecureMemorySecretFactoryTest
     {
+        private static readonly byte[] TestBytes = new byte[] { 0, 1 };
+        private static readonly char[] TestChars = new[] { 'a', 'b' };
         private readonly IConfiguration configuration;
 
         public SecureMemorySecretFactoryTest()
@@ -52,13 +53,13 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void TestMmapConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"secureHeapEngine", "mmap"}
             }).Build();
 
             Debug.WriteLine("SecureMemorySecretFactoryTest.TestMmapConfiguration");
-            using (var factory = new SecureMemorySecretFactory(configuration))
+            using (var factory = new SecureMemorySecretFactory(testConfiguration))
             {
             }
         }
@@ -66,7 +67,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void TestInvalidConfiguration()
         {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"secureHeapEngine", "magic-heap-engine2"}
             }).Build();
@@ -74,7 +75,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             Debug.WriteLine("SecureMemorySecretFactoryTest.TestMmapConfiguration");
             Assert.Throws<PlatformNotSupportedException>(() =>
             {
-                using (var factory = new SecureMemorySecretFactory(configuration))
+                using (var factory = new SecureMemorySecretFactory(testConfiguration))
                 {
                 }
             });
@@ -84,22 +85,18 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         private void TestCreateSecretByteArray()
         {
             Debug.WriteLine("SecureMemorySecretFactoryTest.TestCreateSecretByteArray");
-            using (var factory = new SecureMemorySecretFactory(configuration))
-            {
-                using Secret secret = factory.CreateSecret(new byte[] { 0, 1 });
-                Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
-            }
+            using var factory = new SecureMemorySecretFactory(configuration);
+            using var secret = factory.CreateSecret(TestBytes);
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
         }
 
         [Fact]
         private void TestCreateSecretCharArray()
         {
             Debug.WriteLine("SecureMemorySecretFactoryTest.TestCreateSecretCharArray");
-            using (var factory = new SecureMemorySecretFactory(configuration))
-            {
-                using Secret secret = factory.CreateSecret(new[] { 'a', 'b' });
-                Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
-            }
+            using var factory = new SecureMemorySecretFactory(configuration);
+            using var secret = factory.CreateSecret(TestChars);
+            Assert.Equal(typeof(SecureMemorySecret), secret.GetType());
         }
 
         [Fact]
@@ -107,7 +104,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             var factory = new SecureMemorySecretFactory(configuration);
             factory.Dispose();
-            Assert.Throws<Exception>(() => {
+            Assert.Throws<SecureMemoryException>(() =>
+            {
                 factory.Dispose();
             });
         }
@@ -117,12 +115,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "disabled"}
             }).Build();
 
-            ISecureMemoryAllocator allocator = SecureMemorySecretFactory.ConfigureForMacOS64(configuration);
+            var allocator = SecureMemorySecretFactory.ConfigureForMacOS64(testConfiguration);
 
             Assert.IsType<MacOSSecureMemoryAllocatorLP64>(allocator);
             Assert.IsNotType<MacOSProtectedMemoryAllocatorLP64>(allocator);
@@ -133,12 +131,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "disabled"}
             }).Build();
 
-            ISecureMemoryAllocator allocator = SecureMemorySecretFactory.ConfigureForLinux64(configuration);
+            var allocator = SecureMemorySecretFactory.ConfigureForLinux64(testConfiguration);
 
             Assert.IsType<LinuxSecureMemoryAllocatorLP64>(allocator);
             Assert.IsNotType<LinuxProtectedMemoryAllocatorLP64>(allocator);
@@ -149,12 +147,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "false"}
             }).Build();
 
-            Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForMacOS64(configuration));
+            Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForMacOS64(testConfiguration));
         }
 
         [SkippableFact]
@@ -162,12 +160,12 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            var testConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
             {
                 {"mlock", "no"}
             }).Build();
 
-            Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForLinux64(configuration));
+            Assert.Throws<ConfigurationErrorsException>(() => SecureMemorySecretFactory.ConfigureForLinux64(testConfiguration));
         }
 
         [SkippableFact]
@@ -175,7 +173,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
-            ISecureMemoryAllocator allocator = SecureMemorySecretFactory.ConfigureForLinux64(configuration);
+            var allocator = SecureMemorySecretFactory.ConfigureForLinux64(configuration);
 
             Assert.IsType<LinuxProtectedMemoryAllocatorLP64>(allocator);
             Assert.IsNotType<LinuxSecureMemoryAllocatorLP64>(allocator);
@@ -186,7 +184,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
-            ISecureMemoryAllocator allocator = SecureMemorySecretFactory.ConfigureForMacOS64(configuration);
+            var allocator = SecureMemorySecretFactory.ConfigureForMacOS64(configuration);
 
             Assert.IsType<MacOSProtectedMemoryAllocatorLP64>(allocator);
             Assert.IsNotType<MacOSSecureMemoryAllocatorLP64>(allocator);

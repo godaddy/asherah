@@ -1,7 +1,6 @@
 using System;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
-using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Keys;
 using Moq;
 
@@ -9,7 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     public class CacheMock
     {
-        private static readonly AeadEnvelopeCrypto Crypto = new BouncyAes256GcmCrypto();
+        private static readonly BouncyAes256GcmCrypto Crypto = new BouncyAes256GcmCrypto();
 
         private CacheMock(SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache, SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache)
         {

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Logging;
 
 namespace GoDaddy.Asherah.Logging.Tests

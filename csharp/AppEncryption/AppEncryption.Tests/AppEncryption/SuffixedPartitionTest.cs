@@ -10,7 +10,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestProductId = "test_product_id";
         private const string TestSuffixRegion = "test_suffix_region";
 
-        private readonly Partition partition;
+        private readonly SuffixedPartition partition;
 
         public SuffixedPartitionTest()
         {

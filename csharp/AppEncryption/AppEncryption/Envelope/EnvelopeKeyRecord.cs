@@ -37,7 +37,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="created">Creation time of the <paramref name="encryptedKey"/>.</param>.
         /// <param name="parentKeyMeta">The <see cref="KeyMeta"/> for encryption keys.</param>
         /// <param name="encryptedKey">The encrypted key (a system key, intermediate key or a data row key.</param>
-        public EnvelopeKeyRecord(DateTimeOffset created,  KeyMeta parentKeyMeta,  byte[] encryptedKey)
+        public EnvelopeKeyRecord(DateTimeOffset created, KeyMeta parentKeyMeta, byte[] encryptedKey)
             : this(created, parentKeyMeta, encryptedKey, null)
         {
         }
@@ -53,7 +53,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="parentKeyMeta">The <see cref="KeyMeta"/> for encryption keys.</param>
         /// <param name="encryptedKey">The encrypted key (a system key, intermediate key or a data row key.</param>
         /// <param name="revoked">The revocation status of the encrypted key.</param>
-        public EnvelopeKeyRecord(DateTimeOffset created,  KeyMeta parentKeyMeta,  byte[] encryptedKey,  bool? revoked)
+        public EnvelopeKeyRecord(DateTimeOffset created, KeyMeta parentKeyMeta, byte[] encryptedKey, bool? revoked)
         {
             Created = created;
             ParentKeyMeta = parentKeyMeta;

@@ -9,7 +9,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         private const string TestServiceId = "test_service_id";
         private const string TestProductId = "test_product_id";
 
-        private readonly Partition partition;
+        private readonly DefaultPartition partition;
 
         public DefaultPartitionTest()
         {

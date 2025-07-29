@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
 using Microsoft.Extensions.Configuration;
 
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
@@ -20,11 +19,11 @@ namespace GoDaddy.Asherah.SecureMemory
         private readonly IConfiguration configuration;
         private readonly bool requireSecretDisposal;
         private IntPtr pointer;
-        private string creationStackTrace;
+        private readonly string creationStackTrace;
 
         // IMPORTANT: accessCounter is not volatile nor atomic since we use accessLock for all read and write
         // access. If that changes, update the counter accordingly!
-        private long accessCounter = 0;
+        private long accessCounter;
 
         internal SecureMemorySecret(byte[] sourceBytes, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
@@ -79,7 +78,7 @@ namespace GoDaddy.Asherah.SecureMemory
 
         ~SecureMemorySecret()
         {
-            Debug.WriteLine($"SecureMemorySecret: Finalizer");
+            Debug.WriteLine("SecureMemorySecret: Finalizer");
             Dispose(disposing: false);
         }
 
@@ -91,7 +90,7 @@ namespace GoDaddy.Asherah.SecureMemory
                 throw new InvalidOperationException($"WithSecretBytes only supports secrets up to {int.MaxValue} bytes");
             }
 
-            byte[] bytes = new byte[length];
+            var bytes = new byte[length];
             var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
             try
             {
@@ -131,7 +130,7 @@ namespace GoDaddy.Asherah.SecureMemory
         {
             return WithSecretBytes(bytes =>
             {
-                char[] chars = Encoding.UTF8.GetChars(bytes);
+                var chars = Encoding.UTF8.GetChars(bytes);
                 var handle = GCHandle.Alloc(chars, GCHandleType.Pinned);
                 try
                 {
@@ -180,8 +179,7 @@ namespace GoDaddy.Asherah.SecureMemory
         public override void Close()
         {
             Debug.WriteLine("SecureMemorySecret.Close");
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Dispose();
         }
 
         public override void Dispose()
@@ -193,7 +191,7 @@ namespace GoDaddy.Asherah.SecureMemory
 
         internal static SecureMemorySecret FromCharArray(char[] sourceChars, ISecureMemoryAllocator allocator, IConfiguration configuration)
         {
-            byte[] sourceBytes = Encoding.UTF8.GetBytes(sourceChars);
+            var sourceBytes = Encoding.UTF8.GetBytes(sourceChars);
             try
             {
                 return new SecureMemorySecret(sourceBytes, allocator, configuration);
@@ -216,7 +214,7 @@ namespace GoDaddy.Asherah.SecureMemory
                 if (requireSecretDisposal)
                 {
                     const string exceptionMessage = "FATAL: Reached finalizer for SecureMemorySecret (missing Dispose())";
-                    throw new Exception(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
+                    throw new InvalidOperationException(exceptionMessage + ((creationStackTrace == null) ? string.Empty : Environment.NewLine + creationStackTrace));
                 }
 
                 const string warningMessage = "WARN: Reached finalizer for SecureMemorySecret (missing Dispose())";
@@ -259,7 +257,7 @@ namespace GoDaddy.Asherah.SecureMemory
         {
             // NoOptimize to prevent the optimizer from deciding this call is unnecessary
             // NoInlining to prevent the inliner from forgetting that the method was no-optimize
-            for (int i = 0; i < buffer.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
                 buffer[i] = 0;
             }
@@ -270,7 +268,7 @@ namespace GoDaddy.Asherah.SecureMemory
         {
             // NoOptimize to prevent the optimizer from deciding this call is unnecessary
             // NoInlining to prevent the inliner from forgetting that the method was no-optimize
-            for (int i = 0; i < buffer.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
                 buffer[i] = '\0';
             }

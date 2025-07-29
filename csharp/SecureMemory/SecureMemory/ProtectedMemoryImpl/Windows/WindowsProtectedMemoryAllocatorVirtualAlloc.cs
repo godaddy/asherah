@@ -13,13 +13,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
 
         public WindowsProtectedMemoryAllocatorVirtualAlloc(IConfiguration configuration)
         {
-            UIntPtr min = UIntPtr.Zero;
-            UIntPtr max = UIntPtr.Zero;
-            IntPtr hProcess = WindowsInterop.GetCurrentProcess();
+            var min = UIntPtr.Zero;
+            var max = UIntPtr.Zero;
+            var hProcess = WindowsInterop.GetCurrentProcess();
             var result = WindowsInterop.GetProcessWorkingSetSize(hProcess, ref min, ref max);
             if (!result)
             {
-                throw new Exception("GetProcessWorkingSetSize failed");
+                throw new InvalidOperationException("GetProcessWorkingSetSize failed");
             }
 
             var minConfig = configuration["minimumWorkingSetSize"];
@@ -51,7 +51,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Windows
             result = WindowsInterop.SetProcessWorkingSetSize(hProcess, min, max);
             if (!result)
             {
-                throw new Exception($"SetProcessWorkingSetSize({min.ToUInt64()},{max.ToUInt64()}) failed");
+                throw new InvalidOperationException($"SetProcessWorkingSetSize({min.ToUInt64()},{max.ToUInt64()}) failed");
             }
         }
 

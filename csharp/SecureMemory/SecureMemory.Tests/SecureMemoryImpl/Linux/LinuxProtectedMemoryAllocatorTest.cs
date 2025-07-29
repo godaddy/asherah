@@ -35,8 +35,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Linux
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
-            IntPtr fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
-            Assert.Throws<Exception>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
+            var fakeValidPointer = IntPtr.Add(IntPtr.Zero, 1);
+            Assert.Throws<SecureMemoryException>(() => linuxProtectedMemoryAllocator.SetNoDump(fakeValidPointer, 0));
         }
 
         [SkippableFact]
@@ -53,15 +53,15 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl.Linux
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
             byte[] origValue = { 1, 2, 3, 4 };
-            ulong length = (ulong)origValue.Length;
+            var length = (ulong)origValue.Length;
 
-            IntPtr pointer = linuxProtectedMemoryAllocator.Alloc(length);
+            var pointer = linuxProtectedMemoryAllocator.Alloc(length);
 
             try
             {
                 Marshal.Copy(origValue, 0, pointer, (int)length);
 
-                byte[] retValue = new byte[length];
+                var retValue = new byte[length];
                 Marshal.Copy(pointer, retValue, 0, (int)length);
                 Assert.Equal(origValue, retValue);
             }

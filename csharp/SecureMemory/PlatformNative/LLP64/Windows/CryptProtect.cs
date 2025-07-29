@@ -1,6 +1,6 @@
 namespace GoDaddy.Asherah.PlatformNative.LLP64.Windows
 {
-    public class CryptProtect
+    public static class CryptProtect
     {
         public const ulong BLOCKSIZE = 16;
     }

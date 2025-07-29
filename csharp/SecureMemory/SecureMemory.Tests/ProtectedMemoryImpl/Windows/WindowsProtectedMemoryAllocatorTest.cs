@@ -11,7 +11,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
     [Collection("Logger Fixture collection")]
     public class WindowsProtectedMemoryAllocatorTest : IDisposable
     {
-        private readonly WindowsProtectedMemoryAllocatorLLP64 windowsProtectedMemoryAllocator;
+        private static readonly byte[] ZeroBytes = new byte[] { 0, 0, 0, 0 };
+        private readonly WindowsProtectedMemoryAllocatorVirtualAlloc windowsProtectedMemoryAllocator;
 
         public WindowsProtectedMemoryAllocatorTest()
         {
@@ -41,7 +42,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
-            IntPtr pointer = windowsProtectedMemoryAllocator.Alloc(1);
+            var pointer = windowsProtectedMemoryAllocator.Alloc(1);
             try
             {
                 // just do some sanity checks
@@ -60,21 +61,21 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
             byte[] origValue = { 1, 2, 3, 4 };
-            ulong length = (ulong)origValue.Length;
+            var length = (ulong)origValue.Length;
 
-            IntPtr pointer = windowsProtectedMemoryAllocator.Alloc(length);
+            var pointer = windowsProtectedMemoryAllocator.Alloc(length);
 
             try
             {
                 Marshal.Copy(origValue, 0, pointer, (int)length);
 
-                byte[] retValue = new byte[length];
+                var retValue = new byte[length];
                 Marshal.Copy(pointer, retValue, 0, (int)length);
                 Assert.Equal(origValue, retValue);
 
-                windowsProtectedMemoryAllocator.ZeroMemory(pointer, length);
+                WindowsProtectedMemoryAllocatorLLP64.ZeroMemory(pointer, length);
                 Marshal.Copy(pointer, retValue, 0, (int)length);
-                Assert.Equal(new byte[] { 0, 0, 0, 0 }, retValue);
+                Assert.Equal(ZeroBytes, retValue);
             }
             finally
             {

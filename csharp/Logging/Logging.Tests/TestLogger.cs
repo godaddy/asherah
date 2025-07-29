@@ -34,11 +34,11 @@ namespace GoDaddy.Asherah.Logging.Tests
                 message += formatter(state, exception);
             }
 
-// Log to console
+            // Log to console
             Console.WriteLine($"{logLevel.ToString()} - {eventId.Id} - {categoryName} - {message}");
         }
 
-        private class NoopDisposable : IDisposable
+        private sealed class NoopDisposable : IDisposable
         {
             public void Dispose()
             {

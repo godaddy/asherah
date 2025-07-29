@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using LanguageExt;
+
+[assembly: InternalsVisibleTo("AppEncryption.Tests")]
 
 namespace GoDaddy.Asherah.AppEncryption.Persistence
 {
@@ -12,7 +15,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
     /// </summary>
     ///
     /// <typeparam name="T">The type of value to store and retrieve.</typeparam>
-    public class InMemoryMetastoreImpl<T> : IMetastore<T>
+    public class InMemoryMetastoreImpl<T> : IMetastore<T>, IDisposable
     {
         private readonly DataTable dataTable;
 
@@ -44,7 +47,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     .Where(row => row["keyId"].Equals(keyId)
                                   && row["created"].Equals(created))
                     .ToList();
-                if (!dataRows.Any())
+                if (dataRows.Count == 0)
                 {
                     return Option<T>.None;
                 }
@@ -69,7 +72,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     .ToList();
 
                 // Need to check if empty as Last will throw an exception instead of returning null
-                if (!dataRows.Any())
+                if (dataRows.Count == 0)
                 {
                     return Option<T>.None;
                 }
@@ -87,7 +90,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     .Where(row => row["keyId"].Equals(keyId)
                                   && row["created"].Equals(created))
                     .ToList();
-                if (dataRows.Any())
+                if (dataRows.Count > 0)
                 {
                     return false;
                 }
@@ -100,6 +103,26 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         public string GetKeySuffix()
         {
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                dataTable?.Dispose();
+            }
         }
     }
 }

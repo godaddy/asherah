@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -11,6 +12,7 @@ using LanguageExt;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
+
 using static GoDaddy.Asherah.AppEncryption.Persistence.DynamoDbMetastoreImpl;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
@@ -23,7 +25,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         private const string Region = "us-west-2";
         private const string TestKeyWithRegionSuffix = TestKey + "_" + Region;
 
-        private readonly IAmazonDynamoDB amazonDynamoDbClient;
+        private readonly AmazonDynamoDBClient amazonDynamoDbClient;
 
         private readonly Dictionary<string, object> keyRecord = new Dictionary<string, object>
         {
@@ -98,7 +100,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        private void CreateTableSchema(IAmazonDynamoDB client, string tableName)
+        private static void CreateTableSchema(AmazonDynamoDBClient client, string tableName)
         {
             CreateTableRequest request = new CreateTableRequest
             {
@@ -186,7 +188,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdPlusOneHour },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentPlusOneHour);
+            await table.PutItemAsync(documentPlusOneHour, CancellationToken.None);
 
             Document documentPlusOneDay = new Document
             {
@@ -197,7 +199,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdPlusOneDay },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentPlusOneDay);
+            await table.PutItemAsync(documentPlusOneDay, CancellationToken.None);
 
             Document documentMinusOneHour = new Document
             {
@@ -208,7 +210,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdMinusOneHour },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentMinusOneHour);
+            await table.PutItemAsync(documentMinusOneHour, CancellationToken.None);
 
             Document documentMinusOneDay = new Document
             {
@@ -219,7 +221,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                     { "mytime", createdMinusOneDay },
                 }.ToString()),
             };
-            await table.PutItemAsync(documentMinusOneDay);
+            await table.PutItemAsync(documentMinusOneDay, CancellationToken.None);
 
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
@@ -382,7 +384,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 [SortKey] = created.ToUnixTimeSeconds(),
                 [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
             };
-            await tempTable.PutItemAsync(document);
+            await tempTable.PutItemAsync(document, CancellationToken.None);
 
             // Create a metastore object using the withTableName step
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)

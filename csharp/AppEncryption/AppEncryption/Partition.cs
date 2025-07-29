@@ -1,3 +1,5 @@
+using System;
+
 namespace GoDaddy.Asherah.AppEncryption
 {
     /// <summary>
@@ -33,7 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public virtual bool IsValidIntermediateKeyId(string keyId)
         {
-            return keyId.Equals(IntermediateKeyId);
+            return keyId.Equals(IntermediateKeyId, StringComparison.Ordinal);
         }
     }
 }

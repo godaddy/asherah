@@ -60,7 +60,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
         }
 
-        private void VerifyDecryptFlow(
+        private static void VerifyDecryptFlow(
             Mock<IMetastore<JObject>> metastore,
             DecryptMetastoreInteractions metastoreInteractions,
             Partition partition)
@@ -81,7 +81,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
         }
 
-        private void VerifyEncryptFlow(
+        private static void VerifyEncryptFlow(
             Mock<IMetastore<JObject>> metastore,
             EncryptMetastoreInteractions metastoreInteractions,
             Partition partition)
@@ -166,7 +166,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             }
         }
 
-        private class AppEncryptionParameterizedTestData : IEnumerable<object[]>
+        private sealed class AppEncryptionParameterizedTestData : IEnumerable<object[]>
         {
             private static readonly Random Random = new Random();
             private readonly ConfigFixture configFixture;
@@ -185,13 +185,13 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
             public IEnumerator<object[]> GetEnumerator()
             {
-                foreach (KeyState cacheIK in Enum.GetValues(typeof(KeyState)))
+                foreach (KeyState cacheIK in Enum.GetValues<KeyState>())
                 {
-                    foreach (KeyState metaIK in Enum.GetValues(typeof(KeyState)))
+                    foreach (KeyState metaIK in Enum.GetValues<KeyState>())
                     {
-                        foreach (KeyState cacheSK in Enum.GetValues(typeof(KeyState)))
+                        foreach (KeyState cacheSK in Enum.GetValues<KeyState>())
                         {
-                            foreach (KeyState metaSK in Enum.GetValues(typeof(KeyState)))
+                            foreach (KeyState metaSK in Enum.GetValues<KeyState>())
                             {
                                 // TODO Add CryptoPolicy.KeyRotationStrategy loop and update expect/verify logic accordingly
                                 yield return GenerateMocks(cacheIK, metaIK, cacheSK, metaSK);

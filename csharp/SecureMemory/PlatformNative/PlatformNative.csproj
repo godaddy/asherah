@@ -1,29 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     <PackageId>GoDaddy.Asherah.PlatformNative</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
+    <!-- NOTE: Version controlled via Directory.Build.props  -->
+    <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.PlatformNative</RootNamespace>
-    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>Recommended</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- CS8981 is a warning for using a type name that only contains lowercase letters. -->
-    <!-- This naming convention is used for native libraries, so we suppress the warning. -->
     <NoWarn>$(NoWarn);CS8981</NoWarn>
+    <!-- Properties related to NuGet packaging: -->
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
     <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/SecureMemory/PlatformNative</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
 </Project>

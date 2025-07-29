@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.SecureMemory.Libc;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
@@ -9,12 +9,12 @@ namespace GoDaddy.Asherah.SecureMemory
     {
         public static readonly IntPtr InvalidPointer = new IntPtr(-1);
 
-        public static void IntPtr(IntPtr intPointer, string methodName)
+        public static void IntPointer(IntPtr intPointer, string methodName)
         {
-            if (intPointer == System.IntPtr.Zero || intPointer == InvalidPointer)
+            if (intPointer == IntPtr.Zero || intPointer == InvalidPointer)
             {
                 var errno = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"****************** Check.IntPtr failed for {methodName} result: {intPointer} errno: {errno}");
+                Debug.WriteLine($"****************** Check.IntPointer failed for {methodName} result: {intPointer} errno: {errno}");
                 throw new LibcOperationFailedException(methodName, intPointer.ToInt64());
             }
         }

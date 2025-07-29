@@ -5,7 +5,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
     public class DummyCryptoPolicy : CryptoPolicy
     {
-        public override bool IsKeyExpired(DateTimeOffset keyCreationTime)
+        public override bool IsKeyExpired(DateTimeOffset keyCreationDate)
         {
             return false;
         }

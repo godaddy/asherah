@@ -4,22 +4,27 @@
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
     <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
-    <CodeAnalysisRuleSet>../StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>Recommended</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- TODO Is this needed? -->
-    <LangVersion>7.2</LangVersion>
+    <!-- Properties related to NuGet packaging: -->
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/AppEncryption</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
     <PackageReference Include="GoDaddy.Asherah.Logging" Version="0.2.0" />
     <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.3.0" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
-    <PackageReference Include="System.Text.Json" Version="9.0.6" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.7" />
+    <PackageReference Include="System.Text.Json" Version="9.0.7" />
   </ItemGroup>
 </Project>
