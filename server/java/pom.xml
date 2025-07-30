@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.jupiter.version>5.13.4</junit.jupiter.version>
     <junit.jupiter.api.version>5.13.4</junit.jupiter.api.version>
-    <io.grpc.version>1.73.0</io.grpc.version>
+    <io.grpc.version>1.74.0</io.grpc.version>
     <protobuf.version>4.31.1</protobuf.version>
     <appencryption.version>0.3.2</appencryption.version>
     <info.picocli.version>4.7.7</info.picocli.version>
@@ -100,7 +100,7 @@
     <dependency>
         <groupId>com.mysql</groupId>
         <artifactId>mysql-connector-j</artifactId>
-        <version>9.3.0</version>
+        <version>9.4.0</version>
     </dependency>
 
     <dependency>
