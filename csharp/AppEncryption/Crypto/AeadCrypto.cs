@@ -6,18 +6,18 @@ using GoDaddy.Asherah.Crypto.Keys;
 using GoDaddy.Asherah.SecureMemory;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.Crypto
 {
-    public abstract class AeadCrypto
+    public abstract class AeadCrypto : IDisposable
     {
         private const int BitsPerByte = 8;
 
         private static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
         private readonly NonceGenerator nonceGenerator;
-        private readonly ISecretFactory secretFactory;
+        private readonly TransientSecretFactory secretFactory;
 
         protected AeadCrypto()
         {
@@ -162,7 +162,7 @@ namespace GoDaddy.Asherah.Crypto
             return nonce;
         }
 
-        protected void AppendNonce(byte[] cipherText, byte[] nonce)
+        protected static void AppendNonce(byte[] cipherText, byte[] nonce)
         {
             Array.Copy(nonce, 0, cipherText, cipherText.Length - nonce.Length, nonce.Length);
         }
@@ -170,6 +170,11 @@ namespace GoDaddy.Asherah.Crypto
         protected byte[] GenerateNonce()
         {
             return nonceGenerator.CreateNonce(GetNonceSizeBits());
+        }
+
+        public void Dispose()
+        {
+            secretFactory?.Dispose();
         }
     }
 }

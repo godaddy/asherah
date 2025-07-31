@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Runtime;
-using Amazon.Runtime.SharedInterfaces;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Util;
@@ -72,12 +71,12 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             regionPriorityComparator = (region1, region2) =>
             {
                 // Give preferred region top priority and fall back to remaining priority
-                if (region1.Equals(this.preferredRegion))
+                if (region1.Equals(this.preferredRegion, StringComparison.Ordinal))
                 {
                     return -1;
                 }
 
-                if (region2.Equals(this.preferredRegion))
+                if (region2.Equals(this.preferredRegion, StringComparison.Ordinal))
                 {
                     return 1;
                 }
@@ -159,7 +158,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                         DictionaryEntry regionToArnAndClient = (DictionaryEntry)regionToArnClientObject;
                         AwsKmsArnClient arnClient = (AwsKmsArnClient)regionToArnAndClient.Value;
                         string region = (string)regionToArnAndClient.Key;
-                        if (!arnClient.Arn.Equals(dateKeyKeyId))
+                        if (!arnClient.Arn.Equals(dateKeyKeyId, StringComparison.Ordinal))
                         {
                             // If the ARN is different than the datakey's, call encrypt since it's another region
                             EncryptKeyAndBuildResult(
@@ -208,7 +207,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     string region = kmsRegionKeyJson.GetString(RegionKey);
                     if (!RegionToArnAndClientDictionary.Contains(region))
                     {
-                        Logger.LogWarning("Failed to decrypt due to no client for region {region}, trying next region", region);
+                        Logger.LogWarning("Failed to decrypt due to no client for region {Region}, trying next region", region);
                         continue;
                     }
 
@@ -229,7 +228,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     }
                     catch (AmazonServiceException e)
                     {
-                        Logger.LogWarning(e, "Failed to decrypt via region {region} KMS, trying next region", region);
+                        Logger.LogWarning(e, "Failed to decrypt via region {Region} KMS, trying next region", region);
 
                         // TODO Consider adding notification/CW alert
                     }
@@ -281,7 +280,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
             catch (AggregateException e)
             {
-                Logger.LogWarning(e, "Failed to encrypt generated data key via region {region} KMS", region);
+                Logger.LogWarning(e, "Failed to encrypt generated data key via region {Region} KMS", region);
 
                 // TODO Consider adding notification/CW alert
                 return Option<JObject>.None;
@@ -331,7 +330,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 }
                 catch (AmazonServiceException e)
                 {
-                    Logger.LogWarning(e, "Failed to generate data key via region {region} KMS, trying next region", region);
+                    Logger.LogWarning(e, "Failed to generate data key via region {Region} KMS, trying next region", region);
 
                     // TODO Consider adding notification/CW alert
                 }
@@ -393,7 +392,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
         }
 
-        private JObject BuildKmsRegionKeyJson(string region, string arn, byte[] encryptedKeyEncryptionKey)
+        private static JObject BuildKmsRegionKeyJson(string region, string arn, byte[] encryptedKeyEncryptionKey)
         {
             // NOTE: ARN not needed in decrypt, but storing for now in case we want to later use for encryption context, policy, etc.
             Json kmsRegionKeyJson = new Json();

@@ -61,7 +61,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestEqualsWithSameInstance()
         {
-            // ReSharper disable once EqualExpressionComparison
             Assert.True(keyMeta.Equals(keyMeta));
         }
 
@@ -74,7 +73,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestEqualsWithDifferentClass()
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
             Assert.False(keyMeta.Equals("blah"));
         }
 

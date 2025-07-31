@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GoDaddy.Asherah.SecureMemory.Libc;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Linux;
 using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.MacOS;
-using GoDaddy.Asherah.SecureMemory.SecureMemoryImpl;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
@@ -13,10 +11,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
     [Collection("Logger Fixture collection")]
     public class SecureMemoryAllocatorTest : IDisposable
     {
-        private static readonly IntPtr InvalidPointer = new IntPtr(-1);
+        private static readonly IntPtr InvalidPointer = new(-1);
 
         private readonly ISecureMemoryAllocator secureMemoryAllocator;
-        private IConfiguration configuration;
 
         public SecureMemoryAllocatorTest()
         {
@@ -24,14 +21,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
-            {
-                {"heapSize", "32000"},
-                {"minimumAllocationSize", "128"},
-            }).Build();
-
             Debug.WriteLine("SecureMemoryAllocatorTest ctor");
-            secureMemoryAllocator = GetPlatformAllocator(configuration);
+            secureMemoryAllocator = GetPlatformAllocator();
         }
 
         public void Dispose()
@@ -40,7 +31,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
             secureMemoryAllocator.Dispose();
         }
 
-        internal ISecureMemoryAllocator GetPlatformAllocator(IConfiguration configuration)
+        internal static ISecureMemoryAllocator GetPlatformAllocator()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -67,8 +58,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
         [Fact]
         private void TestTwoAllocatorInstances()
         {
-            var allocator1 = GetPlatformAllocator(configuration);
-            var allocator2 = GetPlatformAllocator(configuration);
+            var allocator1 = GetPlatformAllocator();
+            var allocator2 = GetPlatformAllocator();
             Assert.NotNull(allocator1);
             Assert.NotNull(allocator2);
             allocator1.Dispose();
@@ -80,7 +71,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.SecureMemoryImpl
         private void TestAllocSuccess()
         {
             Debug.WriteLine("SecureMemoryAllocatorTest.TestAllocSuccess");
-            IntPtr pointer = secureMemoryAllocator.Alloc(1);
+            var pointer = secureMemoryAllocator.Alloc(1);
             CheckIntPtr(pointer, "ISecureMemoryAllocator.Alloc");
 
             try

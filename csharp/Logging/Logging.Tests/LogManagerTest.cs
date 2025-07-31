@@ -4,9 +4,9 @@ using Xunit;
 
 namespace GoDaddy.Asherah.Logging.Tests
 {
-    public class LogManagerTest
+    public class LogManagerTest : IDisposable
     {
-        private ILoggerFactory loggerFactory;
+        private LoggerFactory loggerFactory;
 
         [Fact]
         public void TestWithNullLoggerFactory()
@@ -31,6 +31,11 @@ namespace GoDaddy.Asherah.Logging.Tests
 
             // Trying to set the LoggerFactory for a second time throws an exception
             Assert.Throws<LoggerFactoryExistsException>(() => LogManager.SetLoggerFactory(loggerFactory));
+        }
+
+        public void Dispose()
+        {
+            loggerFactory?.Dispose();
         }
     }
 }

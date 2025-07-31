@@ -207,20 +207,30 @@ namespace GoDaddy.Asherah.Crypto
 
         private class Builder : IKeyExpirationDaysStep, IRevokeCheckMinutesStep, IBuildStep
         {
-            #pragma warning disable SA1401
-            internal int KeyExpirationDays;
-            internal int RevokeCheckMinutes;
+            private int keyExpirationDays;
+            private int revokeCheckMinutes;
 
             // Set some reasonable defaults since these aren't required by the builder steps
-            internal KeyRotationStrategy KeyRotationStrategy = DefaultKeyRotationStrategy;
-            internal bool CanCacheSystemKeys = DefaultCanCacheSystemKeys;
-            internal bool CanCacheIntermediateKeys = DefaultCanCacheIntermediateKeys;
-            internal bool CanCacheSessions = DefaultCanCacheSessions;
-            internal long SessionCacheMaxSize = DefaultSessionCacheSize;
-            internal long SessionCacheExpireMillis = DefaultSessionCacheExpiryMillis;
-            internal bool NotifyExpiredSystemKeyOnRead = DefaultNotifyExpiredSystemKeyOnRead;
-            internal bool NotifyExpiredIntermediateKeyOnRead = DefaultNotifyExpiredIntermediateKeyOnRead;
-            #pragma warning restore SA1401
+            private KeyRotationStrategy keyRotationStrategy = DefaultKeyRotationStrategy;
+            private bool canCacheSystemKeys = DefaultCanCacheSystemKeys;
+            private bool canCacheIntermediateKeys = DefaultCanCacheIntermediateKeys;
+            private bool canCacheSessions = DefaultCanCacheSessions;
+            private long sessionCacheMaxSize = DefaultSessionCacheSize;
+            private long sessionCacheExpireMillis = DefaultSessionCacheExpiryMillis;
+            private bool notifyExpiredSystemKeyOnRead = DefaultNotifyExpiredSystemKeyOnRead;
+            private bool notifyExpiredIntermediateKeyOnRead = DefaultNotifyExpiredIntermediateKeyOnRead;
+
+            // Internal properties for access
+            internal int KeyExpirationDays => keyExpirationDays;
+            internal int RevokeCheckMinutes => revokeCheckMinutes;
+            internal KeyRotationStrategy KeyRotationStrategy => keyRotationStrategy;
+            internal bool CanCacheSystemKeys => canCacheSystemKeys;
+            internal bool CanCacheIntermediateKeys => canCacheIntermediateKeys;
+            internal bool CanCacheSessions => canCacheSessions;
+            internal long SessionCacheMaxSize => sessionCacheMaxSize;
+            internal long SessionCacheExpireMillis => sessionCacheExpireMillis;
+            internal bool NotifyExpiredSystemKeyOnRead => notifyExpiredSystemKeyOnRead;
+            internal bool NotifyExpiredIntermediateKeyOnRead => notifyExpiredIntermediateKeyOnRead;
 
             private const KeyRotationStrategy DefaultKeyRotationStrategy = KeyRotationStrategy.Inline;
             private const bool DefaultCanCacheSystemKeys = true;
@@ -233,61 +243,61 @@ namespace GoDaddy.Asherah.Crypto
 
             public IRevokeCheckMinutesStep WithKeyExpirationDays(int days)
             {
-                KeyExpirationDays = days;
+                keyExpirationDays = days;
                 return this;
             }
 
             public IBuildStep WithRevokeCheckMinutes(int minutes)
             {
-                RevokeCheckMinutes = minutes;
+                revokeCheckMinutes = minutes;
                 return this;
             }
 
             public IBuildStep WithRotationStrategy(KeyRotationStrategy rotationStrategy)
             {
-                KeyRotationStrategy = rotationStrategy;
+                keyRotationStrategy = rotationStrategy;
                 return this;
             }
 
             public IBuildStep WithCanCacheSystemKeys(bool cacheSystemKeys)
             {
-                CanCacheSystemKeys = cacheSystemKeys;
+                canCacheSystemKeys = cacheSystemKeys;
                 return this;
             }
 
             public IBuildStep WithCanCacheIntermediateKeys(bool cacheIntermediateKeys)
             {
-                CanCacheIntermediateKeys = cacheIntermediateKeys;
+                canCacheIntermediateKeys = cacheIntermediateKeys;
                 return this;
             }
 
             public IBuildStep WithCanCacheSessions(bool cacheSessions)
             {
-                CanCacheSessions = cacheSessions;
+                canCacheSessions = cacheSessions;
                 return this;
             }
 
             public IBuildStep WithSessionCacheMaxSize(long sessionCacheMaxSize)
             {
-                SessionCacheMaxSize = sessionCacheMaxSize;
+                this.sessionCacheMaxSize = sessionCacheMaxSize;
                 return this;
             }
 
             public IBuildStep WithSessionCacheExpireMillis(long sessionCacheExpireMillis)
             {
-                SessionCacheExpireMillis = sessionCacheExpireMillis;
+                this.sessionCacheExpireMillis = sessionCacheExpireMillis;
                 return this;
             }
 
             public IBuildStep WithNotifyExpiredSystemKeyOnRead(bool notify)
             {
-                NotifyExpiredSystemKeyOnRead = notify;
+                notifyExpiredSystemKeyOnRead = notify;
                 return this;
             }
 
             public IBuildStep WithNotifyExpiredIntermediateKeyOnRead(bool notify)
             {
-                NotifyExpiredIntermediateKeyOnRead = notify;
+                notifyExpiredIntermediateKeyOnRead = notify;
                 return this;
             }
 

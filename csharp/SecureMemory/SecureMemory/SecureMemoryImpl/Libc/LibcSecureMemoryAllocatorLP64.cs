@@ -10,21 +10,16 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
 {
     internal abstract class LibcSecureMemoryAllocatorLP64 : LibcMemoryAllocatorLP64
     {
-        protected LibcSecureMemoryAllocatorLP64(LibcLP64 libc)
-            : base(libc)
-        {
-        }
-
         // ************************************
         // alloc / free
         // ************************************
         public override IntPtr Alloc(ulong length)
         {
             // Some platforms may require fd to be -1 even if using anonymous
-            IntPtr secureMemory = GetLibc().mmap(
+            var secureMemory = LibcLP64.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-            Check.IntPtr(secureMemory, "mmap");
+            Check.IntPointer(secureMemory, "mmap");
             SetNoDump(secureMemory, length);
 
             return secureMemory;
@@ -40,7 +35,7 @@ namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl.Libc
             finally
             {
                 // Free (unmap) the protected memory
-                Check.Zero(GetLibc().munmap(pointer, length), "munmap");
+                Check.Zero(LibcLP64.munmap(pointer, length), "munmap");
             }
         }
     }

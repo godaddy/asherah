@@ -12,7 +12,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX));
 
-            rlimit zeroRlimit = rlimit.Zero();
+            var zeroRlimit = rlimit.Zero();
             Assert.Equal(0UL, zeroRlimit.rlim_cur);
             Assert.Equal(0UL, zeroRlimit.rlim_max);
         }

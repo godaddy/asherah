@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SecureMemory.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace GoDaddy.Asherah.SecureMemory.SecureMemoryImpl
+namespace GoDaddy.Asherah.SecureMemory
 {
     internal interface ISecureMemoryAllocator : IDisposable
     {

@@ -14,10 +14,14 @@ namespace GoDaddy.Asherah.Logging
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void SetLoggerFactory(ILoggerFactory loggerFactory)
         {
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(loggerFactory);
+#else
             if (loggerFactory == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(loggerFactory));
             }
+#endif
 
             if (LogManager.loggerFactory != null)
             {

@@ -6,7 +6,7 @@ using Xunit;
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
     [Collection("Logger Fixture collection")]
-    public class SessionBytesImplTest
+    public class SessionBytesImplTest : IDisposable
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;
         private readonly SessionBytesImpl<string> sessionBytesImpl;
@@ -32,7 +32,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             envelopeEncryptionMock.Setup(x => x.DecryptDataRowRecord(It.IsAny<string>())).Returns(expectedBytes);
 
             byte[] actualBytes = sessionBytesImpl.Decrypt("some data row record");
-            Assert.Equal(expectedBytes,  actualBytes);
+            Assert.Equal(expectedBytes, actualBytes);
         }
 
         [Fact]
@@ -59,6 +59,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
             envelopeEncryptionMock.Setup(x => x.Dispose()).Throws<SystemException>();
             sessionBytesImpl.Dispose();
             envelopeEncryptionMock.Verify(x => x.Dispose());
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            sessionBytesImpl?.Dispose();
         }
     }
 }

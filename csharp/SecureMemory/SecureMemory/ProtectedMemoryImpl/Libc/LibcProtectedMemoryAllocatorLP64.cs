@@ -14,8 +14,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
         private static long resourceLimit;
         private static long memoryLocked;
 
-        protected LibcProtectedMemoryAllocatorLP64(LibcLP64 libc)
-            : base(libc)
+        protected LibcProtectedMemoryAllocatorLP64()
         {
             var rlim = GetMemlockResourceLimit();
             if (rlim == rlimit.UNLIMITED || rlim > long.MaxValue)
@@ -40,13 +39,13 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
             }
 
             // Some platforms may require fd to be -1 even if using anonymous
-            IntPtr protectedMemory = GetLibc().mmap(
+            var protectedMemory = LibcLP64.mmap(
                 IntPtr.Zero, length, GetProtReadWrite(), GetPrivateAnonymousFlags(), -1, 0);
 
-            Check.IntPtr(protectedMemory, "mmap");
+            Check.IntPointer(protectedMemory, "mmap");
             try
             {
-                Check.Zero(GetLibc().mlock(protectedMemory, length), "mlock");
+                Check.Zero(LibcLP64.mlock(protectedMemory, length), "mlock");
 
                 try
                 {
@@ -55,14 +54,14 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                 }
                 catch (Exception e)
                 {
-                    Check.Zero(GetLibc().munlock(protectedMemory, length), "munlock", e);
+                    Check.Zero(LibcLP64.munlock(protectedMemory, length), "munlock", e);
                     Interlocked.Add(ref memoryLocked, 0 - (long)length);
                     throw new SecureMemoryAllocationFailedException("Failed to set no dump on protected memory", e);
                 }
             }
             catch (Exception e)
             {
-                Check.Zero(GetLibc().munmap(protectedMemory, length), "munmap", e);
+                Check.Zero(LibcLP64.munmap(protectedMemory, length), "munmap", e);
                 throw;
             }
 
@@ -83,7 +82,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                     // Regardless of whether or not we successfully wipe, unlock
 
                     // Unlock the protected memory
-                    Check.Zero(GetLibc().munlock(pointer, length), "munlock");
+                    Check.Zero(LibcLP64.munlock(pointer, length), "munlock");
                     Interlocked.Add(ref memoryLocked, 0 - (long)length);
                 }
                 finally
@@ -91,7 +90,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
                     // Regardless of whether or not we successfully unlock, unmap
 
                     // Free (unmap) the protected memory
-                    Check.Zero(GetLibc().munmap(pointer, length), "munmap");
+                    Check.Zero(LibcLP64.munmap(pointer, length), "munmap");
                 }
             }
         }
@@ -100,7 +99,7 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc
 
         internal virtual ulong GetMemlockResourceLimit()
         {
-            GetLibc().getrlimit(GetMemLockLimit(), out var rlim);
+            LibcLP64.getrlimit(GetMemLockLimit(), out var rlim);
             return rlim.rlim_max;
         }
     }

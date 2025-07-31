@@ -5,7 +5,7 @@ using GoDaddy.Asherah.Crypto.Keys;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
 {
-    public class DummyKeyManagementService : KeyManagementService
+    public sealed class DummyKeyManagementService : KeyManagementService, IDisposable
     {
         private readonly CryptoKey encryptionKey;
         private readonly BouncyAes256GcmCrypto crypto = new BouncyAes256GcmCrypto();
@@ -28,6 +28,27 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy
         public override string ToString()
         {
             return typeof(DummyKeyManagementService).FullName + "[kms_arn=LOCAL, crypto=" + crypto + "]";
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Disposes of the managed resources.
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                encryptionKey?.Dispose();
+                crypto?.Dispose();
+            }
         }
     }
 }

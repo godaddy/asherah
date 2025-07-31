@@ -1,6 +1,5 @@
 using System;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Libc;
+using GoDaddy.Asherah.SecureMemory.Libc;
 using Xunit;
 
 namespace GoDaddy.Asherah.SecureMemory.Tests
@@ -11,8 +10,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         [Fact]
         private void CheckIntPtr()
         {
-            IntPtr ptr = IntPtr.Add(IntPtr.Zero, 1000);
-            Check.IntPtr(ptr, "CheckIntPtr");
+            var ptr = IntPtr.Add(IntPtr.Zero, 1000);
+            Check.IntPointer(ptr, "CheckIntPtr");
         }
 
         [Fact]
@@ -20,8 +19,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                IntPtr ptr = IntPtr.Zero;
-                Check.IntPtr(ptr, "CheckBadIntPtr");
+                var ptr = IntPtr.Zero;
+                Check.IntPointer(ptr, "CheckBadIntPtr");
             });
         }
 
@@ -30,8 +29,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
         {
             Assert.Throws<LibcOperationFailedException>(() =>
             {
-                IntPtr ptr = Check.InvalidPointer;
-                Check.IntPtr(ptr, "CheckBadIntPtr");
+                var ptr = Check.InvalidPointer;
+                Check.IntPointer(ptr, "CheckBadIntPtr");
             });
         }
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace GoDaddy.Asherah.AppEncryption
 {
     public class SuffixedPartition : Partition
@@ -37,7 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         public override bool IsValidIntermediateKeyId(string keyId)
         {
-            return keyId.Equals(IntermediateKeyId) || keyId.StartsWith(base.IntermediateKeyId);
+            return keyId.Equals(IntermediateKeyId, StringComparison.Ordinal) || keyId.StartsWith(base.IntermediateKeyId, StringComparison.Ordinal);
         }
     }
 }

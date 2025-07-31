@@ -105,23 +105,23 @@ namespace GoDaddy.Asherah.Crypto
             return GetKeyRotationStrategy() == KeyRotationStrategy.Queued;
         }
 
-       /// <summary>
-       /// Truncate the SystemKey created time to the nearest minute.
-       /// </summary>
-       ///
-       /// <param name="dateTimeOffset">A <see cref="DateTimeOffset"/> object.</param>
-       /// <returns>A <see cref="DateTimeOffset"/> object truncated to the nearest minute. </returns>
+        /// <summary>
+        /// Truncate the SystemKey created time to the nearest minute.
+        /// </summary>
+        ///
+        /// <param name="dateTimeOffset">A <see cref="DateTimeOffset"/> object.</param>
+        /// <returns>A <see cref="DateTimeOffset"/> object truncated to the nearest minute. </returns>
         public virtual DateTimeOffset TruncateToSystemKeyPrecision(DateTimeOffset dateTimeOffset)
         {
             return dateTimeOffset.Truncate(TimeSpan.FromMinutes(1));
         }
 
-       /// <summary>
-       /// Truncate the IntermediateKey created time to the nearest minute.
-       /// </summary>
-       ///
-       /// <param name="dateTimeOffset">A <see cref="DateTimeOffset"/> object.</param>
-       /// <returns>A <see cref="DateTimeOffset"/> object truncated to the nearest minute. </returns>
+        /// <summary>
+        /// Truncate the IntermediateKey created time to the nearest minute.
+        /// </summary>
+        ///
+        /// <param name="dateTimeOffset">A <see cref="DateTimeOffset"/> object.</param>
+        /// <returns>A <see cref="DateTimeOffset"/> object truncated to the nearest minute. </returns>
         public virtual DateTimeOffset TruncateToIntermediateKeyPrecision(DateTimeOffset dateTimeOffset)
         {
             return dateTimeOffset.Truncate(TimeSpan.FromMinutes(1));

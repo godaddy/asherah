@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using GoDaddy.Asherah.PlatformNative.LP64.Libc;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux;
 using GoDaddy.Asherah.PlatformNative.LP64.Linux.Enums;
 
@@ -10,63 +11,58 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
     public class OpenSSLCryptProtectMemory : IDisposable
     {
         private readonly ulong pageSize = (ulong)Environment.SystemPageSize;
-        private OpenSSLCrypto openSSLCrypto;
         private IntPtr encryptCtx = IntPtr.Zero;
         private IntPtr decryptCtx = IntPtr.Zero;
-        private IntPtr evpCipher = IntPtr.Zero;
+        private readonly IntPtr evpCipher = IntPtr.Zero;
         private IntPtr key = IntPtr.Zero;
-        private IntPtr iv = IntPtr.Zero;
-        private int blockSize;
+        private readonly IntPtr iv = IntPtr.Zero;
+        private readonly int blockSize;
         private bool disposedValue;
-        private LinuxOpenSSL11LP64 openSSL11;
-        private object cryptProtectLock = new object();
-        private int protNone;
-        private int protRead;
+        private readonly object cryptProtectLock = new object();
+        private readonly int protNone;
+        private readonly int protRead;
 
         internal OpenSSLCryptProtectMemory(string cipher, LinuxProtectedMemoryAllocatorLP64 allocator)
         {
-            openSSL11 = new LinuxOpenSSL11LP64();
-            openSSLCrypto = new OpenSSLCrypto();
-
             protNone = allocator.GetProtNoAccess();
             protRead = allocator.GetProtRead();
 
-            evpCipher = openSSLCrypto.EVP_get_cipherbyname(cipher);
-            Check.IntPtr(evpCipher, "EVP_get_cipherbyname");
+            evpCipher = OpenSSLCrypto.EVP_get_cipherbyname(cipher);
+            Check.IntPointer(evpCipher, "EVP_get_cipherbyname");
             Debug.WriteLine("OpenSSL found cipher " + cipher);
 
-            blockSize = openSSLCrypto.EVP_CIPHER_block_size(evpCipher);
+            blockSize = OpenSSLCrypto.EVP_CIPHER_block_size(evpCipher);
             Debug.WriteLine("Block size: " + blockSize);
 
-            int keySize = openSSLCrypto.EVP_CIPHER_key_length(evpCipher);
+            var keySize = OpenSSLCrypto.EVP_CIPHER_key_length(evpCipher);
             Debug.WriteLine("Key length: " + keySize);
 
-            int ivSize = openSSLCrypto.EVP_CIPHER_iv_length(evpCipher);
+            var ivSize = OpenSSLCrypto.EVP_CIPHER_iv_length(evpCipher);
             Debug.WriteLine("IV length: " + ivSize);
 
-            key = openSSL11.mmap(IntPtr.Zero, pageSize, allocator.GetProtReadWrite(), allocator.GetPrivateAnonymousFlags(), -1, 0);
-            Check.IntPtr(key, "mmap");
+            key = LibcLP64.mmap(IntPtr.Zero, pageSize, allocator.GetProtReadWrite(), allocator.GetPrivateAnonymousFlags(), -1, 0);
+            Check.IntPointer(key, "mmap");
 
-            int result = openSSL11.mlock(key, pageSize);
+            var result = LibcLP64.mlock(key, pageSize);
             Check.Result(result, 0, "mlock");
 
-            result = openSSL11.madvise(key, pageSize, (int)Madvice.MADV_DONTDUMP);
+            result = LibcLP64.madvise(key, pageSize, (int)Madvice.MADV_DONTDUMP);
             Check.Result(result, 0, "madvise");
 
             iv = IntPtr.Add(key, keySize);
 
             Debug.WriteLine("EVP_CIPHER_CTX_new encryptCtx");
-            encryptCtx = openSSLCrypto.EVP_CIPHER_CTX_new();
-            Check.IntPtr(encryptCtx, "EVP_CIPHER_CTX_new encryptCtx");
+            encryptCtx = OpenSSLCrypto.EVP_CIPHER_CTX_new();
+            Check.IntPointer(encryptCtx, "EVP_CIPHER_CTX_new encryptCtx");
 
             Debug.WriteLine("EVP_CIPHER_CTX_new decryptCtx");
-            decryptCtx = openSSLCrypto.EVP_CIPHER_CTX_new();
-            Check.IntPtr(decryptCtx, "EVP_CIPHER_CTX_new decryptCtx");
+            decryptCtx = OpenSSLCrypto.EVP_CIPHER_CTX_new();
+            Check.IntPointer(decryptCtx, "EVP_CIPHER_CTX_new decryptCtx");
 
-            result = openSSLCrypto.RAND_bytes(key, keySize);
+            result = OpenSSLCrypto.RAND_bytes(key, keySize);
             Check.Result(result, 1, "RAND_bytes");
 
-            result = openSSLCrypto.RAND_bytes(iv, ivSize);
+            result = OpenSSLCrypto.RAND_bytes(iv, ivSize);
             Check.Result(result, 1, "RAND_bytes");
         }
 
@@ -87,51 +83,51 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             if (disposedValue)
             {
-                throw new Exception("Called CryptProtectMemory on disposed OpenSSLCryptProtectMemory object");
+                throw new SecureMemoryException("Called CryptProtectMemory on disposed OpenSSLCryptProtectMemory object");
             }
 
             Debug.WriteLine("AllocHGlobal for tmpBuffer: " + length + blockSize);
-            IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
+            var tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
             {
-                openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
-                openSSL11.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
+                LibcLP64.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
+                LibcLP64.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
 
                 lock (cryptProtectLock)
                 {
                     int finalOutputLength;
-                    openSSL11.mprotect(key, pageSize, protRead);
+                    LibcLP64.mprotect(key, pageSize, protRead);
 
                     try
                     {
                         Debug.WriteLine("EVP_EncryptInit_ex");
-                        Check.IntPtr(encryptCtx, "CryptProtectMemory encryptCtx");
-                        Check.IntPtr(key, "CryptProtectMemory key");
-                        Check.IntPtr(iv, "CryptProtectMemory iv");
-                        int result = openSSLCrypto.EVP_EncryptInit_ex(encryptCtx, evpCipher, IntPtr.Zero, key, iv);
+                        Check.IntPointer(encryptCtx, "CryptProtectMemory encryptCtx");
+                        Check.IntPointer(key, "CryptProtectMemory key");
+                        Check.IntPointer(iv, "CryptProtectMemory iv");
+                        var result = OpenSSLCrypto.EVP_EncryptInit_ex(encryptCtx, evpCipher, IntPtr.Zero, key, iv);
                         Check.Result(result, 1, "EVP_EncryptInit_ex");
 
                         int outputLength;
                         Debug.WriteLine("EVP_EncryptUpdate");
-                        result = openSSLCrypto.EVP_EncryptUpdate(encryptCtx, tmpBuffer, out outputLength, memory, length);
+                        result = OpenSSLCrypto.EVP_EncryptUpdate(encryptCtx, tmpBuffer, out outputLength, memory, length);
                         Check.Result(result, 1, "EVP_EncryptUpdate");
 
                         Debug.WriteLine($"EVP_EncryptUpdate outputLength = {outputLength}");
 
-                        IntPtr finalOutput = IntPtr.Add(tmpBuffer, outputLength);
+                        var finalOutput = IntPtr.Add(tmpBuffer, outputLength);
 
                         Debug.WriteLine("EVP_EncryptFinal_ex");
-                        result = openSSLCrypto.EVP_EncryptFinal_ex(encryptCtx, finalOutput, out finalOutputLength);
+                        result = OpenSSLCrypto.EVP_EncryptFinal_ex(encryptCtx, finalOutput, out finalOutputLength);
                         Check.Result(result, 1, "EVP_EncryptFinal_ex");
                         finalOutputLength += outputLength;
                         Debug.WriteLine($"EVP_EncryptFinal_ex outputLength = {finalOutputLength}");
                     }
                     finally
                     {
-                        openSSL11.mprotect(key, pageSize, protNone);
+                        LibcLP64.mprotect(key, pageSize, protNone);
                     }
 
-                    openSSL11.memcpy(memory, tmpBuffer, (ulong)finalOutputLength);
+                    LinuxLibcLP64.memcpy(memory, tmpBuffer, (ulong)finalOutputLength);
                 }
             }
             finally
@@ -147,48 +143,48 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
 
             if (disposedValue)
             {
-                throw new Exception("Called CryptUnprotectMemory on disposed OpenSSLCryptProtectMemory object");
+                throw new SecureMemoryException("Called CryptUnprotectMemory on disposed OpenSSLCryptProtectMemory object");
             }
 
             Debug.WriteLine("AllocHGlobal for tmpBuffer: " + length + blockSize);
-            IntPtr tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
+            var tmpBuffer = Marshal.AllocHGlobal(length + blockSize);
             try
             {
-                openSSL11.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
-                openSSL11.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
+                LibcLP64.mlock(tmpBuffer, (ulong)length + (ulong)blockSize);
+                LibcLP64.madvise(tmpBuffer, (ulong)length + (ulong)blockSize, (int)Madvice.MADV_DONTDUMP);
 
                 lock (cryptProtectLock)
                 {
                     int finalDecryptedLength;
-                    openSSL11.mprotect(key, pageSize, protRead);
+                    LibcLP64.mprotect(key, pageSize, protRead);
                     try
                     {
                         Debug.WriteLine("EVP_DecryptInit_ex");
-                        Check.IntPtr(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
-                        Check.IntPtr(key, "CryptUnprotectMemory key is invalid");
-                        Check.IntPtr(iv, "CryptUnprotectMemory iv is invalid");
-                        int result = openSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
+                        Check.IntPointer(decryptCtx, "CryptUnprotectMemory decryptCtx is invalid");
+                        Check.IntPointer(key, "CryptUnprotectMemory key is invalid");
+                        Check.IntPointer(iv, "CryptUnprotectMemory iv is invalid");
+                        var result = OpenSSLCrypto.EVP_DecryptInit_ex(decryptCtx, evpCipher, IntPtr.Zero, key, iv);
                         Check.Result(result, 1, "EVP_DecryptInit_ex");
 
                         int decryptedLength;
                         Debug.WriteLine("EVP_DecryptUpdate");
-                        result = openSSLCrypto.EVP_DecryptUpdate(decryptCtx, tmpBuffer, out decryptedLength, memory, length);
+                        result = OpenSSLCrypto.EVP_DecryptUpdate(decryptCtx, tmpBuffer, out decryptedLength, memory, length);
                         Check.Result(result, 1, "EVP_DecryptUpdate");
                         Debug.WriteLine($"EVP_DecryptUpdate decryptedLength = {decryptedLength}");
 
-                        IntPtr finalDecrypted = IntPtr.Add(tmpBuffer, decryptedLength);
+                        var finalDecrypted = IntPtr.Add(tmpBuffer, decryptedLength);
                         Debug.WriteLine("EVP_DecryptFinal_ex");
-                        result = openSSLCrypto.EVP_DecryptFinal_ex(decryptCtx, finalDecrypted, out finalDecryptedLength);
+                        result = OpenSSLCrypto.EVP_DecryptFinal_ex(decryptCtx, finalDecrypted, out finalDecryptedLength);
                         finalDecryptedLength += decryptedLength;
                         Debug.WriteLine($"EVP_DecryptFinal_ex finalDecryptedLength = {finalDecryptedLength}");
                     }
                     finally
                     {
-                        openSSL11.mprotect(key, pageSize, protNone);
+                        LibcLP64.mprotect(key, pageSize, protNone);
                     }
 
                     Debug.WriteLine("memcpy");
-                    openSSL11.memcpy(memory, tmpBuffer, (ulong)finalDecryptedLength);
+                    LinuxLibcLP64.memcpy(memory, tmpBuffer, (ulong)finalDecryptedLength);
                 }
             }
             finally
@@ -207,29 +203,23 @@ namespace GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl.Linux
         {
             if (!disposedValue)
             {
-                LinuxOpenSSL11LP64 openSSL11ref = null;
                 try
                 {
                     if (disposing)
                     {
-                        openSSL11ref = openSSL11;
                         Monitor.Enter(cryptProtectLock);
-                    }
-                    else
-                    {
-                        openSSL11ref = new LinuxOpenSSL11LP64();
                     }
 
                     Debug.WriteLine("EVP_CIPHER_CTX_free encryptCtx");
-                    openSSLCrypto.EVP_CIPHER_CTX_free(encryptCtx);
+                    OpenSSLCrypto.EVP_CIPHER_CTX_free(encryptCtx);
                     encryptCtx = IntPtr.Zero;
 
                     Debug.WriteLine("EVP_CIPHER_CTX_free decryptCtx");
-                    openSSLCrypto.EVP_CIPHER_CTX_free(decryptCtx);
+                    OpenSSLCrypto.EVP_CIPHER_CTX_free(decryptCtx);
                     decryptCtx = IntPtr.Zero;
 
                     Debug.WriteLine($"munmap({key}, {pageSize})");
-                    openSSL11ref.munmap(key, pageSize);
+                    LibcLP64.munmap(key, pageSize);
                     key = IntPtr.Zero;
                 }
                 finally

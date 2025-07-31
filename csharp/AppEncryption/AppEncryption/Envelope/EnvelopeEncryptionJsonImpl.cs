@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1816:Call GC.SuppressFinalize correctly", Justification = "This class does not have a finalizer and does not need to suppress finalization.")]
 
 namespace GoDaddy.Asherah.AppEncryption.Envelope
 {
@@ -175,7 +176,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     try
                     {
                         Logger.LogDebug(
-                            "Attempting to update cache for IK {keyId} with created {created}",
+                            "Attempting to update cache for IK {KeyId} with created {Created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
                         intermediateKey = intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
@@ -191,7 +192,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             if (cryptoPolicy.NotifyExpiredIntermediateKeyOnRead() && IsKeyExpiredOrRevoked(intermediateKey))
             {
                 // TODO :  Send notification that a DRK is using an expired IK
-                Logger.LogDebug("NOTIFICATION: Expired IK {keyMeta} in use during read", intermediateKeyMeta);
+                Logger.LogDebug("NOTIFICATION: Expired IK {KeyMeta} in use during read", intermediateKeyMeta);
             }
 
             return ApplyFunctionAndDisposeKey(intermediateKey, functionWithIntermediateKey);
@@ -212,7 +213,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     try
                     {
                         Logger.LogDebug(
-                            "Attempting to update cache for IK {keyId} with created {created}",
+                            "Attempting to update cache for IK {KeyId} with created {Created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
                         intermediateKey = intermediateKeyCache.PutAndGetUsable(intermediateKey.GetCreated(), intermediateKey);
@@ -257,7 +258,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 {
                     try
                     {
-                        Logger.LogDebug("Attempting to update cache for SK {keyMeta}", systemKeyMeta);
+                        Logger.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
                         systemKey = systemKeyCache.PutAndGetUsable(systemKeyMeta.Created, systemKey);
                     }
                     catch (Exception e)
@@ -280,7 +281,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.NotifyExpiredSystemKeyOnRead())
                 {
                     // TODO: Send notification that an SK is expired
-                    Logger.LogDebug("NOTIFICATION: Expired SK {keyMeta} in use during read", systemKeyMeta);
+                    Logger.LogDebug("NOTIFICATION: Expired SK {KeyMeta} in use during read", systemKeyMeta);
                 }
             }
 
@@ -302,7 +303,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     {
                         KeyMeta systemKeyMeta = new KeyMeta(partition.SystemKeyId, systemKey.GetCreated());
 
-                        Logger.LogDebug("Attempting to update cache for SK {keyMeta}", systemKeyMeta);
+                        Logger.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
                         systemKey = systemKeyCache.PutAndGetUsable(systemKeyMeta.Created, systemKey);
                     }
                     catch (Exception e)
@@ -339,7 +340,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     {
                         Logger.LogDebug(
                             e,
-                            "The SK for the IK ({keyId}, {created}) is missing or in an invalid state. Will create new IK instead.",
+                            "The SK for the IK ({KeyId}, {Created}) is missing or in an invalid state. Will create new IK instead.",
                             partition.IntermediateKeyId,
                             keyRecord.Created);
                     }
@@ -350,7 +351,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.IsQueuedKeyRotation())
                 {
                     // TODO : Queued rotation
-                    Logger.LogDebug("Queuing up IK {keyId} for rotation", partition.IntermediateKeyId);
+                    Logger.LogDebug("Queuing up IK {KeyId} for rotation", partition.IntermediateKeyId);
                     try
                     {
                         return WithExistingSystemKey(
@@ -364,7 +365,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     {
                         Logger.LogDebug(
                             e,
-                            "The SK for the IK ({keyId}, {created}) is missing or in an invalid state. Will create new IK instead.",
+                            "The SK for the IK ({KeyId}, {Created}) is missing or in an invalid state. Will create new IK instead.",
                             partition.IntermediateKeyId,
                             keyRecord.Created);
                     }
@@ -386,7 +387,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                         false));
 
                 Logger.LogDebug(
-                    "Attempting to store new IK {keyId}, for created {created}",
+                    "Attempting to store new IK {KeyId}, for created {Created}",
                     partition.IntermediateKeyId,
                     newIntermediateKeyRecord.Created);
 
@@ -398,7 +399,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 else
                 {
                     Logger.LogDebug(
-                        "Attempted to store new IK {keyId} but detected duplicate for created {created}, disposing newly created IK",
+                        "Attempted to store new IK {KeyId} but detected duplicate for created {Created}, disposing newly created IK",
                         partition.IntermediateKeyId,
                         intermediateKey.GetCreated());
                     DisposeKey(intermediateKey, null);
@@ -454,7 +455,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.IsQueuedKeyRotation())
                 {
                     // TODO : Queued rotation
-                    Logger.LogDebug("Queuing up SK {keyId} for rotation", partition.SystemKeyId);
+                    Logger.LogDebug("Queuing up SK {KeyId} for rotation", partition.SystemKeyId);
                     return keyManagementService.DecryptKey(
                         keyRecord.EncryptedKey, keyRecord.Created, keyRecord.Revoked.IfNone(false));
                 }
@@ -471,7 +472,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     systemKey.GetCreated(), null, keyManagementService.EncryptKey(systemKey), false);
 
                 Logger.LogDebug(
-                    "Attempting to store new SK {keyId} for created {created}",
+                    "Attempting to store new SK {KeyId} for created {Created}",
                     partition.SystemKeyId,
                     newSystemKeyRecord.Created);
                 if (metastore.Store(partition.SystemKeyId, newSystemKeyRecord.Created, newSystemKeyRecord.ToJson()))
@@ -481,7 +482,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 else
                 {
                     Logger.LogDebug(
-                        "Attempted to store new SK {keyId} but detected duplicate for created {created}, disposing newly created SK",
+                        "Attempted to store new SK {KeyId} but detected duplicate for created {Created}, disposing newly created SK",
                         partition.SystemKeyId,
                         systemKey.GetCreated());
                     DisposeKey(systemKey, null);
@@ -572,7 +573,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <exception cref="MetadataMissingException">If the EnvelopeKeyRecord is not found.</exception>
         internal virtual EnvelopeKeyRecord LoadKeyRecord(string keyId, DateTimeOffset created)
         {
-            Logger.LogDebug("Attempting to load key with KeyID {keyId} created {created}", keyId, created);
+            Logger.LogDebug("Attempting to load key with KeyID {KeyId} created {Created}", keyId, created);
             return metastore.Load(keyId, created)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson))
@@ -589,7 +590,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="keyId">The id to find the latest key of.</param>
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)
         {
-            Logger.LogDebug("Attempting to load latest key with keyId {keyId}", keyId);
+            Logger.LogDebug("Attempting to load latest key with keyId {KeyId}", keyId);
             return metastore.LoadLatest(keyId)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));
@@ -605,7 +606,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             return cryptoPolicy.IsKeyExpired(cryptoKey.GetCreated()) || cryptoKey.IsRevoked();
         }
 
-        private T ApplyFunctionAndDisposeKey<T>(CryptoKey key, Func<CryptoKey, T> functionWithKey)
+        private static T ApplyFunctionAndDisposeKey<T>(CryptoKey key, Func<CryptoKey, T> functionWithKey)
         {
             try
             {
@@ -621,7 +622,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
         }
 
-        private void DisposeKey(CryptoKey cryptoKey, Exception rootException)
+        private static void DisposeKey(CryptoKey cryptoKey, Exception rootException)
         {
             try
             {

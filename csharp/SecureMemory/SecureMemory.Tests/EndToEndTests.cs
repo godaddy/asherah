@@ -1,4 +1,3 @@
-using GoDaddy.Asherah.SecureMemory.ProtectedMemoryImpl;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,8 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
     [Collection("Logger Fixture collection")]
     public class EndToEndTests
     {
+        private static readonly byte[] SecretBytes = new byte[] { 0, 1, 2, 3 };
+
         [Fact]
         private void EndToEndTest()
         {
@@ -24,9 +25,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             try
             {
                 Debug.WriteLine("SampleTest.EndToEndTest");
-                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
+                using (var secretFactory = new SecureMemorySecretFactory(configuration))
                 {
-                    var secretBytes = new byte[] { 0, 1, 2, 3 };
+                    var secretBytes = SecretBytes;
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
                     {
                         secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));
@@ -34,7 +35,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
                 }
                 Debug.WriteLine("SampleTest.EndToEndTest finish");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.WriteLine("SampleTest.EndToEndTest exception: " + e.Message);
             }
@@ -47,7 +48,7 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             var consoleListener = new ConsoleTraceListener();
             Trace.Listeners.Add(consoleListener);
 
-            var dictionary = new Dictionary<string,string>
+            var dictionary = new Dictionary<string, string>
             {
                 { "secureHeapEngine", "openssl11" },
                 { "heapSize", "32000" },
@@ -61,9 +62,9 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
             try
             {
                 Debug.WriteLine("SampleTest.EndToEndOpenSSLTest");
-                using (ISecretFactory secretFactory = new SecureMemorySecretFactory(configuration))
+                using (var secretFactory = new SecureMemorySecretFactory(configuration))
                 {
-                    var secretBytes = new byte[] { 0, 1, 2, 3 };
+                    var secretBytes = SecretBytes;
                     using (var secret = secretFactory.CreateSecret(secretBytes.Clone() as byte[]))
                     {
                         secret.WithSecretBytes(decryptedBytes => Assert.Equal(secretBytes, decryptedBytes));

@@ -16,6 +16,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests
             LogManager.SetLoggerFactory(LoggerFactory);
         }
 
-        public ILoggerFactory LoggerFactory { get; private set;  }
+        public ILoggerFactory LoggerFactory { get; private set; }
     }
 }

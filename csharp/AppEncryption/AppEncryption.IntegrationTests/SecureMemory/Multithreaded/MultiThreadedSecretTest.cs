@@ -24,7 +24,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.SecureMemory.Multithrea
         [Fact]
         private void MultiThreadedWithSecretBytesAccess()
         {
-            ISecretFactory secretFactory = new TransientSecretFactory(null);
+            TransientSecretFactory secretFactory = new TransientSecretFactory(null);
             Secret secret = secretFactory.CreateSecret(payload.Clone() as byte[]);
 
             // Get the current settings and try to force minWorkers

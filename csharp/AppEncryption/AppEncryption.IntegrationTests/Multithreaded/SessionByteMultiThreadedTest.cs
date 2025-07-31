@@ -32,14 +32,14 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
 
         public void Dispose()
         {
-            sessionBytes.Dispose();
-            sessionFactory.Dispose();
+            sessionBytes?.Dispose();
+            sessionFactory?.Dispose();
         }
 
         [Fact]
         public void SessionEncryptMultipleThreads()
         {
-            Logger.LogInformation("Running SessionEncryptMultipleThreads test with {numThreads} threads", NumThreads);
+            Logger.LogInformation("Running SessionEncryptMultipleThreads test with {NumThreads} threads", NumThreads);
 
             // Get the current settings and try to force minWorkers
             ThreadPool.GetMinThreads(out _, out var currentMinIOC);

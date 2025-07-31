@@ -20,7 +20,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
     [Collection("Logger Fixture collection")]
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
-        private readonly Partition partition =
+        private readonly DefaultPartition partition =
             new DefaultPartition("shopper_123", "payments", "ecomm");
 
         // Setup DateTimeOffsets truncated to seconds and separated by hour to isolate overlap in case of interacting with multiple level keys
@@ -556,7 +556,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             systemKeyCacheMock.Setup(x => x.Get(keyMetaMock.Object.Created)).Returns(systemCryptoKeyMock.Object);
             systemCryptoKeyMock.Setup(x => x.Dispose()).Throws(new AppEncryptionException("fake error"));
 
-            Func<CryptoKey, byte[]> functionWithSystemKey = cryptoKey => new byte[] { };
+            Func<CryptoKey, byte[]> functionWithSystemKey = cryptoKey => Array.Empty<byte>();
 
             Assert.Throws<AppEncryptionException>(() =>
                 envelopeEncryptionJsonImplSpy.Object.WithExistingSystemKey(keyMetaMock.Object, false, functionWithSystemKey));

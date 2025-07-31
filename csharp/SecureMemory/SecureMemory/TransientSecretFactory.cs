@@ -4,9 +4,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace GoDaddy.Asherah.SecureMemory
 {
-    public class TransientSecretFactory : ISecretFactory
+    public sealed class TransientSecretFactory : ISecretFactory
     {
-        private readonly ISecretFactory secretFactory;
+        private readonly SecureMemorySecretFactory secretFactory;
 
         public TransientSecretFactory(IConfiguration configuration = null)
         {
