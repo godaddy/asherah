@@ -61,6 +61,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             using (SecureCryptoKeyDictionary<DateTimeOffset> secureCryptoKeyDictionary =
                 new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()))
             {
+                var mockLogger = new Mock<ILogger>();
                 IEnvelopeEncryption<JObject> envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastore,
@@ -68,8 +69,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     aeadEnvelopeCrypto,
                     cryptoPolicy,
-                    keyManagementService);
-                var mockLogger = new Mock<ILogger>();
+                    keyManagementService,
+                    mockLogger.Object);
                 using (Session<JObject, JObject> sessionJsonImpl =
                     new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl, mockLogger.Object))
                 {

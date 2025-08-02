@@ -233,6 +233,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
                 SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
 
+                var mockLogger = new Mock<ILogger>();
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastoreMock.Object,
@@ -240,9 +241,8 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     intermediateKeyCache,
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
-                    kms);
-
-                var mockLogger = new Mock<ILogger>();
+                    kms,
+                    mockLogger.Object);
                 IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
                     new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson, mockLogger.Object);
 

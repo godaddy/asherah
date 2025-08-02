@@ -419,7 +419,8 @@ namespace GoDaddy.Asherah.AppEncryption
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
-                    keyManagementService);
+                    keyManagementService,
+                    _logger);
             };
 
             if (cryptoPolicy.CanCacheSessions())
