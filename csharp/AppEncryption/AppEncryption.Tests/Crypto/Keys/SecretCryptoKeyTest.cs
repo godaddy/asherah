@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
 {
-    [Collection("Logger Fixture collection")]
     public class SecretCryptoKeyTest : IDisposable
     {
         private const bool Revoked = false;

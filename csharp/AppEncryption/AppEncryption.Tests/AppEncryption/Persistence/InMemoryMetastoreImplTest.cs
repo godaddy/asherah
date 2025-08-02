@@ -5,7 +5,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
-    [Collection("Logger Fixture collection")]
     public class InMemoryMetastoreImplTest : IDisposable
     {
         private readonly InMemoryMetastoreImpl<string> inMemoryMetastoreImpl;

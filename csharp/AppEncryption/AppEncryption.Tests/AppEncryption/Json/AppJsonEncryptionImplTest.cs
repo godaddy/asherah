@@ -13,7 +13,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
 {
-    [Collection("Logger Fixture collection")]
     public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>, IDisposable
     {
         private readonly InMemoryMetastoreImpl<JObject> metastore;

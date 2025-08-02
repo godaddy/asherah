@@ -18,7 +18,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
         private readonly DefaultPartition partition =

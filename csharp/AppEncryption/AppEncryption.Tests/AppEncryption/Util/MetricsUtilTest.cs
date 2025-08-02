@@ -5,7 +5,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Util
 {
-    [Collection("Logger Fixture collection")]
     public class MetricsUtilTest
     {
         [Fact]

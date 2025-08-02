@@ -7,7 +7,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
-    [Collection("Logger Fixture collection")]
     public class SessionJsonImplTest : IDisposable
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;

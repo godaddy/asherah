@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
-    [Collection("Logger Fixture collection")]
     public class CryptoPolicyTest
     {
         private readonly Mock<CryptoPolicy> cryptoPolicyMock;

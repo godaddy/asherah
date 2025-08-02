@@ -24,7 +24,6 @@ using static GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
-    [Collection("Logger Fixture collection")]
     public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>
     {
         private const string UsEast1 = "us-east-1";
