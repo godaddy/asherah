@@ -9,6 +9,7 @@ using Amazon.Runtime;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -122,7 +123,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadSuccess()
+        public void TestLoadSuccess()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
 
@@ -131,7 +132,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadWithNoResultShouldReturnEmpty()
+        public void TestLoadWithNoResultShouldReturnEmpty()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load("fake_key", created);
 
@@ -139,7 +140,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadWithFailureShouldReturnEmpty()
+        public void TestLoadWithFailureShouldReturnEmpty()
         {
             Dispose();
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.Load(TestKey, created);
@@ -148,7 +149,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithSingleRecord()
+        public void TestLoadLatestWithSingleRecord()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
 
@@ -157,7 +158,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithSingleRecordAndSuffix()
+        public void TestLoadLatestWithSingleRecordAndSuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -171,7 +172,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private async Task TestLoadLatestWithMultipleRecords()
+        public async Task TestLoadLatestWithMultipleRecords()
         {
             DateTimeOffset createdMinusOneHour = created.AddHours(-1);
             DateTimeOffset createdPlusOneHour = created.AddHours(1);
@@ -230,7 +231,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithNoResultShouldReturnEmpty()
+        public void TestLoadLatestWithNoResultShouldReturnEmpty()
         {
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest("fake_key");
 
@@ -238,7 +239,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestLoadLatestWithFailureShouldReturnEmpty()
+        public void TestLoadLatestWithFailureShouldReturnEmpty()
         {
             Dispose();
             Option<JObject> actualJsonObject = dynamoDbMetastoreImpl.LoadLatest(TestKey);
@@ -247,7 +248,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestStore()
+        public void TestStore()
         {
             bool actualValue = dynamoDbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
 
@@ -255,7 +256,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestStoreWithSuffixSuccess()
+        public void TestStoreWithSuffixSuccess()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -267,7 +268,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestStoreWithDbErrorShouldThrowException()
+        public void TestStoreWithDbErrorShouldThrowException()
         {
             Dispose();
             Assert.Throws<AppEncryptionException>(() =>
@@ -275,7 +276,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestStoreWithDuplicateShouldReturnFalse()
+        public void TestStoreWithDuplicateShouldReturnFalse()
         {
             DateTimeOffset now = DateTimeOffset.Now;
             bool firstAttempt = dynamoDbMetastoreImpl.Store(TestKey, now, JObject.FromObject(keyRecord));
@@ -286,7 +287,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithEndPointConfiguration()
+        public void TestBuilderPathWithEndPointConfiguration()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -296,7 +297,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithRegion()
+        public void TestBuilderPathWithRegion()
         {
             Mock<Builder> builder = new Mock<Builder>(Region);
             Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
@@ -315,7 +316,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithKeySuffix()
+        public void TestBuilderPathWithKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -327,7 +328,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithoutKeySuffix()
+        public void TestBuilderPathWithoutKeySuffix()
         {
             DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -338,7 +339,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithCredentials()
+        public void TestBuilderPathWithCredentials()
         {
             var dbMetastoreImpl = NewBuilder(Region)
                 .WithEndPointConfiguration(serviceUrl, Region)
@@ -349,7 +350,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestBuilderPathWithInvalidCredentials()
+        public void TestBuilderPathWithInvalidCredentials()
         {
             var emptySecretKey = string.Empty;
             Assert.ThrowsAny<Exception>(() => NewBuilder(Region)
@@ -359,7 +360,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private async Task TestBuilderPathWithTableName()
+        public async Task TestBuilderPathWithTableName()
         {
             const string tempTableName = "DummyTable";
 
@@ -399,7 +400,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
-        private void TestPrimaryBuilderPath()
+        public void TestPrimaryBuilderPath()
         {
             Mock<Builder> builder = new Mock<Builder>(Region);
             Table loadTable = (Table)new TableBuilder(amazonDynamoDbClient, "EncryptionKey")
@@ -414,6 +415,55 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 .Build();
 
             Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerEnabled()
+        {
+            var mockLogger = new Mock<ILogger>();
+
+            var dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .WithLogger(mockLogger.Object)
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerDisabled()
+        {
+            var dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerAndCredentials()
+        {
+            var mockLogger = new Mock<ILogger>();
+
+            var dbMetastoreImpl = NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .WithLogger(mockLogger.Object)
+                .WithCredentials(new BasicAWSCredentials("dummykey", "dummy_secret"))
+                .Build();
+
+            Assert.NotNull(dbMetastoreImpl);
+        }
+
+        [Fact]
+        public void TestWithLoggerReturnsCorrectInterface()
+        {
+            var mockLogger = new Mock<ILogger>();
+
+            var buildStep = NewBuilder(Region)
+                .WithEndPointConfiguration(serviceUrl, Region)
+                .WithLogger(mockLogger.Object);
+
+            Assert.IsAssignableFrom<IBuildStep>(buildStep);
         }
     }
 }
