@@ -242,8 +242,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     cryptoPolicy,
                     kms);
 
+                var mockLogger = new Mock<ILogger>();
                 IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
-                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
+                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson, mockLogger.Object);
 
                 return new object[]
                 {

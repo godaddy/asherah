@@ -309,7 +309,7 @@ namespace GoDaddy.Asherah.AppEncryption
 
         internal IEnvelopeEncryption<byte[]> GetEnvelopeEncryptionBytes(string partitionId)
         {
-            return new EnvelopeEncryptionBytesImpl(GetEnvelopeEncryptionJson(partitionId));
+            return new EnvelopeEncryptionBytesImpl(GetEnvelopeEncryptionJson(partitionId), _logger);
         }
 
         internal Partition GetPartition(string partitionId)
