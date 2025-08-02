@@ -11,6 +11,7 @@ using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -38,8 +39,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             KeyState metaSK,
             Partition partition)
         {
+            var mockLogger = new Mock<ILogger>();
             using (Session<JObject, byte[]> sessionJsonImpl =
-                new SessionJsonImpl<byte[]>(envelopeEncryptionJson))
+                new SessionJsonImpl<byte[]>(envelopeEncryptionJson, mockLogger.Object))
             {
                 EncryptMetastoreInteractions encryptMetastoreInteractions =
                     new EncryptMetastoreInteractions(cacheIK, metaIK, cacheSK, metaSK);

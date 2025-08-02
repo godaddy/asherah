@@ -6,6 +6,8 @@ using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -67,8 +69,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                     aeadEnvelopeCrypto,
                     cryptoPolicy,
                     keyManagementService);
+                var mockLogger = new Mock<ILogger>();
                 using (Session<JObject, JObject> sessionJsonImpl =
-                    new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl))
+                    new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl, mockLogger.Object))
                 {
                     Asherah.AppEncryption.Util.Json testJson = new Asherah.AppEncryption.Util.Json();
                     testJson.Put("Test", testData);

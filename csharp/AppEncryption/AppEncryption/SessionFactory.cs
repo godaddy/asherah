@@ -262,7 +262,7 @@ namespace GoDaddy.Asherah.AppEncryption
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption = GetEnvelopeEncryptionBytes(partitionId);
 
-            return new SessionJsonImpl<byte[]>(envelopeEncryption);
+            return new SessionJsonImpl<byte[]>(envelopeEncryption, _logger);
         }
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace GoDaddy.Asherah.AppEncryption
         {
             IEnvelopeEncryption<JObject> envelopeEncryption = GetEnvelopeEncryptionJson(partitionId);
 
-            return new SessionJsonImpl<JObject>(envelopeEncryption);
+            return new SessionJsonImpl<JObject>(envelopeEncryption, _logger);
         }
 
         /// <summary>
