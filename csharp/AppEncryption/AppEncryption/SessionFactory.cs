@@ -11,7 +11,6 @@ using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -34,7 +33,7 @@ namespace GoDaddy.Asherah.AppEncryption
         // Percentage of session cache to compact if it exceeds size limits and remove unused sessions
         private const int CompactionPercentage = 50;
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<SessionFactory>();
+        private readonly ILogger _logger;
 
         private readonly string productId;
         private readonly string serviceId;
@@ -66,6 +65,34 @@ namespace GoDaddy.Asherah.AppEncryption
             SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
             CryptoPolicy cryptoPolicy,
             KeyManagementService keyManagementService)
+            : this(productId, serviceId, metastore, systemKeyCache, cryptoPolicy, keyManagementService, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionFactory"/> class with a custom logger.
+        /// </summary>
+        ///
+        /// <param name="productId">A unique identifier for a product.</param>
+        /// <param name="serviceId">A unique identifier for a service.</param>
+        /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
+        /// keys.</param>
+        /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
+        /// caching system keys.</param>
+        /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
+        /// the various behaviors of Asherah.</param>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// implementation that generates the top level master key and encrypts the system keys using the master key.
+        /// </param>
+        /// <param name="logger">A logger implementation.</param>
+        public SessionFactory(
+            string productId,
+            string serviceId,
+            IMetastore<JObject> metastore,
+            SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
+            CryptoPolicy cryptoPolicy,
+            KeyManagementService keyManagementService,
+            ILogger logger)
         {
             this.productId = productId;
             this.serviceId = serviceId;
@@ -73,6 +100,7 @@ namespace GoDaddy.Asherah.AppEncryption
             this.systemKeyCache = systemKeyCache;
             this.cryptoPolicy = cryptoPolicy;
             this.keyManagementService = keyManagementService;
+            this._logger = logger;
             semaphoreLocks = new ConcurrentDictionary<string, object>();
             sessionCache = new MemoryCache(new MemoryCacheOptions());
         }
@@ -158,6 +186,15 @@ namespace GoDaddy.Asherah.AppEncryption
             IBuildStep WithMetrics(IMetrics metrics);
 
             /// <summary>
+            /// Set the logger for the <see cref="SessionFactory"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            ///
+            /// <returns>The current <see cref="IBuildStep"/> instance with logger set.</returns>
+            IBuildStep WithLogger(ILogger logger);
+
+            /// <summary>
             /// Builds the finalized session factory with the parameters specified in the <see cref="Builder"/>.
             /// </summary>
             ///
@@ -191,7 +228,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "unexpected exception during skCache close");
+                _logger?.LogError(e, "unexpected exception during skCache close");
             }
 
             // Actually dispose of all the remaining sessions that might be active in the cache.
@@ -364,7 +401,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Unexpected exception during dispose");
+                _logger?.LogError(e, "Unexpected exception during dispose");
             }
         }
 
@@ -459,6 +496,7 @@ namespace GoDaddy.Asherah.AppEncryption
             private CryptoPolicy cryptoPolicy;
             private KeyManagementService keyManagementService;
             private IMetrics metrics;
+            private ILogger _logger;
 
             internal Builder(string productId, string serviceId)
             {
@@ -508,6 +546,12 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
+            public IBuildStep WithLogger(ILogger logger)
+            {
+                this._logger = logger;
+                return this;
+            }
+
             public SessionFactory Build()
             {
                 // If no metrics provided, we just create a disabled/no-op one
@@ -526,7 +570,8 @@ namespace GoDaddy.Asherah.AppEncryption
                     metastore,
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     cryptoPolicy,
-                    keyManagementService);
+                    keyManagementService,
+                    _logger);
             }
         }
     }
