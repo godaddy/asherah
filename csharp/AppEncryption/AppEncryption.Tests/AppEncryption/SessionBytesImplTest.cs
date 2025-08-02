@@ -1,5 +1,6 @@
 using System;
 using GoDaddy.Asherah.AppEncryption.Envelope;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -9,23 +10,25 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
     public class SessionBytesImplTest : IDisposable
     {
         private readonly Mock<IEnvelopeEncryption<string>> envelopeEncryptionMock;
+        private readonly Mock<ILogger> mockLogger;
         private readonly SessionBytesImpl<string> sessionBytesImpl;
 
         public SessionBytesImplTest()
         {
             envelopeEncryptionMock = new Mock<IEnvelopeEncryption<string>>();
-            sessionBytesImpl = new SessionBytesImpl<string>(envelopeEncryptionMock.Object);
+            mockLogger = new Mock<ILogger>();
+            sessionBytesImpl = new SessionBytesImpl<string>(envelopeEncryptionMock.Object, mockLogger.Object);
         }
 
         [Fact]
-        private void TestConstructor()
+        public void TestConstructor()
         {
-            SessionBytesImpl<string> session = new SessionBytesImpl<string>(envelopeEncryptionMock.Object);
+            SessionBytesImpl<string> session = new SessionBytesImpl<string>(envelopeEncryptionMock.Object, mockLogger.Object);
             Assert.NotNull(session);
         }
 
         [Fact]
-        private void TestDecrypt()
+        public void TestDecrypt()
         {
             byte[] expectedBytes = { 0, 1, 2, 3, 4 };
 
@@ -36,7 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestEncrypt()
+        public void TestEncrypt()
         {
             const string expectedDataRowRecord = "some data row record";
 
@@ -47,14 +50,14 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestDispose()
+        public void TestDispose()
         {
             sessionBytesImpl.Dispose();
             envelopeEncryptionMock.Verify(x => x.Dispose());
         }
 
         [Fact]
-        private void TestCloseWithCloseFailShouldReturn()
+        public void TestCloseWithCloseFailShouldReturn()
         {
             envelopeEncryptionMock.Setup(x => x.Dispose()).Throws<SystemException>();
             sessionBytesImpl.Dispose();
