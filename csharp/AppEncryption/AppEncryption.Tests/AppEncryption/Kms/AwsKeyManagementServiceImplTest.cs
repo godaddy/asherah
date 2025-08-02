@@ -57,24 +57,28 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 
             awsKmsClientFactoryMock.Setup(x => x.CreateAwsKmsClient(It.IsAny<string>(), It.IsAny<AWSCredentials>()))
                 .Returns(amazonKeyManagementServiceClientMock.Object);
+            var mockLogger = new Mock<ILogger>();
             awsKeyManagementServiceImplSpy = new Mock<AwsKeyManagementServiceImpl>(
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentials)
+                credentials,
+                mockLogger.Object)
             { CallBase = true };
         }
 
         [Fact]
         public void TestRegionToArnAndClientDictionaryGeneration()
         {
+            var mockLogger = new Mock<ILogger>();
             AwsKeyManagementServiceImpl awsKeyManagementService = new AwsKeyManagementServiceImpl(
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentials);
+                credentials,
+                mockLogger.Object);
             IDictionaryEnumerator dictionaryEnumerator =
                 awsKeyManagementService.RegionToArnAndClientDictionary.GetEnumerator();
             dictionaryEnumerator.MoveNext();

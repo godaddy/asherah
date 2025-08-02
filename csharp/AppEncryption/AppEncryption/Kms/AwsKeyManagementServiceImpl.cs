@@ -103,15 +103,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             });
         }
 
-        internal AwsKeyManagementServiceImpl(
-            Dictionary<string, string> regionToArnDictionary,
-            string preferredRegion,
-            AeadEnvelopeCrypto crypto,
-            AwsKmsClientFactory awsKmsClientFactory,
-            AWSCredentials credentials)
-            : this(regionToArnDictionary, preferredRegion, crypto, awsKmsClientFactory, credentials, null)
-        {
-        }
+
 
         public interface IBuildStep
         {
