@@ -23,27 +23,6 @@ if _, err := r(buf); err != nil {
 - Propagate errors up to callers who can implement retry logic
 - Add monitoring/alerting for entropy failures
 
-## 🟡 High-Impact Performance Issues
-
-### 2. Unbounded Simple Cache (Partially Fixed)
-**Location**: `key_cache.go:78-131`
-
-**Current Status**:
-- Default cache now uses bounded LRU/LFU cache with configurable size
-- Simple cache still exists for users who explicitly set `cachePolicy = "simple"`
-- Simple cache still never evicts keys and grows without bounds
-
-**Why Complete Fix Needed**:
-- Users who explicitly choose "simple" cache still face OOM risk
-- No warning about unbounded growth when selecting simple cache
-- Memory usage grows linearly with unique partition IDs
-
-**Remediation Options**:
-1. Remove simple cache entirely (breaking change)
-2. Add size limit to simple cache with basic LRU eviction
-3. Add warning logs when simple cache is selected
-4. Deprecate simple cache and remove in next major version
-
 ## 🟠 Concurrency and Race Condition Issues
 
 ### 1. Goroutine Leak in Session Cache
@@ -140,15 +119,12 @@ return f.systemKeys.Close()
 1. **Immediate (Security Critical)**:
    - Panic on RNG failure (#1)
 
-2. **High Priority (Performance Critical)**:
-   - Unbounded cache growth (#2)
-
-3. **Medium Priority (Reliability)**:
+2. **High Priority (Reliability)**:
    - Goroutine leak (Concurrency #1)
    - Nil pointer dereference (Concurrency #3)
    - Potential double-close (Concurrency #2)
 
-4. **Lower Priority (Observability)**:
+3. **Lower Priority (Observability)**:
    - Silent error swallowing (Other #1)
    - Resource leak on close error (Other #2)
 
