@@ -168,6 +168,10 @@ type keyCache struct {
 	latest map[string]KeyMeta
 
 	cacheType cacheKeyType
+	
+	// orphaned tracks keys that were evicted from cache but still have references
+	orphaned []*cachedCryptoKey
+	orphanedMu sync.Mutex
 }
 
 // cacheKeyType is used to identify the type of key cache.
@@ -211,6 +215,7 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 		latest: make(map[string]KeyMeta),
 
 		cacheType: t,
+		orphaned: make([]*cachedCryptoKey, 0),
 	}
 
 	onEvict := func(key string, value cacheEntry) {
@@ -218,8 +223,11 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 
 		if !value.key.Close() {
 			// Key still has active references and couldn't be closed.
-			// This key is now orphaned (not in cache, but still allocated).
-			// It will be cleaned up when the last reference is dropped.
+			// Track it so we can clean it up later.
+			c.orphanedMu.Lock()
+			c.orphaned = append(c.orphaned, value.key)
+			c.orphanedMu.Unlock()
+			
 			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
 				key, value.key.refs.Load())
 		}
@@ -264,6 +272,12 @@ func isReloadRequired(entry cacheEntry, checkInterval time.Duration) bool {
 // is not present in the cache it will retrieve the key using the provided loader
 // and store the key if an error is not returned.
 func (c *keyCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
+	// Periodically clean orphaned keys (every 100th access)
+	// Don't do it async to avoid races during shutdown
+	if c.keys.Len()%100 == 0 {
+		c.cleanOrphaned()
+	}
+	
 	c.rw.RLock()
 	k, ok := c.getFresh(id)
 	c.rw.RUnlock()
@@ -442,13 +456,47 @@ func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
 	return internal.IsKeyInvalid(key, c.policy.ExpireKeyAfter)
 }
 
+// cleanOrphaned attempts to close orphaned keys that no longer have references
+func (c *keyCache) cleanOrphaned() {
+	c.orphanedMu.Lock()
+	defer c.orphanedMu.Unlock()
+	
+	remaining := make([]*cachedCryptoKey, 0, len(c.orphaned))
+	for _, key := range c.orphaned {
+		if !key.Close() {
+			// Still has references, keep it
+			remaining = append(remaining, key)
+		}
+	}
+	
+	if len(remaining) < len(c.orphaned) {
+		log.Debugf("%s cleaned up %d orphaned keys, %d still referenced\n", 
+			c, len(c.orphaned)-len(remaining), len(remaining))
+	}
+	
+	c.orphaned = remaining
+}
+
 // Close frees all memory locked by the keys in this cache.
 // It MUST be called after a session is complete to avoid
 // running into MEMLOCK limits.
 func (c *keyCache) Close() error {
 	log.Debugf("%s closing\n", c)
 
-	return c.keys.Close()
+	// Clean up any orphaned keys first
+	c.cleanOrphaned()
+	
+	// Close the cache
+	err := c.keys.Close()
+	
+	// Try once more to clean orphaned keys
+	c.cleanOrphaned()
+	
+	if len(c.orphaned) > 0 {
+		log.Debugf("%s WARNING: %d keys still orphaned with active references\n", c, len(c.orphaned))
+	}
+	
+	return err
 }
 
 // String returns a string representation of this cache.
