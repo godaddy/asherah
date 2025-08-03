@@ -13,7 +13,7 @@ import (
 )
 
 // cachedCryptoKey is a wrapper around a CryptoKey that tracks concurrent access.
-// 
+//
 // Reference counting ensures proper cleanup:
 // - Starts with ref count = 1 (owned by cache)
 // - Incremented when retrieved via GetOrLoad
@@ -272,7 +272,7 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 	return c
 }
 
-// startOrphanCleanup starts a background goroutine to periodically clean orphaned keys
+// startOrphanCleanup starts a background goroutine to periodically clean orphaned keys.
 func (c *keyCache) startOrphanCleanup() {
 	c.cleanupStop = make(chan struct{})
 	c.cleanupDone.Add(1)
@@ -486,7 +486,7 @@ func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
 	return internal.IsKeyInvalid(key, c.policy.ExpireKeyAfter)
 }
 
-// cleanOrphaned attempts to close orphaned keys that no longer have references
+// cleanOrphaned attempts to close orphaned keys that no longer have references.
 func (c *keyCache) cleanOrphaned() {
 	// Swap the list to minimize lock time
 	c.orphanedMu.Lock()
