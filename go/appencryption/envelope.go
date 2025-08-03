@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/godaddy/asherah/go/securememory"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
+	"github.com/godaddy/asherah/go/securememory"
 )
 
 // MetricsPrefix prefixes all metrics names.
@@ -198,7 +198,10 @@ func (e *envelopeEncryption) tryStoreSystemKey(ctx context.Context, sk *internal
 // isEnvelopeInvalid checks if the envelope key record is revoked or has an expired key.
 func (e *envelopeEncryption) isEnvelopeInvalid(ekr *EnvelopeKeyRecord) bool {
 	// TODO Add key rotation policy check. If not inline, then can return valid even if expired
-	return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
+	if e == nil {
+		return true
+	}
+	return internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
 }
 
 func (e *envelopeEncryption) generateKey() (*internal.CryptoKey, error) {
