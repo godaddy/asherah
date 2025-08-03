@@ -94,4 +94,3 @@ func TestCachedCryptoKey_LogRaceCondition(t *testing.T) {
 		t.Log("Race condition would have occurred with separate Add/Load operations")
 	}
 }
-
