@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -139,14 +140,14 @@ func TestSessionCleanupProcessor_QueueFull(t *testing.T) {
 	assert.True(t, success, "First task should be accepted")
 
 	// Try to fill up the queue - should eventually fall back to synchronous execution
-	var syncExecuted bool
+	var syncExecuted atomic.Bool
 	key2 := internal.NewCryptoKeyForTest(time.Now().Unix(), false)
 	mockMu2 := new(sync.Mutex)
 	syncEnc := &sharedEncryption{
 		Encryption: &mockEncryption{
 			key: key2,
 			onClose: func() {
-				syncExecuted = true
+				syncExecuted.Store(true)
 			},
 		},
 		mu:            mockMu2,
@@ -161,7 +162,7 @@ func TestSessionCleanupProcessor_QueueFull(t *testing.T) {
 	}
 
 	// Should have fallen back to synchronous execution
-	assert.True(t, syncExecuted, "Should have executed synchronously when queue full")
+	assert.True(t, syncExecuted.Load(), "Should have executed synchronously when queue full")
 }
 
 // mockEncryption is a test double for Encryption.
