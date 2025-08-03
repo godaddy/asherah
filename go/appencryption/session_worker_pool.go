@@ -1,10 +1,23 @@
 package appencryption
 
 import (
+	"context"
 	"sync"
+	"time"
 
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
+
+// nopEncryption is a no-op implementation of Encryption for testing.
+type nopEncryption struct{}
+
+func (nopEncryption) EncryptPayload(context.Context, []byte) (*DataRowRecord, error) { 
+	return nil, nil 
+}
+func (nopEncryption) DecryptDataRowRecord(context.Context, DataRowRecord) ([]byte, error) { 
+	return nil, nil 
+}
+func (nopEncryption) Close() error { return nil }
 
 // sessionCleanupProcessor manages a single goroutine to handle session cleanup.
 // This provides minimal overhead for Lambda while preventing unbounded goroutines.
@@ -77,11 +90,26 @@ func (p *sessionCleanupProcessor) close() {
 	})
 }
 
+// waitForEmpty blocks until the work queue is empty.
+// This is primarily used for testing to ensure cleanup has completed.
+func (p *sessionCleanupProcessor) waitForEmpty() {
+	// Wait for queue to drain
+	for i := 0; i < 200; i++ { // max 2 seconds
+		if len(p.workChan) == 0 {
+			// Give processor more time to finish processing any in-flight items
+			time.Sleep(time.Millisecond * 100)
+			return
+		}
+		time.Sleep(time.Millisecond * 10)
+	}
+}
+
 // globalSessionCleanupProcessor is the shared cleanup processor for all session caches.
 // Using a global processor prevents multiple caches from creating their own processors.
 var (
 	globalSessionCleanupProcessor     *sessionCleanupProcessor
 	globalSessionCleanupProcessorOnce sync.Once
+	globalSessionCleanupProcessorMu   sync.Mutex
 )
 
 // getSessionCleanupProcessor returns the global session cleanup processor, creating it if needed.
@@ -93,4 +121,18 @@ func getSessionCleanupProcessor() *sessionCleanupProcessor {
 	})
 
 	return globalSessionCleanupProcessor
+}
+
+// resetGlobalSessionCleanupProcessor resets the global processor for testing.
+// This should only be used in tests.
+func resetGlobalSessionCleanupProcessor() {
+	globalSessionCleanupProcessorMu.Lock()
+	defer globalSessionCleanupProcessorMu.Unlock()
+	
+	if globalSessionCleanupProcessor != nil {
+		globalSessionCleanupProcessor.close()
+	}
+	
+	globalSessionCleanupProcessor = nil
+	globalSessionCleanupProcessorOnce = sync.Once{}
 }

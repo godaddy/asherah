@@ -184,6 +184,9 @@ func TestSessionCacheCount(t *testing.T) {
 }
 
 func TestSessionCacheMaxCount(t *testing.T) {
+	// Ensure processor is empty before starting
+	getSessionCleanupProcessor().waitForEmpty()
+	
 	totalSessions := 20
 	maxSessions := 10
 	b := newSessionBucket()
@@ -212,6 +215,9 @@ func TestSessionCacheMaxCount(t *testing.T) {
 
 	// assert the others have been closed
 	assert.Eventually(t, func() bool {
+		// Wait for cleanup processor to process items each time
+		getSessionCleanupProcessor().waitForEmpty()
+		
 		closed := 0
 		for i := 0; i < totalSessions; i++ {
 			s := sessions[i]
@@ -221,7 +227,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 				closed++
 			}
 		}
-
+		
 		return closed == totalSessions-maxSessions
 	}, time.Second*10, time.Millisecond*100)
 }
@@ -300,6 +306,9 @@ func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 }
 
 func TestSharedSessionCloseOnCacheClose(t *testing.T) {
+	// Ensure processor is empty before starting
+	getSessionCleanupProcessor().waitForEmpty()
+	
 	b := newSessionBucket()
 
 	cache := newSessionCache(b.load, NewCryptoPolicy())
@@ -319,11 +328,16 @@ func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 	cache.Close()
 
 	assert.Eventually(t, func() bool {
+		// Wait for cleanup processor to process items each time
+		getSessionCleanupProcessor().waitForEmpty()
 		return b.IsClosed(s)
 	}, time.Second*10, time.Millisecond*100)
 }
 
 func TestSharedSessionCloseOnEviction(t *testing.T) {
+	// Ensure processor is empty before starting
+	getSessionCleanupProcessor().waitForEmpty()
+	
 	b := newSessionBucket()
 
 	const max = 10
@@ -357,6 +371,9 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	s2.Close()
 
 	assert.Eventually(t, func() bool {
+		// Wait for cleanup processor to process items each time
+		getSessionCleanupProcessor().waitForEmpty()
+		
 		count := 0
 
 		// One--and only one--of the first batch items should be closed
