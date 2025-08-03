@@ -23,26 +23,6 @@ if _, err := r(buf); err != nil {
 - Propagate errors up to callers who can implement retry logic
 - Add monitoring/alerting for entropy failures
 
-## 🟠 Concurrency and Race Condition Issues
-
-
-### 1. Nil Pointer Dereference
-**Location**: `envelope.go:201`
-```go
-return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
-```
-
-**Why Fix**:
-- Boolean short-circuit doesn't prevent `e.Policy` access
-- Causes panic in production when envelope is nil
-- Hard to test all error paths
-- Production crashes impact availability
-
-**Remediation**:
-- Separate nil check from other conditions
-- Return early on nil
-- Add defensive programming practices
-
 ## 🟢 Other Notable Issues
 
 ### 1. Silent Error Swallowing
@@ -87,10 +67,7 @@ return f.systemKeys.Close()
 1. **Immediate (Security Critical)**:
    - Panic on RNG failure (#1)
 
-2. **High Priority (Reliability)**:
-   - Nil pointer dereference (Concurrency #1)
-
-3. **Lower Priority (Observability)**:
+2. **Lower Priority (Observability)**:
    - Silent error swallowing (Other #1)
    - Resource leak on close error (Other #2)
 
