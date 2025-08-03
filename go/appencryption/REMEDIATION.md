@@ -25,30 +25,8 @@ if _, err := r(buf); err != nil {
 
 ## 🟠 Concurrency and Race Condition Issues
 
-### 1. ~~Goroutine Leak in Session Cache~~ **FIXED**
-**Location**: `session_cache.go:156` (Previously: `go v.encryption.(*sharedEncryption).Remove()`)
 
-**Fix Applied**:
-- Implemented single cleanup goroutine with buffered channel (10,000 capacity)
-- Eviction callbacks now submit work to single processor instead of spawning unlimited goroutines
-- Added graceful fallback to synchronous cleanup when channel queue is full
-- Single-goroutine design prevents unbounded goroutine creation while being Lambda-friendly
-
-### 2. Potential Double-Close
-**Location**: `session_cache.go:49-59`
-
-**Why Fix**:
-- No idempotency check in `Remove()`
-- Double-close causes panic or undefined behavior
-- In distributed systems, cleanup races are common
-- Production crashes from double-close are hard to debug
-
-**Remediation**:
-- Add `sync.Once` or atomic flag for single execution
-- Make Close() operations idempotent
-- Add state tracking to prevent invalid transitions
-
-### 3. Nil Pointer Dereference
+### 1. Nil Pointer Dereference
 **Location**: `envelope.go:201`
 ```go
 return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
@@ -110,9 +88,7 @@ return f.systemKeys.Close()
    - Panic on RNG failure (#1)
 
 2. **High Priority (Reliability)**:
-   - Goroutine leak (Concurrency #1)
-   - Nil pointer dereference (Concurrency #3)
-   - Potential double-close (Concurrency #2)
+   - Nil pointer dereference (Concurrency #1)
 
 3. **Lower Priority (Observability)**:
    - Silent error swallowing (Other #1)
