@@ -31,7 +31,7 @@ func (m *benchmarkMetastore) Load(ctx context.Context, keyID string, created int
 }
 
 func (m *benchmarkMetastore) LoadLatest(ctx context.Context, keyID string) (*EnvelopeKeyRecord, error) {
-	return nil, nil // Simulate no existing key  
+	return nil, nil // Simulate no existing key
 }
 
 func (m *benchmarkMetastore) Store(ctx context.Context, keyID string, created int64, envelope *EnvelopeKeyRecord) (bool, error) {
@@ -83,7 +83,7 @@ func newBenchmarkSessionFactory(b *testing.B) *SessionFactory {
 		Product: "benchmark",
 		Service: "test",
 	}
-	
+
 	return NewSessionFactory(
 		config,
 		&benchmarkMetastore{},
