@@ -134,7 +134,7 @@ func (s *simpleCache) Capacity() int {
 func (s *simpleCache) Close() error {
 	for k, entry := range s.m {
 		if !entry.key.Close() {
-			log.Debugf("[simpleCache.Close] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
+			log.Debugf("[simpleCache.Close] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n",
 				k, entry.key.refs.Load())
 		}
 	}
@@ -168,11 +168,11 @@ type keyCache struct {
 	latest map[string]KeyMeta
 
 	cacheType cacheKeyType
-	
+
 	// orphaned tracks keys that were evicted from cache but still have references
-	orphaned []*cachedCryptoKey
+	orphaned   []*cachedCryptoKey
 	orphanedMu sync.Mutex
-	
+
 	// cleanup management
 	cleanupStop chan struct{}
 	cleanupDone sync.WaitGroup
@@ -220,7 +220,7 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 		latest: make(map[string]KeyMeta),
 
 		cacheType: t,
-		orphaned: make([]*cachedCryptoKey, 0),
+		orphaned:  make([]*cachedCryptoKey, 0),
 	}
 
 	onEvict := func(key string, value cacheEntry) {
@@ -232,10 +232,10 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 			c.orphanedMu.Lock()
 			c.orphaned = append(c.orphaned, value.key)
 			c.orphanedMu.Unlock()
-			
-			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
+
+			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n",
 				key, value.key.refs.Load())
-			
+
 			// NOTE: Orphaned keys are cleaned up by a background goroutine every 30 seconds.
 			// This prevents memory accumulation while keeping cleanup out of the hot path.
 			// In practice, orphaning should be rare as it only happens when a key is evicted
@@ -276,12 +276,12 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 func (c *keyCache) startOrphanCleanup() {
 	c.cleanupStop = make(chan struct{})
 	c.cleanupDone.Add(1)
-	
+
 	go func() {
 		defer c.cleanupDone.Done()
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ticker.C:
@@ -493,7 +493,7 @@ func (c *keyCache) cleanOrphaned() {
 	toClean := c.orphaned
 	c.orphaned = make([]*cachedCryptoKey, 0)
 	c.orphanedMu.Unlock()
-	
+
 	// Process outside the lock
 	remaining := make([]*cachedCryptoKey, 0)
 	for _, key := range toClean {
@@ -502,12 +502,12 @@ func (c *keyCache) cleanOrphaned() {
 			remaining = append(remaining, key)
 		}
 	}
-	
+
 	if len(toClean) > 0 && len(remaining) < len(toClean) {
-		log.Debugf("%s cleaned up %d orphaned keys, %d still referenced\n", 
+		log.Debugf("%s cleaned up %d orphaned keys, %d still referenced\n",
 			c, len(toClean)-len(remaining), len(remaining))
 	}
-	
+
 	// Put back the ones we couldn't close
 	if len(remaining) > 0 {
 		c.orphanedMu.Lock()
@@ -521,7 +521,7 @@ func (c *keyCache) cleanOrphaned() {
 // running into MEMLOCK limits.
 func (c *keyCache) Close() error {
 	var closeErr error
-	
+
 	c.cleanupOnce.Do(func() {
 		log.Debugf("%s closing\n", c)
 
@@ -533,18 +533,18 @@ func (c *keyCache) Close() error {
 
 		// Clean up any orphaned keys first
 		c.cleanOrphaned()
-		
+
 		// Close the cache
 		closeErr = c.keys.Close()
-		
+
 		// Try once more to clean orphaned keys
 		c.cleanOrphaned()
-		
+
 		if len(c.orphaned) > 0 {
 			log.Debugf("%s WARNING: %d keys still orphaned with active references\n", c, len(c.orphaned))
 		}
 	})
-	
+
 	return closeErr
 }
 

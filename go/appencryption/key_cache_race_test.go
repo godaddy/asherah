@@ -34,13 +34,13 @@ func TestCachedCryptoKey_RaceConditionFixed(t *testing.T) {
 		for j := 0; j < numGoroutines; j++ {
 			go func() {
 				defer wg.Done()
-				
+
 				// Increment (simulating cache hit)
 				cachedKey.increment()
-				
+
 				// Small delay to increase concurrency
 				time.Sleep(time.Microsecond)
-				
+
 				// Decrement (simulating release)
 				cachedKey.Close()
 			}()
@@ -94,3 +94,4 @@ func TestCachedCryptoKey_LogRaceCondition(t *testing.T) {
 		t.Log("Race condition would have occurred with separate Add/Load operations")
 	}
 }
+
