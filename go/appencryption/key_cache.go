@@ -488,23 +488,32 @@ func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
 
 // cleanOrphaned attempts to close orphaned keys that no longer have references
 func (c *keyCache) cleanOrphaned() {
+	// Swap the list to minimize lock time
 	c.orphanedMu.Lock()
-	defer c.orphanedMu.Unlock()
+	toClean := c.orphaned
+	c.orphaned = make([]*cachedCryptoKey, 0)
+	c.orphanedMu.Unlock()
 	
-	remaining := make([]*cachedCryptoKey, 0, len(c.orphaned))
-	for _, key := range c.orphaned {
+	// Process outside the lock
+	remaining := make([]*cachedCryptoKey, 0)
+	for _, key := range toClean {
 		if !key.Close() {
 			// Still has references, keep it
 			remaining = append(remaining, key)
 		}
 	}
 	
-	if len(remaining) < len(c.orphaned) {
+	if len(toClean) > 0 && len(remaining) < len(toClean) {
 		log.Debugf("%s cleaned up %d orphaned keys, %d still referenced\n", 
-			c, len(c.orphaned)-len(remaining), len(remaining))
+			c, len(toClean)-len(remaining), len(remaining))
 	}
 	
-	c.orphaned = remaining
+	// Put back the ones we couldn't close
+	if len(remaining) > 0 {
+		c.orphanedMu.Lock()
+		c.orphaned = append(c.orphaned, remaining...)
+		c.orphanedMu.Unlock()
+	}
 }
 
 // Close frees all memory locked by the keys in this cache.
