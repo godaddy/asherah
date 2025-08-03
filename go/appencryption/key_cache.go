@@ -230,6 +230,11 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 			
 			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
 				key, value.key.refs.Load())
+			
+			// NOTE: We don't attempt to clean orphaned keys in the hot path to avoid
+			// variable latency. Orphaned keys are cleaned up only during cache Close().
+			// In practice, this should be rare as it only happens when a key is evicted
+			// while still being actively used.
 		}
 	}
 
@@ -272,12 +277,6 @@ func isReloadRequired(entry cacheEntry, checkInterval time.Duration) bool {
 // is not present in the cache it will retrieve the key using the provided loader
 // and store the key if an error is not returned.
 func (c *keyCache) GetOrLoad(id KeyMeta, loader func(KeyMeta) (*internal.CryptoKey, error)) (*cachedCryptoKey, error) {
-	// Periodically clean orphaned keys (every 100th access)
-	// Don't do it async to avoid races during shutdown
-	if c.keys.Len()%100 == 0 {
-		c.cleanOrphaned()
-	}
-	
 	c.rw.RLock()
 	k, ok := c.getFresh(id)
 	c.rw.RUnlock()
