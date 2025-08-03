@@ -42,25 +42,6 @@ _ = err // err is intentionally ignored
 - Add metrics/monitoring for metastore failures
 - Implement error classification (retriable vs permanent)
 
-### 2. Resource Leak on Close Error
-**Location**: `session.go:99-100`
-```go
-if f.Config.Policy.SharedIntermediateKeyCache {
-    f.intermediateKeys.Close()
-}
-return f.systemKeys.Close()
-```
-
-**Why Fix**:
-- First Close() error is lost if second fails
-- Leaves resources (memory, file handles) leaked
-- In long-running services, accumulates resource leaks
-- Makes it hard to diagnose which component failed
-
-**Remediation**:
-- Collect all errors using `multierr` or similar
-- Ensure all resources are attempted to be closed
-- Return combined error with full context
 
 ## Priority Order for Remediation
 
@@ -69,7 +50,6 @@ return f.systemKeys.Close()
 
 2. **Lower Priority (Observability)**:
    - Silent error swallowing (Other #1)
-   - Resource leak on close error (Other #2)
 
 ## Testing Recommendations
 
