@@ -89,15 +89,40 @@ func NewSessionFactory(config *Config, store Metastore, kms KeyManagementService
 // Close will close any open resources owned by this factory (e.g. cache of system keys). It should be called
 // when the factory is no longer required.
 func (f *SessionFactory) Close() error {
+	var errs []error
+
 	if f.Config.Policy.CacheSessions {
 		f.sessionCache.Close()
 	}
 
 	if f.Config.Policy.SharedIntermediateKeyCache {
-		f.intermediateKeys.Close()
+		if err := f.intermediateKeys.Close(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	return f.systemKeys.Close()
+	if err := f.systemKeys.Close(); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(errs) == 0 {
+		return nil
+	}
+
+	if len(errs) == 1 {
+		return errs[0]
+	}
+
+	// Combine multiple errors into a single error message
+	var msg string
+	for i, err := range errs {
+		if i == 0 {
+			msg = err.Error()
+		} else {
+			msg = msg + "; " + err.Error()
+		}
+	}
+	return errors.New(msg)
 }
 
 // GetSession returns a new session for the provided partition ID.

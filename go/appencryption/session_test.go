@@ -479,3 +479,88 @@ func TestSessionFactory_GetSession_SessionCache(t *testing.T) {
 	assert.NotNil(t, sess)
 	cache.AssertCalled(t, "Get", "testing")
 }
+
+func TestSessionFactory_Close_ErrorHandling(t *testing.T) {
+	tests := []struct {
+		name              string
+		intermediateError error
+		systemError       error
+		sharedCache       bool
+		expectedError     string
+	}{
+		{
+			name:              "intermediate_error_only",
+			intermediateError: fmt.Errorf("intermediate cache close failed"),
+			systemError:       nil,
+			sharedCache:       true,
+			expectedError:     "intermediate cache close failed",
+		},
+		{
+			name:              "system_error_only",
+			intermediateError: nil,
+			systemError:       fmt.Errorf("system cache close failed"),
+			sharedCache:       true,
+			expectedError:     "system cache close failed",
+		},
+		{
+			name:              "both_errors",
+			intermediateError: fmt.Errorf("intermediate cache close failed"),
+			systemError:       fmt.Errorf("system cache close failed"),
+			sharedCache:       true,
+			expectedError:     "intermediate cache close failed; system cache close failed",
+		},
+		{
+			name:              "no_shared_cache_system_error",
+			intermediateError: nil,
+			systemError:       fmt.Errorf("system cache close failed"),
+			sharedCache:       false,
+			expectedError:     "system cache close failed",
+		},
+		{
+			name:              "no_errors",
+			intermediateError: nil,
+			systemError:       nil,
+			sharedCache:       true,
+			expectedError:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create factory with test configuration
+			config := &Config{
+				Policy: &CryptoPolicy{
+					SharedIntermediateKeyCache: tt.sharedCache,
+				},
+			}
+			factory := NewSessionFactory(config, nil, nil, nil)
+
+			// Setup mock caches
+			mockSystemCache := new(MockCache)
+			mockSystemCache.On("Close").Return(tt.systemError)
+			factory.systemKeys = mockSystemCache
+
+			if tt.sharedCache {
+				mockIntermediateCache := new(MockCache)
+				mockIntermediateCache.On("Close").Return(tt.intermediateError)
+				factory.intermediateKeys = mockIntermediateCache
+			}
+
+			// Test the Close method
+			err := factory.Close()
+
+			// Verify expectations
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+
+			// Verify all expected calls were made
+			mockSystemCache.AssertCalled(t, "Close")
+			if tt.sharedCache {
+				factory.intermediateKeys.(*MockCache).AssertCalled(t, "Close")
+			}
+		})
+	}
+}
