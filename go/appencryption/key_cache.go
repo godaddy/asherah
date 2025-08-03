@@ -43,15 +43,17 @@ func newCachedCryptoKey(k *internal.CryptoKey) *cachedCryptoKey {
 
 // Close decrements the reference count for this key. If the reference count
 // reaches zero, the underlying key is closed.
-func (c *cachedCryptoKey) Close() {
+// Returns true if the key was actually closed, false if there are still references.
+func (c *cachedCryptoKey) Close() bool {
 	newRefCount := c.refs.Add(-1)
 	if newRefCount > 0 {
-		return
+		return false
 	}
 
 	// newRefCount is 0, which means the ref count was 1 before decrement
 	log.Debugf("closing cached key: %s, final ref count was 1", c.CryptoKey)
 	c.CryptoKey.Close()
+	return true
 }
 
 // increment the reference count for this key.
@@ -130,8 +132,11 @@ func (s *simpleCache) Capacity() int {
 
 // Close closes the cache and frees all memory locked by the keys in this cache.
 func (s *simpleCache) Close() error {
-	for _, entry := range s.m {
-		entry.key.Close()
+	for k, entry := range s.m {
+		if !entry.key.Close() {
+			log.Debugf("[simpleCache.Close] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
+				k, entry.key.refs.Load())
+		}
 	}
 
 	return nil
@@ -211,7 +216,13 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 	onEvict := func(key string, value cacheEntry) {
 		log.Debugf("[onEvict] closing key -- id: %s\n", key)
 
-		value.key.Close()
+		if !value.key.Close() {
+			// Key still has active references and couldn't be closed.
+			// This key is now orphaned (not in cache, but still allocated).
+			// It will be cleaned up when the last reference is dropped.
+			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
+				key, value.key.refs.Load())
+		}
 	}
 
 	if cachePolicy == "" || cachePolicy == "simple" {
