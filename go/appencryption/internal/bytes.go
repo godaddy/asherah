@@ -7,14 +7,9 @@ import (
 
 // MemClr takes a buffer and wipes it with zeroes.
 func MemClr(buf []byte) {
-	for i := range buf {
-		buf[i] = 0
-	}
-
-	// Prevent dead store elimination, based on https://github.com/golang/go/issues/33325
-	// and https://github.com/awnumar/memguard/blob/fb1272668ab3188606f9dfec73b2f7865a30603d/core/crypto.go#L105.
-	// Avoid using memguard directly here in case we change our default secure memory implementation.
-	runtime.KeepAlive(buf)
+	// Use Go's built-in clear() function (available since Go 1.21)
+	// which is guaranteed not to be optimized away by the compiler
+	clear(buf)
 }
 
 // FillRandom takes a buffer and overwrites it with cryptographically-secure random bytes.
