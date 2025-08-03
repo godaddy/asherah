@@ -25,24 +25,14 @@ if _, err := r(buf); err != nil {
 
 ## 🟠 Concurrency and Race Condition Issues
 
-### 1. Goroutine Leak in Session Cache
-**Location**: `session_cache.go:156`
-```go
-cb.WithEvictFunc(func(k string, v *Session) {
-    go v.encryption.(*sharedEncryption).Remove()
-})
-```
+### 1. ~~Goroutine Leak in Session Cache~~ **FIXED**
+**Location**: `session_cache.go:156` (Previously: `go v.encryption.(*sharedEncryption).Remove()`)
 
-**Why Fix**:
-- Creates unbounded goroutines on cache eviction
-- Under memory pressure, mass eviction creates goroutine explosion
-- Each goroutine holds memory until cleanup completes
-- Can cause cascading failure in production
-
-**Remediation**:
-- Use worker pool with bounded concurrency
-- Implement queue with backpressure
-- Consider synchronous cleanup with timeout
+**Fix Applied**:
+- Implemented single cleanup goroutine with buffered channel (10,000 capacity)
+- Eviction callbacks now submit work to single processor instead of spawning unlimited goroutines
+- Added graceful fallback to synchronous cleanup when channel queue is full
+- Single-goroutine design prevents unbounded goroutine creation while being Lambda-friendly
 
 ### 2. Potential Double-Close
 **Location**: `session_cache.go:49-59`
