@@ -148,12 +148,19 @@ func (c *cacheWrapper) Close() {
 	log.Debugf("closing session cache")
 
 	c.cache.Close()
+
+	// Note: We don't close the global cleanup processor here because:
+	// 1. Multiple caches might share it
+	// 2. Eviction callbacks might still be in flight
+	// The cleanup processor will be cleaned up when the process exits
 }
 
 func newSessionCache(loader sessionLoaderFunc, policy *CryptoPolicy) sessionCache {
 	cb := cache.New[string, *Session](policy.SessionCacheMaxSize)
 	cb.WithEvictFunc(func(k string, v *Session) {
-		go v.encryption.(*sharedEncryption).Remove()
+		if !getSessionCleanupProcessor().submit(v.encryption.(*sharedEncryption)) {
+			log.Debugf("session cleanup processor submit failed for key: %s", k)
+		}
 	})
 
 	if policy.SessionCacheDuration > 0 {
