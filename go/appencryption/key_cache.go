@@ -172,6 +172,11 @@ type keyCache struct {
 	// orphaned tracks keys that were evicted from cache but still have references
 	orphaned []*cachedCryptoKey
 	orphanedMu sync.Mutex
+	
+	// cleanup management
+	cleanupStop chan struct{}
+	cleanupDone sync.WaitGroup
+	cleanupOnce sync.Once
 }
 
 // cacheKeyType is used to identify the type of key cache.
@@ -231,15 +236,17 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 			log.Debugf("[onEvict] WARNING: failed to close key (still has references) -- id: %s, refs: %d\n", 
 				key, value.key.refs.Load())
 			
-			// NOTE: We don't attempt to clean orphaned keys in the hot path to avoid
-			// variable latency. Orphaned keys are cleaned up only during cache Close().
-			// In practice, this should be rare as it only happens when a key is evicted
+			// NOTE: Orphaned keys are cleaned up by a background goroutine every 30 seconds.
+			// This prevents memory accumulation while keeping cleanup out of the hot path.
+			// In practice, orphaning should be rare as it only happens when a key is evicted
 			// while still being actively used.
 		}
 	}
 
 	if cachePolicy == "" || cachePolicy == "simple" {
 		c.keys = newSimpleCache()
+		// Start background cleanup for simple cache too
+		c.startOrphanCleanup()
 		return c
 	}
 
@@ -259,7 +266,31 @@ func newKeyCache(t cacheKeyType, policy *CryptoPolicy) (c *keyCache) {
 
 	c.keys = cb.WithEvictFunc(onEvict).Build()
 
+	// Start background cleanup for orphaned keys
+	c.startOrphanCleanup()
+
 	return c
+}
+
+// startOrphanCleanup starts a background goroutine to periodically clean orphaned keys
+func (c *keyCache) startOrphanCleanup() {
+	c.cleanupStop = make(chan struct{})
+	c.cleanupDone.Add(1)
+	
+	go func() {
+		defer c.cleanupDone.Done()
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		
+		for {
+			select {
+			case <-ticker.C:
+				c.cleanOrphaned()
+			case <-c.cleanupStop:
+				return
+			}
+		}
+	}()
 }
 
 // isReloadRequired returns true if the check interval has elapsed
@@ -480,22 +511,32 @@ func (c *keyCache) cleanOrphaned() {
 // It MUST be called after a session is complete to avoid
 // running into MEMLOCK limits.
 func (c *keyCache) Close() error {
-	log.Debugf("%s closing\n", c)
+	var closeErr error
+	
+	c.cleanupOnce.Do(func() {
+		log.Debugf("%s closing\n", c)
 
-	// Clean up any orphaned keys first
-	c.cleanOrphaned()
+		// Stop the cleanup goroutine
+		if c.cleanupStop != nil {
+			close(c.cleanupStop)
+			c.cleanupDone.Wait()
+		}
+
+		// Clean up any orphaned keys first
+		c.cleanOrphaned()
+		
+		// Close the cache
+		closeErr = c.keys.Close()
+		
+		// Try once more to clean orphaned keys
+		c.cleanOrphaned()
+		
+		if len(c.orphaned) > 0 {
+			log.Debugf("%s WARNING: %d keys still orphaned with active references\n", c, len(c.orphaned))
+		}
+	})
 	
-	// Close the cache
-	err := c.keys.Close()
-	
-	// Try once more to clean orphaned keys
-	c.cleanOrphaned()
-	
-	if len(c.orphaned) > 0 {
-		log.Debugf("%s WARNING: %d keys still orphaned with active references\n", c, len(c.orphaned))
-	}
-	
-	return err
+	return closeErr
 }
 
 // String returns a string representation of this cache.
