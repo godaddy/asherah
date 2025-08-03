@@ -13,6 +13,13 @@ import (
 )
 
 // cachedCryptoKey is a wrapper around a CryptoKey that tracks concurrent access.
+// 
+// Reference counting ensures proper cleanup:
+// - Starts with ref count = 1 (owned by cache)
+// - Incremented when retrieved via GetOrLoad
+// - Decremented when caller calls Close()
+// - When cache evicts, it removes from map THEN calls Close()
+// - This prevents use-after-free since no new refs can be obtained
 type cachedCryptoKey struct {
 	*internal.CryptoKey
 
@@ -37,11 +44,13 @@ func newCachedCryptoKey(k *internal.CryptoKey) *cachedCryptoKey {
 // Close decrements the reference count for this key. If the reference count
 // reaches zero, the underlying key is closed.
 func (c *cachedCryptoKey) Close() {
-	if c.refs.Add(-1) > 0 {
+	newRefCount := c.refs.Add(-1)
+	if newRefCount > 0 {
 		return
 	}
 
-	log.Debugf("closing cached key: %s, refs=%d", c.CryptoKey, c.refs.Load())
+	// newRefCount is 0, which means the ref count was 1 before decrement
+	log.Debugf("closing cached key: %s, final ref count was 1", c.CryptoKey)
 	c.CryptoKey.Close()
 }
 
