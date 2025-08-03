@@ -40,47 +40,9 @@ if _, err := r(buf); err != nil {
 - Make cache implementation configurable with sensible defaults
 - Add metrics for cache size monitoring
 
-## 🔴 Critical Design Flaws
-
-### 3. ✅ FIXED: Cache Eviction Orphans Keys
-**Location**: `pkg/cache/cache.go:465-475` and `key_cache.go:211-215`
-
-**Issue**:
-- Cache removes entry from map BEFORE checking if eviction succeeds
-- If key still has active references, `Close()` returns early (ref count > 0)
-- Key becomes orphaned: not in cache, but still allocated
-- No mechanism to track or recover orphaned keys
-- Leads to memory leaks in production
-
-**Fixed By**:
-- Modified `cachedCryptoKey.Close()` to return bool indicating if close succeeded
-- Track orphaned keys in separate list when eviction fails
-- Periodically clean up orphaned keys when their references are released
-- Clean up orphaned keys on cache close
-
-**Implementation** (in `key_cache.go`):
-```go
-// Track orphaned keys
-orphaned []*cachedCryptoKey
-orphanedMu sync.Mutex
-
-// In eviction callback
-if !value.key.Close() {
-    c.orphanedMu.Lock()
-    c.orphaned = append(c.orphaned, value.key)
-    c.orphanedMu.Unlock()
-}
-
-// Periodic cleanup
-func (c *keyCache) cleanOrphaned() {
-    // Remove keys that can now be closed
-}
-```
-
 ## 🟠 Concurrency and Race Condition Issues
 
-
-### 4. Goroutine Leak in Session Cache
+### 1. Goroutine Leak in Session Cache
 **Location**: `session_cache.go:156`
 ```go
 cb.WithEvictFunc(func(k string, v *Session) {
@@ -99,7 +61,7 @@ cb.WithEvictFunc(func(k string, v *Session) {
 - Implement queue with backpressure
 - Consider synchronous cleanup with timeout
 
-### 5. Potential Double-Close
+### 2. Potential Double-Close
 **Location**: `session_cache.go:49-59`
 
 **Why Fix**:
@@ -113,7 +75,7 @@ cb.WithEvictFunc(func(k string, v *Session) {
 - Make Close() operations idempotent
 - Add state tracking to prevent invalid transitions
 
-### 6. Nil Pointer Dereference
+### 3. Nil Pointer Dereference
 **Location**: `envelope.go:201`
 ```go
 return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
@@ -132,7 +94,7 @@ return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) |
 
 ## 🟢 Other Notable Issues
 
-### 7. Silent Error Swallowing
+### 1. Silent Error Swallowing
 **Location**: `envelope.go:221`
 ```go
 _ = err // err is intentionally ignored
@@ -149,7 +111,7 @@ _ = err // err is intentionally ignored
 - Add metrics/monitoring for metastore failures
 - Implement error classification (retriable vs permanent)
 
-### 8. Resource Leak on Close Error
+### 2. Resource Leak on Close Error
 **Location**: `session.go:99-100`
 ```go
 if f.Config.Policy.SharedIntermediateKeyCache {
@@ -178,12 +140,13 @@ return f.systemKeys.Close()
    - Unbounded cache growth (#2)
 
 3. **Medium Priority (Reliability)**:
-   - Goroutine leak (#3)
-   - Nil pointer dereference (#5)
+   - Goroutine leak (Concurrency #1)
+   - Nil pointer dereference (Concurrency #3)
+   - Potential double-close (Concurrency #2)
 
 4. **Lower Priority (Observability)**:
-   - Silent error swallowing (#6)
-   - Resource leak on close error (#7)
+   - Silent error swallowing (Other #1)
+   - Resource leak on close error (Other #2)
 
 ## Testing Recommendations
 
