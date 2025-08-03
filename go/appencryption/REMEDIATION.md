@@ -25,20 +25,24 @@ if _, err := r(buf); err != nil {
 
 ## 🟡 High-Impact Performance Issues
 
-### 2. Unbounded Simple Cache
-**Location**: `key_cache.go:68-82`
+### 2. Unbounded Simple Cache (Partially Fixed)
+**Location**: `key_cache.go:78-131`
 
-**Why Fix**:
-- Never evicts keys, leading to monotonic memory growth
-- In production with many partitions/users, causes OOM
+**Current Status**:
+- Default cache now uses bounded LRU/LFU cache with configurable size
+- Simple cache still exists for users who explicitly set `cachePolicy = "simple"`
+- Simple cache still never evicts keys and grows without bounds
+
+**Why Complete Fix Needed**:
+- Users who explicitly choose "simple" cache still face OOM risk
+- No warning about unbounded growth when selecting simple cache
 - Memory usage grows linearly with unique partition IDs
-- No way to configure limits or eviction
 
-**Remediation**:
-- Implement max size enforcement
-- Add LRU or LFU eviction
-- Make cache implementation configurable with sensible defaults
-- Add metrics for cache size monitoring
+**Remediation Options**:
+1. Remove simple cache entirely (breaking change)
+2. Add size limit to simple cache with basic LRU eviction
+3. Add warning logs when simple cache is selected
+4. Deprecate simple cache and remove in next major version
 
 ## 🟠 Concurrency and Race Condition Issues
 
