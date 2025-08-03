@@ -2,30 +2,13 @@
 
 This document outlines critical issues found in the Asherah Go implementation that require remediation, organized by severity and impact on high-traffic production systems.
 
-## 🟢 Notable Issues
+## Status
 
-### 1. Silent Error Swallowing
-**Location**: `envelope.go:221`
-```go
-_ = err // err is intentionally ignored
-```
+All previously identified issues have been resolved:
 
-**Why Fix**:
-- Masks critical infrastructure failures (network, permissions, etc.)
-- Makes debugging production issues nearly impossible
-- Treats all errors as "duplicate key" when they could be systemic
-- No observability into metastore health
-
-**Remediation**:
-- Log errors with appropriate severity
-- Add metrics/monitoring for metastore failures
-- Implement error classification (retriable vs permanent)
-
-
-## Priority Order for Remediation
-
-1. **Lower Priority (Observability)**:
-   - Silent error swallowing (#1)
+- ✅ **Nil Pointer Dereference**: Fixed in envelope validation
+- ✅ **Resource Leak on Close Error**: Fixed in SessionFactory.Close()
+- ✅ **Silent Error Swallowing**: Fixed with warning logs for metastore failures
 
 ## Testing Recommendations
 
