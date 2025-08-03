@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/godaddy/asherah/go/appencryption/internal"
 )
 
 // TestCachedCryptoKey_RaceConditionFixed tests that the race condition
