@@ -359,14 +359,19 @@ func (e *envelopeEncryption) getValidIntermediateKey(sk accessorRevokable, ekr *
 
 // decryptRow decrypts drr using ik as the parent key and returns the decrypted data.
 func decryptRow(ik internal.BytesFuncAccessor, drr DataRowRecord, crypto AEAD) ([]byte, error) {
-	return internal.WithKeyFunc(ik, func(bytes []byte) ([]byte, error) {
+	return internal.WithKeyFunc(ik, func(bytes []byte) (result []byte, err error) {
 		// TODO Consider having separate DecryptKey that is functional and handles wiping bytes
 		rawDrk, err := crypto.Decrypt(drr.Key.EncryptedKey, bytes)
 		if err != nil {
 			return nil, err
 		}
 
-		defer internal.MemClr(rawDrk)
+		// Ensure rawDrk is cleared regardless of success or error
+		defer func() {
+			if rawDrk != nil {
+				clear(rawDrk)
+			}
+		}()
 
 		return crypto.Decrypt(drr.Data, rawDrk)
 	})

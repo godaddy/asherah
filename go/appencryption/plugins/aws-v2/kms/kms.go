@@ -187,7 +187,17 @@ func (a *AWSKMS) DecryptKey(ctx context.Context, data []byte) ([]byte, error) {
 			continue
 		}
 
-		keyBytes, err := a.crypto.Decrypt(kekEn.EncryptedKey, resp.Plaintext)
+		// Process in a closure to ensure plaintext is cleared even on error
+		keyBytes, err := func() ([]byte, error) {
+			defer func() {
+				if resp.Plaintext != nil {
+					clear(resp.Plaintext)
+				}
+			}()
+			
+			return a.crypto.Decrypt(kekEn.EncryptedKey, resp.Plaintext)
+		}()
+		
 		if err != nil {
 			log.Debugf("error crypto decrypt: %s\n", err)
 			continue
