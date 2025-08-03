@@ -15,11 +15,11 @@ import (
 // cachedCryptoKey is a wrapper around a CryptoKey that tracks concurrent access.
 //
 // Reference counting ensures proper cleanup:
-// - Starts with ref count = 1 (owned by cache)
-// - Incremented when retrieved via GetOrLoad
-// - Decremented when caller calls Close()
-// - When cache evicts, it removes from map THEN calls Close()
-// - This prevents use-after-free since no new refs can be obtained
+// - Starts with ref count = 1 (owned by cache).
+// - Incremented when retrieved via GetOrLoad.
+// - Decremented when caller calls Close().
+// - When cache evicts, it removes from map THEN calls Close().
+// - This prevents use-after-free since no new refs can be obtained.
 type cachedCryptoKey struct {
 	*internal.CryptoKey
 
