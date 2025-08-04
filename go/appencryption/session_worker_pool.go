@@ -7,7 +7,6 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-
 // sessionCleanupProcessor manages a single goroutine to handle session cleanup.
 // This provides minimal overhead for Lambda while preventing unbounded goroutines.
 type sessionCleanupProcessor struct {
