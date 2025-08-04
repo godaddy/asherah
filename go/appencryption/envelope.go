@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/godaddy/asherah/go/securememory"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
+	"github.com/godaddy/asherah/go/securememory"
 )
 
 // MetricsPrefix prefixes all metrics names.
