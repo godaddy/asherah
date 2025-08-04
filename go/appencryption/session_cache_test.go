@@ -184,8 +184,9 @@ func TestSessionCacheCount(t *testing.T) {
 }
 
 func TestSessionCacheMaxCount(t *testing.T) {
-	// Ensure processor is empty before starting
-	getSessionCleanupProcessor().waitForEmpty()
+	// Reset processor to ensure test isolation
+	resetGlobalSessionCleanupProcessor()
+	defer resetGlobalSessionCleanupProcessor() // Clean up after test
 	
 	totalSessions := 20
 	maxSessions := 10
@@ -285,10 +286,17 @@ func (t *testLogger) Debugf(f string, v ...interface{}) {
 }
 
 func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
+	// Reset processor to ensure test isolation
+	resetGlobalSessionCleanupProcessor()
+	defer resetGlobalSessionCleanupProcessor() // Clean up after test
+
 	b := newSessionBucket()
 
 	cache := newSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
+	
+	// Wait briefly to ensure the processor is fully started
+	time.Sleep(10 * time.Millisecond)
 
 	l := new(testLogger)
 	assert.Equal(t, 0, l.Len())
@@ -306,8 +314,9 @@ func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 }
 
 func TestSharedSessionCloseOnCacheClose(t *testing.T) {
-	// Ensure processor is empty before starting
-	getSessionCleanupProcessor().waitForEmpty()
+	// Reset processor to ensure test isolation
+	resetGlobalSessionCleanupProcessor()
+	defer resetGlobalSessionCleanupProcessor() // Clean up after test
 	
 	b := newSessionBucket()
 
@@ -335,8 +344,9 @@ func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 }
 
 func TestSharedSessionCloseOnEviction(t *testing.T) {
-	// Ensure processor is empty before starting
-	getSessionCleanupProcessor().waitForEmpty()
+	// Reset processor to ensure test isolation
+	resetGlobalSessionCleanupProcessor()
+	defer resetGlobalSessionCleanupProcessor() // Clean up after test
 	
 	b := newSessionBucket()
 
