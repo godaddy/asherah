@@ -101,7 +101,7 @@ func resetGlobalSessionCleanupProcessor() {
 	if globalSessionCleanupProcessor != nil {
 		globalSessionCleanupProcessor.close()
 	}
-	
+
 	globalSessionCleanupProcessor = nil
 	globalSessionCleanupProcessorOnce = sync.Once{}
 }
