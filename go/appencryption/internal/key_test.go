@@ -7,11 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 const keySize = 32

@@ -18,6 +18,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/godaddy/asherah/go/securememory"
+	smlog "github.com/godaddy/asherah/go/securememory/log"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/jessevdk/go-flags"
 	"github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
@@ -30,9 +33,6 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
 	kmsv2 "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
-	"github.com/godaddy/asherah/go/securememory"
-	smlog "github.com/godaddy/asherah/go/securememory/log"
-	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 const (
