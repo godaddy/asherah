@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/godaddy/asherah/go/securememory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
-	"github.com/godaddy/asherah/go/securememory"
 )
 
 const keySize = 32
