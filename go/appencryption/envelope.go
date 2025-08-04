@@ -198,7 +198,10 @@ func (e *envelopeEncryption) tryStoreSystemKey(ctx context.Context, sk *internal
 // isEnvelopeInvalid checks if the envelope key record is revoked or has an expired key.
 func (e *envelopeEncryption) isEnvelopeInvalid(ekr *EnvelopeKeyRecord) bool {
 	// TODO Add key rotation policy check. If not inline, then can return valid even if expired
-	return e == nil || internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
+	if e == nil {
+		return true
+	}
+	return internal.IsKeyExpired(ekr.Created, e.Policy.ExpireKeyAfter) || ekr.Revoked
 }
 
 func (e *envelopeEncryption) generateKey() (*internal.CryptoKey, error) {
@@ -217,8 +220,9 @@ func (e *envelopeEncryption) tryStore(
 	ekr *EnvelopeKeyRecord,
 ) bool {
 	success, err := e.Metastore.Store(ctx, ekr.ID, ekr.Created, ekr)
-
-	_ = err // err is intentionally ignored
+	if err != nil {
+		log.Debugf("WARNING: metastore store failed (treated as duplicate): %v", err)
+	}
 
 	return success
 }

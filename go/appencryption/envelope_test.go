@@ -931,6 +931,50 @@ func TestEnvelopeEncryption_Close(t *testing.T) {
 	}
 }
 
+func TestEnvelopeEncryption_isEnvelopeInvalid_NilPointerSafety(t *testing.T) {
+	// Test that isEnvelopeInvalid properly handles nil receiver
+	var e *envelopeEncryption = nil
+
+	ekr := &EnvelopeKeyRecord{
+		Created: someTimestamp,
+		Revoked: false,
+	}
+
+	// This should not panic and should return true for nil receiver
+	result := e.isEnvelopeInvalid(ekr)
+	assert.True(t, result, "isEnvelopeInvalid should return true for nil receiver")
+}
+
+func TestEnvelopeEncryption_isEnvelopeInvalid_ValidCases(t *testing.T) {
+	// Create a valid envelope encryption instance
+	e := &envelopeEncryption{
+		Policy: &CryptoPolicy{
+			ExpireKeyAfter: time.Hour,
+		},
+	}
+
+	// Test with non-revoked, non-expired key
+	ekr := &EnvelopeKeyRecord{
+		Created: time.Now().Unix(),
+		Revoked: false,
+	}
+	assert.False(t, e.isEnvelopeInvalid(ekr), "Valid key should not be invalid")
+
+	// Test with revoked key
+	ekrRevoked := &EnvelopeKeyRecord{
+		Created: time.Now().Unix(),
+		Revoked: true,
+	}
+	assert.True(t, e.isEnvelopeInvalid(ekrRevoked), "Revoked key should be invalid")
+
+	// Test with expired key
+	ekrExpired := &EnvelopeKeyRecord{
+		Created: time.Now().Add(-2 * time.Hour).Unix(),
+		Revoked: false,
+	}
+	assert.True(t, e.isEnvelopeInvalid(ekrExpired), "Expired key should be invalid")
+}
+
 func getKeyAndKeyBytes(t *testing.T) (*internal.CryptoKey, []byte) {
 	key, err := internal.GenerateKey(secretFactory, someTimestamp, keySize)
 	assert.NoError(t, err)
