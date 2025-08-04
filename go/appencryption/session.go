@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/godaddy/asherah/go/securememory"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/rcrowley/go-metrics"
 
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
-	"github.com/godaddy/asherah/go/securememory"
-	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 // SessionFactory is used to create new encryption sessions and manage
