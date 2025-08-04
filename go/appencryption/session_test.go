@@ -527,40 +527,44 @@ func TestSessionFactory_Close_ErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create factory with test configuration
-			config := &Config{
-				Policy: &CryptoPolicy{
-					SharedIntermediateKeyCache: tt.sharedCache,
-				},
-			}
-			factory := NewSessionFactory(config, nil, nil, nil)
-
-			// Setup mock caches
-			mockSystemCache := new(MockCache)
-			mockSystemCache.On("Close").Return(tt.systemError)
-			factory.systemKeys = mockSystemCache
-
-			if tt.sharedCache {
-				mockIntermediateCache := new(MockCache)
-				mockIntermediateCache.On("Close").Return(tt.intermediateError)
-				factory.intermediateKeys = mockIntermediateCache
-			}
-
-			// Test the Close method
-			err := factory.Close()
-
-			// Verify expectations
-			if tt.expectedError == "" {
-				assert.NoError(t, err)
-			} else {
-				assert.EqualError(t, err, tt.expectedError)
-			}
-
-			// Verify all expected calls were made
-			mockSystemCache.AssertCalled(t, "Close")
-			if tt.sharedCache {
-				factory.intermediateKeys.(*MockCache).AssertCalled(t, "Close")
-			}
+			testSessionFactoryCloseError(t, tt.intermediateError, tt.systemError, tt.sharedCache, tt.expectedError)
 		})
+	}
+}
+
+func testSessionFactoryCloseError(t *testing.T, intermediateError, systemError error, sharedCache bool, expectedError string) {
+	// Create factory with test configuration
+	config := &Config{
+		Policy: &CryptoPolicy{
+			SharedIntermediateKeyCache: sharedCache,
+		},
+	}
+	factory := NewSessionFactory(config, nil, nil, nil)
+
+	// Setup mock caches
+	mockSystemCache := new(MockCache)
+	mockSystemCache.On("Close").Return(systemError)
+	factory.systemKeys = mockSystemCache
+
+	if sharedCache {
+		mockIntermediateCache := new(MockCache)
+		mockIntermediateCache.On("Close").Return(intermediateError)
+		factory.intermediateKeys = mockIntermediateCache
+	}
+
+	// Test the Close method
+	err := factory.Close()
+
+	// Verify expectations
+	if expectedError == "" {
+		assert.NoError(t, err)
+	} else {
+		assert.EqualError(t, err, expectedError)
+	}
+
+	// Verify all expected calls were made
+	mockSystemCache.AssertCalled(t, "Close")
+	if sharedCache {
+		factory.intermediateKeys.(*MockCache).AssertCalled(t, "Close")
 	}
 }
