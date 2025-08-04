@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/stretchr/testify/require"
+
+	"github.com/godaddy/asherah/go/appencryption/internal"
 )
 
 // Concurrent benchmarks with allocation tracking to measure performance under load
