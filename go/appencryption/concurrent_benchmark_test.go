@@ -56,16 +56,17 @@ func BenchmarkSession_Decrypt_Concurrent(b *testing.B) {
 		drrs[i] = drr
 	}
 
+	var counter int64
+
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		idx := 0
 		for pb.Next() {
-			// Use round-robin to select DRR copies
+			// Use atomic counter for round-robin to avoid race
+			idx := atomic.AddInt64(&counter, 1)
 			_, err := session.Decrypt(ctx, *drrs[idx%numCopies])
 			if err != nil {
 				b.Error(err)
 			}
-			idx++
 		}
 	})
 }
