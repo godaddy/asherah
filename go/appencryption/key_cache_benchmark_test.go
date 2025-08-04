@@ -20,6 +20,15 @@ var (
 	enableDebug   = flag.Bool("debug", false, "enable debug logging")
 )
 
+// newBenchmarkPolicy returns a CryptoPolicy with simple cache for benchmarks
+// that directly access cache internals
+func newBenchmarkPolicy() *CryptoPolicy {
+	policy := NewCryptoPolicy()
+	policy.IntermediateKeyCacheEvictionPolicy = "simple"
+	policy.SystemKeyCacheEvictionPolicy = "simple"
+	return policy
+}
+
 func ConfigureLogging() {
 	if *enableDebug {
 		log.SetLogger(logger{})
@@ -29,7 +38,7 @@ func ConfigureLogging() {
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 	ConfigureLogging()
 
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	c.keys.Set(cacheKey(testKey, created), cacheEntry{
 		key:      newCachedCryptoKey(internal.NewCryptoKeyForTest(created, false)),
@@ -53,7 +62,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadExistingKey(b *testing.B) {
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteSameKey(b *testing.B) {
 	ConfigureLogging()
 
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
@@ -82,7 +91,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 	ConfigureLogging()
 
 	var (
-		c = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		i int64
 	)
 
@@ -114,7 +123,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsWriteUniqueKeys(b *testing.B) {
 
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadRevokedKey(b *testing.B) {
 	var (
-		c       = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c       = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		created = time.Now().Add(-(time.Minute * 100)).Unix()
 	)
 
@@ -151,7 +160,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadRevokedKey(b *testing.B) {
 
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B) {
 	var (
-		c       = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c       = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		created = time.Now().Add(-(time.Minute * 100)).Unix()
 	)
 
@@ -188,7 +197,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsRead_NeedReloadKey(b *testing.B)
 }
 
 func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	for i := 0; i < b.N && i < DefaultKeyCacheMaxSize; i++ {
 		keyID := fmt.Sprintf(testKey+"-%d", i)
@@ -221,7 +230,7 @@ func BenchmarkKeyCache_GetOrLoad_MultipleThreadsReadUniqueKeys(b *testing.B) {
 }
 
 func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing.B) {
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	c.mapLatestKeyMeta(testKey, KeyMeta{testKey, created})
 	c.keys.Set(cacheKey(testKey, created), cacheEntry{
@@ -243,7 +252,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadExistingKey(b *testing
 }
 
 func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteSameKey(b *testing.B) {
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
@@ -262,7 +271,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteSameKey(b *testing.B)
 
 func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsWriteUniqueKey(b *testing.B) {
 	var (
-		c = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		i int64
 	)
 
@@ -286,7 +295,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadStaleRevokedKey(b *tes
 	ConfigureLogging()
 
 	var (
-		c       = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c       = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		created = time.Now().Add(-(time.Minute * 100)).Unix()
 	)
 
@@ -322,7 +331,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadRevokedKey(b *testing.
 	ConfigureLogging()
 
 	var (
-		c       = newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+		c       = newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 		created = time.Now().Unix()
 	)
 
@@ -363,7 +372,7 @@ func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadRevokedKey(b *testing.
 func BenchmarkKeyCache_GetOrLoadLatest_MultipleThreadsReadUniqueKeys(b *testing.B) {
 	ConfigureLogging()
 
-	c := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
+	c := newKeyCache(CacheTypeIntermediateKeys, newBenchmarkPolicy())
 
 	for i := 0; i < b.N && i < DefaultKeyCacheMaxSize; i++ {
 		keyID := fmt.Sprintf(testKey+"-%d", i)
