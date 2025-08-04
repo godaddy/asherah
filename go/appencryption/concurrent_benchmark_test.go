@@ -46,16 +46,26 @@ func BenchmarkSession_Decrypt_Concurrent(b *testing.B) {
 	// Pre-encrypt data for concurrent decryption
 	ctx := context.Background()
 	payload := internal.GetRandBytes(benchmarkPayloadSize)
-	drr, err := session.Encrypt(ctx, payload)
-	require.NoError(b, err)
+	
+	// Create multiple copies of the encrypted data to avoid race conditions
+	const numCopies = 100
+	drrs := make([]*DataRowRecord, numCopies)
+	for i := 0; i < numCopies; i++ {
+		drr, err := session.Encrypt(ctx, payload)
+		require.NoError(b, err)
+		drrs[i] = drr
+	}
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
+		idx := 0
 		for pb.Next() {
-			_, err := session.Decrypt(ctx, *drr)
+			// Use round-robin to select DRR copies
+			_, err := session.Decrypt(ctx, *drrs[idx%numCopies])
 			if err != nil {
 				b.Error(err)
 			}
+			idx++
 		}
 	})
 }
