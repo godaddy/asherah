@@ -186,5 +186,3 @@ func (m *mockEncryption) Close() error {
 
 	return nil
 }
-
-
