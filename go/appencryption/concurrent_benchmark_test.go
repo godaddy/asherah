@@ -46,7 +46,7 @@ func BenchmarkSession_Decrypt_Concurrent(b *testing.B) {
 	// Pre-encrypt data for concurrent decryption
 	ctx := context.Background()
 	payload := internal.GetRandBytes(benchmarkPayloadSize)
-	
+
 	// Create multiple copies of the encrypted data to avoid race conditions
 	const numCopies = 100
 	drrs := make([]*DataRowRecord, numCopies)
