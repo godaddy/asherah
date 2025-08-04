@@ -20,6 +20,15 @@ var (
 	enableDebug   = flag.Bool("debug", false, "enable debug logging")
 )
 
+// newBenchmarkPolicy returns a CryptoPolicy with simple cache for benchmarks
+// that directly access cache internals
+func newBenchmarkPolicy() *CryptoPolicy {
+	policy := NewCryptoPolicy()
+	policy.IntermediateKeyCacheEvictionPolicy = "simple"
+	policy.SystemKeyCacheEvictionPolicy = "simple"
+	return policy
+}
+
 func ConfigureLogging() {
 	if *enableDebug {
 		log.SetLogger(logger{})
