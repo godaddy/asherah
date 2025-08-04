@@ -17,6 +17,8 @@ func TestNewCryptoPolicy_DefaultEvictionPolicies(t *testing.T) {
 	// Verify other defaults are still set correctly
 	assert.Equal(t, DefaultKeyCacheMaxSize, policy.IntermediateKeyCacheMaxSize)
 	assert.Equal(t, DefaultKeyCacheMaxSize, policy.SystemKeyCacheMaxSize)
+	assert.Equal(t, true, policy.CacheIntermediateKeys)
+	assert.Equal(t, true, policy.CacheSystemKeys)
 }
 
 func TestCryptoPolicy_CanOverrideEvictionPolicy(t *testing.T) {

@@ -13,7 +13,6 @@ const (
 	DefaultSessionCacheMaxSize        = 1000
 	DefaultSessionCacheDuration       = time.Hour * 2
 	DefaultSessionCacheEngine         = "default"
-	DefaultKeyCacheEvictionPolicy     = "lru"  // Use LRU eviction by default
 	DefaultSessionCacheEvictionPolicy = "slru" // Already documented as default
 )
 
@@ -132,9 +131,9 @@ func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 		CacheSystemKeys:                    true,
 		CacheIntermediateKeys:              true,
 		IntermediateKeyCacheMaxSize:        DefaultKeyCacheMaxSize,
-		IntermediateKeyCacheEvictionPolicy: DefaultKeyCacheEvictionPolicy,
+		IntermediateKeyCacheEvictionPolicy: "lru", // Use LRU eviction by default for bounded cache
 		SystemKeyCacheMaxSize:              DefaultKeyCacheMaxSize,
-		SystemKeyCacheEvictionPolicy:       DefaultKeyCacheEvictionPolicy,
+		SystemKeyCacheEvictionPolicy:       "lru", // Use LRU eviction by default for bounded cache
 		SharedIntermediateKeyCache:         false,
 		CacheSessions:                      false,
 		SessionCacheMaxSize:                DefaultSessionCacheMaxSize,
