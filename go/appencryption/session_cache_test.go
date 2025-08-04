@@ -214,7 +214,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		// Wait for cleanup processor to process items
 		time.Sleep(time.Millisecond * 50)
-		
+
 		closed := 0
 		for i := 0; i < totalSessions; i++ {
 			s := sessions[i]
@@ -348,7 +348,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		// Wait for cleanup processor to process items
 		time.Sleep(time.Millisecond * 50)
-		
+
 		count := 0
 
 		// One--and only one--of the first batch items should be closed
