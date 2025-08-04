@@ -94,3 +94,14 @@ func getSessionCleanupProcessor() *sessionCleanupProcessor {
 
 	return globalSessionCleanupProcessor
 }
+
+// resetGlobalSessionCleanupProcessor resets the global processor for testing.
+// This should only be used in tests.
+func resetGlobalSessionCleanupProcessor() {
+	if globalSessionCleanupProcessor != nil {
+		globalSessionCleanupProcessor.close()
+	}
+	
+	globalSessionCleanupProcessor = nil
+	globalSessionCleanupProcessorOnce = sync.Once{}
+}

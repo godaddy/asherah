@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -14,6 +13,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 var (

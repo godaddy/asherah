@@ -220,7 +220,6 @@ func (e *envelopeEncryption) tryStore(
 	ekr *EnvelopeKeyRecord,
 ) bool {
 	success, err := e.Metastore.Store(ctx, ekr.ID, ekr.Created, ekr)
-
 	if err != nil {
 		log.Debugf("WARNING: metastore store failed (treated as duplicate): %v", err)
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/godaddy/asherah/go/appencryption"
-
 	"github.com/godaddy/asherah/go/appencryption/integrationtest/dynamodbtest"
 )
 

@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 var (

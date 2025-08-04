@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/godaddy/asherah/go/securememory"
-	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/securememory"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 type MockSecretFactory struct {
