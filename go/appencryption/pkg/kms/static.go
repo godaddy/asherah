@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/godaddy/asherah/go/securememory/memguard"
-
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/internal"
+	"github.com/godaddy/asherah/go/securememory/memguard"
 )
 
 var _ appencryption.KeyManagementService = (*StaticKMS)(nil)
