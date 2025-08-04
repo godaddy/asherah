@@ -6,14 +6,14 @@ import (
 
 // Default values for CryptoPolicy if not overridden.
 const (
-	DefaultExpireAfter               = time.Hour * 24 * 90 // 90 days
-	DefaultRevokedCheckInterval      = time.Minute * 60
-	DefaultCreateDatePrecision       = time.Minute
-	DefaultKeyCacheMaxSize           = 1000
-	DefaultSessionCacheMaxSize       = 1000
-	DefaultSessionCacheDuration      = time.Hour * 2
-	DefaultSessionCacheEngine        = "default"
-	DefaultKeyCacheEvictionPolicy    = "lru" // Use LRU eviction by default
+	DefaultExpireAfter                = time.Hour * 24 * 90 // 90 days
+	DefaultRevokedCheckInterval       = time.Minute * 60
+	DefaultCreateDatePrecision        = time.Minute
+	DefaultKeyCacheMaxSize            = 1000
+	DefaultSessionCacheMaxSize        = 1000
+	DefaultSessionCacheDuration       = time.Hour * 2
+	DefaultSessionCacheEngine         = "default"
+	DefaultKeyCacheEvictionPolicy     = "lru"  // Use LRU eviction by default
 	DefaultSessionCacheEvictionPolicy = "slru" // Already documented as default
 )
 
