@@ -1,7 +1,6 @@
 package appencryption
 
 import (
-	"context"
 	"sync"
 	"time"
 
