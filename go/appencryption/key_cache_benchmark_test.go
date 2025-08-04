@@ -20,7 +20,6 @@ var (
 	enableDebug   = flag.Bool("debug", false, "enable debug logging")
 )
 
-
 func ConfigureLogging() {
 	if *enableDebug {
 		log.SetLogger(logger{})
