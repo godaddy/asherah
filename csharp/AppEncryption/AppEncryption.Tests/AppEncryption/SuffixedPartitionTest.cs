@@ -2,7 +2,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
-    [Collection("Logger Fixture collection")]
     public class SuffixedPartitionTest
     {
         private const string TestPartitionId = "test_partition_id";

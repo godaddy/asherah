@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -13,21 +12,22 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     /// <inheritdoc />
     public class EnvelopeEncryptionBytesImpl : IEnvelopeEncryption<byte[]>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionBytesImpl>();
-
+        private readonly ILogger _logger;
         private readonly IEnvelopeEncryption<JObject> envelopeEncryptionJson;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvelopeEncryptionBytesImpl"/> class using the provided
-        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses byte[] as the Data
+        /// parameters and logger. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses byte[] as the Data
         /// Row Record format.
         /// </summary>
         ///
         /// <param name="envelopeEncryptionJson">An <see cref="IEnvelopeEncryption{TD}"/> object which uses
         /// <see cref="JObject"/> as Data Row Record format.</param>
-        public EnvelopeEncryptionBytesImpl(IEnvelopeEncryption<JObject> envelopeEncryptionJson)
+        /// <param name="logger">The logger implementation to use.</param>
+        public EnvelopeEncryptionBytesImpl(IEnvelopeEncryption<JObject> envelopeEncryptionJson, ILogger logger)
         {
             this.envelopeEncryptionJson = envelopeEncryptionJson;
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
@@ -39,7 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Unexpected exception during dispose");
+                _logger?.LogError(e, "Unexpected exception during dispose");
             }
         }
 

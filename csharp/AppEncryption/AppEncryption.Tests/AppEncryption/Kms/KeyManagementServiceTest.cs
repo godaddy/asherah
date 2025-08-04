@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
-    [Collection("Logger Fixture collection")]
     public class KeyManagementServiceTest
     {
         private readonly Mock<CryptoKey> cryptoKeyMock;

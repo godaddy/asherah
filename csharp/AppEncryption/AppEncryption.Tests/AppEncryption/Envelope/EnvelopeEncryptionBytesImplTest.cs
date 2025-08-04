@@ -2,26 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using GoDaddy.Asherah.AppEncryption.Envelope;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class EnvelopeEncryptionBytesImplTest : IDisposable
     {
         private readonly Mock<EnvelopeEncryptionJsonImpl> envelopeEncryptionJsonImplMock;
+        private readonly Mock<ILogger> mockLogger;
         private readonly EnvelopeEncryptionBytesImpl envelopeEncryptionBytesImpl;
 
         public EnvelopeEncryptionBytesImplTest()
         {
             envelopeEncryptionJsonImplMock = new Mock<EnvelopeEncryptionJsonImpl>();
-            envelopeEncryptionBytesImpl = new EnvelopeEncryptionBytesImpl(envelopeEncryptionJsonImplMock.Object);
+            mockLogger = new Mock<ILogger>();
+            envelopeEncryptionBytesImpl = new EnvelopeEncryptionBytesImpl(envelopeEncryptionJsonImplMock.Object, mockLogger.Object);
         }
 
         [Fact]
-        private void TestDecryptDataRowRecord()
+        public void TestDecryptDataRowRecord()
         {
             byte[] expectedBytes = { 0, 1 };
 
@@ -35,7 +37,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         }
 
         [Fact]
-        private void TestEncryptPayload()
+        public void TestEncryptPayload()
         {
             ImmutableDictionary<string, string> immutableDictionary = new Dictionary<string, string> { { "key", "value" } }.ToImmutableDictionary();
             JObject dataRowRecord = JObject.FromObject(immutableDictionary);
@@ -48,7 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         }
 
         [Fact]
-        private void TestDisposeSuccess()
+        public void TestDisposeSuccess()
         {
             envelopeEncryptionBytesImpl.Dispose();
 
@@ -57,7 +59,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         }
 
         [Fact]
-        private void TestDisposeWithDisposeFailShouldReturn()
+        public void TestDisposeWithDisposeFailShouldReturn()
         {
             envelopeEncryptionJsonImplMock.Setup(x => x.Dispose()).Throws(new SystemException());
             envelopeEncryptionBytesImpl.Dispose();

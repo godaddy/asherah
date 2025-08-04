@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.AppEncryption.Envelope;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("AppEncryption.Tests")]
@@ -12,21 +11,22 @@ namespace GoDaddy.Asherah.AppEncryption
     /// <inheritdoc />
     public class SessionBytesImpl<TD> : Session<byte[], TD>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<SessionBytesImpl<TD>>();
-
+        private readonly ILogger _logger;
         private readonly IEnvelopeEncryption<TD> envelopeEncryption;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionBytesImpl{TD}"/> class using the provided
-        /// <see cref="IEnvelopeEncryption{TD}"/>. An implementation of <see cref="Session{TP,TD}"/> that encrypts a
+        /// <see cref="IEnvelopeEncryption{TD}"/> and logger. An implementation of <see cref="Session{TP,TD}"/> that encrypts a
         /// payload of type byte[].
         /// </summary>
         ///
         /// <param name="envelopeEncryption">An implementation of <see cref="envelopeEncryption"/> that uses byte[] as
         /// the Data Row Record format.</param>
-        public SessionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+        /// <param name="logger">The logger implementation to use.</param>
+        public SessionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption, ILogger logger)
         {
             this.envelopeEncryption = envelopeEncryption;
+            this._logger = logger;
         }
 
         /// <inheritdoc/>
@@ -50,7 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "unexpected exception during close");
+                _logger?.LogError(e, "unexpected exception during close");
             }
         }
     }
