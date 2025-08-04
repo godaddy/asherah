@@ -187,7 +187,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	// Reset processor to ensure test isolation
 	resetGlobalSessionCleanupProcessor()
 	defer resetGlobalSessionCleanupProcessor() // Clean up after test
-	
+
 	totalSessions := 20
 	maxSessions := 10
 	b := newSessionBucket()
@@ -218,7 +218,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		// Wait for cleanup processor to process items each time
 		getSessionCleanupProcessor().waitForEmpty()
-		
+
 		closed := 0
 		for i := 0; i < totalSessions; i++ {
 			s := sessions[i]
@@ -228,7 +228,7 @@ func TestSessionCacheMaxCount(t *testing.T) {
 				closed++
 			}
 		}
-		
+
 		return closed == totalSessions-maxSessions
 	}, time.Second*10, time.Millisecond*100)
 }
@@ -294,7 +294,7 @@ func TestSessionCacheCloseWithDebugLogging(t *testing.T) {
 
 	cache := newSessionCache(b.load, NewCryptoPolicy())
 	require.NotNil(t, cache)
-	
+
 	// Wait briefly to ensure the processor is fully started
 	time.Sleep(10 * time.Millisecond)
 
@@ -317,7 +317,7 @@ func TestSharedSessionCloseOnCacheClose(t *testing.T) {
 	// Reset processor to ensure test isolation
 	resetGlobalSessionCleanupProcessor()
 	defer resetGlobalSessionCleanupProcessor() // Clean up after test
-	
+
 	b := newSessionBucket()
 
 	cache := newSessionCache(b.load, NewCryptoPolicy())
@@ -347,7 +347,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	// Reset processor to ensure test isolation
 	resetGlobalSessionCleanupProcessor()
 	defer resetGlobalSessionCleanupProcessor() // Clean up after test
-	
+
 	b := newSessionBucket()
 
 	const max = 10
@@ -383,7 +383,7 @@ func TestSharedSessionCloseOnEviction(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		// Wait for cleanup processor to process items each time
 		getSessionCleanupProcessor().waitForEmpty()
-		
+
 		count := 0
 
 		// One--and only one--of the first batch items should be closed

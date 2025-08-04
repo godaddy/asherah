@@ -8,16 +8,6 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/log"
 )
 
-// nopEncryption is a no-op implementation of Encryption for testing.
-type nopEncryption struct{}
-
-func (nopEncryption) EncryptPayload(context.Context, []byte) (*DataRowRecord, error) { 
-	return nil, nil 
-}
-func (nopEncryption) DecryptDataRowRecord(context.Context, DataRowRecord) ([]byte, error) { 
-	return nil, nil 
-}
-func (nopEncryption) Close() error { return nil }
 
 // sessionCleanupProcessor manages a single goroutine to handle session cleanup.
 // This provides minimal overhead for Lambda while preventing unbounded goroutines.
@@ -128,11 +118,11 @@ func getSessionCleanupProcessor() *sessionCleanupProcessor {
 func resetGlobalSessionCleanupProcessor() {
 	globalSessionCleanupProcessorMu.Lock()
 	defer globalSessionCleanupProcessorMu.Unlock()
-	
+
 	if globalSessionCleanupProcessor != nil {
 		globalSessionCleanupProcessor.close()
 	}
-	
+
 	globalSessionCleanupProcessor = nil
 	globalSessionCleanupProcessorOnce = sync.Once{}
 }
