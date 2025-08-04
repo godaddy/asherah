@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/require"
+
+	"github.com/godaddy/asherah/go/appencryption/internal"
 )
 
 // Memory leak detection tests for Asherah Go implementation
@@ -39,9 +40,7 @@ const (
 	memLeakToleranceMB    = 5 // MB tolerance for memory growth
 )
 
-var (
-	memLeakSecretFactory = new(memguard.SecretFactory)
-)
+var memLeakSecretFactory = new(memguard.SecretFactory)
 
 // Create minimal test implementations to avoid import cycles
 
@@ -106,10 +105,10 @@ type memStats struct {
 func getMemStats() memStats {
 	runtime.GC() // Force garbage collection for accurate measurements
 	runtime.GC() // Double GC to ensure cleanup
-	
+
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	
+
 	return memStats{
 		alloc:      m.Alloc,
 		totalAlloc: m.TotalAlloc,
@@ -127,15 +126,15 @@ func checkMemoryLeaks(t *testing.T, before, after memStats, testName string) {
 		// Handle case where memory decreased (GC freed more than we allocated)
 		allocGrowthMB = -float64(before.alloc-after.alloc) / 1024 / 1024
 	}
-	
+
 	t.Logf("%s Memory Stats:", testName)
 	t.Logf("  Alloc growth: %.2f MB", allocGrowthMB)
 	t.Logf("  TotalAlloc growth: %.2f MB", float64(after.totalAlloc-before.totalAlloc)/1024/1024)
 	t.Logf("  Sys growth: %.2f MB", float64(after.sys-before.sys)/1024/1024)
 	t.Logf("  GC runs: %d", after.numGC-before.numGC)
-	
+
 	if allocGrowthMB > memLeakToleranceMB {
-		t.Errorf("Potential memory leak detected in %s: %.2f MB growth (tolerance: %d MB)", 
+		t.Errorf("Potential memory leak detected in %s: %.2f MB growth (tolerance: %d MB)",
 			testName, allocGrowthMB, memLeakToleranceMB)
 	}
 }
@@ -150,7 +149,7 @@ func TestKeyCache_MemoryLeaks(t *testing.T) {
 			name: "GetOrLoad_SameKey",
 			testFunc: func(t *testing.T, cache *keyCache) {
 				keyMeta := KeyMeta{ID: "leak_test_key", Created: time.Now().Unix()}
-				
+
 				for i := 0; i < memLeakTestIterations; i++ {
 					key, err := cache.GetOrLoad(keyMeta, func(meta KeyMeta) (*internal.CryptoKey, error) {
 						return internal.NewCryptoKeyForTest(meta.Created, false), nil
@@ -165,7 +164,7 @@ func TestKeyCache_MemoryLeaks(t *testing.T) {
 			testFunc: func(t *testing.T, cache *keyCache) {
 				for i := 0; i < memLeakTestIterations; i++ {
 					keyMeta := KeyMeta{ID: fmt.Sprintf("leak_test_key_%d", i), Created: time.Now().Unix()}
-					
+
 					key, err := cache.GetOrLoad(keyMeta, func(meta KeyMeta) (*internal.CryptoKey, error) {
 						return internal.NewCryptoKeyForTest(meta.Created, false), nil
 					})
@@ -178,7 +177,7 @@ func TestKeyCache_MemoryLeaks(t *testing.T) {
 			name: "GetOrLoadLatest_SameKey",
 			testFunc: func(t *testing.T, cache *keyCache) {
 				keyID := "leak_test_latest_key"
-				
+
 				for i := 0; i < memLeakTestIterations; i++ {
 					key, err := cache.GetOrLoadLatest(keyID, func(meta KeyMeta) (*internal.CryptoKey, error) {
 						return internal.NewCryptoKeyForTest(time.Now().Unix(), false), nil
@@ -189,16 +188,16 @@ func TestKeyCache_MemoryLeaks(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 			defer cache.Close()
-			
+
 			before := getMemStats()
 			tt.testFunc(t, cache)
 			after := getMemStats()
-			
+
 			checkMemoryLeaks(t, before, after, fmt.Sprintf("KeyCache_%s", tt.name))
 		})
 	}
@@ -216,7 +215,7 @@ func TestCachedCryptoKey_ReferenceCountingLeaks(t *testing.T) {
 				for i := 0; i < memLeakTestIterations; i++ {
 					key := internal.NewCryptoKeyForTest(time.Now().Unix(), false)
 					cachedKey := newCachedCryptoKey(key)
-					
+
 					// Simulate reference counting cycles
 					cachedKey.increment()
 					cachedKey.increment()
@@ -231,12 +230,12 @@ func TestCachedCryptoKey_ReferenceCountingLeaks(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				key := internal.NewCryptoKeyForTest(time.Now().Unix(), false)
 				cachedKey := newCachedCryptoKey(key)
-				
+
 				for i := 0; i < memLeakTestIterations; i++ {
 					cachedKey.increment()
 					cachedKey.Close()
 				}
-				
+
 				// Final cleanup
 				cachedKey.Close()
 			},
@@ -252,13 +251,13 @@ func TestCachedCryptoKey_ReferenceCountingLeaks(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			before := getMemStats()
 			tt.testFunc(t)
 			after := getMemStats()
-			
+
 			checkMemoryLeaks(t, before, after, fmt.Sprintf("CachedCryptoKey_%s", tt.name))
 		})
 	}
@@ -274,7 +273,7 @@ func TestSessionFactory_MemoryLeaks(t *testing.T) {
 			name: "GetSession_Close_Cycle",
 			testFunc: func(t *testing.T, factory *SessionFactory) {
 				partitionID := "leak_test_partition"
-				
+
 				for i := 0; i < memLeakTestIterations; i++ {
 					session, err := factory.GetSession(partitionID)
 					require.NoError(t, err)
@@ -294,7 +293,7 @@ func TestSessionFactory_MemoryLeaks(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := &Config{
@@ -302,7 +301,7 @@ func TestSessionFactory_MemoryLeaks(t *testing.T) {
 				Product: "leak_test",
 				Service: "test",
 			}
-			
+
 			factory := NewSessionFactory(
 				config,
 				&benchmarkMetastore{},
@@ -311,11 +310,11 @@ func TestSessionFactory_MemoryLeaks(t *testing.T) {
 				WithSecretFactory(memLeakSecretFactory),
 			)
 			defer factory.Close()
-			
+
 			before := getMemStats()
 			tt.testFunc(t, factory)
 			after := getMemStats()
-			
+
 			checkMemoryLeaks(t, before, after, fmt.Sprintf("SessionFactory_%s", tt.name))
 		})
 	}
@@ -328,7 +327,7 @@ func TestSession_EncryptDecrypt_MemoryLeaks(t *testing.T) {
 		Product: "leak_test",
 		Service: "test",
 	}
-	
+
 	factory := NewSessionFactory(
 		config,
 		&benchmarkMetastore{},
@@ -337,28 +336,48 @@ func TestSession_EncryptDecrypt_MemoryLeaks(t *testing.T) {
 		WithSecretFactory(memLeakSecretFactory),
 	)
 	defer factory.Close()
-	
+
 	session, err := factory.GetSession("leak_test_partition")
 	require.NoError(t, err)
 	defer session.Close()
-	
+
 	ctx := context.Background()
 	payload := internal.GetRandBytes(1024)
-	
+
 	before := getMemStats()
-	
+
 	// Perform many encrypt/decrypt cycles
 	for i := 0; i < memLeakTestIterations; i++ {
 		drr, err := session.Encrypt(ctx, payload)
 		require.NoError(t, err)
-		
+
 		decrypted, err := session.Decrypt(ctx, *drr)
 		require.NoError(t, err)
 		require.Equal(t, len(payload), len(decrypted))
 	}
-	
+
 	after := getMemStats()
 	checkMemoryLeaks(t, before, after, "Session_EncryptDecrypt")
+}
+
+// testGoroutineLeaks runs a test and checks for goroutine leaks
+func testGoroutineLeaks(t *testing.T, name string, testFunc func(t *testing.T)) {
+	before := runtime.NumGoroutine()
+	testFunc(t)
+
+	// Allow time for goroutines to cleanup
+	runtime.GC()
+	time.Sleep(100 * time.Millisecond)
+
+	after := runtime.NumGoroutine()
+	goroutineGrowth := after - before
+
+	t.Logf("Goroutine growth: %d (before: %d, after: %d)", goroutineGrowth, before, after)
+
+	// Allow some tolerance for background goroutines
+	if goroutineGrowth > 5 {
+		t.Errorf("Potential goroutine leak detected in %s: %d new goroutines", name, goroutineGrowth)
+	}
 }
 
 // TestGoroutineLeaks tests for goroutine leaks
@@ -376,7 +395,7 @@ func TestGoroutineLeaks(t *testing.T) {
 						Product: "goroutine_test",
 						Service: "test",
 					}
-					
+
 					factory := NewSessionFactory(
 						config,
 						&benchmarkMetastore{},
@@ -384,12 +403,12 @@ func TestGoroutineLeaks(t *testing.T) {
 						&benchmarkCrypto{},
 						WithSecretFactory(memLeakSecretFactory),
 					)
-					
+
 					// Create and close some sessions
 					session, err := factory.GetSession("test_partition")
 					require.NoError(t, err)
 					session.Close()
-					
+
 					factory.Close()
 				}
 			},
@@ -399,9 +418,9 @@ func TestGoroutineLeaks(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				cache := newKeyCache(CacheTypeIntermediateKeys, NewCryptoPolicy())
 				defer cache.Close()
-				
+
 				keyMeta := KeyMeta{ID: "goroutine_test_key", Created: time.Now().Unix()}
-				
+
 				// Create many concurrent operations
 				for i := 0; i < 100; i++ {
 					go func() {
@@ -413,31 +432,16 @@ func TestGoroutineLeaks(t *testing.T) {
 						}
 					}()
 				}
-				
+
 				// Allow goroutines to complete
 				time.Sleep(100 * time.Millisecond)
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			before := runtime.NumGoroutine()
-			tt.testFunc(t)
-			
-			// Allow time for goroutines to cleanup
-			runtime.GC()
-			time.Sleep(100 * time.Millisecond)
-			
-			after := runtime.NumGoroutine()
-			goroutineGrowth := after - before
-			
-			t.Logf("Goroutine growth: %d (before: %d, after: %d)", goroutineGrowth, before, after)
-			
-			// Allow some tolerance for background goroutines
-			if goroutineGrowth > 5 {
-				t.Errorf("Potential goroutine leak detected in %s: %d new goroutines", tt.name, goroutineGrowth)
-			}
+			testGoroutineLeaks(t, tt.name, tt.testFunc)
 		})
 	}
 }
@@ -453,7 +457,7 @@ func TestMemoryLeaks_WithCache(t *testing.T) {
 		Product: "cache_leak_test",
 		Service: "test",
 	}
-	
+
 	factory := NewSessionFactory(
 		config,
 		&benchmarkMetastore{},
@@ -462,22 +466,22 @@ func TestMemoryLeaks_WithCache(t *testing.T) {
 		WithSecretFactory(memLeakSecretFactory),
 	)
 	defer factory.Close()
-	
+
 	before := getMemStats()
-	
+
 	// Create many sessions that should be cached
 	partitions := make(map[string]bool)
 	for i := 0; i < memLeakTestIterations; i++ {
 		partitionID := fmt.Sprintf("cache_test_%d", i%50) // Reuse 50 partitions
 		partitions[partitionID] = true
-		
+
 		session, err := factory.GetSession(partitionID)
 		require.NoError(t, err)
 		session.Close()
 	}
-	
+
 	after := getMemStats()
-	
+
 	t.Logf("Created sessions for %d unique partitions", len(partitions))
 	checkMemoryLeaks(t, before, after, "SessionCache")
 }
@@ -489,7 +493,7 @@ func TestMemoryLeaks_LargePayloads(t *testing.T) {
 		Product: "large_payload_test",
 		Service: "test",
 	}
-	
+
 	factory := NewSessionFactory(
 		config,
 		&benchmarkMetastore{},
@@ -498,26 +502,26 @@ func TestMemoryLeaks_LargePayloads(t *testing.T) {
 		WithSecretFactory(memLeakSecretFactory),
 	)
 	defer factory.Close()
-	
+
 	session, err := factory.GetSession("large_payload_partition")
 	require.NoError(t, err)
 	defer session.Close()
-	
+
 	ctx := context.Background()
 	largePayload := internal.GetRandBytes(64 * 1024) // 64KB
-	
+
 	before := getMemStats()
-	
+
 	// Encrypt/decrypt large payloads multiple times
 	for i := 0; i < 100; i++ { // Fewer iterations due to large payload size
 		drr, err := session.Encrypt(ctx, largePayload)
 		require.NoError(t, err)
-		
+
 		decrypted, err := session.Decrypt(ctx, *drr)
 		require.NoError(t, err)
 		require.Equal(t, len(largePayload), len(decrypted))
 	}
-	
+
 	after := getMemStats()
 	checkMemoryLeaks(t, before, after, "LargePayloads")
 }
@@ -534,7 +538,7 @@ func TestMemoryLeaks_ReferenceCountingEdgeCases(t *testing.T) {
 				for i := 0; i < memLeakTestIterations/10; i++ {
 					key := internal.NewCryptoKeyForTest(time.Now().Unix(), false)
 					cachedKey := newCachedCryptoKey(key)
-					
+
 					// Close multiple times (should be safe)
 					cachedKey.Close()
 					cachedKey.Close() // Should be no-op
@@ -548,9 +552,9 @@ func TestMemoryLeaks_ReferenceCountingEdgeCases(t *testing.T) {
 				for i := 0; i < memLeakTestIterations/10; i++ {
 					key := internal.NewCryptoKeyForTest(time.Now().Unix(), false)
 					cachedKey := newCachedCryptoKey(key)
-					
+
 					cachedKey.Close() // Ref count goes to 0, key is closed
-					
+
 					// This should still work but key is already closed
 					// This tests that we don't leak memory even in edge cases
 					cachedKey.increment()
@@ -559,13 +563,13 @@ func TestMemoryLeaks_ReferenceCountingEdgeCases(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			before := getMemStats()
 			tt.testFunc(t)
 			after := getMemStats()
-			
+
 			checkMemoryLeaks(t, before, after, fmt.Sprintf("ReferenceCountingEdgeCase_%s", tt.name))
 		})
 	}
@@ -578,7 +582,7 @@ func BenchmarkMemoryLeaks_SessionOperations(b *testing.B) {
 		Product: "benchmark_leak_test",
 		Service: "test",
 	}
-	
+
 	factory := NewSessionFactory(
 		config,
 		&benchmarkMetastore{},
@@ -587,22 +591,22 @@ func BenchmarkMemoryLeaks_SessionOperations(b *testing.B) {
 		WithSecretFactory(memLeakSecretFactory),
 	)
 	defer factory.Close()
-	
+
 	session, err := factory.GetSession("benchmark_partition")
 	require.NoError(b, err)
 	defer session.Close()
-	
+
 	ctx := context.Background()
 	payload := internal.GetRandBytes(1024)
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		drr, err := session.Encrypt(ctx, payload)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		_, err = session.Decrypt(ctx, *drr)
 		if err != nil {
 			b.Fatal(err)
