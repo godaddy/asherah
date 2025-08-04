@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godaddy/asherah/go/appencryption/internal"
 	"github.com/godaddy/asherah/go/securememory/memguard"
 	"github.com/stretchr/testify/require"
+
+	"github.com/godaddy/asherah/go/appencryption/internal"
 )
 
 // Hot path benchmarks with allocation tracking for performance monitoring
@@ -18,9 +19,7 @@ const (
 	benchmarkPayloadSize = 1024 // 1KB payload for realistic testing
 )
 
-var (
-	benchmarkSecretFactory = new(memguard.SecretFactory)
-)
+var benchmarkSecretFactory = new(memguard.SecretFactory)
 
 // Create minimal test implementations to avoid import cycles
 
@@ -77,7 +76,7 @@ func (c *benchmarkCrypto) GenerateKey() ([]byte, error) {
 
 // Helper functions for creating test instances
 
-func newBenchmarkSessionFactory(b *testing.B) *SessionFactory {
+func newBenchmarkSessionFactory(_ *testing.B) *SessionFactory {
 	config := &Config{
 		Policy:  NewCryptoPolicy(),
 		Product: "benchmark",
