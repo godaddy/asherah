@@ -209,6 +209,8 @@ jobs:
         run: |
           cd tests/cross-language/go
           go mod edit -replace github.com/godaddy/asherah/go/appencryption=../../../go/appencryption
+          # ensure the go.mod file is up to date
+          go mod tidy
           ./scripts/build.sh
 
       - name: Test
