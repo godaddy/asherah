@@ -51,6 +51,21 @@ func (suite *CacheTestSuite) Test_NewKeyCache() {
 	assert.NotNil(suite.T(), cache)
 	assert.IsType(suite.T(), new(keyCache), cache)
 	assert.NotNil(suite.T(), cache.keys)
+	// Default is now LRU cache, not simple cache
+	assert.NotNil(suite.T(), cache.policy)
+	assert.Equal(suite.T(), DefaultKeyCacheMaxSize, cache.keys.Capacity())
+}
+
+func (suite *CacheTestSuite) Test_NewKeyCache_Simple() {
+	policy := NewCryptoPolicy()
+	policy.IntermediateKeyCacheEvictionPolicy = "simple"
+
+	cache := newKeyCache(CacheTypeIntermediateKeys, policy)
+	defer cache.Close()
+
+	assert.NotNil(suite.T(), cache)
+	assert.IsType(suite.T(), new(keyCache), cache)
+	assert.NotNil(suite.T(), cache.keys)
 	assert.IsType(suite.T(), new(simpleCache), cache.keys)
 	assert.NotNil(suite.T(), cache.policy)
 	assert.Equal(suite.T(), -1, cache.keys.Capacity())
