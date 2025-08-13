@@ -1,0 +1,78 @@
+panic: test timed out after 10m0s
+	running tests:
+		TestSessionCacheMaxCount (9m59s)
+
+goroutine 10480 [running]:
+testing.(*M).startAlarm.func1()
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:2373 +0x1dc
+created by time.goFunc
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/time/sleep.go:215 +0x44
+
+goroutine 1 [chan receive, 9 minutes]:
+testing.(*T).Run(0xc0001b6680, {0x104cd33c9, 0x18}, 0x104e64c80)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:1751 +0x600
+testing.runTests.func1(0xc0001b6680)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:2168 +0x84
+testing.tRunner(0xc0001b6680, 0xc0001e9ad8)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:1690 +0x188
+testing.runTests(0xc0001c0258, {0x1051a0f00, 0x36, 0x36}, {0xc0001ab410?, 0x1048c3100?, 0x1051a6b00?})
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:2166 +0x6e4
+testing.(*M).Run(0xc0001a50e0)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:2034 +0xb78
+main.main()
+	_testmain.go:175 +0x114
+
+goroutine 19 [chan receive]:
+github.com/rcrowley/go-metrics.(*meterArbiter).tick(...)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/packages/pkg/mod/github.com/rcrowley/go-metrics@v0.0.0-20201227073835-cf1acfcdf475/meter.go:239
+created by github.com/rcrowley/go-metrics.NewMeter in goroutine 1
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/packages/pkg/mod/github.com/rcrowley/go-metrics@v0.0.0-20201227073835-cf1acfcdf475/meter.go:46 +0x150
+
+goroutine 10165 [select]:
+github.com/godaddy/asherah/go/appencryption.(*keyCache).startOrphanCleanup.func1()
+	/Users/jgowdy/asherah/go/appencryption/key_cache.go:286 +0x178
+created by github.com/godaddy/asherah/go/appencryption.(*keyCache).startOrphanCleanup in goroutine 10163
+	/Users/jgowdy/asherah/go/appencryption/key_cache.go:280 +0xf0
+
+goroutine 10735 [sync.Cond.Wait, 9 minutes]:
+sync.runtime_notifyListWait(0xc000010710, 0x0)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/runtime/sema.go:587 +0x154
+sync.(*Cond).Wait(0xc000010700)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/sync/cond.go:71 +0x6c
+github.com/godaddy/asherah/go/appencryption.(*sharedEncryption).Remove(0xc000010740)
+	/Users/jgowdy/asherah/go/appencryption/session_cache.go:53 +0x60
+github.com/godaddy/asherah/go/appencryption.(*sessionCleanupProcessor).processor(0xc000752520)
+	/Users/jgowdy/asherah/go/appencryption/session_worker_pool.go:37 +0x34
+created by github.com/godaddy/asherah/go/appencryption.newSessionCleanupProcessor in goroutine 10734
+	/Users/jgowdy/asherah/go/appencryption/session_worker_pool.go:26 +0x168
+
+goroutine 10743 [chan receive, 9 minutes]:
+github.com/godaddy/asherah/go/appencryption/pkg/cache.(*cache[...]).processEvents(0x104e72060)
+	/Users/jgowdy/asherah/go/appencryption/pkg/cache/cache.go:264 +0xb8
+created by github.com/godaddy/asherah/go/appencryption/pkg/cache.(*cache[...]).startup in goroutine 10742
+	/Users/jgowdy/asherah/go/appencryption/pkg/cache/cache.go:314 +0x170
+
+goroutine 10742 [sleep]:
+time.Sleep(0xf4240)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/runtime/time.go:285 +0xe0
+github.com/godaddy/asherah/go/appencryption.(*sessionCleanupProcessor).waitForEmpty(0xc000752520)
+	/Users/jgowdy/asherah/go/appencryption/session_worker_pool.go:85 +0x34
+github.com/godaddy/asherah/go/appencryption.TestSessionCacheMaxCount(0xc0001b71e0)
+	/Users/jgowdy/asherah/go/appencryption/session_cache_test.go:214 +0x3c4
+testing.tRunner(0xc0001b71e0, 0x104e64c80)
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:1690 +0x188
+created by testing.(*T).Run in goroutine 1
+	/Users/jgowdy/.asdf/installs/golang/1.23.0/go/src/testing/testing.go:1743 +0x5e4
+FAIL	github.com/godaddy/asherah/go/appencryption	600.193s
+ok  	github.com/godaddy/asherah/go/appencryption/internal	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/cache	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/cache/internal	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/kms	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/log	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/pkg/persistence	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/kms	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/plugins/aws-v1/persistence	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore	(cached)
+ok  	github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms	(cached)
+FAIL
