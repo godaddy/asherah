@@ -45,7 +45,7 @@
     <apache.commons.version>3.18.0</apache.commons.version>
     <amazonaws.version>2.0.0</amazonaws.version>
     <aws.sdk.version>1.12.788</aws.sdk.version>
-    <aws.sdk-v2.version>2.32.11</aws.sdk-v2.version>
+    <aws.sdk-v2.version>2.32.21</aws.sdk-v2.version>
     <bouncycastle.version>1.81</bouncycastle.version>
     <build.helper.version>3.6.1</build.helper.version>
     <caffeine.version>3.2.2</caffeine.version>
@@ -68,14 +68,14 @@
     <maven.scm.version>2.1.0</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
     <maven.surefire.version>3.5.3</maven.surefire.version>
-    <micrometer.version>1.15.2</micrometer.version>
+    <micrometer.version>1.15.3</micrometer.version>
     <mockito.core.version>5.18.0</mockito.core.version>
     <nexus.staging.maven.version>1.7.0</nexus.staging.maven.version>
     <securememory.version>0.1.5</securememory.version>
     <slf4j.version>2.0.17</slf4j.version>
     <sqlite4java.version>1.0.392</sqlite4java.version>
     <testcontainers.version>1.11.2</testcontainers.version>
-    <zaxxer.version>7.0.0</zaxxer.version>
+    <zaxxer.version>7.0.1</zaxxer.version>
   </properties>
 
   <build>
