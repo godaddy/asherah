@@ -21,8 +21,8 @@
     <info.picocli.version>4.7.7</info.picocli.version>
     <gson.version>2.13.1</gson.version>
     <json.version>20250517</json.version>
-    <hikaricp.version>7.0.0</hikaricp.version>
-    <io.netty.version>4.2.3.Final</io.netty.version>
+    <hikaricp.version>7.0.1</hikaricp.version>
+    <io.netty.version>4.2.4.Final</io.netty.version>
     <commons.lang3.version>3.18.0</commons.lang3.version>
     <slf4j.version>2.0.17</slf4j.version>
     <jacoco.version>0.8.13</jacoco.version>
