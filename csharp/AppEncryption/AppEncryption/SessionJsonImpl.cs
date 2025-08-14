@@ -31,6 +31,19 @@ namespace GoDaddy.Asherah.AppEncryption
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionJsonImpl{TD}"/> class using the provided
+        /// <see cref="IEnvelopeEncryption{TD}"/> object. An implementation of <see cref="Session{TP,TD}"/> that
+        /// encrypts a payload of type JObject. This constructor is provided for backwards compatibility and does not include logging.
+        /// </summary>
+        ///
+        /// <param name="envelopeEncryption">An implementation of <see cref="IEnvelopeEncryption{TD}"/> that uses
+        /// JObject as the Data Row Record format.</param>
+        public SessionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+            : this(envelopeEncryption, null)
+        {
+        }
+
         /// <inheritdoc/>
         public override JObject Decrypt(TD dataRowRecord)
         {

@@ -78,6 +78,39 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
+        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses
+        /// <see cref="JObject"/> as the Data Row Record format. This constructor is provided for backwards compatibility and does not include logging.
+        /// </summary>
+        ///
+        /// <param name="partition">A <see cref="GoDaddy.Asherah.AppEncryption.Partition"/> object.</param>
+        /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
+        /// keys.</param>
+        /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
+        /// caching system keys.</param>
+        /// <param name="intermediateKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation
+        /// for caching intermediate keys.</param>
+        /// <param name="aeadEnvelopeCrypto">An implementation of
+        /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/>, used to encrypt/decrypt keys and
+        /// envelopes.</param>
+        /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
+        /// the various behaviors of Asherah.</param>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// implementation that generates the top level master key and encrypts the system keys using the master key.
+        /// </param>
+        public EnvelopeEncryptionJsonImpl(
+            Partition partition,
+            IMetastore<JObject> metastore,
+            SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
+            SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
+            AeadEnvelopeCrypto aeadEnvelopeCrypto,
+            CryptoPolicy cryptoPolicy,
+            KeyManagementService keyManagementService)
+            : this(partition, metastore, systemKeyCache, intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService, null)
+        {
+        }
+
         internal EnvelopeEncryptionJsonImpl()
         {
             // Need default constructor for unit test mocks

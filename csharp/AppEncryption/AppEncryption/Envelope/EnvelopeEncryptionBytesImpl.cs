@@ -30,6 +30,19 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvelopeEncryptionBytesImpl"/> class using the provided
+        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses byte[] as the Data
+        /// Row Record format. This constructor is provided for backwards compatibility and does not include logging.
+        /// </summary>
+        ///
+        /// <param name="envelopeEncryptionJson">An <see cref="IEnvelopeEncryption{TD}"/> object which uses
+        /// <see cref="JObject"/> as Data Row Record format.</param>
+        public EnvelopeEncryptionBytesImpl(IEnvelopeEncryption<JObject> envelopeEncryptionJson)
+            : this(envelopeEncryptionJson, null)
+        {
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {

@@ -29,6 +29,19 @@ namespace GoDaddy.Asherah.AppEncryption
             this._logger = logger;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionBytesImpl{TD}"/> class using the provided
+        /// <see cref="IEnvelopeEncryption{TD}"/>. An implementation of <see cref="Session{TP,TD}"/> that encrypts a
+        /// payload of type byte[]. This constructor is provided for backwards compatibility and does not include logging.
+        /// </summary>
+        ///
+        /// <param name="envelopeEncryption">An implementation of <see cref="envelopeEncryption"/> that uses byte[] as
+        /// the Data Row Record format.</param>
+        public SessionBytesImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+            : this(envelopeEncryption, null)
+        {
+        }
+
         /// <inheritdoc/>
         public override byte[] Decrypt(TD dataRowRecord)
         {
