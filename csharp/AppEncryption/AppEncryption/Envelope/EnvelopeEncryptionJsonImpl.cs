@@ -10,7 +10,6 @@ using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -24,7 +23,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
     /// <inheritdoc />
     public class EnvelopeEncryptionJsonImpl : IEnvelopeEncryption<JObject>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<EnvelopeEncryptionJsonImpl>();
+        private readonly ILogger _logger;
 
         private static readonly TimerOptions EncryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.encrypt" };
         private static readonly TimerOptions DecryptTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".drr.decrypt" };
@@ -39,8 +38,50 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
-        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses
+        /// parameters and logger. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses
         /// <see cref="JObject"/> as the Data Row Record format.
+        /// </summary>
+        ///
+        /// <param name="partition">A <see cref="GoDaddy.Asherah.AppEncryption.Partition"/> object.</param>
+        /// <param name="metastore">A <see cref="IMetastore{T}"/> implementation used to store system & intermediate
+        /// keys.</param>
+        /// <param name="systemKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation for
+        /// caching system keys.</param>
+        /// <param name="intermediateKeyCache">A <see cref="ConcurrentDictionary{TKey,TValue}"/> based implementation
+        /// for caching intermediate keys.</param>
+        /// <param name="aeadEnvelopeCrypto">An implementation of
+        /// <see cref="GoDaddy.Asherah.Crypto.Envelope.AeadEnvelopeCrypto"/>, used to encrypt/decrypt keys and
+        /// envelopes.</param>
+        /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
+        /// the various behaviors of Asherah.</param>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// implementation that generates the top level master key and encrypts the system keys using the master key.
+        /// </param>
+        /// <param name="logger">The logger implementation to use.</param>
+        public EnvelopeEncryptionJsonImpl(
+            Partition partition,
+            IMetastore<JObject> metastore,
+            SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache,
+            SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
+            AeadEnvelopeCrypto aeadEnvelopeCrypto,
+            CryptoPolicy cryptoPolicy,
+            KeyManagementService keyManagementService,
+            ILogger logger)
+        {
+            this.partition = partition;
+            this.metastore = metastore;
+            this.systemKeyCache = systemKeyCache;
+            this.intermediateKeyCache = intermediateKeyCache;
+            crypto = aeadEnvelopeCrypto;
+            this.cryptoPolicy = cryptoPolicy;
+            this.keyManagementService = keyManagementService;
+            this._logger = logger;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
+        /// parameters. This is an implementation of <see cref="IEnvelopeEncryption{TD}"/> which uses
+        /// <see cref="JObject"/> as the Data Row Record format. This constructor is provided for backwards compatibility and does not include logging.
         /// </summary>
         ///
         /// <param name="partition">A <see cref="GoDaddy.Asherah.AppEncryption.Partition"/> object.</param>
@@ -66,14 +107,8 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
             CryptoPolicy cryptoPolicy,
             KeyManagementService keyManagementService)
+            : this(partition, metastore, systemKeyCache, intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService, null)
         {
-            this.partition = partition;
-            this.metastore = metastore;
-            this.systemKeyCache = systemKeyCache;
-            this.intermediateKeyCache = intermediateKeyCache;
-            crypto = aeadEnvelopeCrypto;
-            this.cryptoPolicy = cryptoPolicy;
-            this.keyManagementService = keyManagementService;
         }
 
         internal EnvelopeEncryptionJsonImpl()
@@ -144,7 +179,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Unexpected exception during dispose");
+                _logger?.LogError(e, "Unexpected exception during dispose");
             }
         }
 
@@ -175,7 +210,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 {
                     try
                     {
-                        Logger.LogDebug(
+                        _logger?.LogDebug(
                             "Attempting to update cache for IK {KeyId} with created {Created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
@@ -192,7 +227,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             if (cryptoPolicy.NotifyExpiredIntermediateKeyOnRead() && IsKeyExpiredOrRevoked(intermediateKey))
             {
                 // TODO :  Send notification that a DRK is using an expired IK
-                Logger.LogDebug("NOTIFICATION: Expired IK {KeyMeta} in use during read", intermediateKeyMeta);
+                _logger?.LogDebug("NOTIFICATION: Expired IK {KeyMeta} in use during read", intermediateKeyMeta);
             }
 
             return ApplyFunctionAndDisposeKey(intermediateKey, functionWithIntermediateKey);
@@ -212,7 +247,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 {
                     try
                     {
-                        Logger.LogDebug(
+                        _logger?.LogDebug(
                             "Attempting to update cache for IK {KeyId} with created {Created}",
                             partition.IntermediateKeyId,
                             intermediateKey.GetCreated());
@@ -258,7 +293,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 {
                     try
                     {
-                        Logger.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
+                        _logger?.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
                         systemKey = systemKeyCache.PutAndGetUsable(systemKeyMeta.Created, systemKey);
                     }
                     catch (Exception e)
@@ -281,7 +316,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.NotifyExpiredSystemKeyOnRead())
                 {
                     // TODO: Send notification that an SK is expired
-                    Logger.LogDebug("NOTIFICATION: Expired SK {KeyMeta} in use during read", systemKeyMeta);
+                    _logger?.LogDebug("NOTIFICATION: Expired SK {KeyMeta} in use during read", systemKeyMeta);
                 }
             }
 
@@ -303,7 +338,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     {
                         KeyMeta systemKeyMeta = new KeyMeta(partition.SystemKeyId, systemKey.GetCreated());
 
-                        Logger.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
+                        _logger?.LogDebug("Attempting to update cache for SK {KeyMeta}", systemKeyMeta);
                         systemKey = systemKeyCache.PutAndGetUsable(systemKeyMeta.Created, systemKey);
                     }
                     catch (Exception e)
@@ -338,7 +373,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     }
                     catch (MetadataMissingException e)
                     {
-                        Logger.LogDebug(
+                        _logger?.LogDebug(
                             e,
                             "The SK for the IK ({KeyId}, {Created}) is missing or in an invalid state. Will create new IK instead.",
                             partition.IntermediateKeyId,
@@ -351,7 +386,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.IsQueuedKeyRotation())
                 {
                     // TODO : Queued rotation
-                    Logger.LogDebug("Queuing up IK {KeyId} for rotation", partition.IntermediateKeyId);
+                    _logger?.LogDebug("Queuing up IK {KeyId} for rotation", partition.IntermediateKeyId);
                     try
                     {
                         return WithExistingSystemKey(
@@ -363,7 +398,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                     }
                     catch (MetadataMissingException e)
                     {
-                        Logger.LogDebug(
+                        _logger?.LogDebug(
                             e,
                             "The SK for the IK ({KeyId}, {Created}) is missing or in an invalid state. Will create new IK instead.",
                             partition.IntermediateKeyId,
@@ -386,7 +421,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                         crypto.EncryptKey(intermediateKey, systemCryptoKey),
                         false));
 
-                Logger.LogDebug(
+                _logger?.LogDebug(
                     "Attempting to store new IK {KeyId}, for created {Created}",
                     partition.IntermediateKeyId,
                     newIntermediateKeyRecord.Created);
@@ -398,7 +433,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 }
                 else
                 {
-                    Logger.LogDebug(
+                    _logger?.LogDebug(
                         "Attempted to store new IK {KeyId} but detected duplicate for created {Created}, disposing newly created IK",
                         partition.IntermediateKeyId,
                         intermediateKey.GetCreated());
@@ -455,7 +490,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 if (cryptoPolicy.IsQueuedKeyRotation())
                 {
                     // TODO : Queued rotation
-                    Logger.LogDebug("Queuing up SK {KeyId} for rotation", partition.SystemKeyId);
+                    _logger?.LogDebug("Queuing up SK {KeyId} for rotation", partition.SystemKeyId);
                     return keyManagementService.DecryptKey(
                         keyRecord.EncryptedKey, keyRecord.Created, keyRecord.Revoked.IfNone(false));
                 }
@@ -471,7 +506,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 EnvelopeKeyRecord newSystemKeyRecord = new EnvelopeKeyRecord(
                     systemKey.GetCreated(), null, keyManagementService.EncryptKey(systemKey), false);
 
-                Logger.LogDebug(
+                _logger?.LogDebug(
                     "Attempting to store new SK {KeyId} for created {Created}",
                     partition.SystemKeyId,
                     newSystemKeyRecord.Created);
@@ -481,7 +516,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
                 }
                 else
                 {
-                    Logger.LogDebug(
+                    _logger?.LogDebug(
                         "Attempted to store new SK {KeyId} but detected duplicate for created {Created}, disposing newly created SK",
                         partition.SystemKeyId,
                         systemKey.GetCreated());
@@ -573,7 +608,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <exception cref="MetadataMissingException">If the EnvelopeKeyRecord is not found.</exception>
         internal virtual EnvelopeKeyRecord LoadKeyRecord(string keyId, DateTimeOffset created)
         {
-            Logger.LogDebug("Attempting to load key with KeyID {KeyId} created {Created}", keyId, created);
+            _logger?.LogDebug("Attempting to load key with KeyID {KeyId} created {Created}", keyId, created);
             return metastore.Load(keyId, created)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson))
@@ -590,7 +625,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="keyId">The id to find the latest key of.</param>
         internal virtual Option<EnvelopeKeyRecord> LoadLatestKeyRecord(string keyId)
         {
-            Logger.LogDebug("Attempting to load latest key with keyId {KeyId}", keyId);
+            _logger?.LogDebug("Attempting to load latest key with keyId {KeyId}", keyId);
             return metastore.LoadLatest(keyId)
                 .Map(jsonObject => new Json(jsonObject))
                 .Map(sourceJson => new EnvelopeKeyRecord(sourceJson));

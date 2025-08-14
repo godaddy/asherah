@@ -11,7 +11,6 @@ using Amazon.Runtime;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto.Exceptions;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -37,7 +36,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.loadlatest" };
         private static readonly TimerOptions StoreTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.dynamodb.store" };
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<DynamoDbMetastoreImpl>();
+        private readonly ILogger _logger;
 
         private static readonly string DefaultKeySuffix = string.Empty;
         private static bool hasKeySuffix;
@@ -50,6 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             TableName = builder.TableName;
             preferredRegion = builder.PreferredRegion;
             hasKeySuffix = builder.HasKeySuffix;
+            this._logger = builder.Logger;
 
             // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
             table = builder.LoadTable(DbClient, TableName);
@@ -100,6 +100,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             IBuildStep WithRegion(string region);
 
             /// <summary>
+            /// Set the logger for the <see cref="DynamoDbMetastoreImpl"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            IBuildStep WithLogger(ILogger logger);
+
+            /// <summary>
             /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> with the parameters specified in the builder.
             /// </summary>
             ///
@@ -145,7 +153,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 }
                 catch (AggregateException ae)
                 {
-                    Logger.LogError(ae, "Metastore error");
+                    _logger?.LogError(ae, "Metastore error");
                 }
 
                 return Option<JObject>.None;
@@ -189,7 +197,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 }
                 catch (AggregateException se)
                 {
-                    Logger.LogError(se, "Metastore error");
+                    _logger?.LogError(se, "Metastore error");
                 }
 
                 return Option<JObject>.None;
@@ -245,12 +253,12 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     {
                         if (exception is ConditionalCheckFailedException)
                         {
-                            Logger.LogInformation("Attempted to create duplicate key: {KeyId} {Created}", keyId, created);
+                            _logger?.LogInformation("Attempted to create duplicate key: {KeyId} {Created}", keyId, created);
                             return false;
                         }
                     }
 
-                    Logger.LogError(ae, "Metastore error during store");
+                    _logger?.LogError(ae, "Metastore error during store");
                     throw new AppEncryptionException("Metastore error:", ae);
                 }
             }
@@ -276,6 +284,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             private bool hasKeySuffix;
             private string tableName = DefaultTableName;
             private AWSCredentials credentials;
+            private ILogger _logger;
 
             // Internal properties for access
             internal string PreferredRegion => preferredRegion;
@@ -283,6 +292,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             internal bool HasKeySuffix => hasKeySuffix;
             internal string TableName => tableName;
             internal AWSCredentials Credentials => credentials;
+            internal ILogger Logger => _logger;
 
             private const string DefaultTableName = "EncryptionKey";
             private readonly AmazonDynamoDBConfig dbConfig = new AmazonDynamoDBConfig();
@@ -341,6 +351,18 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             public IBuildStep WithCredentials(AWSCredentials credentials)
             {
                 this.credentials = credentials;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the logger for the <see cref="DynamoDbMetastoreImpl"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            public IBuildStep WithLogger(ILogger logger)
+            {
+                this._logger = logger;
                 return this;
             }
 

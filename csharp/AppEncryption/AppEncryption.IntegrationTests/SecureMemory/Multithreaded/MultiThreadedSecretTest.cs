@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.Logging;
 using GoDaddy.Asherah.SecureMemory;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -13,7 +12,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.SecureMemory.Multithrea
 {
     public class MultiThreadedSecretTest
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<MultiThreadedSecretTest>();
+        private static readonly ILogger Logger = TestLoggerFactory.CreateLogger<MultiThreadedSecretTest>();
         private readonly byte[] payload;
 
         public MultiThreadedSecretTest()

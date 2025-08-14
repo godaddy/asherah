@@ -2,7 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -14,21 +13,35 @@ namespace GoDaddy.Asherah.AppEncryption
     /// <inheritdoc />
     public class SessionJsonImpl<TD> : Session<JObject, TD>
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<SessionJsonImpl<TD>>();
-
+        private readonly ILogger _logger;
         private readonly IEnvelopeEncryption<TD> envelopeEncryption;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SessionJsonImpl{TD}"/> class using the provided
-        /// <see cref="IEnvelopeEncryption{TD}"/> object. An implementation of <see cref="Session{TP,TD}"/> that
+        /// <see cref="IEnvelopeEncryption{TD}"/> object and logger. An implementation of <see cref="Session{TP,TD}"/> that
         /// encrypts a payload of type JObject.
         /// </summary>
         ///
         /// <param name="envelopeEncryption">An implementation of <see cref="IEnvelopeEncryption{TD}"/> that uses
         /// JObject as the Data Row Record format.</param>
-        public SessionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+        /// <param name="logger">The logger implementation to use.</param>
+        public SessionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption, ILogger logger)
         {
             this.envelopeEncryption = envelopeEncryption;
+            this._logger = logger;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SessionJsonImpl{TD}"/> class using the provided
+        /// <see cref="IEnvelopeEncryption{TD}"/> object. An implementation of <see cref="Session{TP,TD}"/> that
+        /// encrypts a payload of type JObject. This constructor is provided for backwards compatibility and does not include logging.
+        /// </summary>
+        ///
+        /// <param name="envelopeEncryption">An implementation of <see cref="IEnvelopeEncryption{TD}"/> that uses
+        /// JObject as the Data Row Record format.</param>
+        public SessionJsonImpl(IEnvelopeEncryption<TD> envelopeEncryption)
+            : this(envelopeEncryption, null)
+        {
         }
 
         /// <inheritdoc/>
@@ -54,7 +67,7 @@ namespace GoDaddy.Asherah.AppEncryption
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "unexpected exception during close");
+                _logger?.LogError(e, "unexpected exception during close");
             }
         }
     }

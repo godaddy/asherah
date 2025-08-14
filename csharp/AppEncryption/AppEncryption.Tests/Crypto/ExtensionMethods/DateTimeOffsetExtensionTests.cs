@@ -4,7 +4,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.ExtensionMethods
 {
-    [Collection("Logger Fixture collection")]
     public class DateTimeOffsetExtensionTests
     {
         private const int Zero = 0;

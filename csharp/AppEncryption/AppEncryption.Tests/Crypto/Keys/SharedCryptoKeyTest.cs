@@ -5,7 +5,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
 {
-    [Collection("Logger Fixture collection")]
     public class SharedCryptoKeyTest : IDisposable
     {
         private readonly Mock<CryptoKey> sharedKeyMock;

@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class KeyMetaTest
     {
         private const string KeyId = "key1";

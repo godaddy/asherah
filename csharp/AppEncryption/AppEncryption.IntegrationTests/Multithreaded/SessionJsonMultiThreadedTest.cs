@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -14,7 +13,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
     [Collection("Configuration collection")]
     public class SessionJsonMultiThreadedTest : IDisposable
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<SessionJsonMultiThreadedTest>();
+        private static readonly ILogger Logger = TestLoggerFactory.CreateLogger<SessionJsonMultiThreadedTest>();
 
         private readonly JObject payload;
         private readonly SessionFactory sessionFactory;

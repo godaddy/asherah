@@ -9,7 +9,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Engine
 {
-    [Collection("Logger Fixture collection")]
     public abstract class GenericAeadCryptoTest
     {
         private readonly AeadEnvelopeCrypto crypto;

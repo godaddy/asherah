@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using static GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers.Constants;
@@ -13,7 +12,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
     [Collection("Configuration collection")]
     public class SessionByteMultiThreadedTest : IDisposable
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<SessionByteMultiThreadedTest>();
+        private static readonly ILogger Logger = TestLoggerFactory.CreateLogger<SessionByteMultiThreadedTest>();
 
         private readonly byte[] payload;
         private readonly SessionFactory sessionFactory;

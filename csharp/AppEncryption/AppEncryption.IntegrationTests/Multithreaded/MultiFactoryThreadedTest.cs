@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -15,7 +14,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
     [Collection("Configuration collection")]
     public class MultiFactoryThreadedTest
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<MultiFactoryThreadedTest>();
+        private static readonly ILogger Logger = TestLoggerFactory.CreateLogger<MultiFactoryThreadedTest>();
         private readonly ConfigFixture configFixture;
 
         public MultiFactoryThreadedTest(ConfigFixture configFixture)

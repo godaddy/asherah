@@ -28,6 +28,7 @@
     <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.3.9" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="App.Metrics" Version="4.3.0" />
     <PackageReference Include="System.Text.Encodings.Web" Version="9.0.7" />
