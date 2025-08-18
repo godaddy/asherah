@@ -11,13 +11,13 @@ using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.ExtensionMethods;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class EnvelopeEncryptionJsonImplTest : IClassFixture<MetricsFixture>
     {
         private readonly DefaultPartition partition =
@@ -39,6 +39,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         private readonly Mock<CryptoKey> intermediateCryptoKeyMock;
         private readonly Mock<CryptoKey> systemCryptoKeyMock;
         private readonly Mock<KeyMeta> keyMetaMock;
+        private readonly Mock<ILogger> mockLogger;
 
         private readonly Mock<EnvelopeEncryptionJsonImpl> envelopeEncryptionJsonImplSpy;
 
@@ -58,6 +59,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             intermediateCryptoKeyMock = new Mock<CryptoKey>();
             systemCryptoKeyMock = new Mock<CryptoKey>();
             keyMetaMock = new Mock<KeyMeta>("some_keyid", DateTimeOffset.UtcNow);
+            mockLogger = new Mock<ILogger>();
 
             envelopeEncryptionJsonImplSpy = new Mock<EnvelopeEncryptionJsonImpl>(
                 partition,
@@ -66,7 +68,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
                 intermediateKeyCacheMock.Object,
                 aeadEnvelopeCryptoMock.Object,
                 cryptoPolicyMock.Object,
-                keyManagementServiceMock.Object)
+                keyManagementServiceMock.Object,
+                mockLogger.Object)
             { CallBase = true };
         }
 

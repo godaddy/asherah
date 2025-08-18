@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
-    [Collection("Logger Fixture collection")]
     public class AdhocPersistenceTest
     {
         private readonly Mock<Func<string, Option<string>>> persistenceLoadMock;

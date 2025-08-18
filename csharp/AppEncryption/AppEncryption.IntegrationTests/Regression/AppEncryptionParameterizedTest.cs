@@ -11,6 +11,7 @@ using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -38,8 +39,9 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             KeyState metaSK,
             Partition partition)
         {
+            var mockLogger = new Mock<ILogger>();
             using (Session<JObject, byte[]> sessionJsonImpl =
-                new SessionJsonImpl<byte[]>(envelopeEncryptionJson))
+                new SessionJsonImpl<byte[]>(envelopeEncryptionJson, mockLogger.Object))
             {
                 EncryptMetastoreInteractions encryptMetastoreInteractions =
                     new EncryptMetastoreInteractions(cacheIK, metaIK, cacheSK, metaSK);
@@ -231,6 +233,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                 SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache = cacheMock.IntermediateKeyCache;
                 SecureCryptoKeyDictionary<DateTimeOffset> systemKeyCache = cacheMock.SystemKeyCache;
 
+                var mockLogger = new Mock<ILogger>();
                 EnvelopeEncryptionJsonImpl envelopeEncryptionJson = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastoreMock.Object,
@@ -238,10 +241,10 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     intermediateKeyCache,
                     new BouncyAes256GcmCrypto(),
                     cryptoPolicy,
-                    kms);
-
+                    kms,
+                    mockLogger.Object);
                 IEnvelopeEncryption<byte[]> envelopeEncryptionByteImpl =
-                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson);
+                    new EnvelopeEncryptionBytesImpl(envelopeEncryptionJson, mockLogger.Object);
 
                 return new object[]
                 {

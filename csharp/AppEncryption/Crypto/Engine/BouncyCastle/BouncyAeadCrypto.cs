@@ -1,10 +1,9 @@
 using System;
+using System.Diagnostics;
 using GoDaddy.Asherah.Crypto.BufferUtils;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
-using GoDaddy.Asherah.Logging;
-using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
@@ -13,7 +12,6 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
     /// <inheritdoc />
     public abstract class BouncyAeadCrypto : AeadEnvelopeCrypto
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<BouncyAeadCrypto>();
 
         /// <inheritdoc />
         public override byte[] Encrypt(byte[] input, CryptoKey key)
@@ -71,11 +69,7 @@ namespace GoDaddy.Asherah.Crypto.Engine.BouncyCastle
 
                 if (position != outputLen)
                 {
-#if DEBUG
-#pragma warning disable CA1848 // Use LoggerMessage delegates
-                    Logger.LogError("position {Position} not equal to outputLength {OutputLen}", position, outputLen);
-#pragma warning restore CA1848 // Use LoggerMessage delegates
-#endif
+                    Debug.WriteLine($"position {position} not equal to outputLength {outputLen}");
                     throw new AppEncryptionException("unexpected error during decrypt cipher finalization");
                 }
 

@@ -15,6 +15,7 @@ using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -23,7 +24,6 @@ using static GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 {
-    [Collection("Logger Fixture collection")]
     public class AwsKeyManagementServiceImplTest : IClassFixture<MetricsFixture>
     {
         private const string UsEast1 = "us-east-1";
@@ -56,24 +56,28 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 
             awsKmsClientFactoryMock.Setup(x => x.CreateAwsKmsClient(It.IsAny<string>(), It.IsAny<AWSCredentials>()))
                 .Returns(amazonKeyManagementServiceClientMock.Object);
+            var mockLogger = new Mock<ILogger>();
             awsKeyManagementServiceImplSpy = new Mock<AwsKeyManagementServiceImpl>(
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentials)
+                credentials,
+                mockLogger.Object)
             { CallBase = true };
         }
 
         [Fact]
-        private void TestRegionToArnAndClientDictionaryGeneration()
+        public void TestRegionToArnAndClientDictionaryGeneration()
         {
+            var mockLogger = new Mock<ILogger>();
             AwsKeyManagementServiceImpl awsKeyManagementService = new AwsKeyManagementServiceImpl(
                 regionToArnDictionary,
                 preferredRegion,
                 cryptoMock.Object,
                 awsKmsClientFactoryMock.Object,
-                credentials);
+                credentials,
+                mockLogger.Object);
             IDictionaryEnumerator dictionaryEnumerator =
                 awsKeyManagementService.RegionToArnAndClientDictionary.GetEnumerator();
             dictionaryEnumerator.MoveNext();
@@ -83,7 +87,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKeySuccessful()
+        public void TestDecryptKeySuccessful()
         {
             byte[] encryptedKey = { 0, 1 };
             byte[] kmsKeyEncryptionKey = { 2, 3 };
@@ -122,7 +126,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKeyWithMissingRegionInPayloadShouldSkipAndSucceed()
+        public void TestDecryptKeyWithMissingRegionInPayloadShouldSkipAndSucceed()
         {
             byte[] encryptedKey = { 0, 1 };
             byte[] kmsKeyEncryptionKey = { 2, 3 };
@@ -167,7 +171,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKeyWithKmsFailureShouldThrowKmsException()
+        public void TestDecryptKeyWithKmsFailureShouldThrowKmsException()
         {
             byte[] encryptedKey = { 0, 1 };
             byte[] kmsKeyEncryptionKey = { 2, 3 };
@@ -201,7 +205,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestGetPrioritizedKmsRegionKeyJsonList()
+        public void TestGetPrioritizedKmsRegionKeyJsonList()
         {
             string json =
                 $@"[{{ '{RegionKey}':'{UsEast1}' }}, {{ '{RegionKey}':'a' }},
@@ -218,7 +222,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKmsEncryptedKeySuccessful()
+        public void TestDecryptKmsEncryptedKeySuccessful()
         {
             byte[] cipherText = { 0, 1 };
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -247,7 +251,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKmsEncryptedKeyWithKmsFailureShouldThrowException()
+        public void TestDecryptKmsEncryptedKeyWithKmsFailureShouldThrowException()
         {
             byte[] cipherText = { 0, 1 };
             byte[] keyEncryptionKey = { 2, 3 };
@@ -265,7 +269,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestDecryptKmsEncryptedKeyWithCryptoFailureShouldThrowExceptionAndWipeBytes()
+        public void TestDecryptKmsEncryptedKeyWithCryptoFailureShouldThrowExceptionAndWipeBytes()
         {
             byte[] cipherText = { 0, 1 };
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -294,7 +298,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestPrimaryBuilderPath()
+        public void TestPrimaryBuilderPath()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
                 NewBuilder(regionToArnDictionary, preferredRegion);
@@ -303,7 +307,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestBuilderPathWithCredentials()
+        public void TestBuilderPathWithCredentials()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
                 NewBuilder(regionToArnDictionary, preferredRegion);
@@ -314,7 +318,54 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestGenerateDataKeySuccessful()
+        public void TestBuilderPathWithLoggerEnabled()
+        {
+            var mockLogger = new Mock<ILogger>();
+            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion);
+            AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder
+                .WithLogger(mockLogger.Object)
+                .Build();
+            Assert.NotNull(awsKeyManagementServiceBuilder);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerDisabled()
+        {
+            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion);
+            AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder.Build();
+            Assert.NotNull(awsKeyManagementServiceBuilder);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerAndCredentials()
+        {
+            var mockLogger = new Mock<ILogger>();
+            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion);
+            AwsKeyManagementServiceImpl awsKeyManagementServiceBuilder = awsKeyManagementServicePrimaryBuilder
+                .WithCredentials(credentials)
+                .WithLogger(mockLogger.Object)
+                .Build();
+            Assert.NotNull(awsKeyManagementServiceBuilder);
+        }
+
+        [Fact]
+        public void TestWithLoggerReturnsCorrectInterface()
+        {
+            var mockLogger = new Mock<ILogger>();
+            AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
+                NewBuilder(regionToArnDictionary, preferredRegion);
+
+            AwsKeyManagementServiceImpl.IBuildStep result = awsKeyManagementServicePrimaryBuilder.WithLogger(mockLogger.Object);
+
+            // Verify the return type is IBuildStep interface (not concrete Builder type)
+            Assert.IsAssignableFrom<AwsKeyManagementServiceImpl.IBuildStep>(result);
+        }
+
+        [Fact]
+        public void TestGenerateDataKeySuccessful()
         {
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
@@ -336,7 +387,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestGenerateDataKeyWithKmsFailureShouldThrowKmsException()
+        public void TestGenerateDataKeyWithKmsFailureShouldThrowKmsException()
         {
             OrderedDictionary sortedRegionToArnAndClient =
                 awsKeyManagementServiceImplSpy.Object.RegionToArnAndClientDictionary;
@@ -350,7 +401,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestEncryptKeyAndBuildResult()
+        public void TestEncryptKeyAndBuildResult()
         {
             byte[] encryptedKey = { 0, 1 };
             EncryptResponse encryptResponse = new EncryptResponse
@@ -373,7 +424,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestEncryptKeyAndBuildResultReturnEmptyOptional()
+        public void TestEncryptKeyAndBuildResultReturnEmptyOptional()
         {
             byte[] dataKeyPlainText = { 0, 1 };
             amazonKeyManagementServiceClientMock
@@ -389,7 +440,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestEncryptKeySuccessful()
+        public void TestEncryptKeySuccessful()
         {
             byte[] encryptedKey = { 3, 4 };
             byte[] dataKeyPlainText = { 1, 2 };
@@ -466,7 +517,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        private void TestEncryptKeyShouldThrowExceptionAndWipeBytes()
+        public void TestEncryptKeyShouldThrowExceptionAndWipeBytes()
         {
             byte[] dataKeyPlainText = { 1, 2 };
             byte[] encryptedKey = { 3, 4 };

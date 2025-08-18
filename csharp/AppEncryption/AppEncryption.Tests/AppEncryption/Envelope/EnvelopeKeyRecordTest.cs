@@ -7,7 +7,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class EnvelopeKeyRecordTest
     {
         private const string ParentKey = "key1";
