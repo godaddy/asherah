@@ -3,7 +3,6 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Util;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -34,7 +33,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private const string LoadLatestQuery =
             @"SELECT key_record from encryption_key where id = @id order by created DESC limit 1";
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<AdoMetastoreImpl>();
+        private readonly ILogger _logger;
 
         private static readonly TimerOptions LoadTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.load" };
         private static readonly TimerOptions LoadLatestTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".metastore.ado.loadlatest" };
@@ -43,11 +42,14 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly string connectionString;
         private readonly DbProviderFactory dbProviderFactory;
 
-        internal AdoMetastoreImpl(DbProviderFactory dbProviderFactory, string connectionString)
+        internal AdoMetastoreImpl(DbProviderFactory dbProviderFactory, string connectionString, ILogger logger)
         {
             this.connectionString = connectionString;
             this.dbProviderFactory = dbProviderFactory;
+            this._logger = logger;
         }
+
+
 
         /// <summary>
         /// Initializes a <see cref="AdoMetastoreImpl"/> builder using the provided parameters.
@@ -91,7 +93,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 }
                 catch (DbException dbe)
                 {
-                    Logger.LogError(dbe, "Metastore error");
+                    _logger?.LogError(dbe, "Metastore error");
                 }
 
                 return Option<JObject>.None;
@@ -123,7 +125,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 }
                 catch (DbException dbe)
                 {
-                    Logger.LogError(dbe, "Metastore error");
+                    _logger?.LogError(dbe, "Metastore error");
                 }
 
                 return Option<JObject>.None;
@@ -162,7 +164,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                 }
                 catch (DbException dbe)
                 {
-                    Logger.LogError(dbe, "Metastore error during store");
+                    _logger?.LogError(dbe, "Metastore error during store");
 
                     // ADO based persistence does not provide any kind of specific integrity violation error
                     // code/exception. Hence we always return false even for systemic issues to keep things simple.
@@ -198,7 +200,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     }
                     catch (JsonException e)
                     {
-                        Logger.LogError(e, "Failed to create JSON from key");
+                        _logger?.LogError(e, "Failed to create JSON from key");
                     }
                 }
             }
@@ -226,11 +228,24 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         {
             private readonly DbProviderFactory dbProviderFactory;
             private readonly string connectionString;
+            private ILogger _logger;
 
             internal Builder(DbProviderFactory dbProviderFactory, string connectionString)
             {
                 this.dbProviderFactory = dbProviderFactory;
                 this.connectionString = connectionString;
+            }
+
+            /// <summary>
+            /// Set the logger for the <see cref="AdoMetastoreImpl"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            /// <returns>The current <see cref="Builder"/> instance.</returns>
+            public Builder WithLogger(ILogger logger)
+            {
+                this._logger = logger;
+                return this;
             }
 
             /// <summary>
@@ -241,7 +256,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <returns>The fully instantiated <see cref="AdoMetastoreImpl"/> object.</returns>
             public AdoMetastoreImpl Build()
             {
-                return new AdoMetastoreImpl(dbProviderFactory, connectionString);
+                return new AdoMetastoreImpl(dbProviderFactory, connectionString, _logger);
             }
         }
     }

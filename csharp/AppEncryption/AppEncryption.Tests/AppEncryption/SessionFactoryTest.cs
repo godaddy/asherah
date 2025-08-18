@@ -11,13 +11,13 @@ using GoDaddy.Asherah.AppEncryption.Util;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Keys;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 {
-    [Collection("Logger Fixture collection")]
     public class SessionFactoryTest : IDisposable
     {
         private const string TestPartitionId = "test_partition_id";
@@ -52,7 +52,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestConstructor()
+        public void TestConstructor()
         {
             using (SessionFactory sessionFactory = new SessionFactory(
                 TestProductId,
@@ -67,7 +67,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheSetupAndDispose()
+        public void TestSessionCacheSetupAndDispose()
         {
             // Test flows around session cache setup, including cache loader and removal flows (via dispose)
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -100,7 +100,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWhileStillUsedAndNotExpiredShouldNotEvict()
+        public void TestSessionCacheGetSessionWhileStillUsedAndNotExpiredShouldNotEvict()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
@@ -138,7 +138,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWhileStillUsedAndExpiredShouldNotEvict()
+        public void TestSessionCacheGetSessionWhileStillUsedAndExpiredShouldNotEvict()
         {
             long sessionCacheExpireMillis = 30;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -191,7 +191,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionAfterUseAndNotExpiredShouldNotEvict()
+        public void TestSessionCacheGetSessionAfterUseAndNotExpiredShouldNotEvict()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
@@ -239,7 +239,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionAfterUseAndExpiredShouldEvict()
+        public void TestSessionCacheGetSessionAfterUseAndExpiredShouldEvict()
         {
             long sessionCacheExpireMillis = 10;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -293,7 +293,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionNotReachedShouldNotEvict()
+        public void TestSessionCacheGetSessionWithMaxSessionNotReachedShouldNotEvict()
         {
             long sessionCacheMaxSize = 2;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -351,7 +351,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
+        public void TestSessionCacheGetSessionWithMaxSessionReachedShouldEvict()
         {
             long sessionCacheMaxSize = 2;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -406,7 +406,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheGetSessionWithMaxSessionReachedButStillUsedShouldNotEvict()
+        public void TestSessionCacheGetSessionWithMaxSessionReachedButStillUsedShouldNotEvict()
         {
             long sessionCacheMaxSize = 1;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -455,7 +455,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact(Skip = "Fails randomly during CI")]
-        private void TestSessionCacheMultiThreadedSameSessionNoEviction()
+        public void TestSessionCacheMultiThreadedSameSessionNoEviction()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
@@ -499,7 +499,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheMultiThreadedDifferentSessionsNoEviction()
+        public void TestSessionCacheMultiThreadedDifferentSessionsNoEviction()
         {
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
                 .WithKeyExpirationDays(1)
@@ -543,7 +543,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact(Skip = "Fails randomly during CI")]
-        private void TestSessionCacheMultiThreadedWithMaxSessionReachedSameSession()
+        public void TestSessionCacheMultiThreadedWithMaxSessionReachedSameSession()
         {
             long sessionCacheMaxSize = 1;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -587,7 +587,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheMultiThreadedWithMaxSessionReachedDifferentSessions()
+        public void TestSessionCacheMultiThreadedWithMaxSessionReachedDifferentSessions()
         {
             long sessionCacheMaxSize = 2;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -630,7 +630,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheMultiThreadedWithExpirationSameSession()
+        public void TestSessionCacheMultiThreadedWithExpirationSameSession()
         {
             long sessionCacheExpireMillis = 10;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -679,7 +679,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestSessionCacheMultiThreadedWithExpirationDifferentSessions()
+        public void TestSessionCacheMultiThreadedWithExpirationDifferentSessions()
         {
             long sessionCacheExpireMillis = 10;
             CryptoPolicy policy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -728,7 +728,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetSessionJson()
+        public void TestGetSessionJson()
         {
             Session<JObject, byte[]> sessionJson =
                 sessionFactory.GetSessionJson(TestPartitionId);
@@ -736,7 +736,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetSessionBytes()
+        public void TestGetSessionBytes()
         {
             Session<byte[], byte[]> sessionBytes =
                 sessionFactory.GetSessionBytes(TestPartitionId);
@@ -744,7 +744,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetSessionJsonAsJson()
+        public void TestGetSessionJsonAsJson()
         {
             Session<JObject, JObject> session =
                 sessionFactory.GetSessionJsonAsJson(TestPartitionId);
@@ -752,7 +752,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetSessionBytesAsJson()
+        public void TestGetSessionBytesAsJson()
         {
             Session<byte[], JObject> session =
                 sessionFactory.GetSessionBytesAsJson(TestPartitionId);
@@ -760,7 +760,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetEnvelopeEncryptionBytes()
+        public void TestGetEnvelopeEncryptionBytes()
         {
             IEnvelopeEncryption<byte[]> envelopeEncryption =
                 sessionFactory.GetEnvelopeEncryptionBytes(TestPartitionId);
@@ -768,7 +768,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetPartitionWithPartitionId()
+        public void TestGetPartitionWithPartitionId()
         {
             Partition partition =
                 sessionFactory.GetPartition(TestPartitionId);
@@ -779,7 +779,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestGetPartitionWithSuffixedPartition()
+        public void TestGetPartitionWithSuffixedPartition()
         {
             metastoreMock.Setup(x => x.GetKeySuffix()).Returns(TestRegionSuffix);
             Partition partition =
@@ -791,7 +791,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestDisposeSuccess()
+        public void TestDisposeSuccess()
         {
             sessionFactory.Dispose();
 
@@ -800,7 +800,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestDisposeWithDisposeFailShouldReturn()
+        public void TestDisposeWithDisposeFailShouldReturn()
         {
             systemKeyCacheMock.Setup(x => x.Dispose()).Throws<SystemException>();
             sessionFactory.Dispose();
@@ -810,7 +810,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestBuilderPathWithPrebuiltInterfaces()
+        public void TestBuilderPathWithPrebuiltInterfaces()
         {
             SessionFactory.IMetastoreStep metastoreStep =
                 SessionFactory.NewBuilder(TestProductId, TestServiceId);
@@ -832,7 +832,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestBuilderPathWithSpecifiedInterfaces()
+        public void TestBuilderPathWithSpecifiedInterfaces()
         {
             SessionFactory.IMetastoreStep metastoreStep =
                 SessionFactory.NewBuilder(TestProductId, TestServiceId);
@@ -858,7 +858,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestBuilderPathWithMetricsDisabled()
+        public void TestBuilderPathWithMetricsDisabled()
         {
             SessionFactory.NewBuilder(TestProductId, TestServiceId)
                 .WithInMemoryMetastore()
@@ -873,7 +873,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
         }
 
         [Fact]
-        private void TestBuilderPathWithMetricsEnabled()
+        public void TestBuilderPathWithMetricsEnabled()
         {
             IMetrics metrics = new MetricsBuilder().Build();
             SessionFactory.NewBuilder(TestProductId, TestServiceId)
@@ -887,6 +887,95 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption
 
             // Verify metrics were recorded
             Assert.NotEmpty(MetricsUtil.MetricsInstance.Snapshot.Get().Contexts);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerEnabled()
+        {
+            var mockLogger = new Mock<ILogger>();
+            SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithNeverExpiredCryptoPolicy()
+                .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithLogger(mockLogger.Object)
+                .Build();
+
+            // Verify the SessionFactory was created successfully
+            // (implicitly tested by the fact that Build() didn't throw)
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerDisabled()
+        {
+            SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithNeverExpiredCryptoPolicy()
+                .WithStaticKeyManagementService(TestStaticMasterKey)
+                .Build();
+
+            // Verify the SessionFactory was created successfully without a logger
+            // (implicitly tested by the fact that Build() didn't throw)
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerInFullChain()
+        {
+            var mockLogger = new Mock<ILogger>();
+
+            SessionFactory.IMetastoreStep metastoreStep =
+                SessionFactory.NewBuilder(TestProductId, TestServiceId);
+            Assert.NotNull(metastoreStep);
+
+            SessionFactory.ICryptoPolicyStep cryptoPolicyStep = metastoreStep.WithInMemoryMetastore();
+            Assert.NotNull(cryptoPolicyStep);
+
+            SessionFactory.IKeyManagementServiceStep keyManagementServiceStep =
+                cryptoPolicyStep.WithNeverExpiredCryptoPolicy();
+            Assert.NotNull(keyManagementServiceStep);
+
+            SessionFactory.IBuildStep buildStep =
+                keyManagementServiceStep.WithStaticKeyManagementService(TestStaticMasterKey);
+            Assert.NotNull(buildStep);
+
+            SessionFactory.IBuildStep buildStepWithLogger = buildStep.WithLogger(mockLogger.Object);
+            Assert.NotNull(buildStepWithLogger);
+
+            SessionFactory sessionFactory = buildStepWithLogger.Build();
+            Assert.NotNull(sessionFactory);
+        }
+
+        [Fact]
+        public void TestBuilderPathWithLoggerAndMetrics()
+        {
+            var mockLogger = new Mock<ILogger>();
+            IMetrics metrics = new MetricsBuilder().Build();
+
+            SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithNeverExpiredCryptoPolicy()
+                .WithStaticKeyManagementService(TestStaticMasterKey)
+                .WithLogger(mockLogger.Object)
+                .WithMetrics(metrics)
+                .Build();
+
+            // Verify the SessionFactory was created successfully with both logger and metrics
+            // (implicitly tested by the fact that Build() didn't throw)
+        }
+
+        [Fact]
+        public void TestWithLoggerReturnsCorrectInterface()
+        {
+            var mockLogger = new Mock<ILogger>();
+
+            SessionFactory.IBuildStep buildStep = SessionFactory.NewBuilder(TestProductId, TestServiceId)
+                .WithInMemoryMetastore()
+                .WithNeverExpiredCryptoPolicy()
+                .WithStaticKeyManagementService(TestStaticMasterKey);
+
+            SessionFactory.IBuildStep result = buildStep.WithLogger(mockLogger.Object);
+
+            // Verify the return type is IBuildStep interface (not concrete Builder type)
+            Assert.IsAssignableFrom<SessionFactory.IBuildStep>(result);
         }
 
         /// <summary>

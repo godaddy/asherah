@@ -6,12 +6,13 @@ using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
 {
-    [Collection("Logger Fixture collection")]
     public class AppJsonEncryptionImplTest : IClassFixture<MetricsFixture>, IDisposable
     {
         private readonly InMemoryMetastoreImpl<JObject> metastore;
@@ -59,6 +60,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
             using (SecureCryptoKeyDictionary<DateTimeOffset> secureCryptoKeyDictionary =
                 new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()))
             {
+                var mockLogger = new Mock<ILogger>();
                 IEnvelopeEncryption<JObject> envelopeEncryptionJsonImpl = new EnvelopeEncryptionJsonImpl(
                     partition,
                     metastore,
@@ -66,9 +68,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                     new SecureCryptoKeyDictionary<DateTimeOffset>(cryptoPolicy.GetRevokeCheckPeriodMillis()),
                     aeadEnvelopeCrypto,
                     cryptoPolicy,
-                    keyManagementService);
+                    keyManagementService,
+                    mockLogger.Object);
                 using (Session<JObject, JObject> sessionJsonImpl =
-                    new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl))
+                    new SessionJsonImpl<JObject>(envelopeEncryptionJsonImpl, mockLogger.Object))
                 {
                     Asherah.AppEncryption.Util.Json testJson = new Asherah.AppEncryption.Util.Json();
                     testJson.Put("Test", testData);

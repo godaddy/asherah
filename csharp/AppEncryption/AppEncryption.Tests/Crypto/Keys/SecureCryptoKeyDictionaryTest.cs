@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Keys
 {
-    [Collection("Logger Fixture collection")]
     public class SecureCryptoKeyDictionaryTest : IDisposable
     {
         private const long RevokeCheckPeriodMillis = 1000;

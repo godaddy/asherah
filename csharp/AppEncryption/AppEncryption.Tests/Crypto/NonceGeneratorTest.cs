@@ -4,7 +4,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
-    [Collection("Logger Fixture collection")]
     public class NonceGeneratorTest
     {
         private const int BitsPerByte = 8;

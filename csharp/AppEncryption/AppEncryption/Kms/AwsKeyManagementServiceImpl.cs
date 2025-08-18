@@ -17,7 +17,6 @@ using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Envelope;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using GoDaddy.Asherah.Crypto.Keys;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -51,7 +50,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
         internal const string ArnKey = "arn";
         internal const string EncryptedKek = "encryptedKek";
 
-        private static readonly ILogger Logger = LogManager.CreateLogger<AwsKeyManagementServiceImpl>();
+        private readonly ILogger _logger;
 
         private static readonly TimerOptions EncryptkeyTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.encryptkey" };
         private static readonly TimerOptions DecryptkeyTimerOptions = new TimerOptions { Name = MetricsUtil.AelMetricsPrefix + ".kms.aws.decryptkey" };
@@ -66,7 +65,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             string preferredRegion,
             AeadEnvelopeCrypto crypto,
             AwsKmsClientFactory awsKmsClientFactory,
-            AWSCredentials credentials)
+            AWSCredentials credentials,
+            ILogger logger)
         {
             regionPriorityComparator = (region1, region2) =>
             {
@@ -88,6 +88,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             this.preferredRegion = preferredRegion;
             this.crypto = crypto;
             this.awsKmsClientFactory = awsKmsClientFactory;
+            this._logger = logger;
             RegionToArnAndClientDictionary = new OrderedDictionary();
 
             List<KeyValuePair<string, string>> regionToArnList = regionToArnDictionary.ToList();
@@ -102,6 +103,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             });
         }
 
+
+
         public interface IBuildStep
         {
             /// <summary>
@@ -111,6 +114,14 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             /// <param name="credentials">The custom AWS credentials to use.</param>
             /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithCredentials(AWSCredentials credentials);
+
+            /// <summary>
+            /// Set the logger for the <see cref="AwsKeyManagementServiceImpl"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            IBuildStep WithLogger(ILogger logger);
 
             /// <summary>
             /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> with the parameters specified in the builder.
@@ -182,7 +193,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e, "Unexpected execution exception while encrypting KMS data key");
+                    _logger?.LogError(e, "Unexpected execution exception while encrypting KMS data key");
                     throw new AppEncryptionException("unexpected execution error during encrypt", e);
                 }
                 finally
@@ -207,7 +218,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     string region = kmsRegionKeyJson.GetString(RegionKey);
                     if (!RegionToArnAndClientDictionary.Contains(region))
                     {
-                        Logger.LogWarning("Failed to decrypt due to no client for region {Region}, trying next region", region);
+                        _logger?.LogWarning("Failed to decrypt due to no client for region {Region}, trying next region", region);
                         continue;
                     }
 
@@ -228,7 +239,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     }
                     catch (AmazonServiceException e)
                     {
-                        Logger.LogWarning(e, "Failed to decrypt via region {Region} KMS, trying next region", region);
+                        _logger?.LogWarning(e, "Failed to decrypt via region {Region} KMS, trying next region", region);
 
                         // TODO Consider adding notification/CW alert
                     }
@@ -280,7 +291,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
             catch (AggregateException e)
             {
-                Logger.LogWarning(e, "Failed to encrypt generated data key via region {Region} KMS", region);
+                _logger?.LogWarning(e, "Failed to encrypt generated data key via region {Region} KMS", region);
 
                 // TODO Consider adding notification/CW alert
                 return Option<JObject>.None;
@@ -330,7 +341,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                 }
                 catch (AmazonServiceException e)
                 {
-                    Logger.LogWarning(e, "Failed to generate data key via region {Region} KMS, trying next region", region);
+                    _logger?.LogWarning(e, "Failed to generate data key via region {Region} KMS, trying next region", region);
 
                     // TODO Consider adding notification/CW alert
                 }
@@ -409,6 +420,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             private readonly string preferredRegion;
 
             private AWSCredentials credentials;
+            private ILogger _logger;
 
             /// <summary>
             /// Initializes the builder for <see cref="AwsKeyManagementServiceImpl"/> class with the specified options.
@@ -436,6 +448,18 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
             }
 
             /// <summary>
+            /// Set the logger for the <see cref="AwsKeyManagementServiceImpl"/>.
+            /// </summary>
+            ///
+            /// <param name="logger">The logger implementation to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            public IBuildStep WithLogger(ILogger logger)
+            {
+                this._logger = logger;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the finalized <see cref="AwsKeyManagementServiceImpl"/> object with the parameters specified in
             /// the <see cref="Builder"/>.
             /// </summary>
@@ -448,7 +472,8 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
                     preferredRegion,
                     new BouncyAes256GcmCrypto(),
                     new AwsKmsClientFactory(),
-                    credentials);
+                    credentials,
+                    _logger);
             }
         }
 

@@ -6,7 +6,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Envelope
 {
-    [Collection("Logger Fixture collection")]
     public class AeadEnvelopeCryptoTest
     {
         private readonly Mock<CryptoKey> keyEncryptionKey;

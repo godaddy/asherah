@@ -4,7 +4,6 @@ using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto
 {
-    [Collection("Logger Fixture collection")]
     public class BasicExpiringCryptoPolicyTest
     {
         private static readonly int TestExpirationDays = 2;

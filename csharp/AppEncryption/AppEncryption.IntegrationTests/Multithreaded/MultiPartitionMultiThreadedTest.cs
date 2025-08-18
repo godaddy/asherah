@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.AppEncryption.Persistence;
-using GoDaddy.Asherah.Logging;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -19,7 +18,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Multithreaded
     [Collection("Configuration collection")]
     public class MultiPartitionMultiThreadedTest : IDisposable
     {
-        private static readonly ILogger Logger = LogManager.CreateLogger<MultiPartitionMultiThreadedTest>();
+        private static readonly ILogger Logger = TestLoggerFactory.CreateLogger<MultiPartitionMultiThreadedTest>();
         private static readonly Persistence<byte[]> PersistenceBytes = PersistenceFactory.CreateInMemoryPersistence<byte[]>();
 
         private readonly SessionFactory sessionFactory;
