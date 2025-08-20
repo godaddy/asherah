@@ -134,3 +134,7 @@ issues:
         - godot
         - gosec
         - perfsprint
+    - path: plugins/aws-v1/
+      linters:
+        - staticcheck
+      text: "SA1019.*aws-sdk-go.*deprecated"
