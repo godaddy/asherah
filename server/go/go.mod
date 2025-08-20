@@ -2,8 +2,6 @@ module github.com/godaddy/asherah/server/go
 
 go 1.23.0
 
-toolchain go1.24.1
-
 require (
 	github.com/aws/aws-sdk-go-v2 v1.33.0
 	github.com/aws/aws-sdk-go-v2/config v1.29.1
