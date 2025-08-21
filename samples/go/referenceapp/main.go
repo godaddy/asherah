@@ -19,6 +19,7 @@ import (
 	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
+	awsv2kms "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
 	"github.com/google/logger"
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
@@ -142,7 +143,15 @@ func createKMS(crypto appencryption.AEAD) (appencryption.KeyManagementService, e
 			regionArnMap[regionArnValue[0]] = regionArnValue[1]
 		}
 
-		return kms.NewAWS(crypto, opts.PreferredRegion, regionArnMap)
+		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(opts.PreferredRegion))
+		if err != nil {
+			return nil, err
+		}
+
+		return awsv2kms.NewBuilder(crypto, regionArnMap).
+			WithAWSConfig(cfg).
+			WithPreferredRegion(opts.PreferredRegion).
+			Build()
 	default:
 		logger.Info("using static kms")
 
