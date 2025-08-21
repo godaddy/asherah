@@ -1,7 +1,7 @@
 # Encrypt/decrypt sample application for AWS Lambda
 
 The encrypt/decrypt sample application demonstrates the use of Asherah SDK to perform application-level encryption
-operations in an AWS Lambda function.
+operations in an AWS Lambda function using modern AWS SDK v2 integration.
 
 > This example is based on the [Blank function sample application](https://github.com/awsdocs/aws-lambda-developer-guide/tree/main/sample-apps/blank-go) found in the
 [AWS Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html).

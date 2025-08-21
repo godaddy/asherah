@@ -9,14 +9,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/go-sql-driver/mysql"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
 	"github.com/google/logger"
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
@@ -85,32 +87,36 @@ func createMetastore() appencryption.Metastore {
 	case "DYNAMODB":
 		logger.Info("using dynamodb metastore")
 
-		awsConfig := &aws.Config{
-			Region: aws.String(opts.DynamoDBRegion),
+		configOpts := []func(*config.LoadOptions) error{
+			config.WithRegion(opts.DynamoDBRegion),
 		}
 
-		if opts.Verbose {
-			awsConfig.LogLevel = aws.LogLevel(aws.LogDebug)
-			awsConfig.Logger = aws.Logger(aws.LoggerFunc(func(v ...interface{}) {
-				logger.Infof("AWS %s", fmt.Sprint(v...))
-			}))
+		awsCfg, err := config.LoadDefaultConfig(context.TODO(), configOpts...)
+		if err != nil {
+			panic(err)
 		}
 
-		if len(opts.DynamoDBEndpoint) > 0 {
-			awsConfig.Endpoint = aws.String(opts.DynamoDBEndpoint)
+		client := dynamodb.NewFromConfig(awsCfg, func(o *dynamodb.Options) {
+			if len(opts.DynamoDBEndpoint) > 0 {
+				o.BaseEndpoint = aws.String(opts.DynamoDBEndpoint)
+			}
+		})
+
+		metastoreOpts := []metastore.Option{
+			metastore.WithDynamoDBClient(client),
+			metastore.WithRegionSuffix(opts.EnableRegionSuffix),
 		}
 
-		sess, e := session.NewSession(awsConfig)
-
-		if e != nil {
-			panic(e)
+		if len(opts.DynamoDBTableName) > 0 {
+			metastoreOpts = append(metastoreOpts, metastore.WithTableName(opts.DynamoDBTableName))
 		}
 
-		return persistence.NewDynamoDBMetastore(
-			sess,
-			persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix),
-			persistence.WithTableName(opts.DynamoDBTableName),
-		)
+		metastoreInstance, err := metastore.NewDynamoDB(metastoreOpts...)
+		if err != nil {
+			panic(err)
+		}
+
+		return metastoreInstance
 	default:
 		logger.Info("using in-memory metastore")
 

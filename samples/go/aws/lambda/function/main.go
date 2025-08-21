@@ -9,14 +9,12 @@ import (
 	"syscall"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	awskms "github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
-	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
-	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
+	awsv2kms "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
 	"github.com/godaddy/asherah/go/securememory"
 	"github.com/prometheus/procfs"
 	"github.com/rcrowley/go-metrics"
@@ -141,25 +139,32 @@ func resetFactory() error {
 	return initFactory()
 }
 
-// newMetastore returns a newly initialized DynamoDBMetastore.
-func newMetastore() (*persistence.DynamoDBMetastore, error) {
-	awsConfig := &aws.Config{
-		Region: aws.String(os.Getenv("AWS_REGION")),
+// newMetastore returns a newly initialized DynamoDB metastore using AWS SDK v2.
+func newMetastore() (*metastore.Metastore, error) {
+	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(os.Getenv("AWS_REGION")),
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	sess, e := session.NewSession(awsConfig)
-	if e != nil {
-		return nil, e
+	client := dynamodb.NewFromConfig(awsCfg)
+	// Note: X-Ray tracing for AWS SDK v2 requires different setup
+	// xray.AWS(client) // This would need to be updated for v2 X-Ray integration
+
+	metastoreOpts := []metastore.Option{
+		metastore.WithDynamoDBClient(client),
 	}
 
-	return persistence.NewDynamoDBMetastore(
-		xray.AWSSession(sess),
-		persistence.WithTableName(os.Getenv("ASHERAH_METASTORE_TABLE_NAME")),
-	), nil
+	if tableName := os.Getenv("ASHERAH_METASTORE_TABLE_NAME"); tableName != "" {
+		metastoreOpts = append(metastoreOpts, metastore.WithTableName(tableName))
+	}
+
+	return metastore.NewDynamoDB(metastoreOpts...)
 }
 
-// newKMS returns a newly initialized AWSKMS.
-func newKMS(crypto appencryption.AEAD) (*kms.AWSKMS, error) {
+// newKMS returns a newly initialized AWS KMS using AWS SDK v2.
+func newKMS(crypto appencryption.AEAD) (*awsv2kms.AWSKMS, error) {
 	region := os.Getenv("AWS_REGION")
 
 	// build the ARN regions including preferred region
@@ -167,16 +172,23 @@ func newKMS(crypto appencryption.AEAD) (*kms.AWSKMS, error) {
 		region: os.Getenv("ASHERAH_KMS_KEY_ARN"),
 	}
 
-	k, err := kms.NewAWS(crypto, region, regionArnMap)
+	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(region),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, _ := range k.Clients {
-		client := k.Clients[i].KMS.(*awskms.KMS)
-		xray.AWS(client.Client)
-		k.Clients[i].KMS = client
+	k, err := awsv2kms.NewBuilder(crypto, regionArnMap).
+		WithAWSConfig(awsCfg).
+		WithPreferredRegion(region).
+		Build()
+	if err != nil {
+		return nil, err
 	}
+
+	// Note: X-Ray tracing for AWS SDK v2 requires different setup
+	// X-Ray integration would need to be updated for v2 clients
 
 	return k, nil
 }
