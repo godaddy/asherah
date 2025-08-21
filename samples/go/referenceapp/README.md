@@ -5,6 +5,8 @@ Sample application that can be used as a guide to using the GO AppEncryption SDK
 Current implementation shows a simple encrypt/decrypt use of the library. The Metastore and KMS implementations used are
 based on parameters specified via command-line args. A basic Crypto Policy is being used.
 
+This sample demonstrates current best practices using AWS SDK v2 for AWS service integration.
+
 Future updates as the library evolves:
 
 - Additional usage example utilizing more robust metadata and data storage handling by the library
