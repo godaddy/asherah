@@ -63,6 +63,9 @@ exclude-signatures = [
     { signature = "4fd64eba4d0cd313fb11a4426164090b479e283694c9f78e0b5dfd1ee0bfb1a4", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
     { signature = "2ac463d9e220f2f5b390ffffacdb8c66f6f06514221e5be52119fb7c084f9c39", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
     { signature = "c65c037a27933dba05fec232a3943633143f21ad48e8324f107df4ff467feba7", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
+    { signature = "87051e93075d9739fd69dece05a11c62ed5f3a97962921ecfd6cbc4aa43b32b5", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
+    { signature = "6b38b896135b6fcb90c4b9f50c7752da8113d6e2353b4d7daa74c7e9b2959281", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
+    { signature = "ef3d6c584d7960dc47d93039f4b349b1380224ba868d2acaa55e3d559915121e", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
 
     { signature = "4d6443395d44706153c79440909aba82f18d12a844ae53c18db412044d0fb79f", reason = "Constant the contains the A-Z character set in Node client for gRPC server"},
 
