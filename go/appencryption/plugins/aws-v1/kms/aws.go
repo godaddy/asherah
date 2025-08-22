@@ -44,6 +44,8 @@ type KMS interface {
 
 // AWSKMSClient contains a KMS client and region information used for
 // encrypting a key in KMS.
+//
+// Deprecated: AWS SDK v1 reached end-of-life July 31, 2025. Use github.com/godladdy/asherah/go/appencryption/plugins/aws-v2/kms instead.
 type AWSKMSClient struct {
 	KMS    KMS
 	Region string
@@ -77,6 +79,8 @@ func createAWSKMSClients(arnMap map[string]string) ([]AWSKMSClient, error) {
 
 // AWSKMS implements the KeyManagementService interface and handles
 // encryption/decryption in KMS.
+//
+// Deprecated: AWS SDK v1 reached end-of-life July 31, 2025. Use github.com/godladdy/asherah/go/appencryption/plugins/aws-v2/kms instead.
 type AWSKMS struct {
 	Crypto   appencryption.AEAD
 	Clients  []AWSKMSClient
@@ -93,6 +97,8 @@ func sortClients(preferredRegion string, clients []AWSKMSClient) []AWSKMSClient 
 
 // NewAWS returns a new AWSKMS used for encrypting/decrypting
 // keys with a master key.
+//
+// Deprecated: AWS SDK v1 reached end-of-life July 31, 2025. Use github.com/godladdy/asherah/go/appencryption/plugins/aws-v2/kms instead.
 func NewAWS(crypto appencryption.AEAD, preferredRegion string, arnMap map[string]string) (*AWSKMS, error) {
 	return newAWS(crypto, preferredRegion, awsARNMap(arnMap))
 }
