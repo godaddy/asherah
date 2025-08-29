@@ -4,7 +4,7 @@ This sample application and tutorial demonstrates the use of Asherah SDK to perf
 operations in a web API built with ASP.NET Core and launched as a Fargate task on Amazon ECS.
 
 > This example is based on the excellent ECS tutorial found [here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html)
-in the [AWS Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html).
+in the [AWS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/welcome.html).
 
 ### Prerequisites
 
@@ -13,13 +13,11 @@ in the [AWS Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcom
 * [Docker](https://docs.docker.com/get-docker/)
 * The Bash shell
 
->Optionally, if you wish to build and run the sample application locally you will need [.NET SDK 3.1 or later](https://dotnet.microsoft.com/download/dotnet/3.1) installed in your development environment.
+>Optionally, if you wish to build and run the sample application locally you will need [.NET SDK 9.0](https://dotnet.microsoft.com/) installed in your development environment.
 
 In addition, the steps that follow also assume the `ecsTaskExecutionRole` already exists within your AWS account. If you
 know this task execution role already exists, you're ready to [get started](#setup).
-Otherwise, see
-[this section](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html#ECS_CLI_tutorial_fargate_iam_role)
-of the ECS tutorial for more information.
+Otherwise, see the Amazon ECS documentation for more information.
 
 ## Setup
 
