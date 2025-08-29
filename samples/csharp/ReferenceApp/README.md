@@ -26,19 +26,19 @@ Running `dotnet publish` will generate the required dll.
 Example showing CLI options:
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll --help
+[user@machine ReferenceApp]$ dotnet run --project ReferenceApp -- --help
 ```
 
 Example run using defaults (in-memory metastore, static KMS, console metrics only):
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll
+[user@machine ReferenceApp]$ dotnet run --project ReferenceApp
  ```
 
 Example run using ADO persistence and AWS KMS and 100 iterations:
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \
+[user@machine ReferenceApp]$ dotnet run --project ReferenceApp -- \
   --metastore-type ADO \
   --ado-connection-string <AdoConnectionString> \
   --kms-type AWS \
@@ -134,11 +134,11 @@ Example run using DynamoDB metastore with key suffixes enabled (for Global Table
 local DynamoDB endpoint.
 
 ```console
-[user@machine ReferenceApp]$ dotnet bin/Debug/netcoreapp2.0/ReferenceApp.dll \
+[user@machine ReferenceApp]$ dotnet run --project ReferenceApp -- \
   --metastore-type DYNAMODB \
   --enable-key-suffix \
   --dynamodb-endpoint http://localhost:8000 \
-  --dynamodb-signing-region us-west-2 \
+  --dynamodb-region us-west-2 \
   --dynamodb-table-name MyGlobalTable
 ```
 
@@ -155,7 +155,7 @@ follows:
 
   -t, --dynamodb-table-name      The table name for DynamoDb (only supported by DYNAMODB)
 
-  -s, --key-suffix               Configure the metastore to use key suffixes (only supported by DYNAMODB)
+  -s, --enable-key-suffix        Configure the metastore to use key suffixes (only supported by DYNAMODB)
 
   -a, --ado-connection-string    ADO connection string to use for an ADO metastore. Required for ADO metastore.
 
@@ -166,8 +166,6 @@ follows:
   --region-arn-tuples        Comma separated list of <region>=<kms_arn> tuples. Required for AWS KMS.
 
   -i, --iterations               (Default: 1) Number of encrypt/decrypt iterations to run
-
-  -c, --enable-cw                Enable CloudWatch Metrics output
 
   -d, --drr                      DRR to be decrypted
 

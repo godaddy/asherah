@@ -11,7 +11,6 @@ using GoDaddy.Asherah.AppEncryption;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.Crypto;
-using GoDaddy.Asherah.Logging;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json.Linq;
@@ -23,8 +22,8 @@ namespace GoDaddy.Asherah.ReferenceApp
         private static readonly int KeyExpirationDays = 30;
         private static readonly int CacheCheckMinutes = 30;
 
-        private static ILogger logger;
-        private static ParserResult<Options> cmdOptions;
+        private static ILogger? logger;
+        private static ParserResult<Options>? cmdOptions;
 
         public enum Metastore
         {
@@ -49,8 +48,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 builder.AddFilter((category, level) => level >= LogLevel.Information)
                     .AddConsole();
             });
-            LogManager.SetLoggerFactory(loggerFactory);
-            logger = LogManager.CreateLogger<ReferenceApp>();
+            logger = loggerFactory.CreateLogger<ReferenceApp>();
 
             cmdOptions = Parser.Default.ParseArguments<Options>(args);
             cmdOptions.WithParsed(App);
@@ -58,28 +56,29 @@ namespace GoDaddy.Asherah.ReferenceApp
 
         private static async void App(Options options)
         {
-            IMetastore<JObject> metastore = null;
-            KeyManagementService keyManagementService = null;
+            IMetastore<JObject>? metastore = null;
+            KeyManagementService? keyManagementService = null;
 
             if (options.Metastore == Metastore.ADO)
             {
                 if (options.AdoConnectionString != null)
                 {
-                    logger.LogInformation("using ADO-based metastore...");
+                    logger?.LogInformation("using ADO-based metastore...");
                     metastore = AdoMetastoreImpl
                         .NewBuilder(MySqlClientFactory.Instance, options.AdoConnectionString)
+                        .WithLogger(logger)
                         .Build();
                 }
                 else
                 {
-                    logger.LogError("ADO connection string is a mandatory parameter with Metastore Type: ADO");
+                    logger?.LogError("ADO connection string is a mandatory parameter with Metastore Type: ADO");
                     Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                     return;
                 }
             }
             else if (options.Metastore == Metastore.DYNAMODB)
             {
-                logger.LogInformation("using DynamoDB-based metastore...");
+                logger?.LogInformation("using DynamoDB-based metastore...");
                 AWSConfigs.AWSRegion = "us-west-2";
                 DynamoDbMetastoreImpl.Builder builder = DynamoDbMetastoreImpl.NewBuilder("us-west-2");
 
@@ -88,7 +87,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                     if (string.IsNullOrEmpty(options.DynamodbRegion))
                     {
                         // TODO: check if region can be determined from provided endpoint
-                        logger.LogError("DynamoDb region is required when providing a DynamoDb endpoint.");
+                        logger?.LogError("DynamoDb region is required when providing a DynamoDb endpoint.");
                         Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                         return;
                     }
@@ -104,7 +103,7 @@ namespace GoDaddy.Asherah.ReferenceApp
                 {
                     if (options.DynamodbTableName.Length == 0)
                     {
-                        logger.LogError("Table name cannot be blank");
+                        logger?.LogError("Table name cannot be blank");
                         Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                         return;
                     }
@@ -117,11 +116,12 @@ namespace GoDaddy.Asherah.ReferenceApp
                     builder.WithKeySuffix();
                 }
 
+                builder.WithLogger(logger);
                 metastore = builder.Build();
             }
             else
             {
-                logger.LogInformation("using in-memory metastore...");
+                logger?.LogInformation("using in-memory metastore...");
                 metastore = new InMemoryMetastoreImpl<JObject>();
             }
 
@@ -136,20 +136,20 @@ namespace GoDaddy.Asherah.ReferenceApp
                         regionToArnDictionary.Add(regionArnArray[0], regionArnArray[1]);
                     }
 
-                    logger.LogInformation("using AWS KMS...");
+                    logger?.LogInformation("using AWS KMS...");
                     keyManagementService = AwsKeyManagementServiceImpl
                         .NewBuilder(regionToArnDictionary, options.PreferredRegion).Build();
                 }
                 else
                 {
-                    logger.LogError("Preferred region and <region>=<arn> tuples are mandatory with  KMS Type: AWS");
+                    logger?.LogError("Preferred region and <region>=<arn> tuples are mandatory with  KMS Type: AWS");
                     Console.WriteLine(HelpText.AutoBuild(cmdOptions, null, null));
                     return;
                 }
             }
             else
             {
-                logger.LogInformation("using static KMS...");
+                logger?.LogInformation("using static KMS...");
                 keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
             }
 
@@ -163,62 +163,54 @@ namespace GoDaddy.Asherah.ReferenceApp
             IMetricsBuilder metricsBuilder = new MetricsBuilder()
                 .Report.ToConsole(consoleOptions => consoleOptions.FlushInterval = TimeSpan.FromSeconds(60));
 
-            // CloudWatch metrics generation
-            if (options.EnableCloudWatch)
-            {
-                // Fill in when we open source our App.Metrics cloudwatch reporter separately
-            }
-
             IMetrics metrics = metricsBuilder.Build();
 
             // Create a session factory for this app. Normally this would be done upon app startup and the
             // same factory would be used anytime a new session is needed for a partition (e.g., shopper).
             // We've split it out into multiple using blocks to underscore this point.
-            using (SessionFactory sessionFactory = SessionFactory
+            using SessionFactory sessionFactory = SessionFactory
                 .NewBuilder("productId", "reference_app")
                 .WithMetastore(metastore)
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithKeyManagementService(keyManagementService)
                 .WithMetrics(metrics)
-                .Build())
+                .WithLogger(logger)
+                .Build();
+
+            // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
+            // for a transaction and is disposed automatically after use due to the IDisposable implementation.
+            using Session<byte[], byte[]> sessionBytes = sessionFactory.GetSessionBytes("shopper123");
+
+            const string originalPayloadString = "mysupersecretpayload";
+            foreach (int i in Enumerable.Range(0, options.Iterations))
             {
-                // Now create an actual session for a partition (which in our case is a pretend shopper id). This session is used
-                // for a transaction and is disposed automatically after use due to the IDisposable implementation.
-                using (Session<byte[], byte[]> sessionBytes =
-                    sessionFactory.GetSessionBytes("shopper123"))
+                string dataRowString;
+
+                // If we get a DRR as a command line argument, we want to directly decrypt it
+                if (options.Drr != null)
                 {
-                    const string originalPayloadString = "mysupersecretpayload";
-                    foreach (int i in Enumerable.Range(0, options.Iterations))
-                    {
-                        string dataRowString;
-
-                        // If we get a DRR as a command line argument, we want to directly decrypt it
-                        if (options.Drr != null)
-                        {
-                            dataRowString = options.Drr;
-                        }
-                        else
-                        {
-                            // Encrypt the payload
-                            byte[] dataRowRecordBytes =
-                                sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
-
-                            // Consider this us "persisting" the DRR
-                            dataRowString = Convert.ToBase64String(dataRowRecordBytes);
-                        }
-
-                        logger.LogInformation("dataRowRecord as string = {dataRow}", dataRowString);
-
-                        byte[] newDataRowRecordBytes = Convert.FromBase64String(dataRowString);
-
-                        // Decrypt the payload
-                        string decryptedPayloadString =
-                            Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
-
-                        logger.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
-                        logger.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));
-                    }
+                    dataRowString = options.Drr;
                 }
+                else
+                {
+                    // Encrypt the payload
+                    byte[] dataRowRecordBytes =
+                        sessionBytes.Encrypt(Encoding.UTF8.GetBytes(originalPayloadString));
+
+                    // Consider this us "persisting" the DRR
+                    dataRowString = Convert.ToBase64String(dataRowRecordBytes);
+                }
+
+                logger?.LogInformation("dataRowRecord as string = {dataRow}", dataRowString);
+
+                byte[] newDataRowRecordBytes = Convert.FromBase64String(dataRowString);
+
+                // Decrypt the payload
+                string decryptedPayloadString =
+                    Encoding.UTF8.GetString(sessionBytes.Decrypt(newDataRowRecordBytes));
+
+                logger?.LogInformation("decryptedPayloadString = {payload}", decryptedPayloadString);
+                logger?.LogInformation("matches = {result}", originalPayloadString.Equals(decryptedPayloadString));
             }
 
             // Force final publish of metrics

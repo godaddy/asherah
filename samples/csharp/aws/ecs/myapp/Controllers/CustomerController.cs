@@ -20,14 +20,16 @@ namespace myapp.Controllers
         private static readonly ConcurrentDictionary<Guid, CustomerDTO> _customers =
             new ConcurrentDictionary<Guid, CustomerDTO>();
 
-        private static readonly SessionFactory _sessionFactory;
-
+        private readonly SessionFactory _sessionFactory;
         private readonly ILogger<CustomerController> _logger;
 
-        static CustomerController()
+        public CustomerController(ILogger<CustomerController> logger)
         {
+            _logger = logger;
+
             long sessionCacheSize;
-            if (!long.TryParse(Environment.GetEnvironmentVariable("ASHERAH_SESSION_CACHE_SIZE"), out sessionCacheSize)) {
+            if (!long.TryParse(Environment.GetEnvironmentVariable("ASHERAH_SESSION_CACHE_SIZE"), out sessionCacheSize))
+            {
                 sessionCacheSize = 100;
             }
 
@@ -45,12 +47,8 @@ namespace myapp.Controllers
                 .WithInMemoryMetastore()
                 .WithCryptoPolicy(cryptoPolicy)
                 .WithStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
+                .WithLogger(_logger)
                 .Build();
-        }
-
-        public CustomerController(ILogger<CustomerController> logger)
-        {
-            _logger = logger;
         }
 
         // GET: api/customers
@@ -64,8 +62,9 @@ namespace myapp.Controllers
         [HttpGet("{id}")]
         public ActionResult<CustomerDTO> GetCustomerDTO(Guid id)
         {
-            CustomerDTO retrieved = null;
-            if (_customers.TryGetValue(id, out retrieved)) {
+            CustomerDTO? retrieved = null;
+            if (_customers.TryGetValue(id, out retrieved))
+            {
                 return retrieved;
             }
 
@@ -76,8 +75,9 @@ namespace myapp.Controllers
         [HttpGet("{id}/full")]
         public ActionResult<Customer> GetCustomer(Guid id)
         {
-            CustomerDTO retrieved = null;
-            if (_customers.TryGetValue(id, out retrieved)) {
+            CustomerDTO? retrieved = null;
+            if (_customers.TryGetValue(id, out retrieved))
+            {
                 return fromCustomerDTO(retrieved);
             }
 
@@ -91,7 +91,8 @@ namespace myapp.Controllers
             customer.Id = Guid.NewGuid();
             customer.Created = DateTime.UtcNow;
             var custDTO = toCustomerDTO(customer);
-            if (!_customers.TryAdd(customer.Id, custDTO)){
+            if (!_customers.TryAdd(customer.Id, custDTO))
+            {
                 return BadRequest();
             }
 
@@ -124,9 +125,21 @@ namespace myapp.Controllers
             // Get a session using the customer id as the partition id
             using var session = _sessionFactory.GetSessionJson(dto.Id.ToString());
 
+            // Check if SecretInfo is null before processing
+            if (dto.SecretInfo == null)
+            {
+                throw new ArgumentException("Customer SecretInfo cannot be null", nameof(dto));
+            }
+
             // Use the session to decrypt the customer PII (SecretInfo)
             var jobject = session.Decrypt(Convert.FromBase64String(dto.SecretInfo));
             var pii = jobject.ToObject<CustomerPII>();
+
+            // Add null check before dereferencing
+            if (pii == null)
+            {
+                throw new InvalidOperationException("Failed to deserialize CustomerPII from decrypted data");
+            }
 
             return new Customer
             {
