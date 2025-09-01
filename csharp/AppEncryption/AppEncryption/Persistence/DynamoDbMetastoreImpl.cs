@@ -43,6 +43,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         private readonly string preferredRegion;
         private readonly Table table;
 
+
         internal DynamoDbMetastoreImpl(Builder builder)
         {
             DbClient = builder.DbClient;
@@ -50,6 +51,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             preferredRegion = builder.PreferredRegion;
             hasKeySuffix = builder.HasKeySuffix;
             this._logger = builder.Logger;
+
 
             // Note this results in a network call. For now, cleaner than refactoring w/ thread-safe lazy loading
             table = builder.LoadTable(DbClient, TableName);
@@ -106,6 +108,15 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <param name="logger">The logger implementation to use.</param>
             /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
             IBuildStep WithLogger(ILogger logger);
+
+            /// <summary>
+            /// Provides a custom DynamoDB client. When this is used, the credentials, endpoint, and region
+            /// configurations will be ignored.
+            /// </summary>
+            ///
+            /// <param name="client">The custom DynamoDB client to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            IBuildStep WithDynamoDbClient(IAmazonDynamoDB client);
 
             /// <summary>
             /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> with the parameters specified in the builder.
@@ -274,25 +285,30 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             return DefaultKeySuffix;
         }
 
+
+
         /// <summary>
         /// Builder class to create an instance of the <see cref="DynamoDbMetastoreImpl"/> class.
         /// </summary>
-        public class Builder : IBuildStep, IDisposable
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Builder intentionally does not manage client lifecycle - client cleanup is handled by GC finalizers")]
+        public class Builder : IBuildStep
         {
             private readonly string preferredRegion;
-            private AmazonDynamoDBClient dbClient;
+            private IAmazonDynamoDB dbClient;
             private bool hasKeySuffix;
             private string tableName = DefaultTableName;
             private AWSCredentials credentials;
             private ILogger _logger;
 
+
             // Internal properties for access
             internal string PreferredRegion => preferredRegion;
-            internal AmazonDynamoDBClient DbClient => dbClient;
+            internal IAmazonDynamoDB DbClient => dbClient;
             internal bool HasKeySuffix => hasKeySuffix;
             internal string TableName => tableName;
             internal AWSCredentials Credentials => credentials;
             internal ILogger Logger => _logger;
+
 
             private const string DefaultTableName = "EncryptionKey";
             private readonly AmazonDynamoDBConfig dbConfig = new AmazonDynamoDBConfig();
@@ -367,6 +383,19 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             }
 
             /// <summary>
+            /// Provides a custom DynamoDB client. When this is used, the credentials, endpoint, and region
+            /// configurations will be ignored.
+            /// </summary>
+            ///
+            /// <param name="client">The custom DynamoDB client to use.</param>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            public IBuildStep WithDynamoDbClient(IAmazonDynamoDB client)
+            {
+                this.dbClient = client;
+                return this;
+            }
+
+            /// <summary>
             /// Builds the finalized <see cref="DynamoDbMetastoreImpl"/> object with the parameters specified in the
             /// <see cref="Builder"/>.
             /// </summary>
@@ -374,12 +403,15 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <returns>The fully instantiated <see cref="DynamoDbMetastoreImpl"/> object.</returns>
             public DynamoDbMetastoreImpl Build()
             {
-                if (!hasEndPoint && !hasRegion)
+                if (dbClient == null)
                 {
-                    dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(preferredRegion);
-                }
+                    if (!hasEndPoint && !hasRegion)
+                    {
+                        dbConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(preferredRegion);
+                    }
 
-                dbClient = new AmazonDynamoDBClient(credentials, dbConfig);
+                    dbClient = new AmazonDynamoDBClient(credentials, dbConfig);
+                }
 
                 return new DynamoDbMetastoreImpl(this);
             }
@@ -392,26 +424,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
                     .Build();
             }
 
-            /// <summary>
-            /// Disposes of the managed resources.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
 
-            /// <summary>
-            /// Disposes of the managed resources.
-            /// </summary>
-            /// <param name="disposing">True if called from Dispose, false if called from finalizer.</param>
-            protected virtual void Dispose(bool disposing)
-            {
-                if (disposing)
-                {
-                    dbClient?.Dispose();
-                }
-            }
         }
     }
 }

@@ -98,6 +98,7 @@ build the metastore by calling the `Build` method.
  - **WithRegion**: Specifies the region for the AWS DynamoDb client.
  - **WithEndPointConfiguration**: Adds an EndPoint configuration to the AWS DynamoDb client.
  - **WithCredentials**: Specifies custom credentials for the AWS DynamoDb client.
+ - **WithDynamoDbClient**: **Recommended** - Provides a custom DynamoDB client. This method is preferred over letting the builder create the client, especially when using dependency injection frameworks. It gives you full control over client configuration and lifecycle management.
 
 Below is an example of a DynamoDB metastore that uses a Global Table named `TestTable`
 
@@ -110,6 +111,49 @@ IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder("us-wes
       .WithKeySuffix()
       .WithTableName("TestTable")
       .Build();
+```
+
+**Recommended: Using WithDynamoDbClient with Dependency Injection and AWSSDK.Extensions.NETCore.Setup**
+
+```c#
+// In your DI container setup (e.g., Startup.cs, Program.cs)
+services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
+services.AddAWSService<IAmazonDynamoDB>();
+
+// In your service or controller
+public class AsherahHelper(IAmazonDynamoDB dynamoDbClient, AWSOptions awsOptions)
+{
+    public SessionFactory BuildSessionFactory()
+    {
+        var preferredRegion = awsOptions.Region.SystemName;
+        var metastore = DynamoDbMetastoreImpl.NewBuilder(preferredRegion)
+            .WithDynamoDbClient(dynamoDbClient)  // Use the injected client
+            .WithKeySuffix()
+            .WithTableName("TestTable")
+            .Build();
+
+        // continue building factory here
+    }
+}
+```
+
+**Alternative: Manual Client Configuration**
+
+```c#
+// Create a custom DynamoDB client with specific configuration
+var config = new AmazonDynamoDBConfig
+{
+    RegionEndpoint = Amazon.RegionEndpoint.USWest2,
+    Timeout = TimeSpan.FromSeconds(30)
+};
+var customClient = new AmazonDynamoDBClient(credentials, config);
+
+// Use the custom client in the metastore
+IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
+    .WithDynamoDbClient(customClient)
+    .WithKeySuffix()
+    .WithTableName("TestTable")
+    .Build();
 ```
 
 #### In-memory Metastore (FOR TESTING ONLY)
