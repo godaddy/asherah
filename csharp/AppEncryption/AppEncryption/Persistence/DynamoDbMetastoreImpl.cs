@@ -290,7 +290,7 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
         /// <summary>
         /// Builder class to create an instance of the <see cref="DynamoDbMetastoreImpl"/> class.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Builder intentionally does not manage client lifecycle - client cleanup is handled by GC finalizers")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Builder intentionally should not manage client lifecycle")]
         public class Builder : IBuildStep
         {
             private readonly string preferredRegion;
