@@ -85,6 +85,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
 
             /// <summary>
             /// Adds Endpoint config to the AWS DynamoDb client.
+            /// Note: This method will be ignored if <see cref="WithRegion"/> has already been called.
+            /// The first method called between <see cref="WithRegion"/> and <see cref="WithEndPointConfiguration"/> takes precedence.
             /// </summary>
             ///
             /// <param name="endPoint">the service endpoint either with or without the protocol.</param>
@@ -95,6 +97,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <summary>
             /// Specifies the region for the AWS DynamoDb client. If this is not specified, then the region from
             /// <see cref="DynamoDbMetastoreImpl.NewBuilder"/> is used.
+            /// Note: This method will be ignored if <see cref="WithEndPointConfiguration"/> has already been called.
+            /// The first method called between <see cref="WithRegion"/> and <see cref="WithEndPointConfiguration"/> takes precedence.
             /// </summary>
             ///
             /// <param name="region">The region for the DynamoDb client.</param>
@@ -112,6 +116,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <summary>
             /// Provides a custom DynamoDB client. When this is used, the credentials, endpoint, and region
             /// configurations will be ignored.
+            /// Note: This method completely bypasses all other client configuration methods.
+            /// This is the recommended approach, especially when using dependency injection frameworks.
             /// </summary>
             ///
             /// <param name="client">The custom DynamoDB client to use.</param>
@@ -385,6 +391,8 @@ namespace GoDaddy.Asherah.AppEncryption.Persistence
             /// <summary>
             /// Provides a custom DynamoDB client. When this is used, the credentials, endpoint, and region
             /// configurations will be ignored.
+            /// Note: This method completely bypasses all other client configuration methods.
+            /// This is the recommended approach, especially when using dependency injection frameworks.
             /// </summary>
             ///
             /// <param name="client">The custom DynamoDB client to use.</param>
