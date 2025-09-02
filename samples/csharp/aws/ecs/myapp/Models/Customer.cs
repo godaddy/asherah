@@ -7,17 +7,20 @@ namespace myapp.Models
         public Guid Id { get; set; }
         public DateTime Created { get; set; }
 
-        public string FirstName {
+        public string? FirstName
+        {
             get { return pii.FirstName; }
             set { pii.FirstName = value; }
         }
 
-        public string LastName {
+        public string? LastName
+        {
             get { return pii.LastName; }
             set { pii.LastName = value; }
         }
 
-        public string Address {
+        public string? Address
+        {
             get { return pii.Address; }
             set { pii.Address = value; }
         }
@@ -32,9 +35,9 @@ namespace myapp.Models
 
     public class CustomerPII
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Address { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Address { get; set; }
     }
 
     /// <summary>
@@ -45,6 +48,6 @@ namespace myapp.Models
     {
         public Guid Id { get; set; }
         public DateTime Created { get; set; }
-        public string SecretInfo { get; set; }
+        public string? SecretInfo { get; set; }
     }
 }
