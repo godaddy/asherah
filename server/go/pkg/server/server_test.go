@@ -343,13 +343,16 @@ func Test_Streamer_StreamGetSession(t *testing.T) {
 func Test_NewAppEncryption(t *testing.T) {
 	// A simple smoke test that consturcts new handlers
 	// using a variety of configuration options.
+	testRegionMap := make(RegionMap)
+	testRegionMap["us-west-2"] = "arn:aws:kms:us-west-2:123456789012:key/12345678-1234-1234-1234-123456789012"
+
 	optCombos := []*Options{
-		{KMS: "aws", Metastore: "rdbms"},
-		{KMS: "aws", Metastore: "rdbms", ReplicaReadConsistency: "session"},
-		{KMS: "aws", Metastore: "dynamodb"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000"},
-		{KMS: "aws", Metastore: "dynamodb", DynamoDBTableName: "CustomTableName"},
+		{KMS: "aws", Metastore: "rdbms", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
+		{KMS: "aws", Metastore: "rdbms", ReplicaReadConsistency: "session", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
+		{KMS: "aws", Metastore: "dynamodb", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBRegion: "us-east-1", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBEndpoint: "http://localhost:8000", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
+		{KMS: "aws", Metastore: "dynamodb", DynamoDBTableName: "CustomTableName", PreferredRegion: "us-west-2", RegionMap: testRegionMap},
 		{KMS: "static", Metastore: "rdbms"},
 		{KMS: "static", Metastore: "memory"},
 	}

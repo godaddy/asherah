@@ -14,6 +14,7 @@ import (
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
 	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
+	awsv2kms "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
 	"github.com/godaddy/asherah/go/securememory/memguard"
 
 	pb "github.com/godaddy/asherah/server/go/api"
@@ -148,7 +149,7 @@ func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagemen
 		return m
 	}
 
-	m, err := kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
+	m, err := awsv2kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
 	if err != nil {
 		panic(err)
 	}
