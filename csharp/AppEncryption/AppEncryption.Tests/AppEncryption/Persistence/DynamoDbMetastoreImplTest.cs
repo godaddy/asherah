@@ -267,6 +267,23 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         }
 
         [Fact]
+        public void TestStoreWithClientProvidedExternally()
+        {
+            var client = new AmazonDynamoDBClient(new AmazonDynamoDBConfig
+            {
+                ServiceURL = serviceUrl,
+                AuthenticationRegion = Region,
+            });
+
+            var dbMetastoreImpl = NewBuilder(Region)
+                .WithDynamoDbClient(client)
+                .Build();
+            bool actualValue = dbMetastoreImpl.Store(TestKey, DateTimeOffset.Now, JObject.FromObject(keyRecord));
+
+            Assert.True(actualValue);
+        }
+
+        [Fact]
         public void TestStoreWithDbErrorShouldThrowException()
         {
             Dispose();

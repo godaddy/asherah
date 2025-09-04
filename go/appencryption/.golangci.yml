@@ -134,3 +134,11 @@ issues:
         - godot
         - gosec
         - perfsprint
+    - path: plugins/aws-v1/
+      linters:
+        - staticcheck
+      text: "SA1019.*aws-sdk-go.*deprecated"
+    - path: pkg/(kms|persistence)/
+      linters:
+        - staticcheck
+      text: "SA1019.*is deprecated.*AWS SDK v1 reached end-of-life"

@@ -6,12 +6,15 @@ import (
 	"io"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	awssession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/godaddy/asherah/go/appencryption"
 	"github.com/godaddy/asherah/go/appencryption/pkg/crypto/aead"
 	"github.com/godaddy/asherah/go/appencryption/pkg/kms"
 	"github.com/godaddy/asherah/go/appencryption/pkg/persistence"
+	"github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore"
+	awsv2kms "github.com/godaddy/asherah/go/appencryption/plugins/aws-v2/kms"
 	"github.com/godaddy/asherah/go/securememory/memguard"
 
 	pb "github.com/godaddy/asherah/server/go/api"
@@ -97,23 +100,40 @@ func NewMetastore(opts *Options) appencryption.Metastore {
 
 		return persistence.NewSQLMetastore(db)
 	case "dynamodb":
-		awsOpts := awssession.Options{
-			SharedConfigState: awssession.SharedConfigEnable,
-		}
-
-		if len(opts.DynamoDBEndpoint) > 0 {
-			awsOpts.Config.Endpoint = aws.String(opts.DynamoDBEndpoint)
+		configOpts := []func(*config.LoadOptions) error{
+			config.WithSharedConfigProfile(""),
 		}
 
 		if len(opts.DynamoDBRegion) > 0 {
-			awsOpts.Config.Region = aws.String(opts.DynamoDBRegion)
+			configOpts = append(configOpts, config.WithRegion(opts.DynamoDBRegion))
 		}
 
-		return persistence.NewDynamoDBMetastore(
-			awssession.Must(awssession.NewSessionWithOptions(awsOpts)),
-			persistence.WithDynamoDBRegionSuffix(opts.EnableRegionSuffix),
-			persistence.WithTableName(opts.DynamoDBTableName),
-		)
+		awsCfg, err := config.LoadDefaultConfig(context.TODO(), configOpts...)
+		if err != nil {
+			panic(err)
+		}
+
+		client := dynamodb.NewFromConfig(awsCfg, func(o *dynamodb.Options) {
+			if len(opts.DynamoDBEndpoint) > 0 {
+				o.BaseEndpoint = aws.String(opts.DynamoDBEndpoint)
+			}
+		})
+
+		metastoreOpts := []metastore.Option{
+			metastore.WithDynamoDBClient(client),
+			metastore.WithRegionSuffix(opts.EnableRegionSuffix),
+		}
+
+		if len(opts.DynamoDBTableName) > 0 {
+			metastoreOpts = append(metastoreOpts, metastore.WithTableName(opts.DynamoDBTableName))
+		}
+
+		metastoreInstance, err := metastore.NewDynamoDB(metastoreOpts...)
+		if err != nil {
+			panic(err)
+		}
+
+		return metastoreInstance
 	default:
 		return persistence.NewMemoryMetastore()
 	}
@@ -129,7 +149,7 @@ func NewKMS(opts *Options, crypto appencryption.AEAD) appencryption.KeyManagemen
 		return m
 	}
 
-	m, err := kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
+	m, err := awsv2kms.NewAWS(crypto, opts.PreferredRegion, opts.RegionMap)
 	if err != nil {
 		panic(err)
 	}

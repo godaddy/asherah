@@ -38,6 +38,8 @@ var (
 type ConfigProvider = client.ConfigProvider
 
 // DynamoDBMetastore implements the Metastore interface.
+//
+// Deprecated: AWS SDK v1 reached end-of-life July 31, 2025. Use github.com/godladdy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore instead.
 type DynamoDBMetastore struct {
 	svc          DynamoDBClientAPI
 	regionSuffix string
@@ -100,6 +102,8 @@ func WithClient(c DynamoDBClientAPI) DynamoDBMetastoreOption {
 }
 
 // NewDynamoDBMetastore creates a new DynamoDBMetastore with the provided session and options.
+//
+// Deprecated: AWS SDK v1 reached end-of-life July 31, 2025. Use github.com/godladdy/asherah/go/appencryption/plugins/aws-v2/dynamodb/metastore instead.
 func NewDynamoDBMetastore(sess ConfigProvider, opts ...DynamoDBMetastoreOption) *DynamoDBMetastore {
 	d := &DynamoDBMetastore{
 		svc:       dynamodb.New(sess),
