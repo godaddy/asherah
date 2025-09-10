@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.Util;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -68,6 +69,18 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             Json drrJson = new Json(envelopeEncryptionJson.EncryptPayload(payload));
             return drrJson.ToUtf8();
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<byte[]> DecryptDataRowRecordAsync(byte[] dataRowRecord)
+        {
+            return await Task.FromResult(DecryptDataRowRecord(dataRowRecord));
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<byte[]> EncryptPayloadAsync(byte[] payload)
+        {
+            return await Task.FromResult(EncryptPayload(payload));
         }
     }
 }

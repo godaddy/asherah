@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using Microsoft.Extensions.Logging;
 
@@ -52,6 +53,18 @@ namespace GoDaddy.Asherah.AppEncryption
         public override TD Encrypt(byte[] payload)
         {
             return envelopeEncryption.EncryptPayload(payload);
+        }
+
+        /// <inheritdoc/>
+        public override async Task<byte[]> DecryptAsync(TD dataRowRecord)
+        {
+            return await Task.FromResult(Decrypt(dataRowRecord));
+        }
+
+        /// <inheritdoc/>
+        public override async Task<TD> EncryptAsync(byte[] payload)
+        {
+            return await Task.FromResult(Encrypt(payload));
         }
 
         /// <inheritdoc/>

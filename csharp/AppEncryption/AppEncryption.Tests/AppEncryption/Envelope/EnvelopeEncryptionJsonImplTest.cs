@@ -138,22 +138,22 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
 
             envelopeEncryptionJsonImplSpy
-                .Setup(x => x.WithIntermediateKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeEncryptResult>>()))
-                .Returns<Func<CryptoKey, EnvelopeEncryptResult>>(functionWithIntermediateKey =>
+                .Setup(x => x.WithIntermediateKeyForWrite(It.IsAny<Func<CryptoKey, EnvelopeEncryptResult<KeyMeta>>>()))
+                .Returns<Func<CryptoKey, EnvelopeEncryptResult<KeyMeta>>>(functionWithIntermediateKey =>
                     functionWithIntermediateKey(intermediateCryptoKeyMock.Object));
 
             byte[] decryptedPayload = Encoding.Unicode.GetBytes("somepayload");
             KeyMeta intermediateKeyMeta = new KeyMeta(partition.IntermediateKeyId, ikDateTime);
             byte[] encryptedPayload = { 0, 1, 2, 3 };
             byte[] encryptedKey = { 4, 5, 6, 7 };
-            EnvelopeEncryptResult envelopeEncryptResult = new EnvelopeEncryptResult
+            EnvelopeEncryptResult<KeyMeta> envelopeEncryptResult = new EnvelopeEncryptResult<KeyMeta>
             {
                 CipherText = encryptedPayload,
                 EncryptedKey = encryptedKey,
                 UserState = intermediateKeyMeta,
             };
             aeadEnvelopeCryptoMock
-                .Setup(x => x.EnvelopeEncrypt(decryptedPayload, intermediateCryptoKeyMock.Object, intermediateKeyMeta))
+                .Setup(x => x.EnvelopeEncrypt<KeyMeta>(decryptedPayload, intermediateCryptoKeyMock.Object, intermediateKeyMeta))
                 .Returns(envelopeEncryptResult);
 
             EnvelopeKeyRecord expectedDataRowKey = new EnvelopeKeyRecord(drkDateTime, intermediateKeyMeta, encryptedKey);

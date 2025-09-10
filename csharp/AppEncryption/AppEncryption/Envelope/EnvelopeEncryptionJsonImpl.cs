@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using App.Metrics.Timer;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Kms;
@@ -34,7 +35,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         private readonly SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache;
         private readonly AeadEnvelopeCrypto crypto;
         private readonly CryptoPolicy cryptoPolicy;
-        private readonly KeyManagementService keyManagementService;
+        private readonly IKeyManagementService keyManagementService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvelopeEncryptionJsonImpl"/> class using the provided
@@ -54,7 +55,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// envelopes.</param>
         /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
         /// the various behaviors of Asherah.</param>
-        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.IKeyManagementService"/>
         /// implementation that generates the top level master key and encrypts the system keys using the master key.
         /// </param>
         /// <param name="logger">The logger implementation to use.</param>
@@ -65,7 +66,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
             CryptoPolicy cryptoPolicy,
-            KeyManagementService keyManagementService,
+            IKeyManagementService keyManagementService,
             ILogger logger)
         {
             this.partition = partition;
@@ -96,7 +97,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// envelopes.</param>
         /// <param name="cryptoPolicy">A <see cref="GoDaddy.Asherah.Crypto.CryptoPolicy"/> implementation that dictates
         /// the various behaviors of Asherah.</param>
-        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.KeyManagementService"/>
+        /// <param name="keyManagementService">A <see cref="GoDaddy.Asherah.AppEncryption.Kms.IKeyManagementService"/>
         /// implementation that generates the top level master key and encrypts the system keys using the master key.
         /// </param>
         public EnvelopeEncryptionJsonImpl(
@@ -106,7 +107,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             SecureCryptoKeyDictionary<DateTimeOffset> intermediateKeyCache,
             AeadEnvelopeCrypto aeadEnvelopeCrypto,
             CryptoPolicy cryptoPolicy,
-            KeyManagementService keyManagementService)
+            IKeyManagementService keyManagementService)
             : this(partition, metastore, systemKeyCache, intermediateKeyCache, aeadEnvelopeCrypto, cryptoPolicy, keyManagementService, null)
         {
         }
@@ -151,22 +152,31 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
             {
-                EnvelopeEncryptResult result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
-                        payload,
-                        intermediateCryptoKey,
-                        new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
+                var result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
+                    payload,
+                    intermediateCryptoKey,
+                    new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));
 
-                KeyMeta parentKeyMeta = (KeyMeta)result.UserState;
+                var keyRecord = new EnvelopeKeyRecord(DateTimeOffset.UtcNow, result.UserState, result.EncryptedKey);
 
-                EnvelopeKeyRecord keyRecord =
-                    new EnvelopeKeyRecord(DateTimeOffset.UtcNow, parentKeyMeta, result.EncryptedKey);
-
-                Json wrapperDocument = new Json();
+                var wrapperDocument = new Json();
                 wrapperDocument.Put("Key", keyRecord.ToJson());
                 wrapperDocument.Put("Data", result.CipherText);
 
                 return wrapperDocument.ToJObject();
             }
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<byte[]> DecryptDataRowRecordAsync(JObject dataRowRecord)
+        {
+            return await Task.FromResult(DecryptDataRowRecord(dataRowRecord));
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<JObject> EncryptPayloadAsync(byte[] payload)
+        {
+            return await Task.FromResult(EncryptPayload(payload));
         }
 
         /// <inheritdoc/>

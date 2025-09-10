@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace GoDaddy.Asherah.AppEncryption.Envelope
 {
@@ -27,5 +28,21 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         /// <param name="payload">Payload to encrypt.</param>
         /// <returns>The Data Row Record that contains the now-encrypted payload and corresponding Data Row Key.</returns>
         TD EncryptPayload(byte[] payload);
+
+        /// <summary>
+        /// Uses an envelope encryption algorithm to decrypt a Data Row Record and return the payload asynchronously.
+        /// </summary>
+        ///
+        /// <param name="dataRowRecord">Value to decrypt.</param>
+        /// <returns>A decrypted payload as bytes.</returns>
+        Task<byte[]> DecryptDataRowRecordAsync(TD dataRowRecord);
+
+        /// <summary>
+        /// Uses an envelope encryption algorithm to encrypt a payload and return the resulting Data Row Record asynchronously.
+        /// </summary>
+        ///
+        /// <param name="payload">Payload to encrypt.</param>
+        /// <returns>The Data Row Record that contains the now-encrypted payload and corresponding Data Row Key.</returns>
+        Task<TD> EncryptPayloadAsync(byte[] payload);
     }
 }

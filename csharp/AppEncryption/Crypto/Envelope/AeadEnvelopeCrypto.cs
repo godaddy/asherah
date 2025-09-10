@@ -63,10 +63,10 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         ///
         /// <param name="plainText">The payload to be encrypted.</param>
         /// <param name="keyEncryptionKey">The key encryption key.</param>
-        /// <returns>A <see cref="EnvelopeEncryptResult"/>object/data row record (DRR).</returns>
-        public virtual EnvelopeEncryptResult EnvelopeEncrypt(byte[] plainText, CryptoKey keyEncryptionKey)
+        /// <returns>A <see cref="EnvelopeEncryptResult{T}"/>object/data row record (DRR).</returns>
+        public virtual EnvelopeEncryptResult<T> EnvelopeEncrypt<T>(byte[] plainText, CryptoKey keyEncryptionKey) where T : class
         {
-            return EnvelopeEncrypt(plainText, keyEncryptionKey, null);
+            return EnvelopeEncrypt<T>(plainText, keyEncryptionKey, null);
         }
 
         /// <summary>
@@ -76,12 +76,12 @@ namespace GoDaddy.Asherah.Crypto.Envelope
         /// <param name="plainText">The payload to be encrypted.</param>
         /// <param name="keyEncryptionKey">The key encryption key.</param>
         /// <param name="userState">The KeyMeta for the <see cref="keyEncryptionKey"/>.</param>
-        /// <returns>A <see cref="EnvelopeEncryptResult"/>object/data row record (DRR).</returns>
-        public virtual EnvelopeEncryptResult EnvelopeEncrypt(byte[] plainText, CryptoKey keyEncryptionKey, object userState)
+        /// <returns>A <see cref="EnvelopeEncryptResult{T}"/>object/data row record (DRR).</returns>
+        public virtual EnvelopeEncryptResult<T> EnvelopeEncrypt<T>(byte[] plainText, CryptoKey keyEncryptionKey, T userState) where T : class
         {
             using (CryptoKey dataEncryptionKey = GenerateKey())
             {
-                EnvelopeEncryptResult result = new EnvelopeEncryptResult
+                EnvelopeEncryptResult<T> result = new EnvelopeEncryptResult<T>
                 {
                     CipherText = Encrypt(plainText, dataEncryptionKey),
                     EncryptedKey = EncryptKey(dataEncryptionKey, keyEncryptionKey),
