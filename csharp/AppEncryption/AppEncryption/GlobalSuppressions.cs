@@ -5,3 +5,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1848:Use LoggerMessage delegates", Justification = "Debug logging messages don't require the performance improvement from LoggerMessage delegates")]
+[assembly: SuppressMessage("CodeQuality", "CA1510:Use ArgumentNullException.ThrowIfNull", Justification = "ArgumentNullException.ThrowIfNull is not available in netstandard2.0")]

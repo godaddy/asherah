@@ -85,10 +85,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Envelope
             aeadEnvelopeCryptoMock.Setup(x => x.EncryptKey(keyMock.Object, keyEncryptionKey.Object))
                 .Returns(expectedEncryptedKey);
             aeadEnvelopeCryptoMock.Setup(x => x.GenerateKey()).Returns(keyMock.Object);
-            aeadEnvelopeCryptoMock.Setup(x => x.EnvelopeEncrypt(expectedPlainText, keyEncryptionKey.Object, null))
+            aeadEnvelopeCryptoMock.Setup(x => x.EnvelopeEncrypt<object>(expectedPlainText, keyEncryptionKey.Object, null))
                 .CallBase();
 
-            EnvelopeEncryptResult result = aeadEnvelopeCryptoMock.Object.EnvelopeEncrypt(expectedPlainText, keyEncryptionKey.Object, null);
+            EnvelopeEncryptResult<object> result = aeadEnvelopeCryptoMock.Object.EnvelopeEncrypt<object>(expectedPlainText, keyEncryptionKey.Object, null);
             Assert.Equal(expectedCipherText, result.CipherText);
             Assert.Equal(expectedEncryptedKey, result.EncryptedKey);
             Assert.Null(result.UserState);
@@ -99,11 +99,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.Crypto.Envelope
         private void TestEnvelopeEncryptWithTwoParams()
         {
             byte[] encryptedKey = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
-            aeadEnvelopeCryptoMock.Setup(x => x.EnvelopeEncrypt(
+            aeadEnvelopeCryptoMock.Setup(x => x.EnvelopeEncrypt<object>(
                 encryptedKey, keyEncryptionKey.Object)).CallBase();
 
-            aeadEnvelopeCryptoMock.Object.EnvelopeEncrypt(encryptedKey, keyEncryptionKey.Object);
-            aeadEnvelopeCryptoMock.Verify(x => x.EnvelopeEncrypt(encryptedKey, keyEncryptionKey.Object, null));
+            aeadEnvelopeCryptoMock.Object.EnvelopeEncrypt<object>(encryptedKey, keyEncryptionKey.Object);
+            aeadEnvelopeCryptoMock.Verify(x => x.EnvelopeEncrypt<object>(encryptedKey, keyEncryptionKey.Object, null));
         }
 
         [Fact]

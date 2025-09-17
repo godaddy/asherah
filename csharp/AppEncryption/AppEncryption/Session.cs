@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using LanguageExt;
 
@@ -35,6 +36,24 @@ namespace GoDaddy.Asherah.AppEncryption
         /// <param name="payLoad">The payload to be encrypted.</param>
         /// <returns>The Data Row Record that contains the now-encrypted payload.</returns>
         public abstract TD Encrypt(TP payLoad);
+
+        /// <summary>
+        /// Decrypts a Data Row Record based on an implementation-specific encryption algorithm and returns the actual
+        /// payload asynchronously.
+        /// </summary>
+        ///
+        /// <param name="dataRowRecord"> The DRR to be decrypted.</param>
+        /// <returns>The decrypted payload.</returns>
+        public abstract Task<TP> DecryptAsync(TD dataRowRecord);
+
+        /// <summary>
+        /// Encrypts a payload using an implementation-specific encryption algorithm and returns the Data Row Record
+        /// that contains it asynchronously.
+        /// </summary>
+        ///
+        /// <param name="payLoad">The payload to be encrypted.</param>
+        /// <returns>The Data Row Record that contains the now-encrypted payload.</returns>
+        public abstract Task<TD> EncryptAsync(TP payLoad);
 
         /// <summary>
         /// Uses a persistence key to load a Data Row Record from the provided data persistence store, if any,
