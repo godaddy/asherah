@@ -38,19 +38,19 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.13</jacoco.version>
-    <jna.version>5.17.0</jna.version>
+    <jna.version>5.18.1</jna.version>
     <junit.jupiter.version>5.13.4</junit.jupiter.version>
     <junit.platform.version>1.9.2</junit.platform.version>
-    <logback.version>1.5.18</logback.version>
+    <logback.version>1.5.19</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
-    <maven.compiler.version>3.14.0</maven.compiler.version>
+    <maven.compiler.version>3.14.1</maven.compiler.version>
     <maven.gpg.version>3.2.8</maven.gpg.version>
-    <maven.javadoc.version>3.11.3</maven.javadoc.version>
-    <maven.scm.version>2.1.0</maven.scm.version>
+    <maven.javadoc.version>3.12.0</maven.javadoc.version>
+    <maven.scm.version>2.2.1</maven.scm.version>
     <maven.source.version>3.3.1</maven.source.version>
-    <maven.surefire.version>3.5.3</maven.surefire.version>
-    <mockito.core.version>5.19.0</mockito.core.version>
-    <central.publishing.maven.version>0.8.0</central.publishing.maven.version>
+    <maven.surefire.version>3.5.4</maven.surefire.version>
+    <mockito.core.version>5.20.0</mockito.core.version>
+    <central.publishing.maven.version>0.9.0</central.publishing.maven.version>
     <slf4j.version>2.0.17</slf4j.version>
   </properties>
 
