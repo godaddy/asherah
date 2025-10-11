@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>GoDaddy.Asherah.AppEncryption.PlugIns.Aws</PackageId>
+        <Title>AppEncryption.PlugIns.Aws</Title>
+        <Authors>GoDaddy</Authors>
+        <Company>GoDaddy</Company>
+        <Description>AWS extensions for Application level envelope encryption SDK for C#</Description>
+        <TargetFrameworks>net8.0;net9.0;netstandard2.0</TargetFrameworks>
+        <!-- NOTE: Version controlled via Directory.Build.props  -->
+        <!--<Version></Version>-->
+        <RootNamespace>GoDaddy.Asherah.AppEncryption.PlugIns.Aws</RootNamespace>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisMode>Recommended</AnalysisMode>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Properties related to NuGet packaging: -->
+        <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+        <PackageProjectUrl>https://github.com/godaddy/asherah</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/godaddy/asherah/tree/main/csharp/AppEncryption</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <!-- End of Properties related to NuGet packaging: -->
+    </PropertyGroup>
+    <ItemGroup Label="Package References">
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.7.2"/>
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.4.9" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9"/>
+    </ItemGroup>
+    <ItemGroup Label="Project References">
+        <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>
+        <ProjectReference Include="../Crypto/Crypto.csproj"/>
+    </ItemGroup>
+</Project>

@@ -19,28 +19,30 @@ Application level envelope encryption SDK for C# with support for cloud-agnostic
   * [Development Notes](#development-notes)
 
 ## Installation
-You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/):
+You can get the latest releases from NuGet.
+- Main library: [GoDaddy.Asherah.AppEncryption](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption/)
+- If using AWS implementations: [GoDaddy.Asherah.AppEncryption.PlugIns.Aws](https://www.nuget.org/packages/GoDaddy.Asherah.AppEncryption.PlugIns.Aws/)
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.3.0" />
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.9.0" />
+    <PackageReference Include="GoDaddy.Asherah.AppEncryption.PlugIns.Aws" Version="0.9.0" />
 </ItemGroup>
 ```
 
-`GoDaddy.Asherah.AppEncryption` targets NetStandard 2.0 and NetStandard 2.1. See the
-[.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) and
-[Multi-targeting](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/cross-platform-targeting#multi-targeting)
-for more information.
+Our libraries currently target netstandard2.0, net8.0, net9.0.
 
 ## Quick Start
 
 ```c#
 // Create a session factory. The builder steps used below are for testing only.
+var staticKeyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTestingOnly");
+
 using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
     .WithMemoryPersistence()
     .WithNeverExpiredCryptoPolicy()
-    .WithStaticKeyManagementService("thisIsAStaticMasterKeyForTesting")
+    .WithKeyManagementService(staticKeyManagementService)
     .Build())
 {
     // Now create a cryptographic session for a partition.
@@ -113,7 +115,7 @@ IMetastore<JObject> dynamoDbMetastore = DynamoDbMetastoreImpl.NewBuilder("us-wes
       .Build();
 ```
 
-**Recommended: Using WithDynamoDbClient with Dependency Injection and AWSSDK.Extensions.NETCore.Setup**
+**Recommended: Using WithDynamoDbClient with IServicesCollection and AWSSDK.Extensions.NETCore.Setup**
 
 ```c#
 // In your DI container setup (e.g., Startup.cs, Program.cs)
@@ -167,27 +169,71 @@ Detailed information about the Key Management Service can be found [here](../../
 
 #### AWS KMS
 
-Create a dictionary of region and ARN pairs that will all be used when creating a System Key
+> [!NOTE]
+> This section now covers using the recommended GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Kms.KeyManagementService
+> The GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl is obsolete and will be removed in the future
+
+One way to create your Key Management Service is to use the builder, use the static factory method `NewBuilder`. Provide an ILoggerFactory, your region key arns and AWS credentials. A good strategy if using multiple regions is to provide the closest regions first based on what region your app is running in.
 
 ```c#
-Dictionary<string, string> regionDictionary = new Dictionary<string, string>
+var keyManagementService = KeyManagementService.NewBuilder()
+  .WithLoggerFactory(myLoggerFactory) // required
+  .WithRegionKeyArn("us-east-1", "arn:aws:kms:us-east-1:123456789012:key/abc") // add these in preferred order
+  .WithRegionKeyArn("us-west-2", "arn:aws:kms:us-west-2:234567890123:key/def")
+  .WithCredentials(myAwsCredentials)
+  .Build()
+```
+
+Other options when using the builder are:
+
+- **WithOptions**: Provide a KeyManagementServiceOptions that contains the RegionKeyArns instead of WithRegionKeyArn.
+- **WithKmsClientFactory**: Provide your own client factory instead of using WithCredentials.
+
+The KeyManagementServiceOptions is easily deserializable from appsettings/configuration
+You can implement your own IKeyManagementClientFactory if you need better control how your AWS Kms Clients are created.
+
+**Recommended: Setting up with IServicesCollection and AWSSDK.Extensions.NETCore.Setup**
+
+```json
 {
-    { "us-east-1", "arn_of_us-east-1" },
-    { "us-east-2", "arn_of_us-east-2" },
-    ...
-};
+  "AsherahKmsOptions": {
+    "regionKeyArns": [
+      {
+        "region": "us-west-2",
+        "keyArn": "Key Arn for us-west-2"
+      },
+      {
+        "region": "us-east-1",
+        "keyArn": "Key Arn for us-east-1"
+      }
+    ]
+  }
+}
 ```
 
-To obtain an instance of the builder, use the static factory method `NewBuilder`. Provide the region dictionary and your preferred (usually current) region.
+Then, in code:
 
 ```c#
-KeyManagementService keyManagementService = AwsKeyManagementServiceImpl.NewBuilder(regionDictionary, "us-east-1");
+// In your DI container setup (e.g., Startup.cs, Program.cs)
+// assumes you also have setup ILoggerFactory
+// In your DI container setup (e.g., Startup.cs, Program.cs)
+services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
+
+var kmsOptions = Configuration.GetValue<KeyManagementServiceOptions>("AsherahKmsOptions");
+services.AddSingleton(kmsOptions);
+
+// Then later in a class
+public class MyService(AWSOptions awsOptions, KeyManagementServiceOptions kmsOptions, ILoggerFactory loggerFactory)
+{
+  var keyManagementService = KeyManagementService.NewBuilder()
+    .WithLoggerFactory(loggerFactory)
+    .WithOptions(kmsOptions)
+    .WithCredentials(awsOptions.GetCredentials())
+    .Build();
+
+  // pass keyManagementService to the SessionFactory builder
+}
 ```
-
-Once you have a builder, you can either use the `WithXXX` setter methods to configure any additional properties or simply
-build the Key Management Service by calling the `Build` method.
-
- - **WithCredentials**: Specifies custom credentials for the AWS KMS client.
 
 #### Static KMS (FOR TESTING ONLY)
 
