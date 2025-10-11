@@ -42,6 +42,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     /// }
     /// </code>
     /// </summary>
+    [Obsolete("Use the Kms.KeyManagementService from the GoDaddy.Asherah.AppEncryption.PlugIns.Aws package instead. This will be removed in a future release.")]
     public class AwsKeyManagementServiceImpl : KeyManagementService
     {
         internal const string EncryptedKey = "encryptedKey";
