@@ -26,7 +26,7 @@ jobs:
     name: 'Reference App: Build'
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:9.0
+      image: mcr.microsoft.com/dotnet/sdk:10.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     steps:
       - name: Checkout repository
