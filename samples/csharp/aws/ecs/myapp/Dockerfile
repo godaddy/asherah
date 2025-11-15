@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS builder
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 # NOTE : dotnet enables debugging and profiling by default causing filesystem writes
 # Disabling them ensures that our application can run in a read-only container.

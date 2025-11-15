@@ -3,7 +3,7 @@
     <PackageId>GoDaddy.Asherah.Crypto</PackageId>
     <Authors>GoDaddy</Authors>
     <Company>GoDaddy</Company>
-    <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <RootNamespace>GoDaddy.Asherah.Crypto</RootNamespace>
@@ -23,7 +23,7 @@
   <ItemGroup Label="Package References">
     <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
     <PackageReference Include="GoDaddy.Asherah.SecureMemory" Version="0.4.0" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.9" />
-    <PackageReference Include="System.Text.Json" Version="9.0.9" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
   </ItemGroup>
 </Project>
