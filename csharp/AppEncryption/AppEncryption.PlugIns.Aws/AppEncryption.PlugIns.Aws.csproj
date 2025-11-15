@@ -5,7 +5,7 @@
         <Authors>GoDaddy</Authors>
         <Company>GoDaddy</Company>
         <Description>AWS extensions for Application level envelope encryption SDK for C#</Description>
-        <TargetFrameworks>net8.0;net9.0;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net10.0;netstandard2.0</TargetFrameworks>
         <!-- NOTE: Version controlled via Directory.Build.props  -->
         <!--<Version></Version>-->
         <RootNamespace>GoDaddy.Asherah.AppEncryption.PlugIns.Aws</RootNamespace>
@@ -24,9 +24,9 @@
         <!-- End of Properties related to NuGet packaging: -->
     </PropertyGroup>
     <ItemGroup Label="Package References">
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.7.2"/>
-        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.4.9" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9.6"/>
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.7.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0"/>
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>
