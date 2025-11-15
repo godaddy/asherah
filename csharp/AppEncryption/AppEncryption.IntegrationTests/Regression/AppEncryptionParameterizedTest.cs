@@ -173,7 +173,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
             private static readonly Random Random = new Random();
             private readonly ConfigFixture configFixture;
 
-            [Obsolete]
             public AppEncryptionParameterizedTestData()
             {
                 configFixture = new ConfigFixture();

@@ -19,7 +19,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
         private static readonly char[] SplitChars = { ',' };
         private readonly IConfigurationRoot config;
 
-        [Obsolete]
         public ConfigFixture()
         {
             // Load the config file name from environment variables. If not found, default to config.yaml
@@ -99,7 +98,6 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return new InMemoryMetastoreImpl<JObject>();
         }
 
-        [Obsolete]
         private KeyManagementService CreateKeyManagementService()
         {
             if (KmsType.Equals(KeyManagementAws, StringComparison.OrdinalIgnoreCase))

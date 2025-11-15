@@ -50,10 +50,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         private readonly Mock<AeadEnvelopeCrypto> cryptoMock;
         private readonly Mock<AwsKmsClientFactory> awsKmsClientFactoryMock;
         private readonly Mock<CryptoKey> cryptoKeyMock;
-        [Obsolete]
         private readonly Mock<AwsKeyManagementServiceImpl> awsKeyManagementServiceImplSpy;
 
-        [Obsolete]
         public AwsKeyManagementServiceImplTest()
         {
             amazonKeyManagementServiceClientMock = new Mock<IAmazonKeyManagementService>();
@@ -75,7 +73,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestRegionToArnAndClientDictionaryGeneration()
         {
             var mockLogger = new Mock<ILogger>();
@@ -95,7 +92,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKeySuccessful()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -135,7 +131,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public async Task TestDecryptKeyAsyncSuccessful()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -175,7 +170,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
 
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKeyWithMissingRegionInPayloadShouldSkipAndSucceed()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -221,7 +215,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKeyWithKmsFailureShouldThrowKmsException()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -256,7 +249,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestGetPrioritizedKmsRegionKeyJsonList()
         {
             string json =
@@ -274,7 +266,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKmsEncryptedKeySuccessful()
         {
             byte[] cipherText = { 0, 1 };
@@ -304,7 +295,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKmsEncryptedKeyWithKmsFailureShouldThrowException()
         {
             byte[] cipherText = { 0, 1 };
@@ -323,7 +313,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestDecryptKmsEncryptedKeyWithCryptoFailureShouldThrowExceptionAndWipeBytes()
         {
             byte[] cipherText = { 0, 1 };
@@ -353,7 +342,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestPrimaryBuilderPath()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
@@ -363,7 +351,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestBuilderPathWithCredentials()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
@@ -375,7 +362,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestBuilderPathWithLoggerEnabled()
         {
             var mockLogger = new Mock<ILogger>();
@@ -388,7 +374,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestBuilderPathWithLoggerDisabled()
         {
             AwsKeyManagementServiceImpl.Builder awsKeyManagementServicePrimaryBuilder =
@@ -398,7 +383,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestBuilderPathWithLoggerAndCredentials()
         {
             var mockLogger = new Mock<ILogger>();
@@ -412,7 +396,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestWithLoggerReturnsCorrectInterface()
         {
             var mockLogger = new Mock<ILogger>();
@@ -426,7 +409,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestGenerateDataKeySuccessful()
         {
             OrderedDictionary sortedRegionToArnAndClient =
@@ -449,7 +431,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestGenerateDataKeyWithKmsFailureShouldThrowKmsException()
         {
             OrderedDictionary sortedRegionToArnAndClient =
@@ -464,7 +445,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestEncryptKeyAndBuildResult()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -488,7 +468,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestEncryptKeyAndBuildResultReturnEmptyOptional()
         {
             byte[] dataKeyPlainText = { 0, 1 };
@@ -505,7 +484,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestEncryptKeySuccessful()
         {
             byte[] encryptedKey = { 3, 4 };
@@ -583,7 +561,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public async Task TestEncryptKeyAsyncSuccessful()
         {
             byte[] encryptedKey = { 3, 4 };
@@ -661,7 +638,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
-        [Obsolete]
         public void TestEncryptKeyShouldThrowExceptionAndWipeBytes()
         {
             byte[] dataKeyPlainText = { 1, 2 };
@@ -712,7 +688,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         /// for both implementations of the IKeyManagementService classes
         /// </summary>
         [Fact]
-        [Obsolete]
         public void TestEncryptAndDecryptKeyWithStub()
         {
             var options = new KeyManagementServiceOptions
