@@ -126,6 +126,45 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
         }
 
         [Fact]
+        public async Task TestDecryptKeyAsyncSuccessful()
+        {
+            byte[] encryptedKey = { 0, 1 };
+            byte[] kmsKeyEncryptionKey = { 2, 3 };
+
+            JObject kmsKeyEnvelopeTest = JObject.FromObject(new Dictionary<string, object>
+            {
+                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                {
+                    KmsKeksKey, new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            { RegionKey, UsWest1 },
+                            { ArnKey, ArnUsWest1 },
+                            { EncryptedKek, Convert.ToBase64String(kmsKeyEncryptionKey) },
+                        },
+                    }
+                },
+            });
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            bool revoked = false;
+            awsKeyManagementServiceImplSpy
+                .Setup(x => x.DecryptKmsEncryptedKey(
+                    amazonKeyManagementServiceClientMock.Object,
+                    encryptedKey,
+                    now,
+                    kmsKeyEncryptionKey,
+                    revoked))
+                .Returns(cryptoKeyMock.Object);
+
+            CryptoKey actualCryptoKey = await awsKeyManagementServiceImplSpy.Object.DecryptKeyAsync(
+                    new Asherah.AppEncryption.Util.Json(kmsKeyEnvelopeTest).ToUtf8(), now, revoked);
+            Assert.Equal(cryptoKeyMock.Object, actualCryptoKey);
+        }
+
+
+        [Fact]
         public void TestDecryptKeyWithMissingRegionInPayloadShouldSkipAndSucceed()
         {
             byte[] encryptedKey = { 0, 1 };
@@ -498,6 +537,83 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Kms
                 .Returns(Option<JObject>.Some(encryptKeyAndBuildResultJson));
 
             byte[] encryptedResult = awsKeyManagementServiceImplSpy.Object.EncryptKey(cryptoKeyMock.Object);
+            JObject kmsKeyEnvelopeResult = new Asherah.AppEncryption.Util.Json(encryptedResult).ToJObject();
+
+            Assert.Equal(new byte[] { 0, 0 }, dataKeyPlainText);
+
+            // This is a workaround for https://github.com/JamesNK/Newtonsoft.Json/issues/1437
+            // If DeepEquals fails due to mismatching array order, compare the elements individually
+            if (!JToken.DeepEquals(kmsKeyEnvelope, kmsKeyEnvelopeResult))
+            {
+                JArray kmsKeyEnvelopeKmsKeks = JArray.FromObject(kmsKeyEnvelope[KmsKeksKey]
+                    .OrderBy(k => k[RegionKey]));
+                JArray kmsKeyEnvelopeResultKmsKeks = JArray.FromObject(kmsKeyEnvelopeResult[KmsKeksKey]
+                    .OrderBy(k => k[RegionKey]));
+
+                Assert.True(JToken.DeepEquals(kmsKeyEnvelope[EncryptedKey], kmsKeyEnvelopeResult[EncryptedKey]));
+                Assert.True(JToken.DeepEquals(kmsKeyEnvelopeKmsKeks, kmsKeyEnvelopeResultKmsKeks));
+            }
+        }
+
+        [Fact]
+        public async Task TestEncryptKeyAsyncSuccessful()
+        {
+            byte[] encryptedKey = { 3, 4 };
+            byte[] dataKeyPlainText = { 1, 2 };
+            byte[] dataKeyCipherText = { 5, 6 };
+            byte[] encryptKeyCipherText = { 7, 8 };
+
+            JObject encryptKeyAndBuildResultJson = JObject.FromObject(new Dictionary<string, object>
+            {
+                { RegionKey, UsEast1 },
+                { ArnKey, ArnUsEast1 },
+                { EncryptedKek, Convert.ToBase64String(encryptKeyCipherText) },
+            });
+
+            JObject kmsKeyEnvelope = JObject.FromObject(new Dictionary<string, object>
+            {
+                { EncryptedKey, Convert.ToBase64String(encryptedKey) },
+                {
+                    KmsKeksKey, new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            { RegionKey, UsWest1 },
+                            { ArnKey, ArnUsWest1 },
+                            { EncryptedKek, Convert.ToBase64String(dataKeyCipherText) },
+                        },
+                        encryptKeyAndBuildResultJson,
+                    }
+                },
+            });
+            GenerateDataKeyResponse generateDataKeyResult = new GenerateDataKeyResponse
+            {
+                Plaintext = new MemoryStream(dataKeyPlainText, 0, dataKeyPlainText.Length, true, true),
+                CiphertextBlob = new MemoryStream(dataKeyCipherText, 0, dataKeyCipherText.Length, true, true),
+            };
+
+            Mock<CryptoKey> generatedDataKeyCryptoKey = new Mock<CryptoKey>();
+            string keyId = ArnUsWest1;
+
+            string outKeyId = keyId;
+            awsKeyManagementServiceImplSpy
+                .Setup(x => x.GenerateDataKey(
+                    It.IsAny<OrderedDictionary>(),
+                    out outKeyId))
+                .Returns(generateDataKeyResult);
+            cryptoMock.Setup(x => x.GenerateKeyFromBytes(generateDataKeyResult.Plaintext.ToArray()))
+                .Returns(generatedDataKeyCryptoKey.Object);
+            cryptoMock.Setup(x => x.EncryptKey(cryptoKeyMock.Object, generatedDataKeyCryptoKey.Object))
+                .Returns(encryptedKey);
+            awsKeyManagementServiceImplSpy.Setup(x =>
+                    x.EncryptKeyAndBuildResult(
+                        It.IsAny<IAmazonKeyManagementService>(),
+                        UsEast1,
+                        ArnUsEast1,
+                        dataKeyPlainText))
+                .Returns(Option<JObject>.Some(encryptKeyAndBuildResultJson));
+
+            byte[] encryptedResult = await awsKeyManagementServiceImplSpy.Object.EncryptKeyAsync(cryptoKeyMock.Object);
             JObject kmsKeyEnvelopeResult = new Asherah.AppEncryption.Util.Json(encryptedResult).ToJObject();
 
             Assert.Equal(new byte[] { 0, 0 }, dataKeyPlainText);

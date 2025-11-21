@@ -1,23 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <PackageId>GoDaddy.Asherah.Cltf</PackageId>
     <!-- NOTE: Version controlled via Directory.Build.props  -->
     <!--<Version></Version>-->
     <Authors>GoDaddy</Authors>
     <RootNamespace>GoDaddy.Asherah.Cltf</RootNamespace>
-    <CodeAnalysisRuleSet>StyleCopCustom.ruleset</CodeAnalysisRuleSet>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>Recommended</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1707;NU1904;NU1902</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
-    <PackageReference Include="SpecFlow" Version="3.1.97" />
-    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.1.97" />
-    <PackageReference Include="SpecFlow.xUnit" Version="3.1.97" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="SpecFlow" Version="3.3.30" />
+    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.3.30" />
+    <PackageReference Include="SpecFlow.xUnit" Version="3.3.30" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="MySql.Data" Version="8.0.19" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
     <ProjectReference Include="../../../csharp/AppEncryption/AppEncryption/AppEncryption.csproj" />
   </ItemGroup>
 </Project>

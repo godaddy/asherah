@@ -13,7 +13,7 @@ in the [AWS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develo
 * [Docker](https://docs.docker.com/get-docker/)
 * The Bash shell
 
->Optionally, if you wish to build and run the sample application locally you will need [.NET SDK 9.0](https://dotnet.microsoft.com/) installed in your development environment.
+>Optionally, if you wish to build and run the sample application locally you will need [.NET SDK 10.0](https://dotnet.microsoft.com/) installed in your development environment.
 
 In addition, the steps that follow also assume the `ecsTaskExecutionRole` already exists within your AWS account. If you
 know this task execution role already exists, you're ready to [get started](#setup).
