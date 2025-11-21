@@ -20,7 +20,7 @@
         <!-- End of Properties related to NuGet packaging: -->
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.8.0" />
+        <PackageReference Include="GoDaddy.Asherah.AppEncryption" Version="0.9.0" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="MySql.Data" Version="9.5.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
