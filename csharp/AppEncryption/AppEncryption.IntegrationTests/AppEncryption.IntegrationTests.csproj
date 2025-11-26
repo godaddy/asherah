@@ -10,7 +10,7 @@
         <NoWarn>$(NoWarn);CA1873</NoWarn>
     </PropertyGroup>
     <ItemGroup Label="Package References">
-        <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.4" />
+        <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.1" />
         <PackageReference Include="coverlet.msbuild" Version="6.0.4">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
