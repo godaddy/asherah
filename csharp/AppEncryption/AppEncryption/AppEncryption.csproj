@@ -24,8 +24,8 @@
     <!-- End of Properties related to NuGet packaging: -->
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9.5" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.7" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.1" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
