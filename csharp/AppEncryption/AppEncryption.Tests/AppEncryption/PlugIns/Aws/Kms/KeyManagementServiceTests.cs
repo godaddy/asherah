@@ -1,18 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using GoDaddy.Asherah.AppEncryption.Exceptions;
-using GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Kms;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.ExtensionMethods;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
 {
     [ExcludeFromCodeCoverage]
-    public class KeyManagementServiceTests : IDisposable
+    public class KeyManagementServiceTests
     {
         private const string UsEast1 = "us-east-1";
         private const string ArnUsEast1 = "arn-us-east-1";
@@ -21,159 +22,43 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         private const string EuWest2 = "eu-west-2";
         private const string ArnEuWest2 = "arn-eu-west-2";
 
-        private readonly KeyManagementService _keyManagementServiceEast;
-        private readonly KeyManagementService _keyManagementServiceWest;
-        private readonly KeyManagementService _keyManagementServiceAdditionalRegion;
-        private readonly KeyManagementService _keyManagementServiceSomeBroken;
-        private readonly KeyManagementService _keyManagementServiceAllBroken;
-        private readonly KeyManagementService _keyManagementServiceOnlyEurope;
-
-        public KeyManagementServiceTests()
-        {
-            var optionsEast = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = UsEast1, KeyArn = ArnUsEast1 },
-                    new RegionKeyArn { Region = UsWest2, KeyArn = ArnUsWest2 }
-                ]
-            };
-
-            var optionsWest = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = UsWest2, KeyArn = ArnUsWest2 },
-                    new RegionKeyArn { Region = UsEast1, KeyArn = ArnUsEast1 }
-                ]
-            };
-
-            var optionsEurope = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = EuWest2, KeyArn = ArnEuWest2 },
-                    new RegionKeyArn { Region = UsWest2, KeyArn = ArnUsWest2 },
-                    new RegionKeyArn { Region = UsEast1, KeyArn = ArnUsEast1 }
-                ]
-            };
-
-            var optionsOnlyEurope = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = EuWest2, KeyArn = ArnEuWest2 }
-                ]
-            };
-
-            var optionsSomeBroken = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = UsEast1, KeyArn = "ERROR" },
-                    new RegionKeyArn { Region = UsWest2, KeyArn = ArnUsWest2 }
-                ]
-            };
-
-            var optionsAllBroken = new KeyManagementServiceOptions
-            {
-                RegionKeyArns =
-                [
-                    new RegionKeyArn { Region = UsEast1, KeyArn = "ERROR" },
-                    new RegionKeyArn { Region = UsWest2, KeyArn = "ERROR" }
-                ]
-            };
-
-            var loggerFactoryStub = new LoggerFactoryStub();
-            var clientFactoryStub = new KeyManagementClientFactoryStub(optionsEast);
-
-            _keyManagementServiceEast = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsEast)
-                .WithKmsClientFactory(clientFactoryStub)
-                .Build();
-
-            _keyManagementServiceWest = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsWest)
-                .WithKmsClientFactory(clientFactoryStub)
-                .Build();
-
-            var clientFactoryStubSomeBroken = new KeyManagementClientFactoryStub(optionsSomeBroken);
-            _keyManagementServiceSomeBroken = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsSomeBroken)
-                .WithKmsClientFactory(clientFactoryStubSomeBroken)
-                .Build();
-
-            var clientFactoryStubAllBroken = new KeyManagementClientFactoryStub(optionsAllBroken);
-            _keyManagementServiceAllBroken = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsAllBroken)
-                .WithKmsClientFactory(clientFactoryStubAllBroken)
-                .Build();
-
-            var clientFactoryStubEurope = new KeyManagementClientFactoryStub(optionsEurope);
-            _keyManagementServiceAdditionalRegion = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsEurope)
-                .WithKmsClientFactory(clientFactoryStubEurope)
-                .Build();
-
-            var clientFactoryStubOnlyEurope = new KeyManagementClientFactoryStub(optionsOnlyEurope);
-            _keyManagementServiceOnlyEurope = KeyManagementService.NewBuilder()
-                .WithLoggerFactory(loggerFactoryStub)
-                .WithOptions(optionsOnlyEurope)
-                .WithKmsClientFactory(clientFactoryStubOnlyEurope)
-                .Build();
-        }
-
         [Fact]
         public async Task EncryptKeyAsync_ShouldEncryptKey()
         {
             // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var key = crypto.GenerateKey(keyCreationTime);
 
             // Act
-            var result = await _keyManagementServiceEast.EncryptKeyAsync(key);
+            var result = await service.EncryptKeyAsync(key);
 
             // Assert
-            ValidateEncryptedKey(result);
-        }
-
-        [Fact]
-        public async Task EncryptKeyAsync_RegionFallback_Succeeds()
-        {
-            // Arrange
-            using var crypto = new BouncyAes256GcmCrypto();
-            var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
-            using var key = crypto.GenerateKey(keyCreationTime);
-
-            // Act
-            var result = await _keyManagementServiceEast.EncryptKeyAsync(key);
-
-            // Assert
-            ValidateEncryptedKey(result);
+            ValidateEncryptedKey(result, UsEast1, UsWest2);
         }
 
         [Fact]
         public void EncryptKey_ShouldEncryptKey()
         {
             // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var key = crypto.GenerateKey(keyCreationTime);
 
             // Act
-            var result = _keyManagementServiceEast.EncryptKey(key);
+            var result = service.EncryptKey(key);
 
             // Assert
-            ValidateEncryptedKey(result);
+            ValidateEncryptedKey(result, UsEast1, UsWest2);
         }
 
-        private static void ValidateEncryptedKey(byte[] encryptedKeyResult)
+        private static void ValidateEncryptedKey(byte[] encryptedKeyResult, params string[] expectedRegions)
         {
             Assert.NotNull(encryptedKeyResult);
 
@@ -202,9 +87,10 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
             Assert.True(kmsKeks is System.Text.Json.Nodes.JsonArray);
 
             var kmsKeksArray = kmsKeks!.AsArray();
-            Assert.Equal(2, kmsKeksArray.Count); // Should have 2 regions
+            Assert.Equal(expectedRegions.Length, kmsKeksArray.Count);
 
             // Assert each KMS KEK has required properties
+            var actualRegions = new List<string>();
             foreach (var kekNode in kmsKeksArray)
             {
                 Assert.NotNull(kekNode);
@@ -218,7 +104,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
                 Assert.NotNull(region);
                 var regionValue = region!.AsValue().GetValue<string>();
                 Assert.NotNull(regionValue);
-                Assert.True(regionValue == "us-east-1" || regionValue == "us-west-2");
+                actualRegions.Add(regionValue);
 
                 // Assert arn exists
                 Assert.True(kekObject.ContainsKey("arn"));
@@ -226,7 +112,6 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
                 Assert.NotNull(arn);
                 var arnValue = arn!.AsValue().GetValue<string>();
                 Assert.NotNull(arnValue);
-                Assert.True(arnValue == "arn-us-east-1" || arnValue == "arn-us-west-2" || arnValue == "ERROR");
 
                 // Assert encryptedKek exists and is not empty
                 Assert.True(kekObject.ContainsKey("encryptedKek"));
@@ -237,10 +122,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
                 Assert.NotEmpty(encryptedKekValue);
             }
 
-            // Assert we have both regions
-            var regions = kmsKeksArray.Select(kek => kek!.AsObject()["region"]!.AsValue().GetValue<string>()).ToList();
-            Assert.Contains("us-east-1", regions);
-            Assert.Contains("us-west-2", regions);
+            // Assert we have all expected regions
+            foreach (var expectedRegion in expectedRegions)
+            {
+                Assert.Contains(expectedRegion, actualRegions);
+            }
         }
 
 
@@ -248,13 +134,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public async Task DecryptKeyAsync_ShouldDecryptKey()
         {
             // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
             // Act
-            var encryptedResult = await _keyManagementServiceEast.EncryptKeyAsync(originalKey);
-            var decryptedKey = await _keyManagementServiceEast.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
+            var encryptedResult = await service.EncryptKeyAsync(originalKey);
+            var decryptedKey = await service.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             Assert.NotNull(decryptedKey);
@@ -266,13 +155,16 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public void DecryptKey_ShouldDecryptKey()
         {
             // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
             // Act
-            var encryptedResult = _keyManagementServiceEast.EncryptKey(originalKey);
-            var decryptedKey = _keyManagementServiceEast.DecryptKey(encryptedResult, keyCreationTime, revoked: false);
+            var encryptedResult = service.EncryptKey(originalKey);
+            var decryptedKey = service.DecryptKey(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             Assert.NotNull(decryptedKey);
@@ -284,13 +176,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public async Task DecryptKeyAsync_ShouldDecryptKey_BetweenRegions()
         {
             // Arrange
+            using var serviceEast = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
+            using var serviceWest = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsWest2, ArnUsWest2), (UsEast1, ArnUsEast1))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
             // Act - Encrypt with East, decrypt with West
-            var encryptedResult = await _keyManagementServiceEast.EncryptKeyAsync(originalKey);
-            var decryptedKey = await _keyManagementServiceWest.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
+            var encryptedResult = await serviceEast.EncryptKeyAsync(originalKey);
+            var decryptedKey = await serviceWest.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             Assert.NotNull(decryptedKey);
@@ -302,13 +200,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public async Task DecryptKeyAsync_ShouldDecryptKey_BetweenRegions_WhenNewRegionExists()
         {
             // Arrange
+            using var serviceEast = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
+            using var serviceWithAdditionalRegion = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((EuWest2, ArnEuWest2), (UsWest2, ArnUsWest2), (UsEast1, ArnUsEast1))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
-            // Act - Encrypt with East, decrypt with West
-            var encryptedResult = await _keyManagementServiceEast.EncryptKeyAsync(originalKey);
-            var decryptedKey = await _keyManagementServiceAdditionalRegion.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
+            // Act - Encrypt with East, decrypt with service that has additional region
+            var encryptedResult = await serviceEast.EncryptKeyAsync(originalKey);
+            var decryptedKey = await serviceWithAdditionalRegion.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             Assert.NotNull(decryptedKey);
@@ -320,13 +224,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public async Task DecryptKeyAsync_ShouldFail_BetweenRegions_WhenNoRegionsMatch()
         {
             // Arrange
+            using var serviceEast = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
+            using var serviceOnlyEurope = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((EuWest2, ArnEuWest2))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
-            // Act - Encrypt with East, decrypt with West
-            var encryptedResult = await _keyManagementServiceEast.EncryptKeyAsync(originalKey);
-            var decryptTask = _keyManagementServiceOnlyEurope.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
+            // Act - Encrypt with East, decrypt with Europe-only service
+            var encryptedResult = await serviceEast.EncryptKeyAsync(originalKey);
+            var decryptTask = serviceOnlyEurope.DecryptKeyAsync(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             await Assert.ThrowsAsync<KmsException>(async () => await decryptTask);
@@ -336,13 +246,19 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public void DecryptKey_ShouldDecryptKey_BetweenRegions()
         {
             // Arrange
+            using var serviceEast = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
+            using var serviceWest = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsWest2, ArnUsWest2), (UsEast1, ArnUsEast1))
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var originalKey = crypto.GenerateKey(keyCreationTime);
 
             // Act - Encrypt with East, decrypt with West
-            var encryptedResult = _keyManagementServiceEast.EncryptKey(originalKey);
-            var decryptedKey = _keyManagementServiceWest.DecryptKey(encryptedResult, keyCreationTime, revoked: false);
+            var encryptedResult = serviceEast.EncryptKey(originalKey);
+            var decryptedKey = serviceWest.DecryptKey(encryptedResult, keyCreationTime, revoked: false);
 
             // Assert
             Assert.NotNull(decryptedKey);
@@ -354,41 +270,61 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         public async Task EncryptKeyAsync_AllRegionsBroken_ShouldThrowException()
         {
             // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .WithBrokenRegions(UsEast1, UsWest2)
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var key = crypto.GenerateKey(keyCreationTime);
 
             // Act & Assert
             await Assert.ThrowsAsync<KmsException>(async () =>
-                await _keyManagementServiceAllBroken.EncryptKeyAsync(key));
+                await service.EncryptKeyAsync(key));
         }
 
         [Fact]
         public async Task EncryptKeyAsync_SomeRegionsBroken_Succeeds()
         {
             // Arrange
+            var loggerFactory = new LoggerFactoryStub();
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .WithBrokenRegion(UsEast1)
+                .WithLoggerFactory(loggerFactory)
+                .Build();
             using var crypto = new BouncyAes256GcmCrypto();
             var keyCreationTime = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromMinutes(1));
             using var key = crypto.GenerateKey(keyCreationTime);
 
             // Act
-            var result = await _keyManagementServiceSomeBroken.EncryptKeyAsync(key);
+            var result = await service.EncryptKeyAsync(key);
 
             // Assert
-            ValidateEncryptedKey(result);
+            ValidateEncryptedKey(result, UsEast1, UsWest2);
+
+            // Verify that a warning was logged for the failed region
+            var warningLogs = loggerFactory.LogEntries
+                .Where(log => log.LogLevel == LogLevel.Warning)
+                .ToList();
+            Assert.NotEmpty(warningLogs);
+            var failedRegionLog = warningLogs.FirstOrDefault(log =>
+                log.Message.Contains(UsEast1) && log.Message.Contains("Failed to generate data key"));
+            Assert.NotNull(failedRegionLog);
+            Assert.NotNull(failedRegionLog.Exception);
         }
 
         [Fact]
         public async Task EncryptKeyAsync_Fails_WhenCryptoKeyIsNull()
         {
-            await Assert.ThrowsAsync<KmsException>(async () =>
-                await _keyManagementServiceEast.EncryptKeyAsync(null!));
-        }
+            // Arrange
+            using var service = KeyManagementServiceTestBuilder.Create()
+                .WithRegions((UsEast1, ArnUsEast1), (UsWest2, ArnUsWest2))
+                .Build();
 
-        public void Dispose()
-        {
-            _keyManagementServiceEast?.Dispose();
-            _keyManagementServiceWest?.Dispose();
+            // Act & Assert
+            await Assert.ThrowsAsync<KmsException>(async () =>
+                await service.EncryptKeyAsync(null!));
         }
     }
 }
