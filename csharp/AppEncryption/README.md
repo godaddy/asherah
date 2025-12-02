@@ -171,14 +171,15 @@ Detailed information about the Key Management Service can be found [here](../../
 
 > [!NOTE]
 > This section now covers using the recommended GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Kms.KeyManagementService
-> The GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl is obsolete and will be removed in the future
+> The GoDaddy.Asherah.AppEncryption.Kms.AwsKeyManagementServiceImpl is obsolete and will be removed in the future.
+> See the [Plugins Upgrade Guide](docs/plugins-upgrade-guide.md) for migration instructions.
 
 One way to create your Key Management Service is to use the builder, use the static factory method `NewBuilder`. Provide an ILoggerFactory, your region key arns and AWS credentials. A good strategy if using multiple regions is to provide the closest regions first based on what region your app is running in.
 
 ```c#
 var keyManagementService = KeyManagementService.NewBuilder()
   .WithLoggerFactory(myLoggerFactory) // required
-  .WithRegionKeyArn("us-east-1", "arn:aws:kms:us-east-1:123456789012:key/abc") // add these in preferred order
+  .WithRegionKeyArn("us-east-1", "arn:aws:kms:us-east-1:123456789012:key/abc") // add these in priority order
   .WithRegionKeyArn("us-west-2", "arn:aws:kms:us-west-2:234567890123:key/def")
   .WithCredentials(myAwsCredentials)
   .Build()
@@ -216,7 +217,6 @@ Then, in code:
 ```c#
 // In your DI container setup (e.g., Startup.cs, Program.cs)
 // assumes you also have setup ILoggerFactory
-// In your DI container setup (e.g., Startup.cs, Program.cs)
 services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
 
 var kmsOptions = Configuration.GetValue<KeyManagementServiceOptions>("AsherahKmsOptions");
@@ -225,13 +225,25 @@ services.AddSingleton(kmsOptions);
 // Then later in a class
 public class MyService(AWSOptions awsOptions, KeyManagementServiceOptions kmsOptions, ILoggerFactory loggerFactory)
 {
-  var keyManagementService = KeyManagementService.NewBuilder()
-    .WithLoggerFactory(loggerFactory)
-    .WithOptions(kmsOptions)
-    .WithCredentials(awsOptions.GetCredentials())
-    .Build();
+  public IKeyManagementService CreateKeyManagementServiceForAsherah(){
 
-  // pass keyManagementService to the SessionFactory builder
+    // Optimize KMS options to prioritize the current AWS region
+    // This is optional.  If your kmsOptions are not configured by region, you would use this
+    // to do a runtime sort based on the current running region.
+    // Note: this example is simply putting the current region first and leaving the sequence of the
+    // remaining in the order they were in.
+    var optimizedKmsOptions = kmsOptions.OptimizeByRegions(awsOptions.Region.SystemName);
+
+    var keyManagementService = KeyManagementService.NewBuilder()
+      .WithLoggerFactory(loggerFactory)
+      .WithOptions(optimizedKmsOptions)
+      .WithCredentials(awsOptions.GetCredentials())
+      .Build();
+
+    // return the keyManagementService that can be passed into the SessionFactory builder
+    return keyManagementService;
+  }
+
 }
 ```
 
