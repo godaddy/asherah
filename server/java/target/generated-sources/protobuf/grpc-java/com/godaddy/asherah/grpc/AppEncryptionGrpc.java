@@ -4,15 +4,12 @@ import static io.grpc.MethodDescriptor.generateFullMethodName;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.54.1)",
-    comments = "Source: appencryption.proto")
 @io.grpc.stub.annotations.GrpcGenerated
 public final class AppEncryptionGrpc {
 
   private AppEncryptionGrpc() {}
 
-  public static final String SERVICE_NAME = "asherah.apps.server.AppEncryption";
+  public static final java.lang.String SERVICE_NAME = "asherah.apps.server.AppEncryption";
 
   // Static method descriptors that strictly reflect the proto.
   private static volatile io.grpc.MethodDescriptor<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest,
@@ -58,6 +55,21 @@ public final class AppEncryptionGrpc {
         }
       };
     return AppEncryptionStub.newStub(factory, channel);
+  }
+
+  /**
+   * Creates a new blocking-style stub that supports all types of calls on the service
+   */
+  public static AppEncryptionBlockingV2Stub newBlockingV2Stub(
+      io.grpc.Channel channel) {
+    io.grpc.stub.AbstractStub.StubFactory<AppEncryptionBlockingV2Stub> factory =
+      new io.grpc.stub.AbstractStub.StubFactory<AppEncryptionBlockingV2Stub>() {
+        @java.lang.Override
+        public AppEncryptionBlockingV2Stub newStub(io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+          return new AppEncryptionBlockingV2Stub(channel, callOptions);
+        }
+      };
+    return AppEncryptionBlockingV2Stub.newStub(factory, channel);
   }
 
   /**
@@ -150,6 +162,37 @@ public final class AppEncryptionGrpc {
 
   /**
    * A stub to allow clients to do synchronous rpc calls to service AppEncryption.
+   */
+  public static final class AppEncryptionBlockingV2Stub
+      extends io.grpc.stub.AbstractBlockingStub<AppEncryptionBlockingV2Stub> {
+    private AppEncryptionBlockingV2Stub(
+        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+      super(channel, callOptions);
+    }
+
+    @java.lang.Override
+    protected AppEncryptionBlockingV2Stub build(
+        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+      return new AppEncryptionBlockingV2Stub(channel, callOptions);
+    }
+
+    /**
+     * <pre>
+     * Performs session operations for a single partition.
+     * Each session must begin with a GetSession message with all subsequent
+     * Encrypt and Decrypt operations scoped its partition.
+     * </pre>
+     */
+    @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/10918")
+    public io.grpc.stub.BlockingClientCall<com.godaddy.asherah.grpc.AppEncryptionProtos.SessionRequest, com.godaddy.asherah.grpc.AppEncryptionProtos.SessionResponse>
+        session() {
+      return io.grpc.stub.ClientCalls.blockingBidiStreamingCall(
+          getChannel(), getSessionMethod(), getCallOptions());
+    }
+  }
+
+  /**
+   * A stub to allow clients to do limited synchronous rpc calls to service AppEncryption.
    */
   public static final class AppEncryptionBlockingStub
       extends io.grpc.stub.AbstractBlockingStub<AppEncryptionBlockingStub> {
@@ -255,9 +298,9 @@ public final class AppEncryptionGrpc {
   private static final class AppEncryptionMethodDescriptorSupplier
       extends AppEncryptionBaseDescriptorSupplier
       implements io.grpc.protobuf.ProtoMethodDescriptorSupplier {
-    private final String methodName;
+    private final java.lang.String methodName;
 
-    AppEncryptionMethodDescriptorSupplier(String methodName) {
+    AppEncryptionMethodDescriptorSupplier(java.lang.String methodName) {
       this.methodName = methodName;
     }
 
