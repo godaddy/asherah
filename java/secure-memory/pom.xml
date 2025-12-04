@@ -39,15 +39,15 @@
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.14</jacoco.version>
     <jna.version>5.18.1</jna.version>
-    <junit.jupiter.version>5.13.4</junit.jupiter.version>
-    <junit.platform.version>1.9.2</junit.platform.version>
-    <logback.version>1.5.20</logback.version>
+    <junit.jupiter.version>6.0.1</junit.jupiter.version>
+    <!-- junit.platform.version removed - JUnit 6 uses unified versioning -->
+    <logback.version>1.5.21</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.14.1</maven.compiler.version>
     <maven.gpg.version>3.2.8</maven.gpg.version>
     <maven.javadoc.version>3.12.0</maven.javadoc.version>
     <maven.scm.version>2.2.1</maven.scm.version>
-    <maven.source.version>3.3.1</maven.source.version>
+    <maven.source.version>3.4.0</maven.source.version>
     <maven.surefire.version>3.5.4</maven.surefire.version>
     <mockito.core.version>5.20.0</mockito.core.version>
     <central.publishing.maven.version>0.9.0</central.publishing.maven.version>
