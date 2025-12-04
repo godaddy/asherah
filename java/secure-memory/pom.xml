@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>securememory</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <name>SecureMemory</name>
   <description>Secure off-heap memory storage for application secrets (like cryptographic keys)</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -83,6 +83,35 @@
         <version>${maven.compiler.version}</version>
         <configuration>
           <release>${java.version}</release>
+        </configuration>
+        <executions>
+          <!-- Compile Java 22+ FFM classes for multi-release JAR -->
+          <execution>
+            <id>compile-java22</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>22</release>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java22</compileSourceRoot>
+              </compileSourceRoots>
+              <multiReleaseOutput>true</multiReleaseOutput>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Multi-Release>true</Multi-Release>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
       <plugin>

@@ -169,6 +169,97 @@ Time to encrypt and then decrypt payload (microseconds, lower is better).
 
 ---
 
+## Secure Memory Layer: FFM vs JNA
+
+Starting with `secure-memory` version 0.1.7, the library supports **Java's Foreign Function & Memory (FFM) API** for better performance on Java 22+. For older Java versions, it automatically falls back to JNA.
+
+### What Changed
+
+| Java Version | Secure Memory Implementation | Native Call Method |
+|--------------|-----------------------------|--------------------|
+| 17-21 | JNA (Java Native Access) | Reflection-based |
+| **22+** | **FFM (Foreign Function & Memory)** | Direct method handles |
+
+### FFM vs JNA Performance Comparison
+
+**Test Environment**: Java 25 (OpenJDK), Apple Silicon M-series
+
+#### Round-Trip (Encrypt + Decrypt) with JDK Crypto
+
+| Payload | FFM (Java 22+) | JNA (Fallback) | FFM Improvement |
+|---------|---------------|----------------|-----------------|
+| 64 bytes | 5.08 µs | 13.52 µs | **2.66x faster** |
+| 256 bytes | 5.00 µs | 6.20 µs | **1.24x faster** |
+| 1024 bytes | 5.32 µs | 7.82 µs | **1.47x faster** |
+| 4096 bytes | 6.76 µs | 7.26 µs | **1.07x faster** |
+
+### Why FFM is Faster
+
+1. **Direct Method Handles**: FFM uses `MethodHandle` for native calls, avoiding JNI/JNA reflection overhead
+2. **No Intermediate Copies**: FFM's `MemorySegment` allows direct memory access without byte array copies
+3. **Better JIT Integration**: FFM calls can be inlined by the JIT compiler
+4. **Deterministic Resource Management**: `Arena`-based allocation has less GC pressure than JNA's `Pointer`
+
+### FFM Implementation Details
+
+The FFM implementation provides platform-specific optimizations:
+
+| Platform | Secure Zero | No-Dump Memory |
+|----------|-------------|----------------|
+| **Linux** | `bzero()` | `madvise(MADV_DONTDUMP)` |
+| **macOS** | `memset_s()` | `setrlimit(RLIMIT_CORE, 0)` |
+
+Both platforms use:
+- `mmap()` with `MAP_PRIVATE | MAP_ANONYMOUS` for allocation
+- `mlock()` to prevent swapping to disk
+- `mprotect()` to control memory access (PROT_NONE when not in use)
+
+### How Auto-Detection Works
+
+```java
+// TransientSecretFactory automatically selects:
+// - FFM on Java 22+ (if available)
+// - JNA on Java 17-21 (fallback)
+
+SecretFactory factory = new TransientSecretFactory();
+
+// To force JNA even on Java 22+:
+TransientSecretFactory.setPreferJna(true);
+
+// Check which implementation is active:
+boolean usingFfm = factory.isUsingFfm();
+```
+
+### Multi-Release JAR Structure
+
+The `secure-memory` JAR uses Java's multi-release JAR feature:
+
+```
+securememory-0.1.7.jar
+├── com/godaddy/asherah/securememory/     ← Java 17 classes (JNA)
+│   ├── TransientSecretFactory.class
+│   └── protectedmemoryimpl/
+└── META-INF/
+    ├── MANIFEST.MF                        ← Multi-Release: true
+    └── versions/22/
+        └── com/godaddy/asherah/securememory/
+            └── ffmimpl/                   ← Java 22+ classes (FFM)
+                ├── FfmSecretFactory.class
+                ├── FfmProtectedMemorySecret.class
+                └── ...
+```
+
+### FFM Recommendations
+
+| Scenario | Recommendation |
+|----------|----------------|
+| **Maximum Performance** | Use Java 22+ (FFM auto-enabled) |
+| **Production on Java 17-21** | JNA fallback works well |
+| **GraalVM Native Image** | Use JDK Crypto + FFM (Java 22+) |
+| **Debugging FFM Issues** | Set `TransientSecretFactory.setPreferJna(true)` |
+
+---
+
 ## How to Run Benchmarks
 
 ### Quick Benchmark (JUnit)
@@ -292,8 +383,15 @@ Payload         BouncyCastle             JDK       JDK vs BC
 
 ## Related Files
 
+### Crypto Engine
 - [`JdkAes256GcmCrypto.java`](../src/main/java/com/godaddy/asherah/crypto/engine/jdk/JdkAes256GcmCrypto.java) - JDK crypto implementation
 - [`BouncyAes256GcmCrypto.java`](../src/main/java/com/godaddy/asherah/crypto/engine/bouncycastle/BouncyAes256GcmCrypto.java) - BouncyCastle implementation
 - [`CryptoEngineType.java`](../src/main/java/com/godaddy/asherah/crypto/engine/CryptoEngineType.java) - Provider selection enum
 - [`CryptoEngineBenchmarkTest.java`](../src/test/java/com/godaddy/asherah/crypto/engine/CryptoEngineBenchmarkTest.java) - Benchmark tests
+
+### Secure Memory (FFM)
+- [`TransientSecretFactory.java`](../../secure-memory/src/main/java/com/godaddy/asherah/securememory/TransientSecretFactory.java) - Auto-detection factory (FFM vs JNA)
+- [`FfmSecretFactory.java`](../../secure-memory/src/main/java22/com/godaddy/asherah/securememory/ffmimpl/FfmSecretFactory.java) - FFM factory (Java 22+)
+- [`FfmProtectedMemoryAllocator.java`](../../secure-memory/src/main/java22/com/godaddy/asherah/securememory/ffmimpl/FfmProtectedMemoryAllocator.java) - FFM native memory allocator
+- [`ProtectedMemorySecretFactory.java`](../../secure-memory/src/main/java/com/godaddy/asherah/securememory/protectedmemoryimpl/ProtectedMemorySecretFactory.java) - JNA factory (fallback)
 
