@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>appencryption</artifactId>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <name>Asherah</name>
   <description>
     An application-layer encryption SDK that provides advanced encryption features and in depth defense against
@@ -84,17 +84,17 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>${maven.checkstyle.version}</version>
+        <configuration>
+          <inputEncoding>UTF-8</inputEncoding>
+          <consoleOutput>true</consoleOutput>
+          <configLocation>${checkstyle.config}</configLocation>
+          <includeResources>false</includeResources>
+          <includeTestResources>false</includeTestResources>
+        </configuration>
         <executions>
           <execution>
             <id>validate</id>
             <phase>validate</phase>
-            <configuration>
-              <inputEncoding>UTF-8</inputEncoding>
-              <consoleOutput>true</consoleOutput>
-              <configLocation>${checkstyle.config}</configLocation>
-              <includeResources>false</includeResources>
-              <includeTestResources>false</includeTestResources>
-            </configuration>
             <goals>
               <goal>check</goal>
             </goals>
