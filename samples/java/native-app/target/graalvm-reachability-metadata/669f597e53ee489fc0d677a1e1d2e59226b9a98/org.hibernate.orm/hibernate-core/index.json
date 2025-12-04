@@ -1,0 +1,35 @@
+[
+  {
+    "latest": true,
+    "metadata-version": "6.6.0.Final",
+    "module": "org.hibernate.orm:hibernate-core",
+    "tested-versions": [
+      "6.6.0.Final"
+    ]
+  },
+  {
+    "metadata-version": "6.5.0.Final",
+    "default-for": "6\\.5\\..*",
+    "module": "org.hibernate.orm:hibernate-core",
+    "tested-versions": [
+      "6.5.0.Final"
+    ]
+  },
+  {
+    "metadata-version": "6.2.0.Final",
+    "default-for": "6\\.[2-4]\\..*",
+    "module": "org.hibernate.orm:hibernate-core",
+    "tested-versions": [
+      "6.2.0.Final",
+      "6.2.2.Final"
+    ]
+  },
+  {
+    "metadata-version": "6.1.1.Final",
+    "default-for": "6\\.1\\..*",
+    "module": "org.hibernate.orm:hibernate-core",
+    "tested-versions": [
+      "6.1.1.Final"
+    ]
+  }
+]
