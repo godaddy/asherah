@@ -84,23 +84,6 @@
         <configuration>
           <release>${java.version}</release>
         </configuration>
-        <executions>
-          <!-- Compile Java 22+ FFM classes for multi-release JAR -->
-          <execution>
-            <id>compile-java22</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <configuration>
-              <release>22</release>
-              <compileSourceRoots>
-                <compileSourceRoot>${project.basedir}/src/main/java22</compileSourceRoot>
-              </compileSourceRoots>
-              <multiReleaseOutput>true</multiReleaseOutput>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -216,6 +199,50 @@
 
 
   <profiles>
+    <!-- Profile for Java 22+ to compile FFM classes -->
+    <profile>
+      <id>java22-ffm</id>
+      <activation>
+        <jdk>[22,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven.compiler.version}</version>
+            <executions>
+              <!-- Compile Java 22+ FFM classes for multi-release JAR -->
+              <execution>
+                <id>compile-java22</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>22</release>
+                  <compileSourceRoots>
+                    <compileSourceRoot>${project.basedir}/src/main/java22</compileSourceRoot>
+                  </compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven.surefire.version}</version>
+            <configuration>
+              <!-- Add multi-release classes to test classpath for Java 22+ FFM tests -->
+              <additionalClasspathElements>
+                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/22</additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <activation>

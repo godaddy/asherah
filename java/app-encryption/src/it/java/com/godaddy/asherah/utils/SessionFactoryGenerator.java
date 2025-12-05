@@ -1,6 +1,5 @@
 package com.godaddy.asherah.utils;
 
-import com.godaddy.asherah.TestSetup;
 import com.godaddy.asherah.appencryption.SessionFactory;
 import com.godaddy.asherah.appencryption.kms.KeyManagementService;
 import com.godaddy.asherah.appencryption.persistence.Metastore;
