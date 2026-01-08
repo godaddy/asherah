@@ -40,6 +40,7 @@ jobs:
           name: csharp-app-encryption
           path: |
             ${{ github.workspace }}/csharp/AppEncryption/AppEncryption
+            ${{ github.workspace }}/csharp/AppEncryption/AppEncryption.PlugIns.Aws
             ${{ github.workspace }}/csharp/AppEncryption/Crypto
 
       - name: Initialize Environment Variables

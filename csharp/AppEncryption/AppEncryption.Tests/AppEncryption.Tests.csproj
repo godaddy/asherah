@@ -5,11 +5,12 @@
     <RootNamespace>GoDaddy.Asherah.AppEncryption.Tests</RootNamespace>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <AnalysisMode>Recommended</AnalysisMode>
+    <AnalysisMode>Minimum</AnalysisMode>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0618;CA1816</NoWarn>
   </PropertyGroup>
   <ItemGroup Label="Package References">
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.4" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.4.1" />
     <PackageReference Include="JunitXml.TestLogger" Version="7.0.2" />
     <PackageReference Include="coverlet.msbuild" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
@@ -30,5 +31,6 @@
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
+    <ProjectReference Include="../AppEncryption.PlugIns.Aws/AppEncryption.PlugIns.Aws.csproj" />
   </ItemGroup>
 </Project>

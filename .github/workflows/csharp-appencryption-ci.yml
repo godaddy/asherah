@@ -70,6 +70,8 @@ jobs:
           path: |
             csharp/AppEncryption/AppEncryption/bin/**
             csharp/AppEncryption/AppEncryption/obj/**
+            csharp/AppEncryption/AppEncryption.PlugIns.Aws/bin/**
+            csharp/AppEncryption/AppEncryption.PlugIns.Aws/obj/**
             csharp/AppEncryption/Crypto/bin/**
             csharp/AppEncryption/Crypto/obj/**
             csharp/AppEncryption/AppEncryption.Tests/bin/**
