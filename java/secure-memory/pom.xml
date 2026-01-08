@@ -4,7 +4,7 @@
 
   <groupId>com.godaddy.asherah</groupId>
   <artifactId>securememory</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <name>SecureMemory</name>
   <description>Secure off-heap memory storage for application secrets (like cryptographic keys)</description>
   <url>https://github.com/godaddy/asherah</url>
@@ -39,15 +39,15 @@
     <!--    Project Dependencies   -->
     <jacoco.version>0.8.14</jacoco.version>
     <jna.version>5.18.1</jna.version>
-    <junit.jupiter.version>5.13.4</junit.jupiter.version>
-    <junit.platform.version>1.9.2</junit.platform.version>
-    <logback.version>1.5.20</logback.version>
+    <junit.jupiter.version>6.0.1</junit.jupiter.version>
+    <!-- junit.platform.version removed - JUnit 6 uses unified versioning -->
+    <logback.version>1.5.21</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.14.1</maven.compiler.version>
     <maven.gpg.version>3.2.8</maven.gpg.version>
     <maven.javadoc.version>3.12.0</maven.javadoc.version>
     <maven.scm.version>2.2.1</maven.scm.version>
-    <maven.source.version>3.3.1</maven.source.version>
+    <maven.source.version>3.4.0</maven.source.version>
     <maven.surefire.version>3.5.4</maven.surefire.version>
     <mockito.core.version>5.20.0</mockito.core.version>
     <central.publishing.maven.version>0.9.0</central.publishing.maven.version>
@@ -83,6 +83,18 @@
         <version>${maven.compiler.version}</version>
         <configuration>
           <release>${java.version}</release>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Multi-Release>true</Multi-Release>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
       <plugin>
@@ -187,6 +199,50 @@
 
 
   <profiles>
+    <!-- Profile for Java 22+ to compile FFM classes -->
+    <profile>
+      <id>java22-ffm</id>
+      <activation>
+        <jdk>[22,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven.compiler.version}</version>
+            <executions>
+              <!-- Compile Java 22+ FFM classes for multi-release JAR -->
+              <execution>
+                <id>compile-java22</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>22</release>
+                  <compileSourceRoots>
+                    <compileSourceRoot>${project.basedir}/src/main/java22</compileSourceRoot>
+                  </compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven.surefire.version}</version>
+            <configuration>
+              <!-- Add multi-release classes to test classpath for Java 22+ FFM tests -->
+              <additionalClasspathElements>
+                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/22</additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <activation>
