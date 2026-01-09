@@ -100,6 +100,16 @@ linters:
           - perfsprint
         path: _test\.go
       - linters:
+          - prealloc
+        path: (_test\.go|memory\.go)
+        text: Consider preallocating
+      - linters:
+          - gosmopolitan
+        path: _test\.go
+      - linters:
+          - staticcheck
+        text: ST1012.*error var.*should have name of the form ErrFoo
+      - linters:
           - staticcheck
         path: plugins/aws-v1/
         text: SA1019.*aws-sdk-go.*deprecated
