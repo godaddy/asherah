@@ -161,6 +161,10 @@ jobs:
         with:
           python-version: '3.x'
           cache: 'pip'
+          cache-dependency-path: 'tests/cross-language/sidecar/requirements.txt'
+
+      - name: Install Python dependencies
+        run: pip3 install -r tests/cross-language/sidecar/requirements.txt
 
       - name: Initialize RDBMS based metastore
         run: |
