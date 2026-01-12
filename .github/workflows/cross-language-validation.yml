@@ -100,6 +100,10 @@ jobs:
         with:
           python-version: '3.x'
           cache: 'pip'
+          cache-dependency-path: 'server/samples/clients/python/requirements.txt'
+
+      - name: Install Python dependencies
+        run: pip3 install -r server/samples/clients/python/requirements.txt
 
       - name: Set up Node
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
