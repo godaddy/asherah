@@ -13,6 +13,7 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <AnalysisMode>Recommended</AnalysisMode>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <!-- Properties related to NuGet packaging: -->
         <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
