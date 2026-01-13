@@ -1,6 +1,6 @@
 module referenceapp
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.38.0
@@ -36,6 +36,6 @@ require (
 	github.com/godaddy/asherah/go/securememory v0.1.7 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
