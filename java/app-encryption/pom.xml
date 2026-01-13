@@ -57,7 +57,7 @@
     <jackson.version>2.20.0</jackson.version>
     <jacoco.version>0.8.14</jacoco.version>
     <json.version>20250517</json.version>
-    <junit.jupiter.version>5.13.4</junit.jupiter.version>
+    <junit.jupiter.version>6.0.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
     <logback.version>1.5.20</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
