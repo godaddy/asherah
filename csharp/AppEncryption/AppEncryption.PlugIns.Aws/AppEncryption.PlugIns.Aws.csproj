@@ -25,9 +25,9 @@
         <!-- End of Properties related to NuGet packaging: -->
     </PropertyGroup>
     <ItemGroup Label="Package References">
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9.6"/>
-        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.7.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0"/>
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.7"/>
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8.5" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2"/>
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>
