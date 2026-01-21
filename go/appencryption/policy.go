@@ -6,13 +6,14 @@ import (
 
 // Default values for CryptoPolicy if not overridden.
 const (
-	DefaultExpireAfter          = time.Hour * 24 * 90 // 90 days
-	DefaultRevokedCheckInterval = time.Minute * 60
-	DefaultCreateDatePrecision  = time.Minute
-	DefaultKeyCacheMaxSize      = 1000
-	DefaultSessionCacheMaxSize  = 1000
-	DefaultSessionCacheDuration = time.Hour * 2
-	DefaultSessionCacheEngine   = "default"
+	DefaultExpireAfter                = time.Hour * 24 * 90 // 90 days
+	DefaultRevokedCheckInterval       = time.Minute * 60
+	DefaultCreateDatePrecision        = time.Minute
+	DefaultKeyCacheMaxSize            = 1000
+	DefaultSessionCacheMaxSize        = 1000
+	DefaultSessionCacheDuration       = time.Hour * 2
+	DefaultSessionCacheEngine         = "default"
+	DefaultSessionCacheEvictionPolicy = "slru" // Already documented as default
 )
 
 // CryptoPolicy contains options to customize various behaviors in the SDK.
@@ -33,7 +34,7 @@ type CryptoPolicy struct {
 	// This value is ignored if IntermediateKeyCacheEvictionPolicy is set to "simple".
 	IntermediateKeyCacheMaxSize int
 	// IntermediateKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
-	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "simple".
+	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "lru".
 	IntermediateKeyCacheEvictionPolicy string
 	// SharedIntermediateKeyCache determines whether Intermediate Keys will use a single shared cache. If enabled,
 	// Intermediate Keys will share a single cache across all sessions for a given factory.
@@ -50,7 +51,7 @@ type CryptoPolicy struct {
 	// This value is ignored if SystemKeyCacheEvictionPolicy is set to "simple".
 	SystemKeyCacheMaxSize int
 	// SystemKeyCacheEvictionPolicy controls the eviction policy to use for the shared cache.
-	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "simple".
+	// Supported values are "simple", "lru", "lfu", "slru", and "tinylfu". Default is "lru".
 	SystemKeyCacheEvictionPolicy string
 	// CacheSessions determines whether sessions will be cached.
 	CacheSessions bool
@@ -124,17 +125,20 @@ func WithSessionCacheDuration(d time.Duration) PolicyOption {
 // NewCryptoPolicy returns a new CryptoPolicy with default values.
 func NewCryptoPolicy(opts ...PolicyOption) *CryptoPolicy {
 	policy := &CryptoPolicy{
-		ExpireKeyAfter:              DefaultExpireAfter,
-		RevokeCheckInterval:         DefaultRevokedCheckInterval,
-		CreateDatePrecision:         DefaultCreateDatePrecision,
-		CacheSystemKeys:             true,
-		CacheIntermediateKeys:       true,
-		IntermediateKeyCacheMaxSize: DefaultKeyCacheMaxSize,
-		SystemKeyCacheMaxSize:       DefaultKeyCacheMaxSize,
-		SharedIntermediateKeyCache:  false,
-		CacheSessions:               false,
-		SessionCacheMaxSize:         DefaultSessionCacheMaxSize,
-		SessionCacheDuration:        DefaultSessionCacheDuration,
+		ExpireKeyAfter:                     DefaultExpireAfter,
+		RevokeCheckInterval:                DefaultRevokedCheckInterval,
+		CreateDatePrecision:                DefaultCreateDatePrecision,
+		CacheSystemKeys:                    true,
+		CacheIntermediateKeys:              true,
+		IntermediateKeyCacheMaxSize:        DefaultKeyCacheMaxSize,
+		IntermediateKeyCacheEvictionPolicy: "lru", // Use LRU eviction by default for bounded cache
+		SystemKeyCacheMaxSize:              DefaultKeyCacheMaxSize,
+		SystemKeyCacheEvictionPolicy:       "lru", // Use LRU eviction by default for bounded cache
+		SharedIntermediateKeyCache:         false,
+		CacheSessions:                      false,
+		SessionCacheMaxSize:                DefaultSessionCacheMaxSize,
+		SessionCacheDuration:               DefaultSessionCacheDuration,
+		SessionCacheEvictionPolicy:         DefaultSessionCacheEvictionPolicy,
 	}
 
 	for _, opt := range opts {
