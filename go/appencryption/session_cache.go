@@ -27,6 +27,7 @@ type sharedEncryption struct {
 	accessCounter int
 	mu            *sync.Mutex
 	cond          *sync.Cond
+	closeOnce     sync.Once // Prevents double-close of underlying Encryption
 }
 
 func (s *sharedEncryption) incrementUsage() {
@@ -53,7 +54,10 @@ func (s *sharedEncryption) Remove() {
 		s.cond.Wait()
 	}
 
-	s.Encryption.Close()
+	// Use sync.Once to prevent double-close
+	s.closeOnce.Do(func() {
+		s.Encryption.Close()
+	})
 
 	s.mu.Unlock()
 }
