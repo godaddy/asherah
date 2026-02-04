@@ -43,14 +43,14 @@
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <!--      Project Dependencies-->
     <apache.commons.version>3.20.0</apache.commons.version>
-    <amazonaws.version>2.0.0</amazonaws.version>
+    <amazonaws.version>2.6.1</amazonaws.version>
     <aws.sdk.version>1.12.797</aws.sdk.version>
-    <aws.sdk-v2.version>2.41.16</aws.sdk-v2.version>
+    <aws.sdk-v2.version>2.41.21</aws.sdk-v2.version>
     <bouncycastle.version>1.83</bouncycastle.version>
     <build.helper.version>3.6.1</build.helper.version>
     <caffeine.version>3.2.3</caffeine.version>
-    <checkerframework.version>3.53.0</checkerframework.version>
-    <commons.codec.version>1.20.0</commons.codec.version>
+    <checkerframework.version>3.53.1</checkerframework.version>
+    <commons.codec.version>1.21.0</commons.codec.version>
     <commons.logging.version>1.3.5</commons.logging.version>
     <commons.text.version>1.15.0</commons.text.version>
     <guava.version>33.5.0-jre</guava.version>
@@ -59,9 +59,9 @@
     <json.version>20251224</json.version>
     <junit.jupiter.version>6.0.2</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <logback.version>1.5.26</logback.version>
+    <logback.version>1.5.27</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
-    <maven.compiler.version>3.14.1</maven.compiler.version>
+    <maven.compiler.version>3.15.0</maven.compiler.version>
     <maven.dependency.version>3.9.0</maven.dependency.version>
     <maven.gpg.version>3.2.8</maven.gpg.version>
     <maven.javadoc.version>3.12.0</maven.javadoc.version>
