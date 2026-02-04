@@ -11,7 +11,7 @@
         <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
     </PropertyGroup>
     <ItemGroup Label="Package References">
-        <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.8" />
+        <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.9" />
         <PackageReference Include="coverlet.msbuild" Version="6.0.4">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
