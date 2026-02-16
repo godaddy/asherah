@@ -45,7 +45,7 @@
     <apache.commons.version>3.20.0</apache.commons.version>
     <amazonaws.version>2.6.1</amazonaws.version>
     <aws.sdk.version>1.12.797</aws.sdk.version>
-    <aws.sdk-v2.version>2.41.21</aws.sdk-v2.version>
+    <aws.sdk-v2.version>2.41.29</aws.sdk-v2.version>
     <bouncycastle.version>1.83</bouncycastle.version>
     <build.helper.version>3.6.1</build.helper.version>
     <caffeine.version>3.2.3</caffeine.version>
@@ -57,18 +57,18 @@
     <jackson.version>2.21.0</jackson.version>
     <jacoco.version>0.8.14</jacoco.version>
     <json.version>20251224</json.version>
-    <junit.jupiter.version>6.0.2</junit.jupiter.version>
+    <junit.jupiter.version>6.0.3</junit.jupiter.version>
     <junit.platform.version>1.7.0</junit.platform.version>
-    <logback.version>1.5.27</logback.version>
+    <logback.version>1.5.32</logback.version>
     <maven.checkstyle.version>3.6.0</maven.checkstyle.version>
     <maven.compiler.version>3.15.0</maven.compiler.version>
-    <maven.dependency.version>3.9.0</maven.dependency.version>
+    <maven.dependency.version>3.10.0</maven.dependency.version>
     <maven.gpg.version>3.2.8</maven.gpg.version>
     <maven.javadoc.version>3.12.0</maven.javadoc.version>
     <maven.scm.version>2.2.1</maven.scm.version>
     <maven.source.version>3.4.0</maven.source.version>
     <maven.surefire.version>3.5.4</maven.surefire.version>
-    <micrometer.version>1.16.2</micrometer.version>
+    <micrometer.version>1.16.3</micrometer.version>
     <mockito.core.version>5.21.0</mockito.core.version>
     <central.publishing.maven.version>0.10.0</central.publishing.maven.version>
     <securememory.version>0.1.6</securememory.version>
