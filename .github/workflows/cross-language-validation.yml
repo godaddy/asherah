@@ -208,7 +208,7 @@ jobs:
       - name: Lint the Go project
         uses: golangci/golangci-lint-action@9fae48acfc02a90574d7c304a1758ef9895495fa # v7.0.1
         with:
-          version: 'v2.8.0'
+          version: 'v2.9.0'
           skip-cache: true
           working-directory: 'tests/cross-language/go'
 
