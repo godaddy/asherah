@@ -27,7 +27,7 @@
     <ItemGroup Label="Package References">
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.14"/>
         <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.8.8" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3"/>
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>
