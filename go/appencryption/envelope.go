@@ -110,12 +110,12 @@ type accessorRevokable interface {
 }
 
 // intermediateKeyFromEKR decrypts ekr using sk and returns a new CryptoKey containing the decrypted key data.
-func (e *envelopeEncryption) intermediateKeyFromEKR(sk accessorRevokable, ekr *EnvelopeKeyRecord) (*internal.CryptoKey, error) {
+func (e *envelopeEncryption) intermediateKeyFromEKR(ctx context.Context, sk accessorRevokable, ekr *EnvelopeKeyRecord) (*internal.CryptoKey, error) {
 	if ekr != nil && ekr.ParentKeyMeta != nil && sk.Created() != ekr.ParentKeyMeta.Created {
 		// In this case, the system key just rotated and this EKR was encrypted with the prior SK.
 		// A duplicate IK would have been attempted to create with the correct SK but would create a duplicate so is discarded.
 		// Lookup the correct system key so the ik decryption can succeed.
-		skLoaded, err := e.getOrLoadSystemKey(context.Background(), *ekr.ParentKeyMeta)
+		skLoaded, err := e.getOrLoadSystemKey(ctx, *ekr.ParentKeyMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -277,7 +277,7 @@ func (e *envelopeEncryption) createIntermediateKey(ctx context.Context) (*intern
 		return nil, err
 	}
 
-	return e.intermediateKeyFromEKR(sk, newEkr)
+	return e.intermediateKeyFromEKR(ctx, sk, newEkr)
 }
 
 // tryStoreIntermediateKey attempts to persist the encrypted ik to the metastore ignoring all persistence related errors.
@@ -325,7 +325,7 @@ func (e *envelopeEncryption) loadLatestOrCreateIntermediateKey(ctx context.Conte
 	defer sk.Close()
 
 	// Only use the loaded IK if it and its parent key is valid.
-	if ik := e.getValidIntermediateKey(sk, ikEkr); ik != nil {
+	if ik := e.getValidIntermediateKey(ctx, sk, ikEkr); ik != nil {
 		return ik, nil
 	}
 
@@ -342,13 +342,13 @@ func (e *envelopeEncryption) getOrLoadSystemKey(ctx context.Context, meta KeyMet
 }
 
 // getValidIntermediateKey returns a new CryptoKey constructed from ekr. It returns nil if sk is invalid or if key initialization fails.
-func (e *envelopeEncryption) getValidIntermediateKey(sk accessorRevokable, ekr *EnvelopeKeyRecord) *internal.CryptoKey {
+func (e *envelopeEncryption) getValidIntermediateKey(ctx context.Context, sk accessorRevokable, ekr *EnvelopeKeyRecord) *internal.CryptoKey {
 	// IK is only valid if its parent is valid
 	if internal.IsKeyInvalid(sk, e.Policy.ExpireKeyAfter) {
 		return nil
 	}
 
-	ik, err := e.intermediateKeyFromEKR(sk, ekr)
+	ik, err := e.intermediateKeyFromEKR(ctx, sk, ekr)
 	if err != nil {
 		return nil
 	}
@@ -485,7 +485,7 @@ func (e *envelopeEncryption) loadIntermediateKey(ctx context.Context, meta KeyMe
 
 	defer sk.Close()
 
-	return e.intermediateKeyFromEKR(sk, ekr)
+	return e.intermediateKeyFromEKR(ctx, sk, ekr)
 }
 
 // Close frees all memory locked by the keys in the session. It should be called
