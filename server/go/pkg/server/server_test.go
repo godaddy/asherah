@@ -554,7 +554,7 @@ func Test_DefaultHandler_EncryptError(t *testing.T) {
 
 	respErr := resp.GetErrorResponse()
 	if assert.NotNil(t, respErr) {
-		assert.Equal(t, "encryption error", respErr.GetMessage())
+		assert.Equal(t, "encryption failed", respErr.GetMessage())
 	}
 
 	m.AssertExpectations(t)
@@ -614,7 +614,7 @@ func Test_DefaultHandler_DecryptError(t *testing.T) {
 
 	respErr := resp.GetErrorResponse()
 	if assert.NotNil(t, respErr) {
-		assert.Equal(t, "decryption error", respErr.GetMessage())
+		assert.Equal(t, "decryption failed", respErr.GetMessage())
 	}
 
 	m.AssertExpectations(t)

@@ -233,7 +233,8 @@ func (h *defaultHandler) Decrypt(ctx context.Context, r *pb.SessionRequest) *pb.
 
 	data, err := h.session.Decrypt(ctx, *drr)
 	if err != nil {
-		return newErrorResponse(err.Error())
+		log.Printf("decrypt error for partition %s: %v", h.partition, err)
+		return newErrorResponse("decryption failed")
 	}
 
 	return &pb.SessionResponse{
@@ -264,7 +265,8 @@ func (h *defaultHandler) Encrypt(ctx context.Context, r *pb.SessionRequest) *pb.
 
 	drr, err := h.session.Encrypt(ctx, r.GetEncrypt().GetData())
 	if err != nil {
-		return newErrorResponse(err.Error())
+		log.Printf("encrypt error for partition %s: %v", h.partition, err)
+		return newErrorResponse("encryption failed")
 	}
 
 	return &pb.SessionResponse{
@@ -297,7 +299,8 @@ func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
 
 	s, err := h.sessionFactory.GetSession(h.partition)
 	if err != nil {
-		return newErrorResponse(err.Error())
+		log.Printf("get session error for partition %s: %v", h.partition, err)
+		return newErrorResponse("session creation failed")
 	}
 
 	h.session = s
