@@ -81,7 +81,7 @@ func (c *tinyLFU[K, V]) Access(item *cacheItem[K, V]) {
 // frequency of the item.
 func (c *tinyLFU[K, V]) Admit(item *cacheItem[K, V]) {
 	if c.bypassed() {
-		c.slru.Admit(item)
+		c.admitTo(item, &c.slru)
 		return
 	}
 
