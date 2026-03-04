@@ -54,6 +54,8 @@ func main() {
 	log.Println("configuration options parsed successfully")
 	printOptions(parser)
 
+	os.Remove(string(opts.SocketFile))
+
 	l, err := net.Listen("unix", string(opts.SocketFile))
 	if err != nil {
 		panic(err)
