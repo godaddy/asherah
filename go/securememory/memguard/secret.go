@@ -3,6 +3,7 @@ package memguard
 
 import (
 	"io"
+	"runtime"
 	"sync"
 	"time"
 
@@ -210,12 +211,20 @@ func (f *SecretFactory) newFromBuffer(lb *memguard.LockedBuffer) (*secret, error
 
 	rw := new(sync.RWMutex)
 
-	return &secret{
+	s := &secret{
 		rw:     rw,
 		c:      sync.NewCond(rw),
 		mc:     f.memcall(),
 		buffer: lb,
-	}, nil
+	}
+
+	runtime.SetFinalizer(s, func(s *secret) {
+		if !s.IsClosed() {
+			s.Close()
+		}
+	})
+
+	return s, nil
 }
 
 // CreateRandom returns a memguard-backed Secret that contains a random byte slice of the specified size.
