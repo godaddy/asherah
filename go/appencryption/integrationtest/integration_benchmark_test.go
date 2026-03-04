@@ -319,3 +319,53 @@ func Benchmark_EncryptDecrypt_SameFactorySamePartition_WithSessionCache(b *testi
 		}
 	})
 }
+
+func Benchmark_EncryptDecrypt_LargePayload(b *testing.B) {
+	sizes := []struct {
+		name string
+		size int
+	}{
+		{"1MB", 1 * 1024 * 1024},
+		{"10MB", 10 * 1024 * 1024},
+		{"25MB", 25 * 1024 * 1024},
+		{"50MB", 50 * 1024 * 1024},
+		{"100MB", 100 * 1024 * 1024},
+	}
+
+	km, err := kms.NewStatic(staticKey, c)
+	assert.NoError(b, err)
+
+	defer km.Close()
+
+	factory := appencryption.NewSessionFactory(config, metastore, km, c)
+	defer factory.Close()
+
+	for _, tc := range sizes {
+		b.Run(tc.name, func(b *testing.B) {
+			sess, err := factory.GetSession(partitionID)
+			assert.NoError(b, err)
+
+			defer sess.Close()
+
+			payload := internal.GetRandBytes(tc.size)
+			ctx := context.Background()
+
+			b.SetBytes(int64(tc.size))
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				drr, err := sess.Encrypt(ctx, payload)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				data, err := sess.Decrypt(ctx, *drr)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				assert.Equal(b, payload, data)
+			}
+		})
+	}
+}
