@@ -204,10 +204,9 @@ func (s *streamer) handleRequest(ctx context.Context, in *pb.SessionRequest) *pb
 		s.handler = s.NewHandler()
 
 		return s.handler.GetSession(in)
+	default:
+		return newErrorResponse("unknown request type")
 	}
-
-	// TODO: handle default
-	return nil
 }
 
 type sessionFactory interface {
