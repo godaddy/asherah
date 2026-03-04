@@ -428,6 +428,10 @@ func (c *keyCache) IsInvalid(key *internal.CryptoKey) bool {
 func (c *keyCache) Close() error {
 	log.Debugf("%s closing\n", c)
 
+	c.rw.Lock()
+	c.latest = nil
+	c.rw.Unlock()
+
 	return c.keys.Close()
 }
 
