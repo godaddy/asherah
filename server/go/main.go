@@ -61,7 +61,10 @@ func main() {
 	defer l.Close()
 
 	service := server.NewAppEncryption(opts.Asherah)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.MaxRecvMsgSize(4 * 1024 * 1024),
+		grpc.MaxConcurrentStreams(100),
+	)
 	pb.RegisterAppEncryptionServer(grpcServer, service)
 
 	sigs := make(chan os.Signal, 1)
