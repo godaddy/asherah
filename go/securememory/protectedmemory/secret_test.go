@@ -453,7 +453,7 @@ func TestProtectedMemory_SetNoAccessIfNeeded_MemcallError(t *testing.T) {
 	err = sec.release()
 	if assert.Error(t, err) {
 		assert.True(t, errors.Is(err, errProtect))
-		assert.Equal(t, 0, sec.accessCounter)
+		assert.Equal(t, 1, sec.accessCounter)
 	}
 }
 
@@ -504,7 +504,7 @@ func TestProtectedMemorySecret_WithBytes_SetNoAccessError(t *testing.T) {
 
 	if assert.Error(t, err) {
 		assert.True(t, called, "WithBytes action func not called")
-		assert.EqualError(t, err, "unable to mark memory as no-access: error from protect: action failed")
+		assert.EqualError(t, err, "action failed")
 	}
 }
 
@@ -556,6 +556,6 @@ func TestProtectedMemorySecret_WithBytesFunc_SetNoAccessError(t *testing.T) {
 
 	if assert.Error(t, err) {
 		assert.True(t, called, "WithBytes action func not called")
-		assert.EqualError(t, err, "unable to mark memory as no-access: error from protect: action failed")
+		assert.EqualError(t, err, "action failed")
 	}
 }

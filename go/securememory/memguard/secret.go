@@ -153,6 +153,7 @@ func (s *secret) release() error {
 	// Only set no access if we're the last one trying to access this potentially-shared Secret
 	if s.accessCounter == 0 {
 		if err := s.mc.Protect(s.buffer.Inner(), memcall.NoAccess()); err != nil {
+			s.accessCounter++
 			// Shouldn't happen but return the err if it does
 			return errors.WithMessage(err, "unable to mark memory as no-access")
 		}
