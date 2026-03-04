@@ -137,7 +137,7 @@ func (a *AWSKMS) encryptAllRegions(ctx context.Context, dataKey *kms.GenerateDat
 
 			resp, err := c.EncryptKey(ctx, dataKey.Plaintext)
 			if err != nil {
-				log.Debugf("error encrypting data key in region (%s): %s\n", c.Region, err)
+				log.Debugf("failed to encrypt data key in region %s (key unavailable for decrypt in this region): %s\n", c.Region, err)
 				return
 			}
 
