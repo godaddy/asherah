@@ -169,6 +169,7 @@ func (c *tinyLFU[K, V]) estimate(h uint64) uint8 {
 // from the appropriate eviction list.
 func (c *tinyLFU[K, V]) Remove(item *cacheItem[K, V]) {
 	c.keys[item.key].parent.Remove(item)
+	delete(c.keys, item.key)
 }
 
 // increment increments the frequency of the item.
@@ -198,5 +199,6 @@ func (c *tinyLFU[K, V]) Close() {
 	c.lru.Close()
 	c.slru.Close()
 
+	c.keys = nil
 	c.cap = 0
 }
