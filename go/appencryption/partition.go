@@ -2,7 +2,6 @@ package appencryption
 
 import (
 	"fmt"
-	"strings"
 )
 
 func newPartition(partition, service, product string) defaultPartition {
@@ -71,5 +70,5 @@ func (p suffixedPartition) IntermediateKeyID() string {
 
 // IsValidIntermediateKeyID ensures the given ID is a valid intermediate key ID for this partition.
 func (p suffixedPartition) IsValidIntermediateKeyID(id string) bool {
-	return id == p.IntermediateKeyID() || strings.Index(id, p.defaultPartition.IntermediateKeyID()) == 0
+	return id == p.IntermediateKeyID() || id == p.defaultPartition.IntermediateKeyID()
 }
