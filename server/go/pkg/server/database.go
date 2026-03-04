@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"sync"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -16,24 +17,24 @@ const (
 var (
 	dbconnection *sql.DB
 	dbdriver     = "mysql"
+	dbOnce       sync.Once
+	dbErr        error
 )
 
 func newMysql(connStr string) (*sql.DB, error) {
-	if dbconnection == nil {
+	dbOnce.Do(func() {
 		dsn, err := mysql.ParseDSN(connStr)
 		if err != nil {
-			return nil, err
+			dbErr = err
+			return
 		}
 
 		dsn.ParseTime = true
 
-		dbconnection, err = sql.Open(dbdriver, dsn.FormatDSN())
-		if err != nil {
-			return nil, err
-		}
-	}
+		dbconnection, dbErr = sql.Open(dbdriver, dsn.FormatDSN())
+	})
 
-	return dbconnection, nil
+	return dbconnection, dbErr
 }
 
 func setRdbmsReplicaReadConsistencyValue(value string) (err error) {

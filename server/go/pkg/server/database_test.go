@@ -6,6 +6,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewMysql(t *testing.T) {
+	dbconnection = nil
+	dbOnce = sync.Once{}
+	dbErr = nil
+
 	assert.Nil(t, dbconnection)
 
 	_, err := newMysql("root:secret@(localhost:%s)/mysql")
@@ -78,6 +83,8 @@ func TestNewMysql(t *testing.T) {
 
 func resetTestDB() {
 	dbconnection = nil
+	dbOnce = sync.Once{}
+	dbErr = nil
 	_, _ = newMysql("root:secret@(localhost:%s)/mysql")
 }
 
