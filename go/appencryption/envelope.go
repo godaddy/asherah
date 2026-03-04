@@ -217,8 +217,9 @@ func (e *envelopeEncryption) tryStore(
 	ekr *EnvelopeKeyRecord,
 ) bool {
 	success, err := e.Metastore.Store(ctx, ekr.ID, ekr.Created, ekr)
-
-	_ = err // err is intentionally ignored
+	if err != nil {
+		log.Debugf("metastore store error (treating as duplicate): %s\n", err)
+	}
 
 	return success
 }
