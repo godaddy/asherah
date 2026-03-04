@@ -2,6 +2,7 @@
 package memguard
 
 import (
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -110,8 +111,9 @@ func (s *secret) Close() error {
 		}
 
 		if s.accessCounter == 0 {
-			// This panics on failure currently
-			s.buffer.Destroy()
+			if err := s.destroyBuffer(); err != nil {
+				return err
+			}
 
 			securememory.InUseCounter.Dec(1)
 
@@ -120,6 +122,18 @@ func (s *secret) Close() error {
 
 		s.c.Wait()
 	}
+}
+
+func (s *secret) destroyBuffer() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("buffer destroy failed: %v", r)
+		}
+	}()
+
+	s.buffer.Destroy()
+
+	return nil
 }
 
 // access sets the access protection of the data region's memory pages to read-only, if needed.
