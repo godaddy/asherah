@@ -197,21 +197,21 @@ func (s *secretInternal) Close() error {
 // close is the actual implementation of secret.Close. It needs to be implemented at this level in order for
 // the finalizer to work properly (to avoid a reference to the secret).
 func (s *secretInternal) close() (err error) {
-	if err := s.mc.Protect(s.bytes, memcall.ReadWrite()); err != nil {
-		return err
+	if protectErr := s.mc.Protect(s.bytes, memcall.ReadWrite()); protectErr != nil {
+		err = protectErr
+	} else {
+		// Only wipe if we were able to make the memory writable.
+		core.Wipe(s.bytes)
 	}
 
-	// Wipe the memory.
-	core.Wipe(s.bytes)
-
 	// Unlock pages locked into memory.
-	if err := s.mc.Unlock(s.bytes); err != nil {
-		return err
+	if unlockErr := s.mc.Unlock(s.bytes); unlockErr != nil && err == nil {
+		err = unlockErr
 	}
 
 	// Free all related memory.
-	if err := s.mc.Free(s.bytes); err != nil {
-		return err
+	if freeErr := s.mc.Free(s.bytes); freeErr != nil && err == nil {
+		err = freeErr
 	}
 
 	s.bytes = nil
@@ -219,7 +219,7 @@ func (s *secretInternal) close() (err error) {
 
 	securememory.InUseCounter.Dec(1)
 
-	return nil
+	return err
 }
 
 // SecretFactory is used to create protected memory based Secret implementations.
