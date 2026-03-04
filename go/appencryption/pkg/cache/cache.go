@@ -210,6 +210,10 @@ func (b *builder[K, V]) Synchronous() *builder[K, V] {
 
 // Build creates the cache.
 func (b *builder[K, V]) Build() Interface[K, V] {
+	if b.capacity < 1 {
+		panic("cache: capacity must be at least 1")
+	}
+
 	c := &cache[K, V]{
 		byKey: make(map[K]*cacheItem[K, V]),
 
