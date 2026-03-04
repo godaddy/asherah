@@ -49,7 +49,7 @@
     <maven.scm.version>2.2.1</maven.scm.version>
     <maven.source.version>3.4.0</maven.source.version>
     <maven.surefire.version>3.5.5</maven.surefire.version>
-    <mockito.core.version>5.21.0</mockito.core.version>
+    <mockito.core.version>5.22.0</mockito.core.version>
     <central.publishing.maven.version>0.10.0</central.publishing.maven.version>
     <slf4j.version>2.0.17</slf4j.version>
   </properties>
