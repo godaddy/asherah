@@ -41,7 +41,9 @@ func (s *sharedEncryption) Close() error {
 	defer s.mu.Unlock()
 	defer s.cond.Broadcast()
 
-	s.accessCounter--
+	if s.accessCounter > 0 {
+		s.accessCounter--
+	}
 
 	return nil
 }
