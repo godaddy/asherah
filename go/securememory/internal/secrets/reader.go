@@ -1,14 +1,21 @@
 package secrets
 
-import "io"
+import (
+	"io"
+	"sync"
+)
 
 type Reader struct {
 	secret BytesWrapper
+	mu     sync.Mutex
 	i      int
 }
 
 // Read implements io.Reader.
 func (r *Reader) Read(p []byte) (n int, err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	err = r.secret.WithBytes(func(b []byte) error {
 		if r.i >= len(b) {
 			return io.EOF
