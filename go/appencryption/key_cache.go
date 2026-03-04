@@ -406,6 +406,9 @@ func (c *keyCache) GetOrLoadLatest(id string, loader func(KeyMeta) (*internal.Cr
 
 		log.Debugf("%s.GetOrLoadLatest reload -- invalid: %s, new: %s, id: %s\n", c, key, reloaded, id)
 
+		// Close the old key's cache reference before replacing it
+		key.Close()
+
 		e := newCacheEntry(reloaded)
 
 		// ensure we've got a cache entry with a fully qualified cache key
