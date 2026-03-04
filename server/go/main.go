@@ -60,6 +60,11 @@ func main() {
 	}
 	defer l.Close()
 
+	// Restrict socket permissions to owner only
+	if err := os.Chmod(string(opts.SocketFile), 0600); err != nil {
+		panic(err)
+	}
+
 	service := server.NewAppEncryption(opts.Asherah)
 	grpcServer := grpc.NewServer()
 	pb.RegisterAppEncryptionServer(grpcServer, service)
