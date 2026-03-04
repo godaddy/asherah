@@ -187,6 +187,8 @@ func (a *AWSKMS) DecryptKey(ctx context.Context, data []byte) ([]byte, error) {
 			continue
 		}
 
+		defer internal.MemClr(resp.Plaintext)
+
 		keyBytes, err := a.crypto.Decrypt(kekEn.EncryptedKey, resp.Plaintext)
 		if err != nil {
 			log.Debugf("error crypto decrypt: %s\n", err)
