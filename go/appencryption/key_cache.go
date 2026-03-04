@@ -104,6 +104,9 @@ func (s *simpleCache) Set(key string, value cacheEntry) {
 // Delete removes a cache entry from the cache.
 func (s *simpleCache) Delete(key string) bool {
 	_, ok := s.m[key]
+	if ok {
+		delete(s.m, key)
+	}
 
 	return ok
 }
