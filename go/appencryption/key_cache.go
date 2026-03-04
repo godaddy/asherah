@@ -131,7 +131,7 @@ func (s *simpleCache) Close() error {
 // cacheKey formats an id and create timestamp to a usable
 // key for storage in a cache.
 func cacheKey(id string, create int64) string {
-	return id + strconv.FormatInt(create, 10)
+	return id + "_" + strconv.FormatInt(create, 10)
 }
 
 // keyCacher contains cached keys for reuse.
