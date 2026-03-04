@@ -111,8 +111,8 @@ func hashU32(v uint32) uint64 {
 func hashString(data string) uint64 {
 	// Inline code from hash/fnv to reduce memory allocations
 	h := fnvOffset
-	for _, b := range data {
-		h ^= uint64(b)
+	for i := 0; i < len(data); i++ {
+		h ^= uint64(data[i])
 		h *= fnvPrime
 	}
 
