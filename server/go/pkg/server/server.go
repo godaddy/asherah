@@ -293,6 +293,14 @@ func toProtobufDRR(drr *appencryption.DataRowRecord) *pb.DataRowRecord {
 func (h *defaultHandler) GetSession(r *pb.SessionRequest) *pb.SessionResponse {
 	h.partition = r.GetGetSession().GetPartitionId()
 
+	if len(h.partition) == 0 {
+		return newErrorResponse("partition id is required")
+	}
+
+	if len(h.partition) > 256 {
+		return newErrorResponse("partition id exceeds maximum length")
+	}
+
 	log.Println("handling get-session for", h.partition)
 
 	s, err := h.sessionFactory.GetSession(h.partition)
