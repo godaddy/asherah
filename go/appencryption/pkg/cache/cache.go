@@ -439,11 +439,7 @@ func (c *cache[K, V]) Delete(key K) bool {
 		return false
 	}
 
-	delete(c.byKey, key)
-
-	c.size--
-
-	c.policy.Remove(item)
+	c.evictItem(item)
 
 	return true
 }
