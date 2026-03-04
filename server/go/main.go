@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	aelog "github.com/godaddy/asherah/go/appencryption/pkg/log"
 	"github.com/jessevdk/go-flags"
@@ -69,9 +70,21 @@ func main() {
 
 	go func() {
 		sig := <-sigs
-		log.Printf("%v received", sig)
-		grpcServer.GracefulStop()
-		log.Println("graceful shutdown complete")
+		log.Printf("%v received, initiating graceful shutdown", sig)
+
+		done := make(chan struct{})
+		go func() {
+			grpcServer.GracefulStop()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.Println("graceful shutdown complete")
+		case <-time.After(30 * time.Second):
+			log.Println("graceful shutdown timed out, forcing stop")
+			grpcServer.Stop()
+		}
 	}()
 
 	log.Println("starting server")
