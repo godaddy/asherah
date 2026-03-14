@@ -36,7 +36,8 @@ Our libraries currently target netstandard2.0, net8.0, net9.0.
 
 ```c#
 // Create a session factory. The builder steps used below are for testing only.
-var staticKeyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTestingOnly");
+// Use StaticKeyManagementService from the GoDaddy.Asherah.AppEncryption.PlugIns.Testing package.
+var staticKeyManagementService = new StaticKeyManagementService("thisIsAStaticMasterKeyForTestingOnly");
 
 using (SessionFactory sessionFactory = SessionFactory
     .NewBuilder("some_product", "some_service")
@@ -250,7 +251,8 @@ public class MyService(AWSOptions awsOptions, KeyManagementServiceOptions kmsOpt
 #### Static KMS (FOR TESTING ONLY)
 
 ```c#
-KeyManagementService keyManagementService = new StaticKeyManagementServiceImpl("thisIsAStaticMasterKeyForTesting");
+// Use StaticKeyManagementService from the GoDaddy.Asherah.AppEncryption.PlugIns.Testing package.
+IKeyManagementService keyManagementService = new StaticKeyManagementService("thisIsAStaticMasterKeyForTesting");
 ```
 
 ### Define the Crypto Policy

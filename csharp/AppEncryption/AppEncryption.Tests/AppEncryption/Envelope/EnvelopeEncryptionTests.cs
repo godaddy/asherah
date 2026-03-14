@@ -11,6 +11,7 @@ using GoDaddy.Asherah.AppEncryption.Exceptions;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Metastore;
 using GoDaddy.Asherah.AppEncryption.PlugIns.Testing.Metastore;
+using GoDaddy.Asherah.AppEncryption.PlugIns.Testing.Kms;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
 using GoDaddy.Asherah.Crypto;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
@@ -34,7 +35,7 @@ public class EnvelopeEncryptionTests
     {
         metastore ??= new InMemoryKeyMetastore();
         var logger = _loggerFactory.CreateLogger("EnvelopeEncryptionTests");
-        keyManagementService ??= new DummyKeyManagementService();
+        keyManagementService ??= new StaticKeyManagementService();
         var crypto = new BouncyAes256GcmCrypto();
         partition ??= _partition;
 
@@ -126,7 +127,7 @@ public class EnvelopeEncryptionTests
     [Fact]
     public async Task EncryptDecrypt_WithDifferentInstances()
     {
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
             .WithKeyExpirationDays(30)
@@ -161,7 +162,7 @@ public class EnvelopeEncryptionTests
     [Fact]
     public async Task Decrypt_Throws_When_IntermediateKey_Cannot_Be_Found()
     {
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
             .WithKeyExpirationDays(30)
             .WithRevokeCheckMinutes(30)
@@ -284,7 +285,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_CreatesNewKeys_WhenExistingKeysAreExpired()
     {
         // Arrange: Use a shared metastore and KMS with a test partition
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("rotationTest", "testService", "testProduct");
 
@@ -345,7 +346,7 @@ public class EnvelopeEncryptionTests
     {
         // This test verifies that revoked keys trigger rotation
         // We'll use a helper metastore that we can manipulate to simulate a revoked key scenario
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("revokedKeyTest", "testService", "testProduct");
 
@@ -375,7 +376,7 @@ public class EnvelopeEncryptionTests
     {
         // This test verifies that when two concurrent encryption operations try to create keys,
         // both succeed (one creates, one uses the created key via retry logic)
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("concurrentTest", "testService", "testProduct");
 
@@ -428,7 +429,7 @@ public class EnvelopeEncryptionTests
     {
         // This test verifies that sequential encryption operations on the same partition
         // reuse the same key (no duplicate creation)
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("sequentialTest", "testService", "testProduct");
 
@@ -471,7 +472,7 @@ public class EnvelopeEncryptionTests
     public async Task DuplicateKeyCreation_MultipleConcurrentOperations_AllSucceed()
     {
         // This test verifies that many concurrent operations all succeed
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("multiConcurrentTest", "testService", "testProduct");
 
@@ -534,7 +535,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_UsesExistingKey_WhenNotExpired()
     {
         // Arrange: Use a shared metastore and KMS
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
 
         var cryptoPolicy = BasicExpiringCryptoPolicy.NewBuilder()
@@ -568,7 +569,7 @@ public class EnvelopeEncryptionTests
     public void Dispose_AfterNormalOperations_DoesNotThrow()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("disposeTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: true, canCacheIntermediateKeys: true);
@@ -628,7 +629,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_WithConfigurablePolicy_CreatesNewIntermediateKey()
     {
         // Arrange: Real implementations except for configurable crypto policy
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("inlineRotationTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -672,7 +673,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_WithConfigurablePolicy_CreatesNewSystemKey()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("systemKeyRotationTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -716,7 +717,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_MultipleRotations_AllKeysRemainDecryptable()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("multiRotationTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -768,7 +769,7 @@ public class EnvelopeEncryptionTests
     public async Task InlineRotation_KeyNotExpired_ReusesExistingKey()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("noRotationTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -804,7 +805,7 @@ public class EnvelopeEncryptionTests
         // Arrange: CanCacheSystemKeys=true, CanCacheIntermediateKeys=false
         // This forces GetIntermediateKey to be called on every decrypt,
         // which in turn calls WithExistingSystemKey. The SK should be cached after first call.
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("systemKeyCacheTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: true, canCacheIntermediateKeys: false);
@@ -839,7 +840,7 @@ public class EnvelopeEncryptionTests
     public async Task WithExistingSystemKey_RevokedSystemKey_TreatExpiredAsMissingTrue_LogsWarningAndCreatesNewKeys()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("revokedSkTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -900,7 +901,7 @@ public class EnvelopeEncryptionTests
     public async Task WithExistingSystemKey_CanCacheSystemKeysTrue_UsesCachedKeyForMultipleIKs()
     {
         // Arrange: CanCacheSystemKeys=true, CanCacheIntermediateKeys=false
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("systemKeyCacheMultiIKTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: true, canCacheIntermediateKeys: false);
@@ -959,7 +960,7 @@ public class EnvelopeEncryptionTests
     {
         // Arrange: CanCacheIntermediateKeys=true, CanCacheSystemKeys=false
         // This ensures we're testing IK caching specifically
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("ikCacheTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: true);
@@ -991,7 +992,7 @@ public class EnvelopeEncryptionTests
     public async Task WithIntermediateKeyForRead_CanCacheIntermediateKeysTrue_UsesCachedKeyForMultipleDecrypts()
     {
         // Arrange: CanCacheIntermediateKeys=true
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("ikCacheMultiDecryptTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: true);
@@ -1036,7 +1037,7 @@ public class EnvelopeEncryptionTests
     public async Task GetLatestOrCreateIntermediateKey_DuplicateDetected_UsesRetryLogic()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("duplicateIkTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -1070,7 +1071,7 @@ public class EnvelopeEncryptionTests
     public async Task GetLatestOrCreateSystemKey_DuplicateDetected_UsesRetryLogic()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("duplicateSkTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -1106,7 +1107,7 @@ public class EnvelopeEncryptionTests
     public async Task GetIntermediateKey_NullParentKeyMeta_ThrowsMetadataMissingException()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("nullParentKeyMetaReadTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -1148,7 +1149,7 @@ public class EnvelopeEncryptionTests
     public async Task GetSystemKey_SystemKeyNotFound_ThrowsMetadataMissingException()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("missingSkTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);
@@ -1189,7 +1190,7 @@ public class EnvelopeEncryptionTests
     public async Task GetLatestOrCreateIntermediateKey_WithNullParentKeyMeta_LogsWarningAndCreatesNewKey()
     {
         // Arrange
-        var keyManagementService = new DummyKeyManagementService();
+        var keyManagementService = new StaticKeyManagementService();
         var metastore = new InMemoryKeyMetastore();
         var partition = new DefaultPartition("nullParentKeyMetaTest", "testService", "testProduct");
         var cryptoPolicy = new ConfigurableCryptoPolicy(canCacheSystemKeys: false, canCacheIntermediateKeys: false);

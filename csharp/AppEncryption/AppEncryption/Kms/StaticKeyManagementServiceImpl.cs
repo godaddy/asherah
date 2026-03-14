@@ -14,6 +14,7 @@ namespace GoDaddy.Asherah.AppEncryption.Kms
     /// encrypt/decrypt keys.
     /// Note: This should never be used in a production environment.
     /// </summary>
+    [Obsolete("Use StaticKeyManagementService from GoDaddy.Asherah.AppEncryption.PlugIns.Testing for testing. This will be removed in a future release.")]
     public class StaticKeyManagementServiceImpl : KeyManagementService, IDisposable
     {
         private readonly SecretCryptoKey encryptionKey;

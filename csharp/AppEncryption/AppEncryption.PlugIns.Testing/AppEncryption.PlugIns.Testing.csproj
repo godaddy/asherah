@@ -25,5 +25,6 @@
     </PropertyGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>
+        <ProjectReference Include="../Crypto/Crypto.csproj"/>
     </ItemGroup>
 </Project>

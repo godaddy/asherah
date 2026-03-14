@@ -5,6 +5,7 @@ using System.Linq;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.TestHelpers;
 using GoDaddy.Asherah.AppEncryption.Kms;
 using GoDaddy.Asherah.AppEncryption.Persistence;
+using GoDaddy.Asherah.AppEncryption.PlugIns.Testing.Kms;
 using GoDaddy.Asherah.Crypto.Exceptions;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
@@ -48,7 +49,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             Metastore = CreateMetastore();
         }
 
-        public KeyManagementService KeyManagementService { get; }
+        public IKeyManagementService KeyManagementService { get; }
 
         public IMetastore<JObject> Metastore { get; }
 
@@ -98,7 +99,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
             return new InMemoryMetastoreImpl<JObject>();
         }
 
-        private KeyManagementService CreateKeyManagementService()
+        private IKeyManagementService CreateKeyManagementService()
         {
             if (KmsType.Equals(KeyManagementAws, StringComparison.OrdinalIgnoreCase))
             {
@@ -124,7 +125,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests
                     .Build();
             }
 
-            return new StaticKeyManagementServiceImpl(KeyManagementStaticMasterKey);
+            return new StaticKeyManagementService(KeyManagementStaticMasterKey);
         }
     }
 }

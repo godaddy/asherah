@@ -33,6 +33,7 @@
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj" />
+        <ProjectReference Include="../AppEncryption.PlugIns.Testing/AppEncryption.PlugIns.Testing.csproj" />
         <ProjectReference Include="../AppEncryption.Tests/AppEncryption.Tests.csproj" />
     </ItemGroup>
     <ItemGroup>

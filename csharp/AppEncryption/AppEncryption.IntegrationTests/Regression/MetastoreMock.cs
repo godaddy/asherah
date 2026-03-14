@@ -16,7 +16,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         internal static Mock<IMetastore<JObject>> CreateMetastoreMock(
             Partition partition,
-            KeyManagementService kms,
+            IKeyManagementService kms,
             KeyState metaIK,
             KeyState metaSK,
             CryptoKeyHolder cryptoKeyHolder,

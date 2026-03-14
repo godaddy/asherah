@@ -56,6 +56,9 @@ exclude-signatures = [
     { signature = "cf90106ca7fcc09ff9d8f07a2ea8f9f02a0758f26031808d1cc1f4d38c712f58", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "5923f959a8738aacb46e92db00f78d64eaa0121fe33edbf3571d676f1355d08c", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "4244fda6859ee07323c9787a7fd65a7afb3f001019ca5a362b77a0a1fb63ccda", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "d443501bf2d6eaa001dbe362f23e5d547b460f878b0455aaed36549c4fc8a415", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "086e498d8eda0c6de875f45ce13fb715f468d1d6c56e2e0f13dba0c9d9ae13b6", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "3896f078bd2434d7d70a38934e314f25215f90be0dbb745b6d9a7156231cf601", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
 
     { signature = "0d4a2e3037d931239373f7f547542616cc64fc583072029e6b3a2e77e8b7f89e", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
     { signature = "3b43730726f7dd09bb41870ddb5b65e77b6b2b8aab52f40e9237e6d2423cfcb3", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
