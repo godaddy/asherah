@@ -59,6 +59,8 @@ exclude-signatures = [
     { signature = "d443501bf2d6eaa001dbe362f23e5d547b460f878b0455aaed36549c4fc8a415", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "086e498d8eda0c6de875f45ce13fb715f468d1d6c56e2e0f13dba0c9d9ae13b6", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
     { signature = "3896f078bd2434d7d70a38934e314f25215f90be0dbb745b6d9a7156231cf601", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in C# tests"},
+    { signature = "dc0fb2464d4d00d122106036f31e628ceedfa5231e0aab2942c5cfea33db9848", reason = "High entropy findings (dummy payloads, fake keys, etc.) in C# MetastoreCompatibilityTest"},
+    { signature = "ef125e46e699f84efac57caea87446602d1d05b6703815afd9d2781a6e69113d", reason = "High entropy findings (dummy payloads, fake keys, etc.) in C# MetastoreCompatibilityTest"},
 
     { signature = "0d4a2e3037d931239373f7f547542616cc64fc583072029e6b3a2e77e8b7f89e", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
     { signature = "3b43730726f7dd09bb41870ddb5b65e77b6b2b8aab52f40e9237e6d2423cfcb3", reason = "High entropy findings (dummy encryoted payloads, fake keys, method names, etc.) in Go Tests"},
@@ -86,6 +88,7 @@ exclude-signatures = [
 ]
 
 exclude-path-patterns = [
+    {path-pattern = '.*/Regression/Metastore/MetastoreCompatibilityTest\.cs', reason = 'C# integration test: dummy payloads, static KMS key reference'},
     {path-pattern = '.*/(L|LL)P64/.*', reason = 'Exclude LP64 paths'},
     {path-pattern = '.*\.DotSettings', reason = 'Exclude DotSettings files'},
     {path-pattern = '.*/go.mod', reason = 'Exclude go.mod files'},
