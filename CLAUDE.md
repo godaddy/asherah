@@ -21,9 +21,9 @@ Asherah is an application-layer encryption SDK providing envelope encryption wit
 
 ## Lint Commands
 - C#: `dotnet format` for formatting, built-in analyzers
-- Go: Binary installation via `curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.0`
+- Go: Binary installation via `curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.9.0`
   - Alternatively: `brew install golangci-lint` (installs latest v2)
-  - Version should match CI configuration (currently v2.8.0)
+  - Version should match CI configuration (currently v2.9.0)
   - Run with: `golangci-lint run` in module directory
 - Java: Checkstyle via Maven (configured in pom.xml)
 
