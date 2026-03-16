@@ -1,4 +1,4 @@
-using System;
+using GoDaddy.Asherah.AppEncryption.Core;
 
 namespace GoDaddy.Asherah.AppEncryption
 {
@@ -8,34 +8,66 @@ namespace GoDaddy.Asherah.AppEncryption
     /// should have its own session.
     /// A payload encrypted using some partition id, cannot be decrypted using a different one.
     /// </summary>
-    public abstract class Partition
+    public abstract class Partition : ISessionPartition
     {
+        private readonly SessionPartition _sessionPartition;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Partition"/> class.
+        /// </summary>
+        /// <param name="partitionId">A unique identifier for this partition.</param>
+        /// <param name="serviceId">A unique identifier for a service.</param>
+        /// <param name="productId">A unique identifier for a product.</param>
         protected Partition(string partitionId, string serviceId, string productId)
+            : this(partitionId, serviceId, productId, null)
         {
-            PartitionId = partitionId;
-            ServiceId = serviceId;
-            ProductId = productId;
         }
 
         /// <summary>
-        /// Gets get the system key id.
+        /// Initializes a new instance of the <see cref="Partition"/> class with an optional suffix.
         /// </summary>
-        public virtual string SystemKeyId => "_SK_" + ServiceId + "_" + ProductId;
+        /// <param name="partitionId">A unique identifier for this partition.</param>
+        /// <param name="serviceId">A unique identifier for a service.</param>
+        /// <param name="productId">A unique identifier for a product.</param>
+        /// <param name="suffix">Optional suffix appended to key ids.</param>
+        protected Partition(string partitionId, string serviceId, string productId, string suffix)
+        {
+            _sessionPartition = new SessionPartition(partitionId, serviceId, productId, suffix);
+        }
 
         /// <summary>
-        /// Gets get the intermediate key id.
+        /// Gets the system key id.
         /// </summary>
-        public virtual string IntermediateKeyId => "_IK_" + PartitionId + "_" + ServiceId + "_" + ProductId;
+        public string SystemKeyId => _sessionPartition.SystemKeyId;
 
-        internal string PartitionId { get; }
+        /// <summary>
+        /// Gets the intermediate key id.
+        /// </summary>
+        public string IntermediateKeyId => _sessionPartition.IntermediateKeyId;
 
-        internal string ServiceId { get; }
+        /// <summary>
+        /// Gets the partition id.
+        /// </summary>
+        public string PartitionId => _sessionPartition.PartitionId;
 
-        internal string ProductId { get; }
+        /// <summary>
+        /// Gets the service id.
+        /// </summary>
+        public string ServiceId => _sessionPartition.ServiceId;
 
-        public virtual bool IsValidIntermediateKeyId(string keyId)
+        /// <summary>
+        /// Gets the product id.
+        /// </summary>
+        public string ProductId => _sessionPartition.ProductId;
+
+        /// <summary>
+        /// Gets the optional suffix appended to key ids. Returns null for base partitions.
+        /// </summary>
+        public string Suffix => _sessionPartition.Suffix;
+
+        public bool IsValidIntermediateKeyId(string keyId)
         {
-            return keyId.Equals(IntermediateKeyId, StringComparison.Ordinal);
+            return _sessionPartition.IsValidIntermediateKeyId(keyId);
         }
     }
 }

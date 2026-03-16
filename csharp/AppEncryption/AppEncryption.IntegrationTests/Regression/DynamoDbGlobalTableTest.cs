@@ -5,13 +5,13 @@ using Amazon.DynamoDBv2.Model;
 using GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils;
 using GoDaddy.Asherah.AppEncryption.Persistence;
 using GoDaddy.Asherah.AppEncryption.Tests;
-using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence;
+using GoDaddy.Asherah.AppEncryption.Tests.Fixtures;
 using Xunit;
 
 namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 {
     [Collection("Configuration collection")]
-    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDBContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
+    public class DynamoDbGlobalTableTest : IClassFixture<DynamoDbContainerFixture>, IClassFixture<MetricsFixture>, IDisposable
     {
         private const string PartitionKey = "Id";
         private const string SortKey = "Created";
@@ -23,7 +23,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
 
         private AmazonDynamoDBClient tempDynamoDbClient;
 
-        public DynamoDbGlobalTableTest(DynamoDBContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
+        public DynamoDbGlobalTableTest(DynamoDbContainerFixture dynamoDbContainerFixture, ConfigFixture configFixture)
         {
             serviceUrl = dynamoDbContainerFixture.GetServiceUrl();
             this.configFixture = configFixture;

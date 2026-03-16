@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GoDaddy.Asherah.AppEncryption.Envelope;
 using GoDaddy.Asherah.AppEncryption.Persistence;
+using GoDaddy.Asherah.AppEncryption.PlugIns.Testing.Kms;
 using GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.TestHelpers.Dummy;
 using GoDaddy.Asherah.Crypto.Engine.BouncyCastle;
 using GoDaddy.Asherah.Crypto.Keys;
@@ -18,7 +19,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
         private readonly InMemoryMetastoreImpl<JObject> metastore;
         private readonly AdhocPersistence<JObject> dataPersistence;
         private readonly DefaultPartition partition;
-        private readonly DummyKeyManagementService keyManagementService;
+        private readonly StaticKeyManagementService keyManagementService;
 
         public AppJsonEncryptionImplTest()
         {
@@ -30,7 +31,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Json
                 (key, jsonObject) => memoryPersistence.Add(key, jsonObject));
 
             metastore = new InMemoryMetastoreImpl<JObject>();
-            keyManagementService = new DummyKeyManagementService();
+            keyManagementService = new StaticKeyManagementService();
 
             BouncyAes256GcmCrypto aeadEnvelopeCrypto = new BouncyAes256GcmCrypto();
 

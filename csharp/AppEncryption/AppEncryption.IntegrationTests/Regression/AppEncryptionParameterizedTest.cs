@@ -213,7 +213,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Regression
                     cacheSK + "CacheSK_" + metaSK + "MetaSK_" + DateTimeUtils.GetCurrentTimeAsUtcIsoDateTimeOffset() + "_" + Random.Next(),
                     DefaultProductId);
 
-                KeyManagementService kms = configFixture.KeyManagementService;
+                IKeyManagementService kms = configFixture.KeyManagementService;
 
                 CryptoKeyHolder cryptoKeyHolder = CryptoKeyHolder.GenerateIKSK();
 

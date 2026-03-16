@@ -153,15 +153,15 @@ namespace GoDaddy.Asherah.AppEncryption
         public interface IKeyManagementServiceStep
         {
             /// <summary>
-            /// Initialize a session factory builder step with a new <see cref="StaticKeyManagementServiceImpl"/>
-            /// object. NOTE: Leaving this in here for now for user integration test convenience. Need to add "don't
-            /// run in prod" checks somehow.
+            /// Initialize a session factory builder step with a new static key management service.
+            /// Use <see cref="WithKeyManagementService"/> with <c>StaticKeyManagementService</c> from
+            /// GoDaddy.Asherah.AppEncryption.PlugIns.Testing for testing instead.
             /// </summary>
             ///
             /// <param name="staticMasterKey">The static key.</param>
             ///
-            /// <returns>The current <see cref="IBuildStep"/> instance initialized with a
-            /// <see cref="StaticKeyManagementServiceImpl"/> object.</returns>
+            /// <returns>The current <see cref="IBuildStep"/> instance.</returns>
+            [Obsolete("Use WithKeyManagementService with StaticKeyManagementService from GoDaddy.Asherah.AppEncryption.PlugIns.Testing for testing. This will be removed in a future release.")]
             IBuildStep WithStaticKeyManagementService(string staticMasterKey);
 
             /// <summary>
@@ -540,9 +540,12 @@ namespace GoDaddy.Asherah.AppEncryption
                 return this;
             }
 
+            [Obsolete("Use WithKeyManagementService with StaticKeyManagementService from GoDaddy.Asherah.AppEncryption.PlugIns.Testing for testing. This will be removed in a future release.")]
             public IBuildStep WithStaticKeyManagementService(string staticMasterKey)
             {
+#pragma warning disable CS0618 // Obsolete: keeping until we remove this method
                 keyManagementService = new StaticKeyManagementServiceImpl(staticMasterKey);
+#pragma warning restore CS0618
                 return this;
             }
 

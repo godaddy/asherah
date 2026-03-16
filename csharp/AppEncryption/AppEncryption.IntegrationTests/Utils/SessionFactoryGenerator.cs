@@ -8,7 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
     public static class SessionFactoryGenerator
     {
         public static SessionFactory CreateDefaultSessionFactory(
-            KeyManagementService keyManagementService, IMetastore<JObject> metastore)
+            IKeyManagementService keyManagementService, IMetastore<JObject> metastore)
         {
             return CreateDefaultSessionFactory(DefaultProductId, DefaultServiceId, keyManagementService, metastore);
         }
@@ -16,7 +16,7 @@ namespace GoDaddy.Asherah.AppEncryption.IntegrationTests.Utils
         private static SessionFactory CreateDefaultSessionFactory(
             string productId,
             string serviceId,
-            KeyManagementService keyManagementService,
+            IKeyManagementService keyManagementService,
             IMetastore<JObject> metastore)
         {
             return SessionFactory.NewBuilder(productId, serviceId)

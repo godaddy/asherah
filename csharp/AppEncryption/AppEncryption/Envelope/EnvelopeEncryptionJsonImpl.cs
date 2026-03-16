@@ -152,7 +152,7 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
         {
             using (MetricsUtil.MetricsInstance.Measure.Timer.Time(EncryptTimerOptions))
             {
-                var result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt(
+                var result = WithIntermediateKeyForWrite(intermediateCryptoKey => crypto.EnvelopeEncrypt<KeyMeta>(
                     payload,
                     intermediateCryptoKey,
                     new KeyMeta(partition.IntermediateKeyId, intermediateCryptoKey.GetCreated())));

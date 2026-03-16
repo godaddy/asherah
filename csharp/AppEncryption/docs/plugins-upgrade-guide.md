@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading from obsolete plugin
 ## Table of Contents
 
 - [Upgrading to the new KeyManagementService Plugin](#upgrading-to-the-new-keymanagementservice-plugin)
+- [Upgrading to the new KeyMetastore Plugin](#upgrading-to-the-new-keymetastore-plugin)
 
 ## Upgrading to the new KeyManagementService Plugin
 
@@ -164,3 +165,76 @@ var keyManagementService = KeyManagementService.NewBuilder()
 - Both synchronous and asynchronous methods are available (`EncryptKey`/`EncryptKeyAsync`, `DecryptKey`/`DecryptKeyAsync`)
 - The new implementation provides better support for dependency injection and configuration-based setup
 - Region fallback behavior remains the same - if the first region fails, it will automatically try the next region in the list
+
+## Upgrading to the new KeyMetastore Plugin
+
+The legacy DynamoDB metastore (`DynamoDbMetastoreImpl`) implements `IMetastore<JObject>` and is used with the legacy `SessionFactory` in `GoDaddy.Asherah.AppEncryption`. The new KeyMetastore plugin (`DynamoDbMetastore` in `GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Metastore`) implements `IKeyMetastore`, which is a breaking interface change: the new interface uses async methods, key records (`IKeyRecord`), and a different storage contract. **Because of this, upgrading to the new KeyMetastore plugin requires upgrading to the new SessionFactory** that accepts `IKeyMetastore` (in `GoDaddy.Asherah.AppEncryption.Core`). You cannot use the new KeyMetastore plugin with the legacy SessionFactory.
+
+Follow the [SessionFactory Upgrade Guide](sessionfactory-upgrade-guide.md) to migrate to the Core `SessionFactory` and `IKeyMetastore`. Then switch your metastore implementation to the new plugin as below.
+
+### Key Changes
+
+1. **Interface**: `IMetastore<JObject>` (sync, JSON values) → `IKeyMetastore` (async, `IKeyRecord` values)
+2. **Namespace**: Legacy DynamoDB metastore lives in `GoDaddy.Asherah.AppEncryption.Persistence`; the new plugin is in `GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Metastore`
+3. **Construction**: Region-based builder → builder that takes an `IAmazonDynamoDB` client and `DynamoDbMetastoreOptions` (e.g. table name, key suffix)
+4. **SessionFactory**: Must use `GoDaddy.Asherah.AppEncryption.Core.SessionFactory` with `WithKeyMetastore()`; the legacy `SessionFactory` does not accept `IKeyMetastore`
+
+### Migration Steps
+
+#### Step 1: Upgrade to the new SessionFactory
+
+Complete the migration described in the [SessionFactory Upgrade Guide](sessionfactory-upgrade-guide.md). Your code will use `GoDaddy.Asherah.AppEncryption.Core.SessionFactory` and `IKeyMetastore` instead of the legacy factory and `IMetastore<JObject>`.
+
+#### Step 2: Replace DynamoDbMetastoreImpl with DynamoDbMetastore
+
+**Old (legacy):**
+```c#
+using GoDaddy.Asherah.AppEncryption.Persistence;
+
+IMetastore<JObject> metastore = DynamoDbMetastoreImpl.NewBuilder("us-west-2")
+    .WithTableName("EncryptionKey")
+    .WithRegion("us-west-2")
+    .Build();
+
+// Used with legacy SessionFactory
+SessionFactory sessionFactory = SessionFactory.NewBuilder("product", "service")
+    .WithMetastore(metastore)
+    .WithCryptoPolicy(cryptoPolicy)
+    .WithKeyManagementService(keyManagementService)
+    .Build();
+```
+
+**New:**
+```c#
+using GoDaddy.Asherah.AppEncryption.Core;
+using GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Metastore;
+
+var options = new DynamoDbMetastoreOptions
+{
+    KeyRecordTableName = "EncryptionKey",
+    KeySuffix = ""  // optional; use for regional key suffix (e.g. global tables)
+};
+
+IKeyMetastore keyMetastore = DynamoDbMetastore.NewBuilder()
+    .WithDynamoDbClient(amazonDynamoDbClient)
+    .WithOptions(options)
+    .Build();
+
+SessionFactory sessionFactory = SessionFactory.NewBuilder("product", "service")
+    .WithKeyMetastore(keyMetastore)
+    .WithCryptoPolicy(cryptoPolicy)
+    .WithKeyManagementService(keyManagementService)
+    .WithLogger(logger)
+    .Build();
+```
+
+You are responsible for creating and configuring `IAmazonDynamoDB` (region, credentials, endpoint, etc.). The new plugin does not construct the client from a region string.
+
+#### Step 3: Table schema
+
+The new and old DynamoDB metastore implementations expect the **exact same schema**. They are compatible: the new `DynamoDbMetastore` plugin will work with your existing key table with no schema changes.
+
+### Summary
+
+- **Upgrade order:** Migrate to the new SessionFactory and `IKeyMetastore` first (see [SessionFactory Upgrade Guide](sessionfactory-upgrade-guide.md)), then replace the legacy DynamoDB metastore with `DynamoDbMetastore` from `GoDaddy.Asherah.AppEncryption.PlugIns.Aws.Metastore`.
+- The new KeyMetastore plugin cannot be used with the legacy `SessionFactory` or `IMetastore<JObject>`-based code paths.
