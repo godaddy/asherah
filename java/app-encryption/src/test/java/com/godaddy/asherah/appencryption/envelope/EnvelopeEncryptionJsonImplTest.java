@@ -2,6 +2,7 @@ package com.godaddy.asherah.appencryption.envelope;
 
 import com.godaddy.asherah.appencryption.DefaultPartition;
 import com.godaddy.asherah.appencryption.Partition;
+import com.godaddy.asherah.appencryption.SuffixedPartition;
 import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.MetadataMissingException;
 import com.godaddy.asherah.appencryption.kms.KeyManagementService;
@@ -1207,6 +1208,53 @@ class EnvelopeEncryptionJsonImplTest {
   @Test
   void testIsKeyExpiredOrRevokedCryptoKeyWithNotExpiredAndNotRevoked() {
     assertFalse(envelopeEncryptionJson.isKeyExpiredOrRevoked(systemCryptoKey));
+  }
+
+  @Test
+  void testWritePathShouldNotUseCrossRegionIntermediateKeyFromReadCache() {
+    // Use SuffixedPartition (not the default partition) and a REAL intermediate key cache
+    SuffixedPartition suffixedPartition = new SuffixedPartition(
+        "order-processing", "order-processing-service", "ecomm", "us-west-2");
+    SecureCryptoKeyMap<Instant> realIkCache = new SecureCryptoKeyMap<>(Long.MAX_VALUE);
+
+    EnvelopeEncryptionJsonImpl impl = spy(new EnvelopeEncryptionJsonImpl(
+        suffixedPartition, metastore, systemKeyCache, realIkCache,
+        aeadEnvelopeCrypto, cryptoPolicy, keyManagementService));
+
+    // Two IKs: local (earlier) and cross-region (later)
+    Instant localCreated = Instant.now().truncatedTo(ChronoUnit.SECONDS).minus(1, ChronoUnit.HOURS);
+    Instant crossRegionCreated = localCreated.plus(30, ChronoUnit.MINUTES);
+
+    CryptoKey localIK = mock(CryptoKey.class);
+    when(localIK.getCreated()).thenReturn(localCreated);
+
+    CryptoKey crossRegionIK = mock(CryptoKey.class);
+    when(crossRegionIK.getCreated()).thenReturn(crossRegionCreated);
+
+    // Pre-populate cache with local IK (simulating a prior local write)
+    realIkCache.putAndGetUsable(localCreated, localIK);
+
+    // Enable IK caching
+    when(cryptoPolicy.canCacheIntermediateKeys()).thenReturn(true);
+
+    // Stub getIntermediateKey to return the cross-region IK when reading cross-region data
+    KeyMeta crossRegionMeta = new KeyMeta(
+        "_IK_order-processing_order-processing-service_ecomm_us-east-1", crossRegionCreated);
+    doReturn(crossRegionIK).when(impl).getIntermediateKey(crossRegionMeta);
+
+    // Read path: decrypt data originally encrypted in us-east-1 -> cross-region IK enters cache
+    impl.withIntermediateKeyForRead(crossRegionMeta, key -> "ok");
+
+    // Write path: getLast() should return the LOCAL key, not the cross-region key
+    Instant[] usedKeyCreated = new Instant[1];
+    impl.withIntermediateKeyForWrite(key -> {
+      usedKeyCreated[0] = key.getCreated();
+      return "ok";
+    });
+
+    // Assert: the write used the local key, not the cross-region key
+    assertEquals(localCreated, usedKeyCreated[0],
+        "Write path should use local region IK, not cross-region IK from read cache");
   }
 
 }
