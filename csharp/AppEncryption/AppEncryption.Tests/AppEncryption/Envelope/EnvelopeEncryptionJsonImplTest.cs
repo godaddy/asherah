@@ -1555,5 +1555,63 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         {
             Assert.False(envelopeEncryptionJsonImplSpy.Object.IsKeyExpiredOrRevoked(systemCryptoKeyMock.Object));
         }
+
+        [Fact]
+        private void TestWritePathShouldNotUseCrossRegionIntermediateKeyFromReadCache()
+        {
+            // Use SuffixedPartition (not the default partition) and a REAL intermediate key cache
+            var suffixedPartition = new SuffixedPartition(
+                "order-processing", "order-processing-service", "ecomm", "us-west-2");
+            var realIkCache = new SecureCryptoKeyDictionary<DateTimeOffset>(long.MaxValue);
+
+            var impl = new Mock<EnvelopeEncryptionJsonImpl>(
+                suffixedPartition,
+                metastoreMock.Object,
+                systemKeyCacheMock.Object,
+                realIkCache,
+                aeadEnvelopeCryptoMock.Object,
+                cryptoPolicyMock.Object,
+                keyManagementServiceMock.Object,
+                mockLogger.Object)
+            { CallBase = true };
+
+            // Two IKs: local (earlier) and cross-region (later)
+            DateTimeOffset localCreated = DateTimeOffset.UtcNow.Truncate(TimeSpan.FromSeconds(1)).AddHours(-1);
+            DateTimeOffset crossRegionCreated = localCreated.AddMinutes(30);
+
+            var localIK = new Mock<CryptoKey>();
+            localIK.Setup(x => x.GetCreated()).Returns(localCreated);
+
+            var crossRegionIK = new Mock<CryptoKey>();
+            crossRegionIK.Setup(x => x.GetCreated()).Returns(crossRegionCreated);
+
+            // Pre-populate cache with local IK (simulating a prior local write)
+            realIkCache.PutAndGetUsable(localCreated, localIK.Object);
+
+            // Enable IK caching
+            cryptoPolicyMock.Setup(x => x.CanCacheIntermediateKeys()).Returns(true);
+
+            // Stub GetIntermediateKey to return the cross-region IK when reading cross-region data
+            var crossRegionMeta = new KeyMeta(
+                "_IK_order-processing_order-processing-service_ecomm_us-east-1", crossRegionCreated);
+            impl.Setup(x => x.GetIntermediateKey(crossRegionMeta))
+                .Returns(crossRegionIK.Object);
+
+            // Read path: decrypt data originally encrypted in us-east-1 -> cross-region IK enters cache
+            impl.Object.WithIntermediateKeyForRead(crossRegionMeta, key => "ok");
+
+            // Write path: GetLast() should return the LOCAL key, not the cross-region key
+            DateTimeOffset usedKeyCreated = DateTimeOffset.MinValue;
+            impl.Object.WithIntermediateKeyForWrite(key =>
+            {
+                usedKeyCreated = key.GetCreated();
+                return "ok";
+            });
+
+            // Assert: the write used the local key, not the cross-region key
+            Assert.Equal(
+                localCreated,
+                usedKeyCreated);
+        }
     }
 }
