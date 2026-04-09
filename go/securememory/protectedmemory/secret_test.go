@@ -229,8 +229,8 @@ func TestProtectedMemory_NewSecret(t *testing.T) {
 
 		defer sec.Close()
 
-		assert.Equal(t, keySize, len(sec.secretInternal.bytes))
-		assert.Equal(t, make([]byte, keySize), sec.secretInternal.bytes)
+		assert.Equal(t, keySize, len(sec.bytes))
+		assert.Equal(t, make([]byte, keySize), sec.bytes)
 	}
 }
 

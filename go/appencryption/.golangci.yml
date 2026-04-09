@@ -1,144 +1,142 @@
-# options for analysis running
+version: "2"
 run:
-  # default concurrency is a available CPU number
   concurrency: 4
-
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  deadline: 5m
-
-  # exit code when at least one issue was found, default is 1
-  issues-exit-code: 1
-
-  # ugly code is ugly - test code is no exception
-  tests: true
-
-  # by default isn't set. If set we pass it to "go list -mod={option}". From "go help modules":
-  # If invoked with -mod=readonly, the go command is disallowed from the implicit
-  # automatic updating of go.mod described above. Instead, it fails when any changes
-  # to go.mod are needed. This setting is most useful to check that go.mod does
-  # not need updates, such as in a continuous integration and testing system.
-  # If invoked with -mod=vendor, the go command assumes that the vendor
-  # directory holds the correct copies of dependencies and ignores
-  # the dependency descriptions in go.mod.
-  modules-download-mode: readonly
-
-  # go version to use. Default is the version of the go command.
   go: "1.19"
-
+  modules-download-mode: readonly
+  issues-exit-code: 1
+  tests: true
 output:
   formats:
-    - format: colored-line-number
+    text:
       path: stdout
-
-  # Sort results by the order defined in `sort-order`.
-  # Default: false
-  sort-results: true
-
-  # Order to use when sorting results.
-  # Require `sort-results` to `true`.
-  # Possible values: `file`, `linter`, and `severity`.
-  #
-  # If the severity values are inside the following list, they are ordered in this order:
-  #   1. error
-  #   2. warning
-  #   3. high
-  #   4. medium
-  #   5. low
-  # Either they are sorted alphabetically.
-  #
-  # Default: ["file"]
   sort-order:
-    # - linter
-    # - severity
-    - file # filepath, line, and column.
-
-  # show stats
-  show-stats: true
-
+    - file
 linters:
-  enable-all: false
-  enabled:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-  fast: false
-
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - cyclop
+    - depguard
+    - dupword
+    - durationcheck
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocognit
+    - gocyclo
+    - godot
+    - gomoddirectives
+    - gomodguard
+    - gosec
+    - gosmopolitan
+    - loggercheck
+    - maintidx
+    - makezero
+    - misspell
+    - musttag
+    - nestif
+    - nilerr
+    - nilnesserr
+    - noctx
+    - perfsprint
+    - prealloc
+    - protogetter
+    - reassign
+    - recvcheck
+    - rowserrcheck
+    - spancheck
+    - sqlclosecheck
+    - unparam
+    - zerologlint
   disable:
     - contextcheck
     - err113
     - godox
     - testifylint
     - wrapcheck
-
-  presets:
-    - bugs
-    - comment
-    - complexity
-    - error
-    - format
-    - import
-    # - metalinter
-    - module
-    - performance
-    - sql
-    # - style
-    # - test
-    - unused
-
-linters-settings:
-  cyclop:
-    # The maximal code complexity to report.
-    # Default: 10
-    max-complexity: 20
-
-  depguard:
+  settings:
+    cyclop:
+      max-complexity: 20
+    depguard:
+      rules:
+        errors:
+          list-mode: lax
+          files:
+            - $all
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: pkg/errors is deprecated, use errors package from stdlib
+        main:
+          list-mode: lax
+          files:
+            - '!$test'
+            - '!**/plugins/**'
+          deny:
+            - pkg: github.com/aws/aws-sdk-go
+              desc: aws-sdk-go dependants must be in plugins/aws-v1
+    funlen:
+      lines: 70
+    gosec:
+      excludes:
+        - G115
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      main:
-        list-mode: lax
-        files:
-          - "!$test"
-          - "!**/plugins/**"
-        deny:
-          - pkg: github.com/aws/aws-sdk-go
-            desc: "aws-sdk-go dependants must be in plugins/aws-v1"
-      errors:
-        list-mode: lax
-        files:
-          - "$all"
-        deny:
-          - pkg: github.com/pkg/errors
-            desc: "pkg/errors is deprecated, use errors package from stdlib"
-
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/godaddy/asherah/go/appencryption)
-    custom-order: true
-
-  gosec:
-    excludes:
-      - G115
-
-  funlen:
-    lines: 70
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - godot
-        - gosec
-        - perfsprint
-    - path: plugins/aws-v1/
-      linters:
-        - staticcheck
-      text: "SA1019.*aws-sdk-go.*deprecated"
-    - path: pkg/(kms|persistence)/
-      linters:
-        - staticcheck
-      text: "SA1019.*is deprecated.*AWS SDK v1 reached end-of-life"
+      - linters:
+          - errcheck
+          - godot
+          - gosec
+          - perfsprint
+        path: _test\.go
+      - linters:
+          - prealloc
+        path: (_test\.go|memory\.go)
+        text: Consider preallocating
+      - linters:
+          - gosmopolitan
+        path: _test\.go
+      - linters:
+          - staticcheck
+        text: ST1012.*error var.*should have name of the form ErrFoo
+      - linters:
+          - staticcheck
+        path: plugins/aws-v1/
+        text: SA1019.*aws-sdk-go.*deprecated
+      - linters:
+          - staticcheck
+        path: pkg/(kms|persistence)/
+        text: SA1019.*is deprecated.*AWS SDK v1 reached end-of-life
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/godaddy/asherah/go/appencryption)
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -45,7 +45,6 @@ go test -v -test.run '^TestEncryptFeatures$' -godog.paths=../features/encrypt.fe
 cd ..
 
 cd sidecar
-pip3 install -r requirements.txt
 echo "----------Encrypting payload with Go sidecar and python client----------"
 export ASHERAH_EXPIRE_AFTER=60m
 export ASHERAH_CHECK_INTERVAL=10m

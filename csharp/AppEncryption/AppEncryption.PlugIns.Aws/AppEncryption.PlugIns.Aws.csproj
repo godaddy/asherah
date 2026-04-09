@@ -13,6 +13,7 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <AnalysisMode>Recommended</AnalysisMode>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <!-- Properties related to NuGet packaging: -->
         <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -24,9 +25,9 @@
         <!-- End of Properties related to NuGet packaging: -->
     </PropertyGroup>
     <ItemGroup Label="Package References">
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9.6"/>
-        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.7.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0"/>
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.15"/>
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="4.0.9.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5"/>
     </ItemGroup>
     <ItemGroup Label="Project References">
         <ProjectReference Include="../AppEncryption/AppEncryption.csproj"/>

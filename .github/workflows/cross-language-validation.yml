@@ -78,7 +78,6 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get -y upgrade --fix-missing
           sudo apt-get install -y build-essential
 
       - name: Set up Go
@@ -100,6 +99,10 @@ jobs:
         with:
           python-version: '3.x'
           cache: 'pip'
+          cache-dependency-path: 'server/samples/clients/python/requirements.txt'
+
+      - name: Install Python dependencies
+        run: pip3 install -r server/samples/clients/python/requirements.txt
 
       - name: Set up Node
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
@@ -161,6 +164,10 @@ jobs:
         with:
           python-version: '3.x'
           cache: 'pip'
+          cache-dependency-path: 'tests/cross-language/sidecar/requirements.txt'
+
+      - name: Install Python dependencies
+        run: pip3 install -r tests/cross-language/sidecar/requirements.txt
 
       - name: Initialize RDBMS based metastore
         run: |
@@ -199,9 +206,9 @@ jobs:
           go mod download
 
       - name: Lint the Go project
-        uses: golangci/golangci-lint-action@051d91933864810ecd5e2ea2cfd98f6a5bca5347 # v6.3.2
+        uses: golangci/golangci-lint-action@9fae48acfc02a90574d7c304a1758ef9895495fa # v7.0.1
         with:
-          version: 'v1.64.2'
+          version: 'v2.9.0'
           skip-cache: true
           working-directory: 'tests/cross-language/go'
 
