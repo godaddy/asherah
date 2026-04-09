@@ -215,8 +215,11 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             {
                 intermediateKey = GetIntermediateKey(intermediateKeyMeta);
 
-                // Put the key into our cache if allowed
-                if (cryptoPolicy.CanCacheIntermediateKeys())
+                // Only cache if the key belongs to this partition's region to prevent cross-region
+                // cache pollution that could cause WithIntermediateKeyForWrite's GetLast() to return
+                // a key from a different region
+                if (cryptoPolicy.CanCacheIntermediateKeys()
+                    && partition.IntermediateKeyId.Equals(intermediateKeyMeta.KeyId, StringComparison.Ordinal))
                 {
                     try
                     {
@@ -298,8 +301,11 @@ namespace GoDaddy.Asherah.AppEncryption.Envelope
             {
                 systemKey = GetSystemKey(systemKeyMeta);
 
-                // Put the key into our cache if allowed
-                if (cryptoPolicy.CanCacheSystemKeys())
+                // Only cache if the key belongs to this partition's region to prevent cross-region
+                // cache pollution that could cause WithSystemKeyForWrite's GetLast() to return
+                // a key from a different region
+                if (cryptoPolicy.CanCacheSystemKeys()
+                    && partition.SystemKeyId.Equals(systemKeyMeta.KeyId, StringComparison.Ordinal))
                 {
                     try
                     {

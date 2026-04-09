@@ -346,8 +346,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndNotExpiredShouldLookupAndCache()
         {
-            keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
-            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(keyMetaMock.Object))
+            var ikKeyMeta = new Mock<KeyMeta>(partition.IntermediateKeyId, DateTimeOffset.UtcNow);
+            ikKeyMeta.Setup(x => x.Created).Returns(ikDateTime);
+            envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(ikKeyMeta.Object))
                 .Returns(intermediateCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheIntermediateKeys()).Returns(true);
             intermediateCryptoKeyMock.Setup(x => x.GetCreated()).Returns(ikDateTime);
@@ -359,9 +360,9 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Func<CryptoKey, byte[]> functionWithIntermediateKey = cryptoKey => expectedBytes;
 
             byte[] actualBytes = envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
-                keyMetaMock.Object, functionWithIntermediateKey);
+                ikKeyMeta.Object, functionWithIntermediateKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(ikKeyMeta.Object));
             intermediateKeyCacheMock.Verify(x => x.PutAndGetUsable(intermediateCryptoKeyMock.Object.GetCreated(), intermediateCryptoKeyMock.Object));
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
@@ -369,7 +370,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndCacheUpdateFailsShouldLookupAndFailAndDisposeKey()
         {
-            keyMetaMock.Setup(x => x.Created).Returns(ikDateTime);
+            var ikKeyMeta = new Mock<KeyMeta>(partition.IntermediateKeyId, DateTimeOffset.UtcNow);
+            ikKeyMeta.Setup(x => x.Created).Returns(ikDateTime);
             envelopeEncryptionJsonImplSpy.Setup(x => x.GetIntermediateKey(It.IsAny<KeyMeta>()))
                 .Returns(intermediateCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheIntermediateKeys()).Returns(true);
@@ -380,8 +382,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Func<CryptoKey, byte[]> functionWithIntermediateKey = cryptoKey => expectedBytes;
 
             Assert.Throws<AppEncryptionException>(() => envelopeEncryptionJsonImplSpy.Object.WithIntermediateKeyForRead(
-                keyMetaMock.Object, functionWithIntermediateKey));
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(keyMetaMock.Object));
+                ikKeyMeta.Object, functionWithIntermediateKey));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetIntermediateKey(ikKeyMeta.Object));
             intermediateCryptoKeyMock.Verify(x => x.Dispose());
         }
 
@@ -573,27 +575,29 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
         [Fact]
         private void TestWithExistingSystemKeyWithKeyNotCachedAndCanCacheAndNotExpiredShouldLookupAndCache()
         {
+            var skKeyMeta = new Mock<KeyMeta>(partition.SystemKeyId, DateTimeOffset.UtcNow);
             envelopeEncryptionJsonImplSpy.Setup(x => x.GetSystemKey(It.IsAny<KeyMeta>()))
                 .Returns(systemCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheSystemKeys()).Returns(true);
-            keyMetaMock.Setup(x => x.Created).Returns(skDateTime);
-            systemKeyCacheMock.Setup(x => x.PutAndGetUsable(keyMetaMock.Object.Created, systemCryptoKeyMock.Object))
+            skKeyMeta.Setup(x => x.Created).Returns(skDateTime);
+            systemKeyCacheMock.Setup(x => x.PutAndGetUsable(skKeyMeta.Object.Created, systemCryptoKeyMock.Object))
                 .Returns(systemCryptoKeyMock.Object);
 
             byte[] expectedBytes = { 0, 1, 2, 3 };
             Func<CryptoKey, byte[]> functionWithSystemKey = cryptoKey => expectedBytes;
 
             byte[] actualBytes =
-                envelopeEncryptionJsonImplSpy.Object.WithExistingSystemKey(keyMetaMock.Object, false, functionWithSystemKey);
+                envelopeEncryptionJsonImplSpy.Object.WithExistingSystemKey(skKeyMeta.Object, false, functionWithSystemKey);
             Assert.Equal(expectedBytes, actualBytes);
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetSystemKey(keyMetaMock.Object));
-            systemKeyCacheMock.Verify(x => x.PutAndGetUsable(keyMetaMock.Object.Created, systemCryptoKeyMock.Object));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetSystemKey(skKeyMeta.Object));
+            systemKeyCacheMock.Verify(x => x.PutAndGetUsable(skKeyMeta.Object.Created, systemCryptoKeyMock.Object));
             systemCryptoKeyMock.Verify(x => x.Dispose());
         }
 
         [Fact]
         private void TestWithExistingSystemKeyWithKeyNotCachedAndCanCacheAndCacheUpdateFailsShouldLookupAndFailAndDisposeKey()
         {
+            var skKeyMeta = new Mock<KeyMeta>(partition.SystemKeyId, DateTimeOffset.UtcNow);
             envelopeEncryptionJsonImplSpy.Setup(x => x.GetSystemKey(It.IsAny<KeyMeta>()))
                 .Returns(systemCryptoKeyMock.Object);
             cryptoPolicyMock.Setup(x => x.CanCacheSystemKeys()).Returns(true);
@@ -604,8 +608,8 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Envelope
             Func<CryptoKey, byte[]> functionWithSystemKey = cryptoKey => expectedBytes;
 
             Assert.Throws<AppEncryptionException>(() =>
-                envelopeEncryptionJsonImplSpy.Object.WithExistingSystemKey(keyMetaMock.Object, false, functionWithSystemKey));
-            envelopeEncryptionJsonImplSpy.Verify(x => x.GetSystemKey(keyMetaMock.Object));
+                envelopeEncryptionJsonImplSpy.Object.WithExistingSystemKey(skKeyMeta.Object, false, functionWithSystemKey));
+            envelopeEncryptionJsonImplSpy.Verify(x => x.GetSystemKey(skKeyMeta.Object));
             systemCryptoKeyMock.Verify(x => x.Dispose());
         }
 
