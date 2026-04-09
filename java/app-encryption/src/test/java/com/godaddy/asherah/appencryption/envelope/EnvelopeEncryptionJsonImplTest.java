@@ -238,6 +238,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Test
   void testWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndNotExpiredShouldLookupAndCache() {
     when(keyMeta.getCreated()).thenReturn(ikInstant);
+    when(keyMeta.getKeyId()).thenReturn(partition.getIntermediateKeyId());
     doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).getIntermediateKey(keyMeta);
     when(cryptoPolicy.canCacheIntermediateKeys()).thenReturn(true);
     when(intermediateCryptoKey.getCreated()).thenReturn(ikInstant);
@@ -257,6 +258,7 @@ class EnvelopeEncryptionJsonImplTest {
   @Test
   void testWithIntermediateKeyForReadWithKeyNotCachedAndCanCacheAndCacheUpdateFailsShouldLookupAndFailAndCloseKey() {
     when(keyMeta.getCreated()).thenReturn(ikInstant);
+    when(keyMeta.getKeyId()).thenReturn(partition.getIntermediateKeyId());
     doReturn(intermediateCryptoKey).when(envelopeEncryptionJson).getIntermediateKey(any());
     when(cryptoPolicy.canCacheIntermediateKeys()).thenReturn(true);
     doThrow(new AppEncryptionException("fake exception")).when(intermediateKeyCache).putAndGetUsable(any(), any());
@@ -435,6 +437,7 @@ class EnvelopeEncryptionJsonImplTest {
     doReturn(systemCryptoKey).when(envelopeEncryptionJson).getSystemKey(any());
     when(cryptoPolicy.canCacheSystemKeys()).thenReturn(true);
     when(keyMeta.getCreated()).thenReturn(skInstant);
+    when(keyMeta.getKeyId()).thenReturn(partition.getSystemKeyId());
     when(systemKeyCache.putAndGetUsable(keyMeta.getCreated(), systemCryptoKey)).thenReturn(systemCryptoKey);
 
     byte[] expectedBytes = new byte[] {0, 1, 2, 3};
@@ -451,6 +454,7 @@ class EnvelopeEncryptionJsonImplTest {
   void testWithExistingSystemKeyWithKeyNotCachedAndCanCacheAndCacheUpdateFailsShouldLookupAndFailAndCloseKey() {
     doReturn(systemCryptoKey).when(envelopeEncryptionJson).getSystemKey(any());
     when(cryptoPolicy.canCacheSystemKeys()).thenReturn(true);
+    when(keyMeta.getKeyId()).thenReturn(partition.getSystemKeyId());
     doThrow(new AppEncryptionException("fake exception")).when(systemKeyCache).putAndGetUsable(any(), any());
 
     byte[] expectedBytes = new byte[] {0, 1, 2, 3};
@@ -1229,7 +1233,8 @@ class EnvelopeEncryptionJsonImplTest {
     when(localIK.getCreated()).thenReturn(localCreated);
 
     CryptoKey crossRegionIK = mock(CryptoKey.class);
-    when(crossRegionIK.getCreated()).thenReturn(crossRegionCreated);
+    // Lenient: called when bug is present (key gets cached), unused after fix (key not cached)
+    lenient().when(crossRegionIK.getCreated()).thenReturn(crossRegionCreated);
 
     // Pre-populate cache with local IK (simulating a prior local write)
     realIkCache.putAndGetUsable(localCreated, localIK);

@@ -138,8 +138,11 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     if (intermediateKey == null) {
       intermediateKey = getIntermediateKey(intermediateKeyMeta);
 
-      // Put the key into our cache if allowed
-      if (cryptoPolicy.canCacheIntermediateKeys()) {
+      // Only cache if the key belongs to this partition's region to prevent cross-region
+      // cache pollution that could cause withIntermediateKeyForWrite's getLast() to return
+      // a key from a different region
+      if (cryptoPolicy.canCacheIntermediateKeys()
+          && partition.getIntermediateKeyId().equals(intermediateKeyMeta.getKeyId())) {
         try {
           logger.debug("attempting to update cache for IK {} with created {}",
               partition.getIntermediateKeyId(), intermediateKey.getCreated());
@@ -201,8 +204,11 @@ public class EnvelopeEncryptionJsonImpl implements EnvelopeEncryption<JSONObject
     if (systemKey == null) {
       systemKey = getSystemKey(systemKeyMeta);
 
-      // Put the key into our cache if allowed
-      if (cryptoPolicy.canCacheSystemKeys()) {
+      // Only cache if the key belongs to this partition's region to prevent cross-region
+      // cache pollution that could cause withSystemKeyForWrite's getLast() to return
+      // a key from a different region
+      if (cryptoPolicy.canCacheSystemKeys()
+          && partition.getSystemKeyId().equals(systemKeyMeta.getKeyId())) {
         try {
           logger.debug("attempting to update cache for SK {}", systemKeyMeta);
           systemKey = systemKeyCache.putAndGetUsable(systemKeyMeta.getCreated(), systemKey);
