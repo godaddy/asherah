@@ -37,6 +37,8 @@
     <checkstyle.config>${project.basedir}/checkstyle.xml</checkstyle.config>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!--    Project Dependencies   -->
+    <build.helper.version>3.6.0</build.helper.version>
+    <ffm.java.version>25</ffm.java.version>
     <jacoco.version>0.8.14</jacoco.version>
     <jna.version>5.18.1</jna.version>
     <junit.jupiter.version>6.0.1</junit.jupiter.version>
@@ -243,6 +245,81 @@
         </plugins>
       </build>
     </profile>
+    <!--
+      ffm-native: build a flat (non-multi-release) JAR for GraalVM native-image.
+
+      GraalVM native-image's handling of multi-release JARs is unreliable, so this profile
+      compiles src/main/java + src/main/java22 together at a single Java release
+      (configurable via -Dffm.java.version, defaults to 25), drops the Multi-Release manifest
+      entry, and skips checkstyle (style is enforced by the default build).
+
+      Activate with:  mvn -Pffm-native clean install
+      Or override the version: mvn -Pffm-native -Dffm.java.version=22 clean install
+
+      Note: this builds an FFM-only JAR. The JNA fallback path is still present as a runtime
+      fallback inside TransientSecretFactory, but on this JAR the runtime version check will
+      always pass (Java >= 22) so the FFM path is taken in practice.
+    -->
+    <profile>
+      <id>ffm-native</id>
+      <build>
+        <plugins>
+          <!-- Add src/main/java22 as a regular source root (not a multi-release section). -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${build.helper.version}</version>
+            <executions>
+              <execution>
+                <id>add-ffm-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/main/java22</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!--
+            Compile everything at a single (Java 22+) release and explicitly disable the
+            multi-release "compile-java22" execution that the auto-activated java22-ffm
+            profile would otherwise add.
+          -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven.compiler.version}</version>
+            <configuration>
+              <release>${ffm.java.version}</release>
+            </configuration>
+            <executions>
+              <execution>
+                <id>compile-java22</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Drop the Multi-Release manifest entry that the default build adds. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.4.2</version>
+            <configuration>
+              <archive>
+                <manifestEntries combine.self="override"/>
+              </archive>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>release</id>
       <activation>

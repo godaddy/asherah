@@ -7,6 +7,8 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -18,30 +20,47 @@ import com.godaddy.asherah.securememory.Debug;
 import com.godaddy.asherah.securememory.Secret;
 
 /**
- * FFM-based implementation of Secret using protected memory.
- * Uses Java's Foreign Function & Memory API for better performance and memory safety.
- * Requires Java 22+.
+ * FFM-based implementation of {@link Secret} backed by mmap'd, mlock'd, mprotect'd memory.
+ *
+ * <p>The secret is stored in a private off-heap segment that is normally mprotect'd to no-access.
+ * Read access is enabled only for the duration of a {@link #withSecretBytes} /
+ * {@link #withSecretUtf8Chars} callback, and is reference-counted so that concurrent callers do
+ * not race on access-flag transitions.
+ *
+ * <p>Requires Java 22+.
  */
 public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
   private static final Logger LOG = LoggerFactory.getLogger(FfmProtectedMemorySecret.class);
   private static final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
 
   private final FfmAllocator allocator;
-  private volatile MemorySegment segment;
   private final int length;
 
-  // IMPORTANT: accessCounter is not volatile nor atomic since we use accessLock for all read and write
-  // access. If that changes, update the counter accordingly!
-  private long accessCounter = 0;
-  private final Lock accessLock = new ReentrantLock(true); // use fairness in case of bursts to avoid starvation
+  /**
+   * The protected segment, or {@code null} after close. Mutated only under {@link #accessLock}.
+   * Marked volatile so the disposed-state probe in {@link #withSecretBytes} sees the publish.
+   */
+  private volatile MemorySegment segment;
 
   /**
-   * Creates a new FFM-based protected memory secret from byte array.
+   * Counts in-flight readers. Guarded by {@link #accessLock} for both reads and writes (no
+   * volatile/atomic). The lock is fair to avoid starvation under bursty access.
+   */
+  private long accessCounter = 0;
+  private final ReentrantLock accessLock = new ReentrantLock(true);
+
+  /** Signaled when {@link #accessCounter} hits 0 so {@link #close()} can wait readers out. */
+  private final Condition noReaders = accessLock.newCondition();
+
+  /**
+   * Creates a new FFM-based protected memory secret from a byte array.
    *
-   * @param sourceBytes the secret bytes (will be securely zeroed after copy)
+   * @param sourceBytes the secret bytes (will be securely zeroed after the copy)
    * @param allocator the FFM allocator to use
    */
   FfmProtectedMemorySecret(final byte[] sourceBytes, final FfmAllocator allocator) {
+    Objects.requireNonNull(sourceBytes, "sourceBytes");
+    Objects.requireNonNull(allocator, "allocator");
     this.allocator = allocator;
     this.length = sourceBytes.length;
     this.segment = allocator.alloc(length);
@@ -49,28 +68,27 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
     if (segment == null || segment.equals(MemorySegment.NULL)) {
       throw new FfmAllocationFailed("Protected memory allocation failed");
     }
-    else if (Debug.ON) {
+    if (Debug.ON) {
       LOG.debug("FFM allocated: {} bytes at address {}", length, segment.address());
     }
 
-    // Copy source bytes to protected memory
     MemorySegment.copy(sourceBytes, 0, segment, ValueLayout.JAVA_BYTE, 0, length);
-
-    // Set memory to no-access
     allocator.setNoAccess(segment, length);
 
-    // Only if we're going to be successful do we want to clear the client's source buffer
+    // Only zero the caller's buffer once everything else has succeeded.
     secureZeroMemory(sourceBytes);
   }
 
   /**
-   * Creates a new FFM-based protected memory secret from char array.
+   * Creates a new FFM-based protected memory secret from a char array.
    *
    * @param sourceChars the secret chars (will be securely zeroed after conversion)
    * @param allocator the FFM allocator to use
-   * @return a new FfmProtectedMemorySecret
+   * @return a new {@code FfmProtectedMemorySecret}
    */
-  public static FfmProtectedMemorySecret fromCharArray(final char[] sourceChars, final FfmAllocator allocator) {
+  public static FfmProtectedMemorySecret fromCharArray(
+      final char[] sourceChars, final FfmAllocator allocator) {
+    Objects.requireNonNull(sourceChars, "sourceChars");
     byte[] sourceBytes = utf8CharArrayToByteArray(sourceChars);
     try {
       return new FfmProtectedMemorySecret(sourceBytes, allocator);
@@ -81,12 +99,10 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
   }
 
   private static void secureZeroMemory(final byte[] bytes) {
-    // Make sure this can't be optimized away
     Arrays.fill(bytes, (byte) 0);
   }
 
   private static void secureZeroMemory(final char[] chars) {
-    // Make sure this can't be optimized away
     Arrays.fill(chars, (char) 0);
   }
 
@@ -106,6 +122,7 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
 
   @Override
   public <T> T withSecretBytes(final Function<byte[], T> functionWithSecret) {
+    Objects.requireNonNull(functionWithSecret, "functionWithSecret");
     MemorySegment currentSegment = segment;
     if (currentSegment == null || currentSegment.equals(MemorySegment.NULL)) {
       throw new IllegalStateException("Attempt to access disposed secret");
@@ -118,8 +135,6 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
         if (Debug.ON) {
           LOG.debug("FFM reading: {} bytes from address {}", length, currentSegment.address());
         }
-
-        // Copy from protected memory to byte array
         MemorySegment.copy(currentSegment, ValueLayout.JAVA_BYTE, 0, bytes, 0, length);
       }
       finally {
@@ -136,9 +151,13 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
   private void setReadAccessIfNeeded() {
     accessLock.lock();
     try {
-      // Only set read access if we're the first one trying to access this potentially-shared Secret
+      MemorySegment current = segment;
+      if (current == null) {
+        throw new IllegalStateException("Attempt to access disposed secret");
+      }
+      // Only flip to read on the first concurrent reader.
       if (accessCounter == 0) {
-        allocator.setReadAccess(segment, length);
+        allocator.setReadAccess(current, length);
       }
       accessCounter++;
     }
@@ -150,10 +169,20 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
   private void setNoAccessIfNeeded() {
     accessLock.lock();
     try {
+      if (accessCounter <= 0) {
+        // Should be impossible — paired with setReadAccessIfNeeded under lock.
+        throw new IllegalStateException(
+            "accessCounter underflow; setNoAccessIfNeeded called without matching setReadAccess");
+      }
       accessCounter--;
-      // Only set no access if we're the last one trying to access this potentially-shared Secret
+      MemorySegment current = segment;
+      // Only flip back to no-access on the last concurrent reader, and only if not closed
+      // mid-flight (close() handles its own access-flag transitions on the freed path).
       if (accessCounter == 0) {
-        allocator.setNoAccess(segment, length);
+        if (current != null) {
+          allocator.setNoAccess(current, length);
+        }
+        noReaders.signalAll();
       }
     }
     finally {
@@ -163,10 +192,7 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
 
   @Override
   public <T> T withSecretUtf8Chars(final Function<char[], T> functionWithSecret) {
-    if (segment == null || segment.equals(MemorySegment.NULL)) {
-      throw new IllegalStateException("Attempt to access disposed secret");
-    }
-
+    Objects.requireNonNull(functionWithSecret, "functionWithSecret");
     return withSecretBytes(bytes -> {
       char[] chars = byteArrayToUtf8CharArray(bytes);
       try {
@@ -183,24 +209,47 @@ public class FfmProtectedMemorySecret implements Secret, AutoCloseable {
     return withSecretBytes((byte[] bytes) -> new FfmProtectedMemorySecret(bytes, allocator));
   }
 
+  /**
+   * Closes this secret, securely zeroing and freeing its protected memory.
+   *
+   * <p>This call is idempotent: a second {@code close()} is a no-op.
+   *
+   * <p>If concurrent readers are in flight, this method waits (uninterruptibly) for all of
+   * them to drain before freeing the underlying segment. This guarantees that
+   * {@link #withSecretBytes} / {@link #withSecretUtf8Chars} can never observe a use-after-free.
+   */
   @Override
   public void close() {
-    MemorySegment currentSegment = segment;
-    if (Debug.ON) {
-      String address = "null";
-      if (currentSegment != null) {
-        address = String.valueOf(currentSegment.address());
+    accessLock.lock();
+    try {
+      MemorySegment currentSegment = segment;
+      if (currentSegment == null || currentSegment.equals(MemorySegment.NULL)) {
+        return; // idempotent
       }
-      LOG.debug("FFM closing: address {}", address);
-    }
 
-    // Only need to do this if segment not yet closed
-    if (currentSegment != null && !currentSegment.equals(MemorySegment.NULL)) {
+      // Wait for any in-flight readers to finish so we don't free memory under their feet.
+      while (accessCounter > 0) {
+        noReaders.awaitUninterruptibly();
+      }
+
+      // Re-read after waiting in case a concurrent close() raced us to the free.
+      currentSegment = segment;
+      if (currentSegment == null || currentSegment.equals(MemorySegment.NULL)) {
+        return;
+      }
+
+      if (Debug.ON) {
+        LOG.debug("FFM closing: address {}", currentSegment.address());
+      }
+
+      // free() requires writable memory so it can zero before unmapping.
       allocator.setReadWriteAccess(currentSegment, length);
       allocator.zeroMemory(currentSegment, length);
       allocator.free(currentSegment, length);
       segment = null;
     }
+    finally {
+      accessLock.unlock();
+    }
   }
 }
-

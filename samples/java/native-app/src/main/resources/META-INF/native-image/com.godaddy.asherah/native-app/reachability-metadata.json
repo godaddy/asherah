@@ -1,68 +1,42 @@
 {
-  "foreign": [
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "long",
-        "argument-types": ["long", "long", "long", "int", "int", "int", "long"]
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "long",
+        "parameterTypes": ["long", "long", "long", "int", "int", "int", "long"]
+      },
+      {
+        "returnType": "long",
+        "parameterTypes": ["long", "long"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["long", "long"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["long", "int"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["long", "long", "long"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["int", "long"]
+      },
+      {
+        "returnType": "void",
+        "parameterTypes": ["long", "long"]
+      },
+      {
+        "returnType": "void",
+        "parameterTypes": ["long", "int", "long"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["long", "int", "long", "long"]
       }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "long",
-        "argument-types": ["long", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "int",
-        "argument-types": ["long", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "int",
-        "argument-types": ["long", "int"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "int",
-        "argument-types": ["long", "long", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "int",
-        "argument-types": ["int", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "void",
-        "argument-types": ["long", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "void",
-        "argument-types": ["long", "int", "long"]
-      }
-    },
-    {
-      "type": "downcall",
-      "function-type": {
-        "return-type": "int",
-        "argument-types": ["long", "int", "long", "long"]
-      }
-    }
-  ]
+    ]
+  }
 }
-

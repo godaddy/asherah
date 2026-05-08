@@ -1,9 +1,7 @@
 package com.godaddy.asherah.securememory.ffmimpl;
 
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
@@ -12,14 +10,18 @@ import java.lang.invoke.MethodHandle;
  *
  * <p>Supports:
  * <ul>
- *   <li>mmap(MAP_PRIVATE | MAP_ANON) - Private anonymous</li>
- *   <li>mlock() - Locked (no swap)</li>
- *   <li>madvise(MADV_DONTDUMP) - Selectively disable core dump for memory ranges</li>
+ *   <li>{@code mmap(MAP_PRIVATE | MAP_ANON)} - private anonymous mapping</li>
+ *   <li>{@code mlock()} - locked, no swap</li>
+ *   <li>{@code madvise(MADV_DONTDUMP)} - selectively exclude from core dumps</li>
+ *   <li>{@code bzero()} - secure zero (glibc bzero is not subject to dead-store elimination)</li>
  * </ul>
+ *
+ * <p>Native symbol resolution is performed lazily through a private holder class so this type
+ * is safe to load at GraalVM native-image build time.
  */
 public class LinuxFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocator {
 
-  // Linux-specific constants
+  // Linux-specific syscall constants (from <sys/mman.h>, <sys/resource.h>).
   private static final int PROT_NONE = 0x0;
   private static final int PROT_READ = 0x01;
   private static final int PROT_WRITE = 0x02;
@@ -32,33 +34,22 @@ public class LinuxFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
 
   private static final int MADV_DONTDUMP = 16;
 
-  // Native function handles for Linux-specific calls
-  private static final MethodHandle MADVISE;
-  private static final MethodHandle BZERO;
-
-  static {
-    Linker linker = Linker.nativeLinker();
-    SymbolLookup libc = linker.defaultLookup();
-
-    // int madvise(void* addr, size_t length, int advice)
-    MADVISE = linker.downcallHandle(
-        libc.find("madvise").orElseThrow(),
+  /** Lazy-init holder. JLS class-init guarantees thread safety without volatile/synchronized. */
+  private static final class Handles {
+    static final MethodHandle MADVISE = NativeLibc.downcall("madvise",
         FunctionDescriptor.of(
             ValueLayout.JAVA_INT,
             ValueLayout.ADDRESS,
             ValueLayout.JAVA_LONG,
-            ValueLayout.JAVA_INT
-        )
-    );
+            ValueLayout.JAVA_INT));
 
-    // void bzero(void* s, size_t n)
-    BZERO = linker.downcallHandle(
-        libc.find("bzero").orElseThrow(),
+    static final MethodHandle BZERO = NativeLibc.downcall("bzero",
         FunctionDescriptor.ofVoid(
             ValueLayout.ADDRESS,
-            ValueLayout.JAVA_LONG
-        )
-    );
+            ValueLayout.JAVA_LONG));
+
+    private Handles() {
+    }
   }
 
   @Override
@@ -94,7 +85,7 @@ public class LinuxFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
   @Override
   protected void setNoDump(final MemorySegment segment, final long length) {
     try {
-      int result = (int) MADVISE.invokeExact(segment, length, MADV_DONTDUMP);
+      int result = (int) Handles.MADVISE.invokeExact(segment, length, MADV_DONTDUMP);
       checkZero(result, "madvise(MADV_DONTDUMP)");
     }
     catch (Throwable t) {
@@ -105,12 +96,11 @@ public class LinuxFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
   @Override
   public void zeroMemory(final MemorySegment segment, final long length) {
     try {
-      // Glibc bzero doesn't seem to be vulnerable to being optimized away
-      BZERO.invokeExact(segment, length);
+      // glibc bzero is not subject to dead-store elimination, unlike memset(0).
+      Handles.BZERO.invokeExact(segment, length);
     }
     catch (Throwable t) {
       throw new FfmOperationFailed("bzero", t);
     }
   }
 }
-

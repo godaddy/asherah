@@ -20,6 +20,13 @@
 
     <!-- Asherah dependencies -->
     <appencryption.version>0.3.4</appencryption.version>
+    <!--
+      secure-memory must be built locally with the ffm-native profile before
+      this sample (mvn -Pffm-native install in java/secure-memory). This
+      produces a flat (non-multi-release) JAR with FFM classes at the root,
+      which is what GraalVM native-image needs.
+    -->
+    <securememory.version>0.1.7</securememory.version>
 
     <!-- Plugin versions -->
     <maven.compiler.version>3.13.0</maven.compiler.version>
@@ -94,6 +101,18 @@
   </build>
 
   <dependencies>
+    <!--
+      Pin secure-memory explicitly so the locally-built flat JAR (from the
+      ffm-native profile) overrides the multi-release JAR that appencryption
+      would otherwise pull in transitively. Direct deps win over transitive
+      ones in Maven dependency mediation.
+    -->
+    <dependency>
+      <groupId>com.godaddy.asherah</groupId>
+      <artifactId>securememory</artifactId>
+      <version>${securememory.version}</version>
+    </dependency>
+
     <!-- Asherah App Encryption - exclude BouncyCastle only -->
     <dependency>
       <groupId>com.godaddy.asherah</groupId>

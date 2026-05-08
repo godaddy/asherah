@@ -1,9 +1,7 @@
 package com.godaddy.asherah.securememory.ffmimpl;
 
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
@@ -12,17 +10,22 @@ import java.lang.invoke.MethodHandle;
  *
  * <p>Supports:
  * <ul>
- *   <li>mmap(MAP_PRIVATE | MAP_ANON) - Private anonymous</li>
- *   <li>mlock() - Locked (no swap)</li>
- *   <li>setrlimit(RLIMIT_CORE, 0) - Globally disable core dumps</li>
+ *   <li>{@code mmap(MAP_PRIVATE | MAP_ANON)} - private anonymous mapping</li>
+ *   <li>{@code mlock()} - locked, no swap</li>
+ *   <li>{@code setrlimit(RLIMIT_CORE, 0)} - globally disable core dumps for the process</li>
+ *   <li>{@code memset_s()} - C11 secure zero, guaranteed not to be optimized away</li>
  * </ul>
  *
- * <p>Note: macOS doesn't support madvise(MADV_DONTDUMP), so core dumps
- * are disabled globally instead.
+ * <p>macOS does not provide {@code madvise(MADV_DONTDUMP)}, so core dumps are disabled
+ * <em>process-wide</em> on construction and re-checked when individual allocations request
+ * "no dump". This is the same trade-off the JNA implementation makes.
+ *
+ * <p>Native symbol resolution is performed lazily through a private holder class so this type
+ * is safe to load at GraalVM native-image build time.
  */
 public class MacOSFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocator {
 
-  // macOS-specific constants
+  // macOS-specific syscall constants (from <sys/mman.h>, <sys/resource.h>).
   private static final int PROT_NONE = 0x00;
   private static final int PROT_READ = 0x01;
   private static final int PROT_WRITE = 0x02;
@@ -33,29 +36,24 @@ public class MacOSFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
   private static final int RLIMIT_CORE = 4;
   private static final int RLIMIT_MEMLOCK = 6;
 
-  // Native function handle for macOS-specific secure memory zeroing
-  private static final MethodHandle MEMSET_S;
-
-  static {
-    Linker linker = Linker.nativeLinker();
-    SymbolLookup libc = linker.defaultLookup();
-
-    // errno_t memset_s(void* dest, rsize_t destsz, int c, rsize_t n)
-    MEMSET_S = linker.downcallHandle(
-        libc.find("memset_s").orElseThrow(),
+  /** Lazy-init holder. JLS class-init guarantees thread safety without volatile/synchronized. */
+  private static final class Handles {
+    /** {@code errno_t memset_s(void* dest, rsize_t destsz, int c, rsize_t n)}. */
+    static final MethodHandle MEMSET_S = NativeLibc.downcall("memset_s",
         FunctionDescriptor.of(
-            ValueLayout.JAVA_INT,     // return: errno_t
-            ValueLayout.ADDRESS,      // dest
-            ValueLayout.JAVA_LONG,    // destsz (rsize_t)
-            ValueLayout.JAVA_INT,     // c (value to set)
-            ValueLayout.JAVA_LONG     // n (rsize_t)
-        )
-    );
+            ValueLayout.JAVA_INT,    // return: errno_t
+            ValueLayout.ADDRESS,     // dest
+            ValueLayout.JAVA_LONG,   // destsz (rsize_t)
+            ValueLayout.JAVA_INT,    // c
+            ValueLayout.JAVA_LONG)); // n (rsize_t)
+
+    private Handles() {
+    }
   }
 
   /**
-   * Creates a new macOS FFM allocator.
-   * Automatically disables core dumps globally.
+   * Creates a new macOS FFM allocator. Disables core dumps globally on construction because
+   * macOS lacks {@code MADV_DONTDUMP}.
    */
   public MacOSFfmProtectedMemoryAllocator() {
     disableCoreDumpGlobally();
@@ -93,20 +91,20 @@ public class MacOSFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
 
   @Override
   protected void setNoDump(final MemorySegment segment, final long length) {
-    // macOS doesn't have madvise(MADV_DONTDUMP), so we disable core dumps globally
+    if (areCoreDumpsGloballyDisabled()) {
+      return;
+    }
+    disableCoreDumpGlobally();
     if (!areCoreDumpsGloballyDisabled()) {
-      disableCoreDumpGlobally();
-      if (!areCoreDumpsGloballyDisabled()) {
-        throw new RuntimeException("Failed to disable core dumps");
-      }
+      throw new FfmOperationFailed("Failed to disable core dumps");
     }
   }
 
   @Override
   public void zeroMemory(final MemorySegment segment, final long length) {
     try {
-      // macOS has memset_s which is standardized and secure (cannot be optimized away)
-      int result = (int) MEMSET_S.invokeExact(segment, length, 0, length);
+      // memset_s is C11 Annex K and is guaranteed by spec not to be optimized away.
+      int result = (int) Handles.MEMSET_S.invokeExact(segment, length, 0, length);
       checkZero(result, "memset_s");
     }
     catch (Throwable t) {
@@ -114,4 +112,3 @@ public class MacOSFfmProtectedMemoryAllocator extends FfmProtectedMemoryAllocato
     }
   }
 }
-

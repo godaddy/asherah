@@ -5,40 +5,42 @@ import com.godaddy.asherah.securememory.SecretFactory;
 
 /**
  * Factory for creating FFM-based protected memory secrets.
- * Automatically detects the platform (Linux/macOS) and uses the appropriate allocator.
- * Requires Java 22+.
+ *
+ * <p>Auto-detects the running platform (Linux / macOS) and instantiates the appropriate
+ * {@link FfmAllocator}. Requires Java 22+ at runtime; this whole class lives in the
+ * {@code java22} multi-release source root, so it cannot be loaded on earlier JVMs.
  */
 public class FfmSecretFactory implements SecretFactory {
 
-  /** Minimum Java version required for FFM support. */
+  /** Minimum Java feature version required for FFM support. */
   private static final int FFM_MIN_JAVA_VERSION = 22;
 
   private final FfmAllocator allocator;
 
   /**
    * Creates a new FFM secret factory.
-   * Automatically detects the platform and creates the appropriate allocator.
    *
    * @throws UnsupportedOperationException if the platform is not supported
    */
   public FfmSecretFactory() {
-    allocator = detectPlatformAllocator();
-    if (allocator == null) {
-      throw new UnsupportedOperationException("Could not detect supported platform for FFM protected memory");
-    }
+    this(allocatorFor(Platform.current()));
   }
 
-  private FfmAllocator detectPlatformAllocator() {
-    String osName = System.getProperty("os.name", "").toLowerCase();
-
-    if (osName.contains("mac") || osName.contains("darwin")) {
-      return new MacOSFfmProtectedMemoryAllocator();
+  /** Visible for testing — allows injecting an allocator. */
+  FfmSecretFactory(final FfmAllocator allocator) {
+    if (allocator == null) {
+      throw new UnsupportedOperationException(
+          "Could not detect supported platform for FFM protected memory");
     }
-    else if (osName.contains("linux")) {
-      return new LinuxFfmProtectedMemoryAllocator();
-    }
+    this.allocator = allocator;
+  }
 
-    return null;
+  private static FfmAllocator allocatorFor(final Platform platform) {
+    return switch (platform) {
+      case LINUX -> new LinuxFfmProtectedMemoryAllocator();
+      case MACOS -> new MacOSFfmProtectedMemoryAllocator();
+      case UNSUPPORTED -> null;
+    };
   }
 
   @Override
@@ -52,23 +54,15 @@ public class FfmSecretFactory implements SecretFactory {
   }
 
   /**
-   * Checks if FFM is available on the current JVM.
+   * Returns true if FFM is available on the current JVM.
+   *
+   * <p>Because this class itself imports {@code java.lang.foreign.*}, it can only be loaded
+   * on a JVM that exposes those types. Calling this method confirms both that the class
+   * loaded successfully <em>and</em> that the runtime feature version meets the minimum.
    *
    * @return true if FFM is available (Java 22+), false otherwise
    */
   public static boolean isAvailable() {
-    try {
-      // Check if FFM classes are available (Java 22+)
-      Class.forName("java.lang.foreign.MemorySegment");
-      Class.forName("java.lang.foreign.Linker");
-
-      // Also verify the runtime version
-      int version = Runtime.version().feature();
-      return version >= FFM_MIN_JAVA_VERSION;
-    }
-    catch (ClassNotFoundException e) {
-      return false;
-    }
+    return Runtime.version().feature() >= FFM_MIN_JAVA_VERSION;
   }
 }
-
