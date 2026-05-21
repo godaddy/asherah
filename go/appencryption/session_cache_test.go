@@ -275,7 +275,7 @@ type testLogger struct {
 }
 
 func (t *testLogger) Debugf(f string, v ...interface{}) {
-	t.Builder.WriteString(fmt.Sprintf(f, v...))
+	fmt.Fprintf(t, f, v...)
 }
 
 func TestSessionCacheCloseWithDebugLogging(t *testing.T) {

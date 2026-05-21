@@ -1,113 +1,86 @@
-# options for analysis running
+version: "2"
 run:
-  # default concurrency is a available CPU number
   concurrency: 4
-
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  deadline: 5m
-
-  # exit code when at least one issue was found, default is 1
-  issues-exit-code: 1
-
-  # include test files or not, default is true
-  tests: true
-
-  # by default isn't set. If set we pass it to "go list -mod={option}". From "go help modules":
-  # If invoked with -mod=readonly, the go command is disallowed from the implicit
-  # automatic updating of go.mod described above. Instead, it fails when any changes
-  # to go.mod are needed. This setting is most useful to check that go.mod does
-  # not need updates, such as in a continuous integration and testing system.
-  # If invoked with -mod=vendor, the go command assumes that the vendor
-  # directory holds the correct copies of dependencies and ignores
-  # the dependency descriptions in go.mod.
   modules-download-mode: readonly
-
+  issues-exit-code: 1
+  tests: true
 output:
   formats:
-    - format: colored-line-number
+    text:
       path: stdout
-
-  # Sort results by the order defined in `sort-order`.
-  # Default: false
-  sort-results: true
-
-  # Order to use when sorting results.
-  # Require `sort-results` to `true`.
-  # Possible values: `file`, `linter`, and `severity`.
-  #
-  # If the severity values are inside the following list, they are ordered in this order:
-  #   1. error
-  #   2. warning
-  #   3. high
-  #   4. medium
-  #   5. low
-  # Either they are sorted alphabetically.
-  #
-  # Default: ["file"]
   sort-order:
-    # - linter
-    # - severity
-    - file # filepath, line, and column.
-
-  # show stats
-  show-stats: true
-
+    - file
 linters:
-  enable-all: false
-  enabled:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-  fast: false
-
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - cyclop
+    - dupword
+    - durationcheck
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocognit
+    - gocyclo
+    - godot
+    - gosec
+    - gosmopolitan
+    - loggercheck
+    - maintidx
+    - makezero
+    - misspell
+    - musttag
+    - nestif
+    - nilerr
+    - nilnesserr
+    - noctx
+    - protogetter
+    - reassign
+    - recvcheck
+    - rowserrcheck
+    - spancheck
+    - sqlclosecheck
+    - zerologlint
   disable:
     - contextcheck
     - err113
     - godox
     - testifylint
     - wrapcheck
-
-  presets:
-    - bugs
-    - comment
-    - complexity
-    # - error
-    # - format
-    # - import
-    # - metalinter
-    # - module
-    # - performance
-    # - sql
-    # - style
-    # - test
-    # - unused
-
-linters-settings:
-  cyclop:
-    # The maximal code complexity to report.
-    # Default: 10
-    max-complexity: 20
-
-  funlen:
-    # If lower than 0, disable the check.
-    # Default: 60
-    lines: 100
-    # Checks the number of statements in a function.
-    # If lower than 0, disable the check.
-    # Default: 40
-    statements: -1
-    # Ignore comments when counting lines.
-    # Default false
-    ignore-comments: true
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - godot
-        - gosec
-        - perfsprint
+  settings:
+    cyclop:
+      max-complexity: 20
+    funlen:
+      lines: 100
+      statements: -1
+      ignore-comments: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - godot
+          - gosec
+          - perfsprint
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

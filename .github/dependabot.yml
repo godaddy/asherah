@@ -4,10 +4,19 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     open-pull-requests-limit: 10
 
- # Maintain dependencies for Go AppEncryption
+  # The remaining entries have open-pull-requests-limit set to 0, which disables
+  # scheduled version update PRs. Dependabot Security Updates (enabled in repo
+  # settings) still creates PRs for known vulnerabilities independently of this
+  # file. We keep these entries so that security update PRs inherit the custom
+  # labels below, making triage easier. Routine dependency upgrades are handled
+  # manually during Asherah SDK release prep.
+  #
+  # See: https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/customizing-dependabot-security-prs
+
+  # Go AppEncryption - security updates only
   - package-ecosystem: "gomod"
     directories:
       - "/go/appencryption"
@@ -18,17 +27,9 @@ updates:
       - "appencryption"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for Go SecureMemory
+  # Go SecureMemory - security updates only
   - package-ecosystem: "gomod"
     directory: "/go/securememory"
     labels:
@@ -37,17 +38,9 @@ updates:
       - "securememory"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for remaining Go projects (server and cross-language tests)
+  # Remaining Go projects - security updates only
   - package-ecosystem: "gomod"
     directories:
       - "/server/go"
@@ -57,17 +50,9 @@ updates:
       - "dependencies"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for .NET Logging
+  # .NET Logging - security updates only
   - package-ecosystem: "nuget"
     directories:
       - "/csharp/Logging"
@@ -76,17 +61,9 @@ updates:
       - "dependencies"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for .NET SecureMemory
+  # .NET SecureMemory - security updates only
   - package-ecosystem: "nuget"
     directories:
       - "/csharp/SecureMemory"
@@ -96,17 +73,9 @@ updates:
       - "securememory"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for .NET AppEncryption
+  # .NET AppEncryption - security updates only
   - package-ecosystem: "nuget"
     directories:
       - "/csharp/AppEncryption"
@@ -116,17 +85,9 @@ updates:
       - "appencryption"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for Java SecureMemory
+  # Java SecureMemory - security updates only
   - package-ecosystem: "maven"
     directory: "/java/secure-memory"
     labels:
@@ -135,17 +96,9 @@ updates:
       - "securememory"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for Java AppEncryption
+  # Java AppEncryption - security updates only
   - package-ecosystem: "maven"
     directory: "/java/app-encryption"
     labels:
@@ -154,17 +107,9 @@ updates:
       - "appencryption"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
 
-  # Maintain dependencies for remaining Java projects (server and cross-language tests)
+  # Remaining Java projects - security updates only
   - package-ecosystem: "maven"
     directories:
       - "/server/java"
@@ -174,12 +119,4 @@ updates:
       - "dependencies"
     schedule:
       interval: "weekly"
-      day: "wednesday"
-      time: "13:00"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
