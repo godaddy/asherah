@@ -6,10 +6,21 @@ import software.amazon.awssdk.services.kms.KmsClient;
 /**
  * A factory to create an AWS KMS client based on the region provided.
  */
-interface AwsKmsClientFactory {
+public interface AwsKmsClientFactory {
 
+  /**
+   * Builds a KMS client for the specified AWS region.
+   *
+   * @param region the AWS region identifier
+   * @return a configured KmsClient instance
+   */
   KmsClient build(String region);
 
+  /**
+   * Returns the default factory implementation that creates standard KMS clients.
+   *
+   * @return the default KMS client factory
+   */
   static DefaultAwsKmsClientFactory defaultFactory() {
     return new DefaultAwsKmsClientFactory();
   }

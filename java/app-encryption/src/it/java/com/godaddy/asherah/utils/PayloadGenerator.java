@@ -9,7 +9,7 @@ public final class PayloadGenerator {
   private static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder()
     .withinRange('0', 'z')
     .filteredBy(Character::isLetterOrDigit)
-    .build();
+    .get();
   private static final int DEFAULT_BYTE_SIZE = 20;
 
   private PayloadGenerator() {
