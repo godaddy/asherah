@@ -12,7 +12,7 @@ import com.godaddy.asherah.appencryption.exceptions.AppEncryptionException;
 import com.godaddy.asherah.appencryption.exceptions.KmsException;
 import com.godaddy.asherah.appencryption.utils.Json;
 import com.godaddy.asherah.appencryption.utils.MetricsUtil;
-import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
+import com.godaddy.asherah.crypto.engine.CryptoEngineType;
 import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.CryptoKey;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -331,19 +331,35 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
     private final Map<String, String> regionToArnMap;
     private final String preferredRegion;
     private AwsKmsClientFactory kmsClientFactory = new AwsKmsClientFactory.DefaultAwsKmsClientFactory();
+    private CryptoEngineType cryptoEngineType = CryptoEngineType.DEFAULT;
 
     private Builder(final Map<String, String> regionToArnMap, final String region) {
       this.regionToArnMap = regionToArnMap;
       this.preferredRegion = region;
     }
 
-    /** Specifies custom kms client factory to use.
+    /**
+     * Specifies custom kms client factory to use.
      *
      * @param clientFactory The AWS KMS client factory.
-     * @return The current {@code BuildStep} instance.
+     * @return The current {@code Builder} instance.
      */
     public Builder withKmsClientFactory(final AwsKmsClientFactory clientFactory) {
       kmsClientFactory = clientFactory;
+      return this;
+    }
+
+    /**
+     * Specifies the crypto engine type to use for encryption operations.
+     * Defaults to {@link CryptoEngineType#DEFAULT} (BouncyCastle) for backward compatibility.
+     *
+     * <p>Use {@link CryptoEngineType#JDK} for GraalVM native-image compatibility and better performance.
+     *
+     * @param engineType The {@link CryptoEngineType} to use.
+     * @return The current {@code Builder} instance.
+     */
+    public Builder withCryptoEngine(final CryptoEngineType engineType) {
+      this.cryptoEngineType = engineType;
       return this;
     }
 
@@ -353,8 +369,8 @@ public class AwsKeyManagementServiceImpl implements KeyManagementService {
      * @return The fully instantiated {@link AwsKeyManagementServiceImpl} object.
      */
     public AwsKeyManagementServiceImpl build() {
-      return new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion, new BouncyAes256GcmCrypto(),
-        kmsClientFactory);
+      return new AwsKeyManagementServiceImpl(regionToArnMap, preferredRegion,
+          cryptoEngineType.createCryptoEngine(), kmsClientFactory);
     }
   }
 }
