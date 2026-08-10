@@ -1,1 +1,0 @@
-../../../build/csharp/release_prod.sh
