@@ -106,8 +106,12 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/heads/release-')
     needs: test
+    name: Release
     permissions:
       contents: write
-    name: Release
-    uses: ./.github/workflows/csharp-securememory-release.yml
-    secrets: inherit
+      id-token: write
+    uses: ./.github/workflows/csharp-release.yml
+    with:
+      artifact-name: csharp-secure-memory
+      package-directory: csharp/SecureMemory
+      release-name: SecureMemory

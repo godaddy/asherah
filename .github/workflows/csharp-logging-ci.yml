@@ -63,8 +63,13 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/heads/release-')
     needs: logging-main
+    name: Release
     permissions:
       contents: write
-    name: Release
-    uses: ./.github/workflows/csharp-logging-release.yml
-    secrets: inherit
+      id-token: write
+    uses: ./.github/workflows/csharp-release.yml
+    with:
+      artifact-name: csharp-logging
+      package-directory: csharp/Logging
+      release-name: Logging
+      artifact-path: csharp/Logging/Logging
