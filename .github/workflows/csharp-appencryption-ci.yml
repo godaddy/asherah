@@ -127,7 +127,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: ./.github/workflows/nuget-release.yml
+    uses: ./.github/workflows/csharp-release.yml
     with:
       artifact-name: csharp-app-encryption
       package-directory: csharp/AppEncryption
