@@ -124,7 +124,7 @@ func hashPointer(k interface{}) (uint64, bool) {
 
 	//nolint:exhaustive
 	switch v.Kind() {
-	case reflect.Ptr, reflect.UnsafePointer, reflect.Func, reflect.Slice, reflect.Map, reflect.Chan:
+	case reflect.Pointer, reflect.UnsafePointer, reflect.Func, reflect.Slice, reflect.Map, reflect.Chan:
 		return hashU64(uint64(v.Pointer())), true
 	default:
 		return 0, false
