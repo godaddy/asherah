@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "\\Qsimplelogger.properties\\E"},
+      {"pattern": "\\QMETA-INF/services/\\E.*"}
+    ]
+  },
+  "bundles": []
+}
+

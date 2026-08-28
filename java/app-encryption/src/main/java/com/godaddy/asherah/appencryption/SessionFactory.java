@@ -26,7 +26,8 @@ import com.godaddy.asherah.appencryption.utils.MetricsUtil;
 import com.godaddy.asherah.appencryption.utils.SafeAutoCloseable;
 import com.godaddy.asherah.crypto.CryptoPolicy;
 import com.godaddy.asherah.crypto.NeverExpiredCryptoPolicy;
-import com.godaddy.asherah.crypto.engine.bouncycastle.BouncyAes256GcmCrypto;
+import com.godaddy.asherah.crypto.engine.CryptoEngineType;
+import com.godaddy.asherah.crypto.envelope.AeadEnvelopeCrypto;
 import com.godaddy.asherah.crypto.keys.SecureCryptoKeyMap;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -42,11 +43,12 @@ public class SessionFactory implements SafeAutoCloseable {
   private final SecureCryptoKeyMap<Instant> systemKeyCache;
   private final CryptoPolicy cryptoPolicy;
   private final KeyManagementService keyManagementService;
+  private final CryptoEngineType cryptoEngineType;
   private final Cache<String, CachedSession> sessionCache;
 
   /**
    * Creates a new {@code SessionFactory} instance using the provided parameters. A session factory is required to
-   * generate cryptographic sessions.
+   * generate cryptographic sessions. Uses the default crypto engine (BouncyCastle).
    *
    * @param productId A unique identifier for a product.
    * @param serviceId A unique identifier for a service.
@@ -64,12 +66,38 @@ public class SessionFactory implements SafeAutoCloseable {
       final SecureCryptoKeyMap<Instant> systemKeyCache,
       final CryptoPolicy cryptoPolicy,
       final KeyManagementService keyManagementService) {
+    this(productId, serviceId, metastore, systemKeyCache, cryptoPolicy, keyManagementService, CryptoEngineType.DEFAULT);
+  }
+
+  /**
+   * Creates a new {@code SessionFactory} instance using the provided parameters. A session factory is required to
+   * generate cryptographic sessions.
+   *
+   * @param productId A unique identifier for a product.
+   * @param serviceId A unique identifier for a service.
+   * @param metastore A {@link Metastore} implementation used to store system and intermediate keys.
+   * @param systemKeyCache A {@link java.util.concurrent.ConcurrentSkipListMap} based implementation for caching
+   *                       system keys.
+   * @param cryptoPolicy A {@link CryptoPolicy} implementation that dictates the various behaviors of Asherah.
+   * @param keyManagementService A {@link KeyManagementService} implementation that generates the top level master key
+   *                             and encrypts the system keys using the master key.
+   * @param cryptoEngineType The {@link CryptoEngineType} to use for encryption operations.
+   */
+  public SessionFactory(
+      final String productId,
+      final String serviceId,
+      final Metastore<JSONObject> metastore,
+      final SecureCryptoKeyMap<Instant> systemKeyCache,
+      final CryptoPolicy cryptoPolicy,
+      final KeyManagementService keyManagementService,
+      final CryptoEngineType cryptoEngineType) {
     this.productId = productId;
     this.serviceId = serviceId;
     this.metastore = metastore;
     this.systemKeyCache = systemKeyCache;
     this.cryptoPolicy = cryptoPolicy;
     this.keyManagementService = keyManagementService;
+    this.cryptoEngineType = cryptoEngineType;
 
     this.sessionCache = Caffeine.newBuilder()
         .weigher((String intermediateKeyId, CachedSession session) -> {
@@ -238,13 +266,14 @@ public class SessionFactory implements SafeAutoCloseable {
     // Wrap the creation logic in a lambda so the cache entry acquisition can create a new instance when needed
     Function<String, EnvelopeEncryptionJsonImpl> createFunc = id -> {
       Partition partition = getPartition(partitionId);
+      AeadEnvelopeCrypto crypto = cryptoEngineType.createCryptoEngine();
 
       return new EnvelopeEncryptionJsonImpl(
           partition,
           metastore,
           systemKeyCache,
           new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()),
-          new BouncyAes256GcmCrypto(),
+          crypto,
           cryptoPolicy,
           keyManagementService);
     };
@@ -297,6 +326,7 @@ public class SessionFactory implements SafeAutoCloseable {
     private Metastore<JSONObject> metastore;
     private CryptoPolicy cryptoPolicy;
     private KeyManagementService keyManagementService;
+    private CryptoEngineType cryptoEngineType = CryptoEngineType.DEFAULT;
     private boolean metricsEnabled = false;
 
     private Builder(final String productId, final String serviceId) {
@@ -348,6 +378,12 @@ public class SessionFactory implements SafeAutoCloseable {
     }
 
     @Override
+    public BuildStep withCryptoEngine(final CryptoEngineType engineType) {
+      this.cryptoEngineType = engineType;
+      return this;
+    }
+
+    @Override
     public SessionFactory build() {
       if (!metricsEnabled) {
         // Deny takes precedence in the filtering logic, so we deny if they didn't explicitly enable metrics
@@ -355,7 +391,8 @@ public class SessionFactory implements SafeAutoCloseable {
       }
 
       return new SessionFactory(productId, serviceId, metastore,
-          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService);
+          new SecureCryptoKeyMap<>(cryptoPolicy.getRevokeCheckPeriodMillis()), cryptoPolicy, keyManagementService,
+          cryptoEngineType);
     }
   }
 
@@ -422,6 +459,17 @@ public class SessionFactory implements SafeAutoCloseable {
      * @return The current {@code BuildStep} instance with metrics enabled.
      */
     BuildStep withMetricsEnabled();
+
+    /**
+     * Specifies the crypto engine type to use for encryption operations.
+     * Defaults to {@link CryptoEngineType#DEFAULT} (BouncyCastle) for backward compatibility.
+     *
+     * <p>Use {@link CryptoEngineType#JDK} for GraalVM native-image compatibility and better performance.
+     *
+     * @param engineType The {@link CryptoEngineType} to use.
+     * @return The current {@code BuildStep} instance with the specified crypto engine.
+     */
+    BuildStep withCryptoEngine(CryptoEngineType engineType);
 
     /**
      * Builds the finalized session factory with the parameters specified in the {@code Builder}.
