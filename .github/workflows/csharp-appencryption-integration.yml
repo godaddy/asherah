@@ -23,7 +23,7 @@ jobs:
     name: 'Run Integration Tests'
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/dotnet/sdk:10.0
+      image: mcr.microsoft.com/dotnet/sdk:11.0
       options: --ulimit core=-1 --ulimit memlock=-1:-1
     services:
       dynamodb:
@@ -35,6 +35,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET SDKs
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: |
+            10.0.x
+            11.0.x
 
       - name: Add workspace to safe.directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
