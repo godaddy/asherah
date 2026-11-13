@@ -123,6 +123,11 @@ jobs:
           name: csharp-app-encryption
           path: ${{ github.workspace }}/csharp/AppEncryption
 
+      - name: Restore test executable permissions
+        run: |
+          chmod +x csharp/AppEncryption/AppEncryption.Tests/bin/Release/net10.0/AppEncryption.Tests
+          chmod +x csharp/AppEncryption/AppEncryption.Tests/bin/Release/net11.0/AppEncryption.Tests
+
       - name: Run unit tests
         run: |
           cd csharp/AppEncryption

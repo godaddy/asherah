@@ -100,6 +100,11 @@ jobs:
           name: csharp-secure-memory
           path: ${{ github.workspace }}/csharp/SecureMemory
 
+      - name: Restore test executable permissions
+        run: |
+          chmod +x csharp/SecureMemory/SecureMemory.Tests/bin/Release/net10.0/SecureMemory.Tests
+          chmod +x csharp/SecureMemory/SecureMemory.Tests/bin/Release/net11.0/SecureMemory.Tests
+
       - name: Install libssl-1.1
         run: |
           wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
