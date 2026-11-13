@@ -378,7 +378,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
         [Fact]
         public async Task TestBuilderPathWithTableName()
         {
-            const string tempTableName = "DummyTable";
+            string tempTableName = $"DummyTable_{Guid.NewGuid():N}";
 
             // Use AWS SDK to create client
             AmazonDynamoDBConfig amazonDynamoDbConfig = new AmazonDynamoDBConfig
@@ -386,33 +386,40 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
                 ServiceURL = serviceUrl,
                 AuthenticationRegion = "us-west-2",
             };
-            AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
+            using AmazonDynamoDBClient tempDynamoDbClient = new AmazonDynamoDBClient(amazonDynamoDbConfig);
             CreateTableSchema(tempDynamoDbClient, tempTableName);
 
-            // Put the object in temp table
-            Table tempTable = (Table)new TableBuilder(tempDynamoDbClient, tempTableName)
-                .AddHashKey(PartitionKey, DynamoDBEntryType.String)
-                .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
-                .Build();
-            JObject jObject = JObject.FromObject(keyRecord);
-            Document document = new Document
+            try
             {
-                [PartitionKey] = TestKey,
-                [SortKey] = created.ToUnixTimeSeconds(),
-                [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
-            };
-            await tempTable.PutItemAsync(document, CancellationToken.None);
+                // Put the object in temp table
+                Table tempTable = (Table)new TableBuilder(tempDynamoDbClient, tempTableName)
+                    .AddHashKey(PartitionKey, DynamoDBEntryType.String)
+                    .AddRangeKey(SortKey, DynamoDBEntryType.Numeric)
+                    .Build();
+                JObject jObject = JObject.FromObject(keyRecord);
+                Document document = new Document
+                {
+                    [PartitionKey] = TestKey,
+                    [SortKey] = created.ToUnixTimeSeconds(),
+                    [AttributeKeyRecord] = Document.FromJson(jObject.ToString()),
+                };
+                await tempTable.PutItemAsync(document, CancellationToken.None);
 
-            // Create a metastore object using the withTableName step
-            DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
-                .WithEndPointConfiguration(serviceUrl, "us-west-2")
-                .WithTableName(tempTableName)
-                .Build();
-            Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
+                // Create a metastore object using the withTableName step
+                DynamoDbMetastoreImpl dbMetastoreImpl = NewBuilder(Region)
+                    .WithEndPointConfiguration(serviceUrl, "us-west-2")
+                    .WithTableName(tempTableName)
+                    .Build();
+                Option<JObject> actualJsonObject = dbMetastoreImpl.Load(TestKey, created);
 
-            // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
-            Assert.True(actualJsonObject.IsSome);
-            Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+                // Verify that we were able to load and successfully decrypt the item from the metastore object created withTableName
+                Assert.True(actualJsonObject.IsSome);
+                Assert.True(JToken.DeepEquals(JObject.FromObject(keyRecord), (JObject)actualJsonObject));
+            }
+            finally
+            {
+                await tempDynamoDbClient.DeleteTableAsync(new DeleteTableRequest { TableName = tempTableName }, CancellationToken.None);
+            }
         }
 
         [Fact]
