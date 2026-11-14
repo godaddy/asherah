@@ -1,6 +1,6 @@
 module github.com/godaddy/asherah/go/appencryption/cmd/example
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
