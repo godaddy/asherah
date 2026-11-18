@@ -1,0 +1,111 @@
+[
+  {
+    "name": "com.godaddy.asherah.securememory.TransientSecretFactory",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.ffmimpl.FfmSecretFactory",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.ffmimpl.FfmProtectedMemorySecret",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.ffmimpl.FfmProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.ffmimpl.LinuxFfmProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.ffmimpl.MacOSFfmProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.ProtectedMemorySecretFactory",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.ProtectedMemorySecret",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.linux.LinuxProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.macos.MacOSProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.libc.LibcProtectedMemoryAllocator",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.libc.ResourceLimit",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true,
+    "allPublicFields": true
+  },
+  {
+    "name": "com.godaddy.asherah.securememory.protectedmemoryimpl.libc.NativeLibc",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.json.JSONObject",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "org.json.JSONArray",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "javax.crypto.Cipher",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "javax.crypto.spec.GCMParameterSpec",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "javax.crypto.spec.SecretKeySpec",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "java.security.SecureRandom",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.foreign.MemorySegment",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.foreign.Linker",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.foreign.Arena",
+    "allDeclaredMethods": true
+  }
+]

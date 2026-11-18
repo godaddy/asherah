@@ -24,7 +24,7 @@ public class BouncyAes256GcmCrypto extends BouncyAeadCrypto {
 
   @Override
   protected AEADBlockCipher getNewAeadBlockCipherInstance() {
-    return new GCMBlockCipher(new AESEngine());
+    return GCMBlockCipher.newInstance(AESEngine.newInstance());
   }
 
   @Override

@@ -74,8 +74,8 @@
     <securememory.version>0.1.6</securememory.version>
     <slf4j.version>2.0.17</slf4j.version>
     <sqlite4java.version>1.0.392</sqlite4java.version>
-    <testcontainers.version>1.11.2</testcontainers.version>
     <zaxxer.version>7.0.2</zaxxer.version>
+    <jmh.version>1.37</jmh.version>
   </properties>
 
   <build>
@@ -84,17 +84,17 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>${maven.checkstyle.version}</version>
+        <configuration>
+          <inputEncoding>UTF-8</inputEncoding>
+          <consoleOutput>true</consoleOutput>
+          <configLocation>${checkstyle.config}</configLocation>
+          <includeResources>false</includeResources>
+          <includeTestResources>false</includeTestResources>
+        </configuration>
         <executions>
           <execution>
             <id>validate</id>
             <phase>validate</phase>
-            <configuration>
-              <inputEncoding>UTF-8</inputEncoding>
-              <consoleOutput>true</consoleOutput>
-              <configLocation>${checkstyle.config}</configLocation>
-              <includeResources>false</includeResources>
-              <includeTestResources>false</includeTestResources>
-            </configuration>
             <goals>
               <goal>check</goal>
             </goals>
@@ -425,6 +425,21 @@
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
       <version>${zaxxer.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JMH for benchmarking -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>${jmh.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
       <scope>test</scope>
     </dependency>
 
