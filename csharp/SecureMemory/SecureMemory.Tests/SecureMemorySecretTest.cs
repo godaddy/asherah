@@ -360,9 +360,11 @@ namespace GoDaddy.Asherah.SecureMemory.Tests
                             }, null);
                     });
 
-                    // Wait for all threads to complete
+                    // Wait for all threads before disposing the secret, even if the test is cancelled.
                     Debug.WriteLine("Waiting for threads");
+#pragma warning disable xUnit1051
                     countdown.Wait();
+#pragma warning restore xUnit1051
                     Debug.WriteLine("Threads finished");
                     Assert.Equal(numTasks, completedTasks);
                 }

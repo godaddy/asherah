@@ -62,6 +62,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
             throw new NotImplementedException();
         }
 
+        public Task<DecapsulateResponse> DecapsulateAsync(DecapsulateRequest request, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<DecryptResponse> DecryptAsync(DecryptRequest request, CancellationToken cancellationToken = default)
         {
             // Read the ciphertext from the request using GetBuffer() like the real implementations
@@ -186,6 +191,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
             throw new NotImplementedException();
         }
 
+        public Task<EncapsulateResponse> EncapsulateAsync(EncapsulateRequest request, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<EncryptResponse> EncryptAsync(EncryptRequest request, CancellationToken cancellationToken = default)
         {
             // Validate the KeyId matches our stored KeyArn
@@ -283,6 +293,11 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.PlugIns.Aws.Kms
         }
 
         public Task<GenerateRandomResponse> GenerateRandomAsync(int? numberOfBytes, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GetKeyLastUsageResponse> GetKeyLastUsageAsync(GetKeyLastUsageRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

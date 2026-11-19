@@ -19,6 +19,8 @@ You can get the latest release from [Nuget](https://www.nuget.org/packages/GoDad
 </ItemGroup>
 ```
 
+The package includes assets for .NET Standard 2.0, .NET 10, and .NET 11. Applications targeting .NET 8 or .NET 9 can select the .NET Standard 2.0 asset, but the 11.0 dependencies warn that those frameworks are unsupported and untested; builds that treat warnings as errors may fail.
+
 ### Currently supported / tested platforms
 * MacOS x86-64
 * Linux x86-64

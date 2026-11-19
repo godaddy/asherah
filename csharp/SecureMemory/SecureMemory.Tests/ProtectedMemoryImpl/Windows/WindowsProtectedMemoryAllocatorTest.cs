@@ -37,10 +37,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             windowsProtectedMemoryAllocator?.Dispose();
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestAllocSuccess()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Requires Windows.");
 
             var pointer = windowsProtectedMemoryAllocator.Alloc(1);
             try
@@ -55,10 +55,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Windows
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestZeroMemory()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Requires Windows.");
 
             byte[] origValue = { 1, 2, 3, 4 };
             var length = (ulong)origValue.Length;

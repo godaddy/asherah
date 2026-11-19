@@ -52,10 +52,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
         }
 
 
-        [SkippableFact]
+        [Fact]
         private void TestAllocWithResourceLimitZeroShouldFail()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -77,10 +77,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestAllocWithResourceLimitMaxValueShouldSucceed()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -96,10 +96,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestAllocWithResourceLimitLargeValueShouldSucceed()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -115,10 +115,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestAllocWithSetNoDumpErrorShouldFail()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestAllocWithSetNoDumpErrorShouldFail");
 
@@ -144,10 +144,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckPointerWithRegularPointerShouldSucceed()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithRegularPointerShouldSucceed");
 
@@ -162,10 +162,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             }
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestFreeWithInvalidLengthShouldFail()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestFreeWithInvalidLengthShouldFail");
 
@@ -173,10 +173,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             Assert.Throws<LibcOperationFailedException>(() => libcProtectedMemoryAllocator.Free(fakePtr, 0));
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckPointerWithNullPointerShouldFail()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithNullPointerShouldFail");
 
@@ -186,10 +186,10 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckPointerWithMapFailedPointerShouldFail()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckPointerWithMapFailedPointerShouldFail");
 
@@ -199,40 +199,40 @@ namespace GoDaddy.Asherah.SecureMemory.Tests.ProtectedMemoryImpl.Libc
             });
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckZeroWithZeroResult()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithZeroResult");
 
             Check.Zero(0, "TestCheckZeroWithZeroResult");
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckZeroWithNonZeroResult()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroWithNonZeroResult");
 
             Assert.Throws<LibcOperationFailedException>(() => { Check.Zero(1, "IGNORE_INTENTIONAL_ERROR"); });
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckZeroThrowableWithZeroResult()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithZeroResult");
 
             Check.Zero(0, "TestCheckZeroThrowableWithZeroResult", new InvalidOperationException());
         }
 
-        [SkippableFact]
+        [Fact]
         private void TestCheckZeroThrowableWithNonZeroResult()
         {
-            Skip.If(libcProtectedMemoryAllocator == null);
+            Assert.SkipWhen(libcProtectedMemoryAllocator == null, "Requires a libc protected memory allocator.");
 
             Debug.WriteLine("LibcProtectedMemoryAllocatorTest.TestCheckZeroThrowableWithNonZeroResult");
 

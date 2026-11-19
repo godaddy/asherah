@@ -31,9 +31,13 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
             }
         }
 
-        public Task InitializeAsync() => dynamoDbContainer?.StartAsync() ?? Task.CompletedTask;
+        public ValueTask InitializeAsync() => dynamoDbContainer is null
+            ? ValueTask.CompletedTask
+            : new ValueTask(dynamoDbContainer.StartAsync());
 
-        public Task DisposeAsync() => dynamoDbContainer?.StopAsync() ?? Task.CompletedTask;
+        public ValueTask DisposeAsync() => dynamoDbContainer is null
+            ? ValueTask.CompletedTask
+            : new ValueTask(dynamoDbContainer.StopAsync());
 
         public string GetServiceUrl() => dynamoDbContainer?.GetConnectionString() ?? localServiceUrl;
     }
